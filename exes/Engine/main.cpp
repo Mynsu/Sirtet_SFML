@@ -1,21 +1,17 @@
-﻿#include "pch.h"
+﻿#pragma hdrstop
+#include "pch.h"
 #include "Console.h"
+#include "..\..\staticLibs\Lib\Util.h"
 
-class ConsoleLocal : public IConsole
-{
-public:
-	ConsoleLocal( )
-	{
-		//TODO:
-		std::cout << "Is ConsoleLocal instance really dynamically bind?\n";
-	}
-	~ConsoleLocal( ) = default;
-};
-
-std::unique_ptr< IConsole > Console = std::make_unique< ConsoleLocal >( );
+std::unique_ptr< IConsole > Console;//
 
 int main( int argc, char* argv[ ] )
 {
+/*
+=====
+Handling arguments
+=====
+*/
 	const std::string argHelp0( "-help" );
 	const std::string argHelp1( "-h" );
 	const std::string argWinSize( "-WS" );
@@ -86,5 +82,26 @@ int main( int argc, char* argv[ ] )
 		}
 	}
 
+/*
+=====
+Initialization
+=====
+*/
+	::util::endian::BindConvertFunc( );
+	
+	void* memPoolPtr = nullptr;
+	::util::memory::OccupyMemPool( &memPoolPtr );
 
+/*
+=====
+Console
+=====
+*/
+
+/*
+=====
+Resource Free
+=====
+*/
+	::util::memory::FreeMemPool( &memPoolPtr );
 }
