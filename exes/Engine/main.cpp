@@ -1,9 +1,11 @@
 ﻿#pragma hdrstop
-#include "pch.h"
-#include "Console.h"
-#include "..\..\staticLibs\Lib\Util.h"
+#include <iostream>
+#include <SFML\Graphics.hpp>
+#include "Lib\Endian.h"
+#include "ServiceLocator.h"
 
-std::unique_ptr< IConsole > Console;//
+//TODO:
+//std::unique_ptr< IConsole > Console;//
 
 int main( int argc, char* argv[ ] )
 {
@@ -12,6 +14,7 @@ int main( int argc, char* argv[ ] )
 Handling arguments
 =====
 */
+	//TODO: string_view를 써볼까?
 	const std::string argHelp0( "-help" );
 	const std::string argHelp1( "-h" );
 	const std::string argWinSize( "-WS" );
@@ -20,6 +23,7 @@ Handling arguments
 	int height = 600;
 	bool isFullScreen = false;
 
+	//TODO: 잘 되나?
 	for ( int i = 1; i < argc; ++i )
 	{
 		const char* arg = argv[ i ];
@@ -88,20 +92,47 @@ Initialization
 =====
 */
 	::util::endian::BindConvertFunc( );
-	
-	void* memPoolPtr = nullptr;
-	::util::memory::OccupyMemPool( &memPoolPtr );
 
 /*
 =====
-Console
+Window
 =====
 */
+	sf::RenderWindow window( sf::VideoMode( width, height ), "Sirtet: the Classic", sf::Style::Close );
+	window.setFramerateLimit( 60 );
+
+	bool isOpen = true;
+	while ( true == isOpen )
+	{
+		sf::Event event;
+		while ( window.pollEvent( event ) )
+		{
+			if ( sf::Event::Closed == event.type ||
+				 true == sf::Keyboard::isKeyPressed( sf::Keyboard::Escape ) )
+			{
+				isOpen = false;
+			}
+		}
+
+		window.clear( );
+
+/*
+=====
+Window - Console
+=====
+*/
+		window.draw( ServiceLocator::console( ) );
+
+		window.display( );
+	}
+
+
+
 
 /*
 =====
 Resource Free
 =====
 */
-	::util::memory::FreeMemPool( &memPoolPtr );
+	window.close( );
 }

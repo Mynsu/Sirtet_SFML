@@ -1,25 +1,23 @@
 #pragma hdrstop
-
 #include "Console.h"
-#include <iostream>//
+//TODO:
+#include <iostream>
 
-class ConsoleLocal : public IConsole
+ConsoleLocal::ConsoleLocal( )
 {
-public:
-	ConsoleLocal( )
-	{
-		//TODO:
-		std::cout << "Is ConsoleLocal instance really dynamically bind?\n";
-	}
-	~ConsoleLocal( ) = default;
+	//TODO:
+	std::cout << "Is ConsoleLocal instance really dynamically bind?\n";
+}
 
-	virtual void addCommand( const char* command,
-							 std::function< void( void ) > function,
-							 CommandType type,
-							 const char* description )
-	{
+void ConsoleLocal::addCommand( std::string_view command,
+							   std::function<void( void )> function,
+							   CommandType type,
+							   std::string_view description )
+{
 
-	}
-};
+}
 
-std::unique_ptr< IConsole > Console = std::make_unique< ConsoleLocal >( );
+void ConsoleLocal::draw( sf::RenderTarget& target, sf::RenderStates states ) const
+{
+
+}

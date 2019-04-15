@@ -1,4 +1,5 @@
-#include "Util.h"
+#include "stdafx.h"
+#include "Endian.h"
 
 namespace util
 {
@@ -14,10 +15,15 @@ namespace util
 			for ( int i = 1; i < 17; ++i )
 			{
 				retVal |= ( ( arg & mask ) << ( 32 - 2 * i ) );
-				arg >> 2 * i;
+				arg >>= 2 * i;
 			}
 
 			return retVal;
+		}
+
+		dword _NoAction( dword arg )
+		{
+			return arg;
 		}
 
 		void BindConvertFunc( )
@@ -45,27 +51,32 @@ namespace util
 
 	namespace memory
 	{
-		bool OccupyMemPool( void** ptr, size_t size )
-		{
-			bool retVal = true;
-			byte** _ptr = ( byte** )ptr;
-			*_ptr = new byte[ size ];
-			for ( size_t i = 0; i != size; ++i )
-			{
-				*_ptr[ i ] = 0;
-			}
-			if ( nullptr == ptr )
-			{
-				retVal = false;
-			}
+		//bool OccupyMemPool( byte** ptr, size_t size )
+		//{
+		//	bool retVal = true;
 
-			return retVal;
-		}
+		//	//byte** _ptr = ( byte** )ptr;
+		//	//*_ptr = new byte[ size ];
 
-		void FreeMemPool( void** ptr )
-		{
-			delete[ ] *ptr;
-			*ptr = nullptr;
-		}
+		//	*ptr = new byte[ size ];
+		//	for ( size_t i = 0; i != size; ++i )
+		//	{
+		//		//*_ptr[ i ] = 0;
+		//		*ptr[ i ] = 0;
+		//	}
+
+		//	if ( nullptr == ptr )
+		//	{
+		//		retVal = false;
+		//	}
+
+		//	return retVal;
+		//}
+
+		//void SetFreeMemPool( byte** ptr )
+		//{
+		//	delete[ ] *ptr;
+		//	*ptr = nullptr;
+		//}
 	}
 }
