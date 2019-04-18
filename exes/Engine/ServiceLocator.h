@@ -1,15 +1,15 @@
+#pragma hdrstop
 #pragma once
+#include <memory>
 #include "Console.h"
 
 class ServiceLocator
 {
-//TODO:
-//protected:
 public:
-	static IConsole& console( )
+	static auto Console( ) -> std::unique_ptr< IConsole >&
 	{
-		return *_Console;
+		return _Console;
 	}
 private:
-	static IConsole* _Console;
+	static std::unique_ptr< IConsole > _Console;
 };

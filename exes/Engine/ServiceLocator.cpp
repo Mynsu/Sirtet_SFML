@@ -1,4 +1,5 @@
 #include "ServiceLocator.h"
 #include "Console.h"
 
-IConsole* ServiceLocator::_Console = new ConsoleLocal( );
+std::unique_ptr< IConsole > ServiceLocator::_Console
+	= std::make_unique< ConsoleLocal >( );
