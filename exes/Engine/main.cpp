@@ -1,8 +1,11 @@
 ﻿#pragma hdrstop
 #include <iostream>
+#include <unordered_map>
 #include <SFML\Graphics.hpp>
 #include "Lib\Endian.h"
 #include "ServiceLocator.h"
+
+using hash = uint32_t;
 
 int main( int argc, char* argv[ ] )
 {
@@ -11,9 +14,12 @@ int main( int argc, char* argv[ ] )
 Handling arguments
 =====
 */
-	int winWidth = 800;
-	int winHeight = 600;
-	uint8_t winStyle = sf::Style::Close;
+	std::unordered_map< hash, int > variableTable;//TODO:int
+	variableTable.reserve( 10 );
+
+	variableTable.emplace( 3139364470, 800 ); // winWidth
+	variableTable.emplace( 1251131622, 600 ); // winHeight
+	variableTable.emplace( 3519249062, sf::Style::Close ); // winStyle
 	{
 		const std::string_view argHelp0( "--help" );
 		const std::string_view argHelp1( "--h" );
@@ -47,7 +53,7 @@ Handling arguments
 					std::cerr << "Error: Too narrow width.\n";
 					return -1;
 				}
-				winWidth = subArg0;
+				variableTable.find( 3139364470 )->second = subArg0;
 
 				const int subArg1 = std::atoi( argv[ ++i ] );
 				// Exception: When NON-number characters has been input,
@@ -62,11 +68,11 @@ Handling arguments
 					std::cerr << "Error: Too low height.\n";
 					return -1;
 				}
-				winHeight = subArg1;
+				variableTable.find( 1251131622 )->second = subArg1;
 			}
 			else if ( 0 == argFullscreen.compare( cur ) )
 			{
-				winStyle |= sf::Style::Fullscreen;
+				variableTable.find( 3519249062 )->second |= sf::Style::Fullscreen;
 			}
 			else
 			{
@@ -89,7 +95,10 @@ Initialization
 Window
 =====
 */
-	sf::RenderWindow window( sf::VideoMode( winWidth, winHeight ), "Sirtet: the Classic", winStyle );
+	sf::RenderWindow window( sf::VideoMode( variableTable.find( 3139364470 )->second, // winWidth
+											variableTable.find( 1251131622 )->second ), // winHeight
+							 "Sirtet: the Classic",
+							 variableTable.find( 3519249062 )->second ); // winStyle
 	window.setFramerateLimit( 60 );
 	auto& console = *ServiceLocator::Console( );
 
@@ -113,12 +122,14 @@ Window
 				{
 					console.toggleVisible( );
 				}
+
+				if ( true == console.isVisible( ) )
+				{
+					console.handleEvent( event );
+				}
 			}
 
-			console.handleEvent( event );
 		}
-
-		///console.update( );
 
 		window.clear( );
 /*
