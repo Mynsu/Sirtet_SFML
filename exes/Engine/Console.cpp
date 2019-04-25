@@ -1,75 +1,104 @@
 #pragma hdrstop
 #include "Console.h"
-#include <SFML\Graphics.hpp>
-//TODO:
+#include <SFML/Graphics.hpp>
 #include <iostream>
 
 ConsoleLocal::ConsoleLocal( ) : mVisible( true ),
 								mCurrentInput( "" ),
-								mCursorPosition( 0 ),
 								mCursorForeground( "_" )
 {
-	mFont.loadFromFile( "Fonts\AGENCYR.TTF" );
+	mFont.loadFromFile( "Fonts/AGENCYB.TTF" );
 	mCurrentInputTextField.setFont( mFont );
-	//mCurrentInputTextField.setPosition( 0.0f, 500.0f );//
-	//mCurrentInputTextField.setFillColor( sf::Color::White );
-	
-	//mCursorForegroundTextField.setFillColor( sf::Color::White );
+	mCursorForegroundTextField.setFont( mFont );
+	mCursorForegroundTextField.setString( mCursorForeground );
+	for ( auto& it : mHistoryTextFields )
+	{
+		it.setFont( mFont );
+	}
+}
+
+void ConsoleLocal::init( const sf::Vector2u& winSize )
+{
+	const sf::Vector2f _winSize( winSize );
+	const float margin = 30.f;
+	const float consoleRatio = 2.f;
+	mConsoleWindow.setPosition( sf::Vector2f( margin, _winSize.y / consoleRatio - margin ) );
+	mConsoleWindow.setSize( _winSize / consoleRatio );
+	mConsoleWindow.setOutlineColor( sf::Color::White );
+	mConsoleWindow.setFillColor( sf::Color::Blue );
+	const auto fontSize = mCurrentInputTextField.getCharacterSize( );
+	sf::Vector2f textFieldPos( margin, winSize.y - margin - fontSize );
+	mCurrentInputTextField.setPosition( textFieldPos );
+	mCursorForegroundTextField.setPosition( textFieldPos );
+	for ( auto& it : mHistoryTextFields ) //cache
+	{
+		textFieldPos -= sf::Vector2f( 0u, fontSize );
+		it.setPosition( textFieldPos );
+	}
 }
 
 void ConsoleLocal::draw( sf::RenderTarget& target, sf::RenderStates states ) const
 {
-	auto targetSize = target.getSize( );
-	///sf::View view( sf::FloatRect( sf::Vector2f( 0.0f, 0.0f ),
-	///							  sf::Vector2f( sf::Vector2i( targetSize.x, targetSize.y ) ) ) );
-	///target.setView( view );
+	//sf::View view( sf::FloatRect( sf::Vector2f( 0.0f, 0.0f ),
+	//							  sf::Vector2f( target.getSize( ) ) ) );
+	//target.setView( view );
 
-	sf::RectangleShape rect;
-	rect.setPosition( sf::Vector2f( sf::Vector2i( 0, targetSize.y / 2 ) ) );
-	rect.setSize( sf::Vector2f( sf::Vector2i( targetSize.x / 2, targetSize.y / 2 ) ) );
-	rect.setOutlineColor( sf::Color::White );
-	rect.setFillColor( sf::Color::Blue );
-	target.draw( rect );
-
+	target.draw( mConsoleWindow );
 	target.draw( mCurrentInputTextField );
 	target.draw( mCursorForegroundTextField );
+	for ( const auto it : mHistoryTextFields ) //cache
+	{
+		target.draw( it );
+	}
 
-	///target.setView( target.getDefaultView( ) );
+	//target.setView( target.getDefaultView( ) );
 }
 
 void ConsoleLocal::handleEvent( const sf::Event& event )
 {
-	if ( sf::Event::TextEntered == event.type )
+	if ( sf::Event::KeyPressed == event.type )
 	{
-		auto input = event.text.unicode;
-		//if ( input > 0x1f && input < 0x7d )
+		if ( sf::Keyboard::Tab == event.key.code )
 		{
-			mCurrentInput += static_cast< char >( event.text.unicode );
-			mCursorForeground.pop_back( );
-			mCursorForeground += " ";
-			mCursorForeground += "_";
-
-			mCurrentInputTextField.setString( mCurrentInput );
-			mCursorForegroundTextField.setString( mCursorForeground );
+			// Toggle console on/off
+			mVisible = !mVisible;
+			return;
 		}
 	}
-}
 
-//void ConsoleLocal::update( )
-//{
-//	mCurrentInputTextField.setString( mCurrentInput );
-//
-//	mCursorForegroundTextField.setString( mCursorForeground );
-//}
+	if ( true == mVisible )
+	{
+		if ( sf::Event::TextEntered == event.type )
+		{
+			if ( auto input = event.text.unicode;
+				 input > 0x1f && input < 0x7f )
+			{
+				mCurrentInput += static_cast< char >( input );
+				mCursorForeground.pop_back( );
+				mCursorForeground += " ";
+				mCursorForeground += "_";
 
-bool ConsoleLocal::isVisible( ) const
-{
-	return mVisible;
-}
-
-void ConsoleLocal::toggleVisible( )
-{
-	mVisible = !mVisible;
+				mCurrentInputTextField.setString( mCurrentInput );
+				mCursorForegroundTextField.setString( mCursorForeground );
+			}
+		}
+		else if ( sf::Event::KeyPressed == event.type )
+		{
+			if ( sf::Keyboard::Enter == event.key.code )
+			{
+				auto size = mHistoryTextFields.size( );
+				for ( size_t i = size - 1; i != 0; --i )
+				{
+					const auto& str = mHistoryTextFields[ i - 1 ].getString( );
+					mHistoryTextFields[ i ].setString( str );
+				}
+				mHistoryTextFields[ 0 ].setString( mCurrentInput );
+				mCurrentInput.clear( );
+				mCurrentInputTextField.setString( "" );
+				mCursorForegroundTextField.setString( "_" );
+			}
+		}
+	}
 }
 
 void ConsoleLocal::addCommand( std::string_view command,

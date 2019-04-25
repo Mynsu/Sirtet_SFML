@@ -1,30 +1,30 @@
 ﻿#pragma hdrstop
 #include <iostream>
 #include <unordered_map>
-#include <SFML\Graphics.hpp>
-#include "Lib\Endian.h"
+#include <SFML/Graphics.hpp>
+#include "Lib/Endian.h"
 #include "ServiceLocator.h"
 
 using hash = uint32_t;
 
 int main( int argc, char* argv[ ] )
 {
-/*
-=====
-Handling arguments
-=====
-*/
-	std::unordered_map< hash, int > variableTable;//TODO:int
+	std::unordered_map< hash, int > variableTable;//int보다 general해야 하는데...
 	variableTable.reserve( 10 );
 
 	variableTable.emplace( 3139364470, 800 ); // winWidth
 	variableTable.emplace( 1251131622, 600 ); // winHeight
 	variableTable.emplace( 3519249062, sf::Style::Close ); // winStyle
+/*
+=====
+Handling arguments
+=====
+*/
 	{
-		const std::string_view argHelp0( "--help" );
-		const std::string_view argHelp1( "--h" );
-		const std::string_view argWinSize( "--WS" );
-		const std::string_view argFullscreen( "--FS" );
+		const std::string argHelp0( "--help" );
+		const std::string argHelp1( "--h" );
+		const std::string argWinSize( "--WS" );
+		const std::string argFullscreen( "--FS" );
 
 		for ( int i = 1; i < argc; ++i )
 		{
@@ -100,13 +100,13 @@ Window
 							 "Sirtet: the Classic",
 							 variableTable.find( 3519249062 )->second ); // winStyle
 	window.setFramerateLimit( 60 );
-	auto& console = *ServiceLocator::Console( );
+	auto& console = *ServiceLocator::Console( window.getSize( ) );
 
 	bool isOpen = true;
 	while ( true == isOpen )
 	{
 		sf::Event event;
-		while ( window.pollEvent( event ) )
+		while ( true == window.pollEvent( event ) )
 		{
 			if ( sf::Event::Closed == event.type )
 			{
@@ -118,25 +118,16 @@ Window
 				{
 					isOpen = false;
 				}
-				else if ( sf::Keyboard::Tab == event.key.code )
-				{
-					console.toggleVisible( );
-				}
-
-				if ( true == console.isVisible( ) )
-				{
-					console.handleEvent( event );
-				}
 			}
-
+		
+			// Console
+			{
+				console.handleEvent( event );
+			}
 		}
 
 		window.clear( );
-/*
-=====
-Window - Console
-=====
-*/
+
 		if ( true == console.isVisible( ) )
 		{
 			window.draw( console );
