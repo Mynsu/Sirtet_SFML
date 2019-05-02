@@ -51,12 +51,11 @@ public:
 					 std::string_view description ) override;//
 private:
 	bool mVisible;
-	///sf::String mCurrentInput; // 28
 	std::string mCurrentInput;
 	std::string mCursorForeground; // 28
 	sf::Font mFont; // 76
 	sf::RectangleShape mConsoleWindow; // 292
 	sf::Text mCurrentInputTextField; // 312
 	sf::Text mCursorForegroundTextField;
-	std::array< sf::Text, 10 > mHistoryTextFields;
+	std::array< sf::Text, 9 > mHistoryTextFields;
 };

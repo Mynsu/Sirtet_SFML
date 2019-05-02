@@ -4,13 +4,14 @@
 #include <iostream>
 
 ConsoleLocal::ConsoleLocal( ) : mVisible( true ),
-								mCurrentInput( "" ),
-								mCursorForeground( "_" )
+								mCurrentInput( "_" )
+								///mCursorForeground( "_" )
 {
 	mFont.loadFromFile( "Fonts/AGENCYB.TTF" );
 	mCurrentInputTextField.setFont( mFont );
-	mCursorForegroundTextField.setFont( mFont );
-	mCursorForegroundTextField.setString( mCursorForeground );
+	mCurrentInputTextField.setString( mCurrentInput );
+	///mCursorForegroundTextField.setFont( mFont );
+	///mCursorForegroundTextField.setString( mCursorForeground );
 	for ( auto& it : mHistoryTextFields )
 	{
 		it.setFont( mFont );
@@ -29,10 +30,10 @@ void ConsoleLocal::init( const sf::Vector2u& winSize )
 	const auto fontSize = mCurrentInputTextField.getCharacterSize( );
 	sf::Vector2f textFieldPos( margin, winSize.y - margin - fontSize );
 	mCurrentInputTextField.setPosition( textFieldPos );
-	mCursorForegroundTextField.setPosition( textFieldPos );
+	///mCursorForegroundTextField.setPosition( textFieldPos );
 	for ( auto& it : mHistoryTextFields ) //cache
 	{
-		textFieldPos -= sf::Vector2f( 0u, fontSize );
+		textFieldPos -= sf::Vector2f( sf::Vector2u( 0u, fontSize ) );
 		it.setPosition( textFieldPos );
 	}
 }
@@ -45,7 +46,7 @@ void ConsoleLocal::draw( sf::RenderTarget& target, sf::RenderStates states ) con
 
 	target.draw( mConsoleWindow );
 	target.draw( mCurrentInputTextField );
-	target.draw( mCursorForegroundTextField );
+	///target.draw( mCursorForegroundTextField );
 	for ( const auto it : mHistoryTextFields ) //cache
 	{
 		target.draw( it );
@@ -73,13 +74,14 @@ void ConsoleLocal::handleEvent( const sf::Event& event )
 			if ( auto input = event.text.unicode;
 				 input > 0x1f && input < 0x7f )
 			{
+				mCurrentInput.pop_back( );
 				mCurrentInput += static_cast< char >( input );
-				mCursorForeground.pop_back( );
-				mCursorForeground += " ";
-				mCursorForeground += "_";
-
+				mCurrentInput += '_';
+				///mCursorForeground.pop_back( );
+				///mCursorForeground += ' ';
+				///mCursorForeground += '_';
 				mCurrentInputTextField.setString( mCurrentInput );
-				mCursorForegroundTextField.setString( mCursorForeground );
+				///mCursorForegroundTextField.setString( mCursorForeground );
 			}
 		}
 		else if ( sf::Event::KeyPressed == event.type )
@@ -92,10 +94,31 @@ void ConsoleLocal::handleEvent( const sf::Event& event )
 					const auto& str = mHistoryTextFields[ i - 1 ].getString( );
 					mHistoryTextFields[ i ].setString( str );
 				}
+				mCurrentInput.pop_back( );
 				mHistoryTextFields[ 0 ].setString( mCurrentInput );
 				mCurrentInput.clear( );
+				///mCursorForeground.clear( );
 				mCurrentInputTextField.setString( "" );
-				mCursorForegroundTextField.setString( "_" );
+				///mCursorForegroundTextField.setString( '_' );
+			}
+			else if ( sf::Keyboard::Escape == event.key.code )
+			{
+				mVisible = false;
+			}
+			else if ( sf::Keyboard::Backspace == event.key.code )
+			{
+				///if ( false == mCurrentInput.empty( ) )
+				if ( 1 != mCurrentInput.size( ) )
+				{
+					mCurrentInput.pop_back( );
+					mCurrentInput.pop_back( );
+					mCurrentInput += '_';
+					///mCursorForeground.pop_back( );
+					///mCursorForeground.pop_back( );
+					///mCursorForeground += '_';
+					mCurrentInputTextField.setString( mCurrentInput );
+					///mCursorForegroundTextField.setString( mCursorForeground );
+				}
 			}
 		}
 	}

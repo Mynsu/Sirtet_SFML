@@ -1,8 +1,11 @@
 ﻿#pragma hdrstop
 #include <iostream>
 #include <unordered_map>
+#include <memory>
 #include <SFML/Graphics.hpp>
-#include "Lib/Endian.h"
+#include <Game/sequence/ISequence.h>
+#include <Game/sequence/Opening.h>
+#include <Lib/Endian.h>
 #include "ServiceLocator.h"
 
 using hash = uint32_t;
@@ -101,6 +104,7 @@ Window
 							 variableTable.find( 3519249062 )->second ); // winStyle
 	window.setFramerateLimit( 60 );
 	auto& console = *ServiceLocator::Console( window.getSize( ) );
+	std::unique_ptr< ::sequence::ISequence > game( std::make_unique< ::sequence::Opening >( window ) );
 
 	bool isOpen = true;
 	while ( true == isOpen )
@@ -116,7 +120,10 @@ Window
 			{
 				if ( sf::Keyboard::Escape == event.key.code )
 				{
-					isOpen = false;
+					if ( false == console.isVisible( ) )
+					{
+						isOpen = false;
+					}
 				}
 			}
 		
@@ -126,13 +133,14 @@ Window
 			}
 		}
 
-		window.clear( );
+		game->update( );//
 
+		window.clear( );
+		game->draw( );//
 		if ( true == console.isVisible( ) )
 		{
 			window.draw( console );
 		}
-
 		window.display( );
 	}
 
