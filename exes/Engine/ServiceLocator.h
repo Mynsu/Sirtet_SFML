@@ -1,5 +1,5 @@
-#pragma hdrstop
 #pragma once
+#pragma hdrstop
 #include <memory>
 #include <SFML/System.hpp>
 #include "Console.h"
@@ -18,4 +18,4 @@ public:
 	}
 private:
 	static std::unique_ptr< IConsole > _Console;
-};
+};	

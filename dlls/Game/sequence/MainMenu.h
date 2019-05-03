@@ -5,15 +5,15 @@
 
 namespace sequence
 {
-	class GAME_API Opening final : public ISequence
+	class MainMenu final : public ISequence
 	{
 	public:
-		Opening( ) = delete;
-		Opening( sf::RenderWindow& window );
-		~Opening( ) = default;
+		MainMenu( ) = delete;
+		MainMenu( sf::RenderWindow& window );
+		~MainMenu( ) = default;
 
-		void update( ) override;
-		void draw( ) override;
+		void update( );
+		void draw( );
 	private:
 		sf::RenderWindow& mWindow;
 		sf::Texture mTexture;

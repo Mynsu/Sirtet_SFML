@@ -1,5 +1,5 @@
-#pragma hdrstop
 #pragma once
+///#pragma hdrstop
 #include <array>
 #include <string_view>
 #include <functional>
@@ -24,6 +24,8 @@ public:
 	
 	virtual bool isVisible( ) const = 0;
 	virtual void handleEvent( const sf::Event& event ) = 0;
+	virtual void print( const std::string& message ) = 0;
+	virtual void printError( const std::string& errorMessage ) = 0;
 	virtual void addCommand( std::string_view command,
 							 std::function< void( void ) > function,
 							 CommandType type,
@@ -44,6 +46,8 @@ public:
 		return mVisible;
 	}
 	void handleEvent( const sf::Event& event ) override;
+	void print( const std::string& message );
+	void printError( const std::string& errorMessage );
 	//±√±›: ø÷ virtual¿œ±Ó?
 	void addCommand( std::string_view command,
 					 std::function< void( void ) > function,
@@ -51,6 +55,7 @@ public:
 					 std::string_view description ) override;//
 private:
 	bool mVisible;
+	bool mInitialized;
 	std::string mCurrentInput;
 	std::string mCursorForeground; // 28
 	sf::Font mFont; // 76

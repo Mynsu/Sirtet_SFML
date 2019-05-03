@@ -1,9 +1,10 @@
-#pragma hdrstop
+//#pragma hdrstop
 #include "Console.h"
 #include <SFML/Graphics.hpp>
 #include <iostream>
 
 ConsoleLocal::ConsoleLocal( ) : mVisible( true ),
+								mInitialized( false ),
 								mCurrentInput( "_" )
 								///mCursorForeground( "_" )
 {
@@ -36,6 +37,8 @@ void ConsoleLocal::init( const sf::Vector2u& winSize )
 		textFieldPos -= sf::Vector2f( sf::Vector2u( 0u, fontSize ) );
 		it.setPosition( textFieldPos );
 	}
+
+	mInitialized = true;
 }
 
 void ConsoleLocal::draw( sf::RenderTarget& target, sf::RenderStates states ) const
@@ -88,14 +91,15 @@ void ConsoleLocal::handleEvent( const sf::Event& event )
 		{
 			if ( sf::Keyboard::Enter == event.key.code )
 			{
-				auto size = mHistoryTextFields.size( );
+				/*auto size = mHistoryTextFields.size( );
 				for ( size_t i = size - 1; i != 0; --i )
 				{
 					const auto& str = mHistoryTextFields[ i - 1 ].getString( );
 					mHistoryTextFields[ i ].setString( str );
-				}
+				}*/
 				mCurrentInput.pop_back( );
-				mHistoryTextFields[ 0 ].setString( mCurrentInput );
+				//mHistoryTextFields[ 0 ].setString( mCurrentInput );
+				print( mCurrentInput );
 				mCurrentInput.clear( );
 				///mCursorForeground.clear( );
 				mCurrentInputTextField.setString( "" );
@@ -122,6 +126,41 @@ void ConsoleLocal::handleEvent( const sf::Event& event )
 			}
 		}
 	}
+}
+
+void ConsoleLocal::print( const std::string& message )
+{
+	auto size = mHistoryTextFields.size( );
+	for ( size_t i = size - 1; i != 0; --i )
+	{
+		const auto& str = mHistoryTextFields[ i - 1 ].getString( );
+		mHistoryTextFields[ i ].setString( str );
+	}
+	mHistoryTextFields[ 0 ].setString( message );
+	if ( sf::Color::White != mHistoryTextFields[ 0 ].getFillColor( ) )
+	{
+		mHistoryTextFields[ 0 ].setFillColor( sf::Color::White );
+	}
+}
+
+void ConsoleLocal::printError( const std::string& errorMessage )
+{
+	auto size = mHistoryTextFields.size( );
+	for ( size_t i = size - 1; i != 0; --i )
+	{
+		const auto& str = mHistoryTextFields[ i - 1 ].getString( );
+		mHistoryTextFields[ i ].setString( str );
+	}
+	mHistoryTextFields[ 0 ].setString( errorMessage );
+	// REASON: An error seldom occurs, so if-branch has been omited.
+	///if ( sf::Color::Red != mHistoryTextFields[ 0 ].getFillColor( ) )
+	///{
+		mHistoryTextFields[ 0 ].setFillColor( sf::Color::Red );
+	///}
+
+	// REASON: I prefer keeping performance to saving memory.
+	// Duplicated codes seems tolerable rather than context-switch cost.
+	///print( "ERROR: " + errorMessage );
 }
 
 void ConsoleLocal::addCommand( std::string_view command,

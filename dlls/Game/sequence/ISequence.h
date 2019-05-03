@@ -1,10 +1,10 @@
 #pragma once
+#pragma hdrstop
 #include "../Common.h"
-#include <SFML/System.hpp>
 
 namespace sequence
 {
-	extern "C" class GAME_API ISequence : public sf::NonCopyable
+	class GAME_API ISequence : public sf::NonCopyable
 	{
 	public:
 		ISequence( ) = default;

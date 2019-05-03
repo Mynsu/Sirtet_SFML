@@ -12,7 +12,7 @@ using hash = uint32_t;
 
 int main( int argc, char* argv[ ] )
 {
-	std::unordered_map< hash, int > variableTable;//int보다 general해야 하는데...
+	std::unordered_map< hash, int > variableTable;//TODO: int보다 general해야 하는데...
 	variableTable.reserve( 10 );
 
 	variableTable.emplace( 3139364470, 800 ); // winWidth
@@ -91,7 +91,11 @@ Initialization
 */
 	{
 		::util::endian::BindConvertFunc( );
+		// NOTE: This is not the init. of console, just pass the address of console to...
+		// an EXTERNAL GLOBAL POINTER VARIABLE 'Console_' declared in 'Common.h' in project 'Game.'
+		Console_ = ServiceLocator::Console( ).get( );
 	}
+	//TODO:nextseq
 
 /*
 =====
@@ -103,6 +107,7 @@ Window
 							 "Sirtet: the Classic",
 							 variableTable.find( 3519249062 )->second ); // winStyle
 	window.setFramerateLimit( 60 );
+	// NOTE: Now console has been initialized.
 	auto& console = *ServiceLocator::Console( window.getSize( ) );
 	std::unique_ptr< ::sequence::ISequence > game( std::make_unique< ::sequence::Opening >( window ) );
 
