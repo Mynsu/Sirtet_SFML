@@ -4,6 +4,14 @@
 
 namespace sequence
 {
+	// NOTE: GAME_API, __declspec( dllimport/dllexport ) is unnecessary.
+	enum class Seq
+	{
+		OPENING = 0,
+		MAIN_MENU,
+		NONE,
+	};
+
 	class GAME_API ISequence : public sf::NonCopyable
 	{
 	public:

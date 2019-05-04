@@ -9,14 +9,16 @@ namespace sequence
 	{
 	public:
 		Opening( ) = delete;
-		Opening( sf::RenderWindow& window );
+		Opening( sf::RenderWindow& window,
+				 ::sequence::Seq* nextSequence );
 		~Opening( ) = default;
 
 		void update( ) override;
 		void draw( ) override;
 	private:
+		::sequence::Seq* mNextSequence;
 		sf::RenderWindow& mWindow;
-		sf::Texture mTexture;
+		sf::Texture mTexture;//TODO 패딩 없애기
 		sf::Sprite mSprite;
 	};
 }
