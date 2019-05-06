@@ -16,6 +16,8 @@ namespace sequence
 		void update( ) override;
 		void draw( ) override;
 	private:
+		uint8_t mDuration;
+		uint8_t mFPS;
 		::sequence::Seq* mNextSequence;
 		sf::RenderWindow& mWindow;
 		sf::Texture mTexture;//TODO 패딩 없애기

@@ -1,8 +1,13 @@
 #pragma once
 #pragma hdrstop
+#include <unordered_map>
 #include <memory>
+#include <intrin.h> // int32_t
 #include <SFML/System.hpp>
 #include "Console.h"
+
+using hashValue_t = int32_t;
+using dword = int32_t;
 
 class ServiceLocator
 {
@@ -16,6 +21,11 @@ public:
 		_Console->init( winSize );
 		return _Console;
 	}
+	static auto VariableTable( ) -> std::unordered_map< hashValue_t, dword >&
+	{
+		return variableTable;
+	}
 private:
 	static std::unique_ptr< IConsole > _Console;
+	static std::unordered_map< hashValue_t, dword > variableTable;
 };	

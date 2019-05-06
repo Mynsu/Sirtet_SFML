@@ -14,5 +14,6 @@
 winWidth	|	3139364470
 winHeight	|	1251131622
 winStyle	|	3519249062
+fps			|	863391493
 
 nextSeq		|	2746935819

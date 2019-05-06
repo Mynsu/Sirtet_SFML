@@ -1,24 +1,22 @@
 ﻿#pragma hdrstop
 #include <iostream>
-#include <unordered_map>
-#include <memory>
-#include <intrin.h>
 #include <SFML/Graphics.hpp>
 
 #include <Game/sequence/ISequence.h>
 #include <Game/sequence/Opening.h>
 #include <Game/sequence/MainMenu.h>
+//#include <Game/sequence/Common.h>
 
 #include <Lib/Endian.h>
 #include "ServiceLocator.h"
 
-using hash = uint32_t;
-
 int main( int argc, char* argv[ ] )
 {
-	std::unordered_map< hash, int32_t > variableTable;
-	variableTable.reserve( 10 );
+	///std::unordered_map< hash, int32_t > variableTable;
+	// 궁금: 해시테이블의 reserve란?
+	//variableTable.reserve( 10 );
 
+	auto variableTable = ServiceLocator::VariableTable( );
 	variableTable.emplace( 3139364470, 800 ); // winWidth
 	variableTable.emplace( 1251131622, 600 ); // winHeight
 	variableTable.emplace( 3519249062, sf::Style::Close ); // winStyle
@@ -97,10 +95,12 @@ Initialization
 		::util::endian::BindConvertFunc( );
 		// IMPORTANT: This is not the initialization of console, just pass the address of console to ...
 		// ... an EXTERNAL GLOBAL POINTER VARIABLE 'Console_' declared in 'Common.h' in project 'Game.'
-		Console_ = ServiceLocator::Console( ).get( );
+		global::Console = &ServiceLocator::Console;
+		global::VariableTable = &ServiceLocator::VariableTable;
 		// NOTE: '::sequence::Seq' is enum class, not enum, thus expilcit casting is necessary.
 		// For more details, try compiling without explicit casting.
 		variableTable.emplace( 2746935819, static_cast< uint32_t >( ::sequence::Seq::OPENING ) ); // nextSeq
+		variableTable.emplace( 863391493, 60u ); // fps
 	}
 
 /*
@@ -112,7 +112,7 @@ Window
 											variableTable.find( 1251131622 )->second ), // winHeight
 							 "Sirtet: the Classic",
 							 variableTable.find( 3519249062 )->second ); // winStyle
-	window.setFramerateLimit( 60 );
+	window.setFramerateLimit( variableTable.find( 863391493 )->second );
 	// IMPORTANT: Now console has been initialized.
 	auto& console = *ServiceLocator::Console( window.getSize( ) );
 	const auto pNextSequence = reinterpret_cast< ::sequence::Seq* >( &( variableTable.find( 2746935819 )->second ) );

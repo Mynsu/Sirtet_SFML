@@ -8,7 +8,8 @@ namespace sequence
 		const std::string pathAndFilename( "Images/MainMenu.png" );
 		if ( false == mTexture.loadFromFile( pathAndFilename ) )
 		{
-			Console_->printError( "Failed to load " + pathAndFilename );
+			//Console_->printError( "Failed to load " + pathAndFilename );
+			global::Console( )->printError( "Failed to load " + pathAndFilename );
 		}
 		mSprite.setTexture( mTexture );
 		*mNextSequence = ::sequence::Seq::NONE;
