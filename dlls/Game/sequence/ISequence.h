@@ -9,6 +9,8 @@ namespace sequence
 	{
 		OPENING = 0,
 		MAIN_MENU,
+		SINGLE_PLAY,
+		MULTI_PLAY,
 		NONE,
 	};
 

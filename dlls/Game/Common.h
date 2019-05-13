@@ -22,3 +22,9 @@ namespace global
 
 #include <SFML/System.hpp>
 #include <SFML/Graphics.hpp>
+
+#ifdef _DEBUG
+#define ASSERT_FALSE( x ) if ( true == x ) __debugbreak( );
+#else
+#define ASSERT_FALSE( x ) __assume( true );
+#endif

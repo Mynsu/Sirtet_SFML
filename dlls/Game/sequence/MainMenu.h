@@ -9,14 +9,20 @@ namespace sequence
 	{
 	public:
 		MainMenu( ) = delete;
-		MainMenu( sf::RenderWindow& window, ::sequence::Seq* const nextSequence );
-		~MainMenu( ) = default;
+		MainMenu( sf::RenderWindow& window,
+				  ::sequence::Seq* const nextSequence );
+		~MainMenu( )
+		{
+			IsInstanciated = false;
+		}
 
 		void update( );
 		void draw( );
 	private:
+		// Only single instance can live, two or more can't.
+		static bool IsInstanciated;
 		::sequence::Seq* const mNextSequence;
-		sf::RenderWindow& mWindow;
+		sf::RenderWindow& const mWindow;
 		sf::Texture mTexture;
 		sf::Sprite mSprite;
 	};

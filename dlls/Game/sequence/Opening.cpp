@@ -2,22 +2,25 @@
 
 namespace sequence
 {
+	bool Opening::IsInstanciated = false;
+
 	Opening::Opening( sf::RenderWindow& window
 					  , ::sequence::Seq* nextSequence )
 		: mDuration( 2u ),
-		//mFPS( static_cast< uint8_t >( global::VariableTable( ).find( 863391493 )->second ) ),
-		mFPS( 60u ),
+		mAlpha( 0u ),
+		mFrameCount( 0u ),
 		mWindow( window ),
 		mNextSequence( nextSequence )
 	{
+		ASSERT_FALSE( IsInstanciated );
 		*mNextSequence = ::sequence::Seq::NONE;
 		const std::string pathAndFilename( "Images/Opening.png" );
 		if ( false == mTexture.loadFromFile( pathAndFilename, sf::IntRect( 0u, 100u, 800u, 600u ) ) )
 		{
-			//Console_->printError( "Failed to load " + pathAndFilename );
 			global::Console( )->printError( "Failed to load " + pathAndFilename );
 		}
 		mSprite.setTexture( mTexture );
+		IsInstanciated = true;
 	}
 
 	void Opening::update( )
@@ -25,12 +28,11 @@ namespace sequence
 		//
 		// Sequence Transition
 		//
-		static int frameCount = 0;// 궁금함: 이 변수의 위치는 함수 안?  클래스 멤버변수 옆?  어셈블리로 보자.
-		++frameCount;
-		if ( mFPS * mDuration < frameCount )//TODO
+		// FPS change promptly permeates at the next frame, not after a new instance comes.
+		const uint8_t fps = static_cast< uint8_t >( global::VariableTable( ).find( 863391493 )->second );
+		if ( fps * mDuration < mFrameCount )
 		{
 			*mNextSequence = ::sequence::Seq::MAIN_MENU;
-			frameCount = 0;
 		}
 	}
 
@@ -39,10 +41,41 @@ namespace sequence
 		//
 		// Fade In & Out
 		//
-		// IMPORTANT: Overflow intended.
-		static uint8_t frameCount = 0;
-		frameCount += 255u / ( mFPS * mDuration );//TODO
-		mSprite.setColor( sf::Color( 255u, 255u, 255u, frameCount ) );
+		const uint8_t MAX_RGBA = 0xffu;
+		const uint8_t MIN_RGBA = 0x00u;
+		// FPS change promptly permeates at the next frame, not after a new instance comes.
+		const uint8_t fps = static_cast< uint8_t >( global::VariableTable( ).find( 863391493 )->second );
+		const uint8_t diff = MAX_RGBA / ( fps / 2u );
+		const uint16_t brokenPoint = fps * mDuration - 30u;
+		if ( mFrameCount > brokenPoint )
+		{
+			// NOTE: Both 'mAlpha' and 'diff' are 'uint8_t', but 'mAlpha - diff' is 'int', not 'int8_t',
+			// that means 'mAlpha - diff' can be below zero, no underflow happens.
+			if ( mAlpha - diff < MIN_RGBA )
+			{
+				mAlpha = MIN_RGBA;
+			}
+			// Fade Out
+			else
+			{
+				mAlpha -= diff;
+			}
+		}
+		else
+		{
+			// NOTE: Same as above.
+			if ( mAlpha + diff > MAX_RGBA )
+			{
+				mAlpha = MAX_RGBA;
+			}
+			// Fade In
+			else
+			{
+				mAlpha += diff;
+			}
+		}
+		mSprite.setColor( sf::Color( MAX_RGBA, MAX_RGBA, MAX_RGBA, mAlpha ) );
 		mWindow.draw( mSprite );
+		++mFrameCount;
 	}
 }

@@ -1,22 +1,16 @@
 ﻿#pragma hdrstop
 #include <iostream>
 #include <SFML/Graphics.hpp>
-
-#include <Game/sequence/ISequence.h>
-#include <Game/sequence/Opening.h>
-#include <Game/sequence/MainMenu.h>
-//#include <Game/sequence/Common.h>
-
+#include <Game/sequence/Sequence.h>
 #include <Lib/Endian.h>
 #include "ServiceLocator.h"
 
 int main( int argc, char* argv[ ] )
 {
-	///std::unordered_map< hash, int32_t > variableTable;
-	// 궁금: 해시테이블의 reserve란?
+	//궁금: 해시테이블의 reserve란?
 	//variableTable.reserve( 10 );
 
-	auto variableTable = ServiceLocator::VariableTable( );
+	auto& variableTable = ServiceLocator::VariableTable( );
 	variableTable.emplace( 3139364470, 800 ); // winWidth
 	variableTable.emplace( 1251131622, 600 ); // winHeight
 	variableTable.emplace( 3519249062, sf::Style::Close ); // winStyle
@@ -25,6 +19,7 @@ int main( int argc, char* argv[ ] )
 Handling arguments
 =====
 */
+	if ( 1 < argc )
 	{
 		const std::string argHelp0( "--help" );
 		const std::string argHelp1( "--h" );
@@ -93,10 +88,10 @@ Initialization
 */
 	{
 		::util::endian::BindConvertFunc( );
-		// IMPORTANT: This is not the initialization of console, just pass the address of console to ...
+		// !IMPORTANT: This is not the initialization of console, just pass the address of console to ...
 		// ... an EXTERNAL GLOBAL POINTER VARIABLE 'Console_' declared in 'Common.h' in project 'Game.'
-		global::Console = &ServiceLocator::Console;
-		global::VariableTable = &ServiceLocator::VariableTable;
+		::global::Console = &ServiceLocator::Console;
+		::global::VariableTable = &ServiceLocator::VariableTable;
 		// NOTE: '::sequence::Seq' is enum class, not enum, thus expilcit casting is necessary.
 		// For more details, try compiling without explicit casting.
 		variableTable.emplace( 2746935819, static_cast< uint32_t >( ::sequence::Seq::OPENING ) ); // nextSeq
@@ -113,36 +108,13 @@ Window
 							 "Sirtet: the Classic",
 							 variableTable.find( 3519249062 )->second ); // winStyle
 	window.setFramerateLimit( variableTable.find( 863391493 )->second );
-	// IMPORTANT: Now console has been initialized.
+	// !IMPORTANT: Now console has been initialized.
 	auto& console = *ServiceLocator::Console( window.getSize( ) );
-	const auto pNextSequence = reinterpret_cast< ::sequence::Seq* >( &( variableTable.find( 2746935819 )->second ) );
-	std::unique_ptr< ::sequence::ISequence > game;
+	::sequence::Sequence game( window );
 
 	bool isOpen = true;
 	while ( true == isOpen )
 	{
-		switch ( *pNextSequence )
-		{
-#ifdef _DEBUG
-#define ASSERT_NONE( x ) if ( ::sequence::Seq::NONE != x ) __debugbreak( )
-#else
-#define ASSERT_NONE( x ) __assume( true )
-#endif
-			case ::sequence::Seq::OPENING:
-				game.reset( nullptr );
-				game = std::make_unique< ::sequence::Opening >( window, pNextSequence );
-				ASSERT_NONE( *pNextSequence );
-				break;
-			case ::sequence::Seq::MAIN_MENU:
-				game.reset( nullptr );
-				game = std::make_unique < ::sequence::MainMenu >( window, pNextSequence );
-				ASSERT_NONE( *pNextSequence );
-				break;
-			case ::sequence::Seq::NONE:
-				[[ fallthrough ]];
-			default: break;
-		}
-
 		sf::Event event;
 		while ( true == window.pollEvent( event ) )
 		{
@@ -167,10 +139,10 @@ Window
 			}
 		}
 
-		game->update( );
+		game.update( );
 
 		window.clear( );
-		game->draw( );
+		game.draw( );
 		if ( true == console.isVisible( ) )
 		{
 			window.draw( console );
