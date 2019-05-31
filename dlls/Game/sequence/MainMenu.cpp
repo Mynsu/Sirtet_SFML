@@ -5,18 +5,18 @@ namespace sequence
 	bool MainMenu::IsInstanciated = false;
 
 	MainMenu::MainMenu( sf::RenderWindow& window,
-						::sequence::Seq* const nextSequence )
-		: mWindow( window ),
-		mNextSequence( nextSequence )
+						::sequence::Seq* const nextMainSequence )
+		: ::sequence::ISequence( window, nextMainSequence ),
+		mOnIndicator( ::sequence::Seq::NONE )
 	{
 		ASSERT_FALSE( IsInstanciated );
-		const std::string pathAndFilename( "Images/MainMenu.png" );
-		if ( false == mTexture.loadFromFile( pathAndFilename ) )
+		const std::string pathAndFilename( "Images/MainMenu.png" );//TODO: 변수테이블, config 파일에서 불러오기
+		if ( false == iTexture.loadFromFile( pathAndFilename ) )
 		{
 			global::Console( )->printError( "Failed to load " + pathAndFilename );
 		}
-		mSprite.setTexture( mTexture );
-		*mNextSequence = ::sequence::Seq::NONE;
+		iSprite.setTexture( iTexture );
+		*iNextMainSequence = ::sequence::Seq::NONE;
 		IsInstanciated = true;
 	}
 
@@ -24,31 +24,37 @@ namespace sequence
 	{
 		if ( true == sf::Mouse::isButtonPressed( sf::Mouse::Left ) )
 		{
-			*mNextSequence = ::sequence::Seq::SINGLE_PLAY;
+			switch ( mOnIndicator )
+			{
+				case ::sequence::Seq::SINGLE_PLAY:
+					*iNextMainSequence = mOnIndicator;
+					break;
+				default:
+					break;
+			}
 		}
 	}
 
 	void MainMenu::draw( )
 	{
-		mSprite.setTextureRect( sf::IntRect( 0u, 0u, 286u, 120u ) );
-		mSprite.setPosition( sf::Vector2f( 480.f, 400.f ) );
-		mWindow.draw( mSprite );
+		const sf::Vector2f winSize( iWindow.getSize( ) );
+		const sf::Vector2i clipSize( iTexture.getSize( ).x, 120 );//TODO: 파일 읽어서 정하자
+		const sf::Vector2f logoMargin( 80.f, 80.f );
+		iSprite.setPosition( winSize - sf::Vector2f( clipSize ) - logoMargin );
+		iSprite.setTextureRect( sf::IntRect( 0, 0, clipSize.x, clipSize.y ) );
+		iWindow.draw( iSprite );
 
-		const int32_t buttonPositionX = 250;
-		const int32_t buttonPositionY = 100;
-		const int32_t buttonWidth = 286;
-		const int32_t buttonHeight = 120;
-		mSprite.setPosition( sf::Vector2f( sf::Vector2i( buttonPositionX, buttonPositionY ) ) );
-		const sf::Vector2i mousePosition( sf::Mouse::getPosition( mWindow ) );
-		if ( buttonPositionX <= mousePosition.x && mousePosition.x <= buttonPositionX + buttonWidth
-			 && buttonPositionY <= mousePosition.y && mousePosition.y <= buttonPositionY + buttonHeight )
+		iSprite.setPosition( winSize / 3.2f );
+		if ( true == iSprite.getGlobalBounds( ).contains( sf::Vector2f( sf::Mouse::getPosition( iWindow ) ) ) )
 		{
-			mSprite.setTextureRect( sf::IntRect( 0, 225, buttonWidth, buttonHeight ) );
+			mOnIndicator = ::sequence::Seq::SINGLE_PLAY;
+			iSprite.setTextureRect( sf::IntRect( 0, 225, clipSize.x, clipSize.y ) );
 		}
 		else
 		{
-			mSprite.setTextureRect( sf::IntRect( 0, 120, buttonWidth, buttonHeight ) );
+			mOnIndicator = ::sequence::Seq::NONE;
+			iSprite.setTextureRect( sf::IntRect( 0, 120, clipSize.x, clipSize.y ) );
 		}
-		mWindow.draw( mSprite );
+		iWindow.draw( iSprite );
 	}
 }

@@ -21,7 +21,7 @@ int main()
 	char arg[ MAX_ARG_LEN ] = { 0 };
 	while ( true )
 	{
-		// NOTE: Wait until key ENTER pressed, so this isn't busy wait.
+		// NOTE: Wait until key 'ENTER' pressed down. This isn't busy wait.
 		std::cin >> arg;
 		const hash hashVal = generateHash( arg, strlen( arg ) );
 		std::cout << strlen( arg ) << " | " << hashVal << " generated and copied to clipboard.\n";

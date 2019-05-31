@@ -1,7 +1,6 @@
 #pragma once
-///#pragma hdrstop
+#pragma hdrstop
 #include <array>
-#include <string_view>
 #include <functional>
 #include <string>
 #include <SFML/Graphics.hpp>
@@ -26,10 +25,10 @@ public:
 	virtual void handleEvent( const sf::Event& event ) = 0;
 	virtual void print( const std::string& message ) = 0;
 	virtual void printError( const std::string& errorMessage ) = 0;
-	virtual void addCommand( std::string_view command,
+	/*virtual void addCommand( const std::string& command,
 							 std::function< void( void ) > function,
 							 CommandType type,
-							 std::string_view description ) = 0;//미완
+							 const std::string& description ) = 0;*/
 };
 
 class ConsoleLocal final : public IConsole
@@ -48,19 +47,28 @@ public:
 	void handleEvent( const sf::Event& event ) override;
 	void print( const std::string& message );
 	void printError( const std::string& errorMessage );
-	//궁금: 왜 virtual일까?
-	void addCommand( std::string_view command,
+	/*void addCommand( const std::string& command,
 					 std::function< void( void ) > function,
 					 CommandType type,
-					 std::string_view description ) override;//
+					 const std::string& description )
+	{
+		mDictionary.emplace( command, function );
+	};*/
 private:
+	void refresh( )
+	{
+		//TODO
+	}
+
 	bool mVisible;
 	bool mInitialized;
 	std::string mCurrentInput;
-	std::string mCursorForeground; // 28
-	sf::Font mFont; // 76
-	sf::RectangleShape mConsoleWindow; // 292
-	sf::Text mCurrentInputTextField; // 312
+	///std::string mCursorForeground;
+	sf::Font mFont;
+	sf::RectangleShape mConsoleWindow;
+	sf::Text mCurrentInputTextField;
 	sf::Text mCursorForegroundTextField;
 	std::array< sf::Text, 9 > mHistoryTextFields;
+
+	///std::unordered_map< std::string, std::function< void( void ) > > mDictionary;//TODO: 떼어두기
 };

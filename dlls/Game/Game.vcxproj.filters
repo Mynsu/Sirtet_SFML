@@ -27,9 +27,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\sequence\Opening.cpp">
-      <Filter>소스 파일\sequence</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\Common.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
@@ -45,15 +42,18 @@
     <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\sequence\Sequence.cpp">
       <Filter>소스 파일\sequence</Filter>
     </ClCompile>
+    <ClCompile Include="sequence\Intro.cpp">
+      <Filter>소스 파일\sequence</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\sequence\inPlay\Ready.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\Common.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\sequence\ISequence.h">
-      <Filter>헤더 파일\sequence</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\sequence\Opening.h">
       <Filter>헤더 파일\sequence</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\sequence\MainMenu.h">
@@ -67,6 +67,15 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\sequence\Sequence.h">
       <Filter>헤더 파일\sequence</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\sequence\inPlay\ISequence.h">
+      <Filter>헤더 파일\sequence\inPlay</Filter>
+    </ClInclude>
+    <ClInclude Include="sequence\Intro.h">
+      <Filter>헤더 파일\sequence</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\sequence\inPlay\Ready.h">
+      <Filter>헤더 파일\sequence\inPlay</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

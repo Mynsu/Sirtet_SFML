@@ -5,12 +5,12 @@
 
 namespace sequence
 {
-	class GAME_API MainMenu final : public ISequence
+	class GAME_API MainMenu final : public ::sequence::ISequence
 	{
 	public:
 		MainMenu( ) = delete;
 		MainMenu( sf::RenderWindow& window,
-				  ::sequence::Seq* const nextSequence );
+				  ::sequence::Seq* const nextMainSequence );
 		~MainMenu( )
 		{
 			IsInstanciated = false;
@@ -21,9 +21,6 @@ namespace sequence
 	private:
 		// Only single instance can live, two or more can't.
 		static bool IsInstanciated;
-		::sequence::Seq* const mNextSequence;
-		sf::RenderWindow& const mWindow;
-		sf::Texture mTexture;
-		sf::Sprite mSprite;
+		::sequence::Seq mOnIndicator;
 	};
 }

@@ -1,22 +1,37 @@
-//#pragma hdrstop
 #include "Console.h"
-#include <SFML/Graphics.hpp>
 #include <iostream>
+#include <SFML/Graphics.hpp>
+#include "ServiceLocator.h"
 
-ConsoleLocal::ConsoleLocal( ) : mVisible( true ),
+ConsoleLocal::ConsoleLocal( ) : mVisible( false ),
 								mInitialized( false ),
 								mCurrentInput( "_" )
-								///mCursorForeground( "_" )
+								//mCursorForeground( "_" )
 {
-	mFont.loadFromFile( "Fonts/AGENCYB.TTF" );
+	try
+	{
+		const std::string scriptPathNName( "Scripts/Console.lua" );
+		const std::string varName0( "Font" );
+		const std::string varName1( "Visible" );
+		const auto values = ServiceLocator::LoadFromScript( scriptPathNName, varName0, varName1 );
+		mFont.loadFromFile( std::get< std::string >( values.at( varName0 ) ) );//궁금:std::string으로 복사해서 get하는 거 아니겠지?
+		if ( const auto& it = values.find( varName1 ); values.cend( ) != it )
+		{
+			mVisible = std::get< bool >( it->second );
+		}
+	}
+	catch ( std::runtime_error& )
+	{ }
 	mCurrentInputTextField.setFont( mFont );
 	mCurrentInputTextField.setString( mCurrentInput );
-	///mCursorForegroundTextField.setFont( mFont );
-	///mCursorForegroundTextField.setString( mCursorForeground );
+	//mCursorForegroundTextField.setFont( mFont );
+	//mCursorForegroundTextField.setString( mCursorForeground );
 	for ( auto& it : mHistoryTextFields )
 	{
 		it.setFont( mFont );
 	}
+
+	///addCommand( "refresh", &ConsoleLocal::refresh, CommandType::SYSTEM, "Reload console's new font, vars, etc." );
 }
 
 void ConsoleLocal::init( const sf::Vector2u& winSize )
@@ -31,7 +46,7 @@ void ConsoleLocal::init( const sf::Vector2u& winSize )
 	const auto fontSize = mCurrentInputTextField.getCharacterSize( );
 	sf::Vector2f textFieldPos( margin, winSize.y - margin - fontSize );
 	mCurrentInputTextField.setPosition( textFieldPos );
-	///mCursorForegroundTextField.setPosition( textFieldPos );
+	//mCursorForegroundTextField.setPosition( textFieldPos );
 	for ( auto& it : mHistoryTextFields ) //cache
 	{
 		textFieldPos -= sf::Vector2f( sf::Vector2u( 0u, fontSize ) );
@@ -80,11 +95,11 @@ void ConsoleLocal::handleEvent( const sf::Event& event )
 				mCurrentInput.pop_back( );
 				mCurrentInput += static_cast< char >( input );
 				mCurrentInput += '_';
-				///mCursorForeground.pop_back( );
-				///mCursorForeground += ' ';
-				///mCursorForeground += '_';
+				//mCursorForeground.pop_back( );
+				//mCursorForeground += ' ';
+				//mCursorForeground += '_';
 				mCurrentInputTextField.setString( mCurrentInput );
-				///mCursorForegroundTextField.setString( mCursorForeground );
+				//mCursorForegroundTextField.setString( mCursorForeground );
 			}
 		}
 		else if ( sf::Event::KeyPressed == event.type )
@@ -101,9 +116,9 @@ void ConsoleLocal::handleEvent( const sf::Event& event )
 				//mHistoryTextFields[ 0 ].setString( mCurrentInput );
 				print( mCurrentInput );
 				mCurrentInput.clear( );
-				///mCursorForeground.clear( );
+				//mCursorForeground.clear( );
 				mCurrentInputTextField.setString( "" );
-				///mCursorForegroundTextField.setString( '_' );
+				//mCursorForegroundTextField.setString( '_' );
 			}
 			else if ( sf::Keyboard::Escape == event.key.code )
 			{
@@ -111,17 +126,17 @@ void ConsoleLocal::handleEvent( const sf::Event& event )
 			}
 			else if ( sf::Keyboard::Backspace == event.key.code )
 			{
-				///if ( false == mCurrentInput.empty( ) )
+				//if ( false == mCurrentInput.empty( ) )
 				if ( 1 != mCurrentInput.size( ) )
 				{
 					mCurrentInput.pop_back( );
 					mCurrentInput.pop_back( );
 					mCurrentInput += '_';
-					///mCursorForeground.pop_back( );
-					///mCursorForeground.pop_back( );
-					///mCursorForeground += '_';
+					//mCursorForeground.pop_back( );
+					//mCursorForeground.pop_back( );
+					//mCursorForeground += '_';
 					mCurrentInputTextField.setString( mCurrentInput );
-					///mCursorForegroundTextField.setString( mCursorForeground );
+					//mCursorForegroundTextField.setString( mCursorForeground );
 				}
 			}
 		}
@@ -152,21 +167,14 @@ void ConsoleLocal::printError( const std::string& errorMessage )
 		mHistoryTextFields[ i ].setString( str );
 	}
 	mHistoryTextFields[ 0 ].setString( errorMessage );
-	// REASON: An error seldom occurs, so if-branch has been omited.
+	// NOTE: An error seldom occurs,
+	// thus checking out has been passed away for the performance.
 	///if ( sf::Color::Red != mHistoryTextFields[ 0 ].getFillColor( ) )
 	///{
 		mHistoryTextFields[ 0 ].setFillColor( sf::Color::Red );
 	///}
 
-	// REASON: I prefer keeping performance to saving memory.
-	// Duplicated codes seems tolerable rather than context-switch cost.
+	// NOTE: Encouraging performance is prior to saving memory in modern game dev.
+	// In this case, Duplicate codes seems tolerable rather than context-switch cost.
 	///print( "ERROR: " + errorMessage );
-}
-
-void ConsoleLocal::addCommand( std::string_view command,
-							   std::function<void( void )> function,
-							   CommandType type,
-							   std::string_view description )
-{
-
 }

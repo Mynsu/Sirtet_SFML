@@ -5,13 +5,15 @@
 #include <Lib/Endian.h>
 #include "ServiceLocator.h"
 
+//TODO: config 파일 만들고 읽어오기
+
 int main( int argc, char* argv[ ] )
 {
 	//궁금: 해시테이블의 reserve란?
 	//variableTable.reserve( 10 );
 
 	auto& variableTable = ServiceLocator::VariableTable( );
-	variableTable.emplace( 3139364470, 800 ); // winWidth
+	variableTable.emplace( 3139364470, 800 ); // winWidth //TODO: 이 3형제 필요 없을 듯
 	variableTable.emplace( 1251131622, 600 ); // winHeight
 	variableTable.emplace( 3519249062, sf::Style::Close ); // winStyle
 /*
@@ -92,10 +94,8 @@ Initialization
 		// ... an EXTERNAL GLOBAL POINTER VARIABLE 'Console_' declared in 'Common.h' in project 'Game.'
 		::global::Console = &ServiceLocator::Console;
 		::global::VariableTable = &ServiceLocator::VariableTable;
-		// NOTE: '::sequence::Seq' is enum class, not enum, thus expilcit casting is necessary.
-		// For more details, try compiling without explicit casting.
-		variableTable.emplace( 2746935819, static_cast< uint32_t >( ::sequence::Seq::OPENING ) ); // nextSeq
-		variableTable.emplace( 863391493, 60u ); // fps
+		variableTable.emplace( 1189622459, 60u ); // foreFPS
+		variableTable.emplace( 3623922771, 30u ); // backFPS
 	}
 
 /*
@@ -107,11 +107,11 @@ Window
 											variableTable.find( 1251131622 )->second ), // winHeight
 							 "Sirtet: the Classic",
 							 variableTable.find( 3519249062 )->second ); // winStyle
-	window.setFramerateLimit( variableTable.find( 863391493 )->second );
+	window.setFramerateLimit( variableTable.find( 1189622459 )->second ); // foreFPS
 	// !IMPORTANT: Now console has been initialized.
 	auto& console = *ServiceLocator::Console( window.getSize( ) );
 	::sequence::Sequence game( window );
-
+	
 	bool isOpen = true;
 	while ( true == isOpen )
 	{
@@ -132,11 +132,21 @@ Window
 					}
 				}
 			}
-		
+			else if ( sf::Event::LostFocus == event.type )
+			{
+				window.setFramerateLimit( variableTable.find( 3623922771 )->second ); // backFPS
+			}
+			else if ( sf::Event::GainedFocus == event.type )
+			{
+				window.setFramerateLimit( variableTable.find( 1189622459 )->second ); // foreFPS
+			}
+					
 			// Console
 			{
 				console.handleEvent( event );
 			}
+
+			
 		}
 
 		game.update( );
