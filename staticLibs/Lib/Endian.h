@@ -2,15 +2,15 @@
 
 namespace util::endian
 {
-	using byte = char;
-	using word = unsigned short;
-	using dword = int;
+	using Byte = char;
+	using Word = unsigned short;
+	using Dword = unsigned int; //int
 
-	extern dword ( *ConvertToLittle )( dword arg );
-	extern dword ( *ConvertToBig )( dword arg );
+	extern Dword ( *ConvertToLittle )( Dword arg );
+	extern Dword ( *ConvertToBig )( Dword arg );
 
-	dword _Convert( dword arg );
-	dword _NoAction( dword arg );
+	Dword _Convert( Dword arg );
+	Dword _NoAction( Dword arg );
 	//궁금함: 에러 왜?
 	/*{
 		return arg;

@@ -19,8 +19,15 @@ namespace sequence
 		void update( );
 		void draw( );
 	private:
-		// Only single instance can live, two or more can't.
+		// A single instance can live at a time, two or more can't.
+		// NOTE: Singleton pattern and service locator pattern also give this,
+		//		 but global access isn't necessary here.
 		static bool IsInstanciated;
 		::sequence::Seq mOnIndicator;
+		::sequence::Seq* const mNextMainSequence;
+		sf::RenderWindow& mWindow;
+		sf::Vector2u mSpriteClipSize;
+		sf::Texture mTexture;
+		sf::Sprite mSprite;
 	};
 }

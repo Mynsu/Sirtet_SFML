@@ -6,6 +6,7 @@
 #include "ServiceLocator.h"
 
 //TODO: config 파일 만들고 읽어오기
+//TODO: 개발 완료 후 auto 쓰는 대신 타입 명시, 브랜치에 커밋
 
 int main( int argc, char* argv[ ] )
 {
@@ -13,12 +14,20 @@ int main( int argc, char* argv[ ] )
 	//variableTable.reserve( 10 );
 
 	auto& variableTable = ServiceLocator::VariableTable( );
-	variableTable.emplace( 3139364470, 800 ); // winWidth //TODO: 이 3형제 필요 없을 듯
-	variableTable.emplace( 1251131622, 600 ); // winHeight
-	variableTable.emplace( 3519249062, sf::Style::Close ); // winStyle
+	{
+		constexpr HashedKey key4 = util::hash::Digest( "debugLog" );
+		variableTable.emplace( key4, true );
+		//TODO: 이 3형제 필요 없을 듯
+		constexpr HashedKey key0 = util::hash::Digest( "winWidth" );
+		variableTable.emplace( key0, 800 );
+		constexpr HashedKey key1 = util::hash::Digest( "winHeight" );
+		variableTable.emplace( key1, 600 );
+		constexpr HashedKey key2 = util::hash::Digest( "winStyle" );
+		variableTable.emplace( key2, sf::Style::Close );
+	}
 /*
 =====
-Handling arguments
+Handling parameters on excution
 =====
 */
 	if ( 1 < argc )
@@ -31,6 +40,7 @@ Handling arguments
 		for ( int i = 1; i < argc; ++i )
 		{
 			const char* cur = argv[ i ];
+			// When "--help" or "--h",
 			if ( 0 == argHelp0.compare( cur ) || 0 == argHelp1.compare( cur ) )
 			{
 				std::cout << "Here are case-sensitive parameters available:\n";
@@ -40,6 +50,7 @@ Handling arguments
 
 				return 0;
 			}
+			// When "--WS",
 			else if ( 0 == argWinSize.compare( cur ) )
 			{
 				const int subArg0 = std::atoi( argv[ ++i ] );
@@ -55,7 +66,8 @@ Handling arguments
 					std::cerr << "Error: Too narrow width.\n";
 					return -1;
 				}
-				variableTable.find( 3139364470 )->second = subArg0;
+				constexpr HashedKey key0 = util::hash::Digest( "winWidth" );
+				variableTable.find( key0 )->second = subArg0;
 
 				const int subArg1 = std::atoi( argv[ ++i ] );
 				// Exception: When NON-number characters has been input,
@@ -70,12 +82,16 @@ Handling arguments
 					std::cerr << "Error: Too low height.\n";
 					return -1;
 				}
-				variableTable.find( 1251131622 )->second = subArg1;
+				constexpr HashedKey key1 = util::hash::Digest( "winHeight" );
+				variableTable.find( key1 )->second = subArg1;
 			}
+			// When "--FS",
 			else if ( 0 == argFullscreen.compare( cur ) )
 			{
-				variableTable.find( 3519249062 )->second |= sf::Style::Fullscreen;
+				constexpr HashedKey key = util::hash::Digest( "winStyle" );
+				variableTable.find( key )->second |= sf::Style::Fullscreen;
 			}
+			// When an undefined parameter has been passed,
 			else
 			{
 				std::cerr << "Error: There is no such parameter.\n";
@@ -85,17 +101,17 @@ Handling arguments
 	}
 /*
 =====
-Initialization
+Lazy Initialization
 =====
 */
 	{
 		::util::endian::BindConvertFunc( );
-		// !IMPORTANT: This is not the initialization of console, just pass the address of console to ...
-		// ... an EXTERNAL GLOBAL POINTER VARIABLE 'Console_' declared in 'Common.h' in project 'Game.'
 		::global::Console = &ServiceLocator::Console;
 		::global::VariableTable = &ServiceLocator::VariableTable;
-		variableTable.emplace( 1189622459, 60u ); // foreFPS
-		variableTable.emplace( 3623922771, 30u ); // backFPS
+		constexpr HashedKey key0 = util::hash::Digest( "foreFPS" );
+		variableTable.emplace( key0, 60u );
+		constexpr HashedKey key1 = util::hash::Digest( "backFPS" );
+		variableTable.emplace( key1, 30u );
 	}
 
 /*
@@ -103,17 +119,21 @@ Initialization
 Window
 =====
 */
-	sf::RenderWindow window( sf::VideoMode( variableTable.find( 3139364470 )->second, // winWidth
-											variableTable.find( 1251131622 )->second ), // winHeight
+	constexpr HashedKey key0 = util::hash::Digest( "winWidth" );
+	constexpr HashedKey key1 = util::hash::Digest( "winHeight" );
+	constexpr HashedKey key2 = util::hash::Digest( "winStyle" );
+	sf::RenderWindow window( sf::VideoMode( variableTable.find( key0 )->second,
+											variableTable.find( key1 )->second ),
 							 "Sirtet: the Classic",
-							 variableTable.find( 3519249062 )->second ); // winStyle
-	window.setFramerateLimit( variableTable.find( 1189622459 )->second ); // foreFPS
+							 variableTable.find( key2 )->second );
+	constexpr HashedKey key3 = util::hash::Digest( "foreFPS" );
+	window.setFramerateLimit( variableTable.find( key3 )->second );
 	// !IMPORTANT: Now console has been initialized.
-	auto& console = *ServiceLocator::Console( window.getSize( ) );
+	auto& console = *ServiceLocator::ConsoleWithInit( window.getSize( ) );
 	::sequence::Sequence game( window );
 	
 	bool isOpen = true;
-	while ( true == isOpen )
+	do
 	{
 		sf::Event event;
 		while ( true == window.pollEvent( event ) )
@@ -130,23 +150,26 @@ Window
 					{
 						isOpen = false;
 					}
+					// else ... is dealt with in 'console.handleEvent( event ).'
 				}
 			}
 			else if ( sf::Event::LostFocus == event.type )
 			{
-				window.setFramerateLimit( variableTable.find( 3623922771 )->second ); // backFPS
+				constexpr HashedKey key4 = util::hash::Digest( "backFPS" );
+				window.setFramerateLimit( variableTable.find( key4 )->second );
 			}
 			else if ( sf::Event::GainedFocus == event.type )
 			{
-				window.setFramerateLimit( variableTable.find( 1189622459 )->second ); // foreFPS
+				window.setFramerateLimit( variableTable.find( key3 )->second );
 			}
 					
 			// Console
-			{
-				console.handleEvent( event );
-			}
+			console.handleEvent( event );
+		}
 
-			
+		if ( false == isOpen )
+		{
+			break;
 		}
 
 		game.update( );
@@ -159,6 +182,7 @@ Window
 		}
 		window.display( );
 	}
+	while ( true );
 
 /*
 =====

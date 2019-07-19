@@ -1,0 +1,1 @@
+Sprite = "Images/MainMenu.png"

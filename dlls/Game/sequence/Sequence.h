@@ -9,6 +9,7 @@ namespace sequence
 	class GAME_API Sequence
 	{
 	public:
+		Sequence( ) = delete;
 		Sequence( sf::RenderWindow& window );
 		~Sequence( )
 		{
@@ -19,18 +20,19 @@ namespace sequence
 		void update( );
 		void draw( );
 	private:
-		// Be careful of what 'MainSequenceType' is.  It's not enum class.
-		template < typename MainSequenceType >
+		// Be careful of what 'MainSequenceType' is.  It's not enum class type.
+		template < typename MainSequenceType,
+			std::enable_if_t< std::is_base_of_v< ::sequence::ISequence, std::decay_t< MainSequenceType > > >* = nullptr >
 		void moveTo( )
 		{
-			static_assert( std::is_base_of< ::sequence::ISequence, MainSequenceType>( ) );
 			mCurrentSequence.reset( nullptr );
 			mCurrentSequence = std::make_unique< MainSequenceType >( mWindow, mNextMainSequence );
 #ifdef _DEBUG
 			if ( ::sequence::Seq::NONE != *mNextMainSequence )
 			{
 				const std::string typeName( typeid( MainSequenceType ).name( ) );
-				::global::Console( )->printError( "Sequence Transition Warning: " + typeName );
+				::global::Console( )->printError( ErrorLevel::WARNING,
+												  "Sequence transition just after " + typeName );
 				*mNextMainSequence = ::sequence::Seq::NONE;
 			}
 #endif

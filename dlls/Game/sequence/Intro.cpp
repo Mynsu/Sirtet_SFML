@@ -4,24 +4,52 @@ namespace sequence
 {
 	bool Intro::IsInstanciated = false;
 
-	Intro::Intro( sf::RenderWindow& window
-					  , ::sequence::Seq* const nextMainSequence )
-		: ::sequence::ISequence( window, nextMainSequence ),
+	Intro::Intro( sf::RenderWindow& window, ::sequence::Seq* const nextMainSequence )
+		: mNextMainSequence( nextMainSequence ),
+		mWindow( window ),
 		mDuration( 2u ),
 		mAlpha( 0u ),
 		mFrameCount( 0u )
 	{
 		ASSERT_FALSE( IsInstanciated );
-		*iNextMainSequence = ::sequence::Seq::NONE;
-		const std::string pathAndFilename( "Images/Intro.png" );//TODO: 변수테이블, config 파일에서 불러오기
-		if ( false == iTexture.loadFromFile( pathAndFilename ) )///, sf::IntRect( 0u, 100u, 800u, 600u ) ) )
+		// Like setting car's gear neutral
+		*mNextMainSequence = ::sequence::Seq::NONE;
+		const std::string scriptPathNName( "Scripts/Intro.lua" );
+		const std::string varName( "Image" );
+		const auto table = ::ServiceLocator::LoadFromScript( scriptPathNName, varName );
+		// When the variable 'Image' exists in the script,
+		if ( const auto& it = table.find( varName ); table.cend( ) != it )
 		{
-			global::Console( )->printError( "Failed to load " + pathAndFilename );
+			//TODO
+			///, sf::IntRect( 0u, 100u, 800u, 600u ) ) )
+			if ( false == mTexture.loadFromFile( std::get< std::string >( it->second ) ) )
+			{
+				// When the value has an odd path, or there's no such file,
+				::global::Console( )->printError( ErrorLevel::CRITICAL, "File not found: " + varName + " in " + scriptPathNName );
+#ifdef _DEBUG
+				__debugbreak( );
+#endif
+			}
 		}
-		iSprite.setTexture( iTexture );
-		const sf::Vector2i textureSize( iTexture.getSize( ) );
-		const sf::Vector2i winSize( window.getSize( ) );
-		iSprite.setTextureRect( sf::IntRect( ( textureSize - winSize ) / 2, winSize ) );
+		// When the variable 'Image' doesN'T exist in the script,
+		else
+		{
+			::global::Console( )->printScriptError( ErrorLevel::WARNING, varName, scriptPathNName );
+			const std::string defaultFilePathNName( "Images/Intro.png" );
+			if ( false == mTexture.loadFromFile( defaultFilePathNName ) )
+			{
+				// When there isn't the default file,
+				::global::Console( )->printError( ErrorLevel::CRITICAL, "File not found: " + defaultFilePathNName );
+#ifdef _DEBUG
+				__debugbreak( );
+#endif
+			}
+		}
+		mSprite.setTexture( mTexture );
+		const sf::Vector2i winSize( mWindow.getSize( ) );
+		mSprite.setTextureRect( sf::IntRect( 0, 0, winSize.x, winSize.y ) );
+		// NOTE: Setting scale makes an image distorted and a bunch of bricks.
+		///mSprite.scale( scaleWidthRatio, scaleWidthRatio );
 		IsInstanciated = true;
 	}
 
@@ -31,10 +59,11 @@ namespace sequence
 		// Sequence Transition
 		//
 		// FPS change promptly permeates at the next frame, not after a new instance comes.
-		const uint8_t fps = static_cast< uint8_t >( global::VariableTable( ).find( 1189622459 )->second ); // foreFPS
+		constexpr HashedKey key = ::util::hash::Digest( "foreFPS" );
+		const uint16_t fps = static_cast< uint16_t >( ::global::VariableTable( ).find( key )->second );
 		if ( fps * mDuration < mFrameCount )
 		{
-			*iNextMainSequence = ::sequence::Seq::MAIN_MENU;
+			*mNextMainSequence = ::sequence::Seq::MAIN_MENU;
 		}
 	}
 
@@ -46,7 +75,8 @@ namespace sequence
 		const uint8_t MAX_RGBA = 0xffu;
 		const uint8_t MIN_RGBA = 0x00u;
 		// FPS change promptly permeates at the next frame, not after a new instance comes.
-		const uint8_t fps = static_cast< uint8_t >( global::VariableTable( ).find( 1189622459 )->second ); // foreFPS
+		constexpr HashedKey key = ::util::hash::Digest( "foreFPS" );
+		const uint16_t fps = static_cast< uint16_t >( ::global::VariableTable( ).find( key )->second );
 		const uint8_t diff = MAX_RGBA / ( fps / 2u );
 		const uint16_t brokenPoint = fps * mDuration - 30u;
 		if ( mFrameCount > brokenPoint )
@@ -76,8 +106,8 @@ namespace sequence
 				mAlpha += diff;
 			}
 		}
-		iSprite.setColor( sf::Color( MAX_RGBA, MAX_RGBA, MAX_RGBA, mAlpha ) );
-		iWindow.draw( iSprite );
+		mSprite.setColor( sf::Color( MAX_RGBA, MAX_RGBA, MAX_RGBA, mAlpha ) );
+		mWindow.draw( mSprite );
 		++mFrameCount;
 	}
 }

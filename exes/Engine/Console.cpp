@@ -2,26 +2,59 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include "ServiceLocator.h"
+#include <Game/Common.h>//궁금: 더 좋은 방법 없을까?
 
-ConsoleLocal::ConsoleLocal( ) : mVisible( false ),
-								mInitialized( false ),
+ConsoleLocal::ConsoleLocal( ) : mInitialized( false ),
+								mVisible( false ),
 								mCurrentInput( "_" )
 								//mCursorForeground( "_" )
 {
+#ifndef _DEBUG
 	try
+#endif
 	{
 		const std::string scriptPathNName( "Scripts/Console.lua" );
 		const std::string varName0( "Font" );
-		const std::string varName1( "Visible" );
-		const auto values = ServiceLocator::LoadFromScript( scriptPathNName, varName0, varName1 );
-		mFont.loadFromFile( std::get< std::string >( values.at( varName0 ) ) );//궁금:std::string으로 복사해서 get하는 거 아니겠지?
-		if ( const auto& it = values.find( varName1 ); values.cend( ) != it )
+		const std::string varName1( "VisibleOnStart" );
+		const auto table = ServiceLocator::LoadFromScript( scriptPathNName, varName0, varName1 );
+		// When the variable 'Font' exists in the script,
+		if ( const auto& it = table.find( varName0 ); table.cend( ) != it )
+		{
+			if ( false == mFont.loadFromFile( std::get< std::string >( it->second ) ) )
+			{
+				// When the value has an odd path, or there's no such file,
+				printError( ErrorLevel::CRITICAL, "File not found: " + varName0 + " in " + scriptPathNName );
+#ifdef _DEBUG
+				__debugbreak( );
+#endif
+			}
+		}
+		// When the variable 'Font' doesN'T exist in the script,
+		else
+		{
+			printScriptError( ErrorLevel::WARNING, varName0, scriptPathNName );
+			const std::string defaultFilePathNName( "Fonts/AGENCYB.TTF" );
+			if ( false == mFont.loadFromFile( defaultFilePathNName ) )
+			{
+				// When there isn't the default file,
+				printError( ErrorLevel::CRITICAL, "File not found: " + defaultFilePathNName );
+#ifdef _DEBUG
+				__debugbreak( );
+#endif
+			}
+		}
+		// When the variable 'VisibleOnStart' exists in the script,
+		if ( const auto& it = table.find( varName1 ); table.cend( ) != it )
 		{
 			mVisible = std::get< bool >( it->second );
 		}
 	}
+#ifndef _DEBUG
 	catch ( std::runtime_error& )
-	{ }
+	{
+		// Nothing to do
+	}
+#endif
 	mCurrentInputTextField.setFont( mFont );
 	mCurrentInputTextField.setString( mCurrentInput );
 	//mCursorForegroundTextField.setFont( mFont );
@@ -38,13 +71,14 @@ void ConsoleLocal::init( const sf::Vector2u& winSize )
 {
 	const sf::Vector2f _winSize( winSize );
 	const float margin = 30.f;
-	const float consoleRatio = 2.f;
-	mConsoleWindow.setPosition( sf::Vector2f( margin, _winSize.y / consoleRatio - margin ) );
-	mConsoleWindow.setSize( _winSize / consoleRatio );
+	const float consoleRatio = 0.5f;
+	mConsoleWindow.setPosition( sf::Vector2f( margin, _winSize.y*consoleRatio-margin ) );
+	mConsoleWindow.setSize( sf::Vector2f( _winSize.x-margin*2, _winSize.y*consoleRatio ) );
 	mConsoleWindow.setOutlineColor( sf::Color::White );
+	mConsoleWindow.setOutlineThickness( 0.2f );
 	mConsoleWindow.setFillColor( sf::Color::Blue );
 	const auto fontSize = mCurrentInputTextField.getCharacterSize( );
-	sf::Vector2f textFieldPos( margin, winSize.y - margin - fontSize );
+	sf::Vector2f textFieldPos( margin+5.f, _winSize.y - margin - static_cast<float>( fontSize ) );
 	mCurrentInputTextField.setPosition( textFieldPos );
 	//mCursorForegroundTextField.setPosition( textFieldPos );
 	for ( auto& it : mHistoryTextFields ) //cache
@@ -65,7 +99,7 @@ void ConsoleLocal::draw( sf::RenderTarget& target, sf::RenderStates states ) con
 	target.draw( mConsoleWindow );
 	target.draw( mCurrentInputTextField );
 	///target.draw( mCursorForegroundTextField );
-	for ( const auto it : mHistoryTextFields ) //cache
+	for ( const auto& it : mHistoryTextFields )
 	{
 		target.draw( it );
 	}
@@ -143,38 +177,19 @@ void ConsoleLocal::handleEvent( const sf::Event& event )
 	}
 }
 
-void ConsoleLocal::print( const std::string& message )
+void ConsoleLocal::print( const std::string& message, sf::Color color )
 {
-	auto size = mHistoryTextFields.size( );
-	for ( size_t i = size - 1; i != 0; --i )
+	// Push up the past messages
+	for ( size_t i = mHistoryTextFields.size( ) - 1; i != 0; --i )
 	{
 		const auto& str = mHistoryTextFields[ i - 1 ].getString( );
 		mHistoryTextFields[ i ].setString( str );
 	}
+	// Print the current message.
 	mHistoryTextFields[ 0 ].setString( message );
-	if ( sf::Color::White != mHistoryTextFields[ 0 ].getFillColor( ) )
+	// Set font color suitable for an normal, non-error message
+	if ( color != mHistoryTextFields[ 0 ].getFillColor( ) )
 	{
-		mHistoryTextFields[ 0 ].setFillColor( sf::Color::White );
+		mHistoryTextFields[ 0 ].setFillColor( color );
 	}
-}
-
-void ConsoleLocal::printError( const std::string& errorMessage )
-{
-	auto size = mHistoryTextFields.size( );
-	for ( size_t i = size - 1; i != 0; --i )
-	{
-		const auto& str = mHistoryTextFields[ i - 1 ].getString( );
-		mHistoryTextFields[ i ].setString( str );
-	}
-	mHistoryTextFields[ 0 ].setString( errorMessage );
-	// NOTE: An error seldom occurs,
-	// thus checking out has been passed away for the performance.
-	///if ( sf::Color::Red != mHistoryTextFields[ 0 ].getFillColor( ) )
-	///{
-		mHistoryTextFields[ 0 ].setFillColor( sf::Color::Red );
-	///}
-
-	// NOTE: Encouraging performance is prior to saving memory in modern game dev.
-	// In this case, Duplicate codes seems tolerable rather than context-switch cost.
-	///print( "ERROR: " + errorMessage );
 }

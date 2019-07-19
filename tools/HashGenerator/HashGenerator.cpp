@@ -2,18 +2,18 @@
 #include <string>
 #include <windows.h> // HGLOBAL, GlobalAlloc( ... ), GlobalLock( ... ), GlobalUnlock( ... )
 
-using hash = uint32_t;
+using HashValue = uint32_t;
 constexpr size_t MAX_ARG_LEN = 15;
 
-const hash generateHash( const char* arg, size_t len )
+const HashValue digest( const char* arg, size_t len )
 {
-	hash retHash = 0u;
+	HashValue retVal = 0u;
 	for ( size_t i = 0; i != len; ++i )
 	{
-		retHash += 65599u * retHash + arg[ i ];
+		retVal += 65599u * retVal + arg[ i ];
 	}
 
-	return retHash ^ ( retHash >> 16 );
+	return retVal ^ ( retVal >> 16 );
 }
 
 int main()
@@ -21,9 +21,9 @@ int main()
 	char arg[ MAX_ARG_LEN ] = { 0 };
 	while ( true )
 	{
-		// NOTE: Wait until key 'ENTER' pressed down. This isn't busy wait.
+		// NOTE: Wait until key 'ENTER' is pressed down. This isn't busy wait.
 		std::cin >> arg;
-		const hash hashVal = generateHash( arg, strlen( arg ) );
+		const HashValue hashVal = digest( arg, strlen( arg ) );
 		std::cout << strlen( arg ) << " | " << hashVal << " generated and copied to clipboard.\n";
 		// Copy to clipboard
 		const std::string str( std::to_string( hashVal ) );

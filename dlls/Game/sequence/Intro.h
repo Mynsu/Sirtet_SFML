@@ -19,7 +19,13 @@ namespace sequence
 		void update( ) override;
 		void draw( ) override;
 	private:
+		::sequence::Seq* const mNextMainSequence;
+		sf::RenderWindow& mWindow;
+		sf::Texture mTexture;
+		sf::Sprite mSprite;
 		// A single instance can live at a time, two or more can't.
+		// NOTE: Singleton pattern and service locator pattern also give this,
+		//		 but global access isn't necessary here.
 		static bool IsInstanciated;
 		// NOTE: 'uint8_t' and 'uint16_t' have been used just for saving memory, which are less than 'int.'
 		uint8_t mDuration;

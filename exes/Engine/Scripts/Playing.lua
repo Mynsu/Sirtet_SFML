@@ -1,0 +1,1 @@
+PlayerPanel = { x = 80, y = 80, width = 300, height = 440 }

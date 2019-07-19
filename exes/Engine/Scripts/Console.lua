@@ -1,2 +1,2 @@
 Font = "Fonts/AGENCYB.TTF"
-Visible = true
+VisibleOnStart = true

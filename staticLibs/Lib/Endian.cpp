@@ -5,23 +5,27 @@ namespace util
 {
 	namespace endian
 	{
-		dword( *ConvertToLittle )( dword arg );
-		dword( *ConvertToBig )( dword arg );
+		Dword( *ConvertToLittle )( Dword arg );
+		Dword( *ConvertToBig )( Dword arg );
 
-		dword _Convert( dword arg )
+		Dword _Convert( Dword arg )
 		{
-			dword retVal = 0;
-			unsigned int mask = 0xff;
-			for ( int i = 1; i < 17; ++i )
-			{
-				retVal |= ( ( arg & mask ) << ( 32 - 2 * i ) );
-				arg >>= 2 * i;
-			}
+			using Size = char;
+			Size numShift = static_cast< Size >( sizeof( Dword ) * 8u - 8u );
+			Dword mask = 0xff;
+			Byte temp = arg & mask;
+			arg |= ( arg >> numShift ) & mask;
+			arg |= temp << numShift;
+			mask <<= 8;
+			temp = arg & mask;
+			numShift -= 16u;
+			arg |= ( arg >> numShift ) & mask;
+			arg |= temp << numShift;
 
-			return retVal;
+			return arg;
 		}
 
-		dword _NoAction( dword arg )
+		Dword _NoAction( Dword arg )
 		{
 			return arg;
 		}
@@ -30,17 +34,18 @@ namespace util
 		{
 			union
 			{
-				byte half;
-				word whole;
+				Byte half;
+				Word whole;
 			} test;
 
 			test.whole = 1;
-			// When now on little endian,
+			// When now on LITTLE endian,
 			if ( 1 == test.half )
 			{
 				ConvertToBig = _Convert;
 				ConvertToLittle = _NoAction;
 			}
+			// When now on BIG endian,
 			else
 			{
 				ConvertToBig = _NoAction;
@@ -49,6 +54,7 @@ namespace util
 		}
 	}
 
+	//TODO: 오브젝트 풀 구현, 다른 파일에서.
 	namespace memory
 	{
 		//bool OccupyMemPool( byte** ptr, size_t size )

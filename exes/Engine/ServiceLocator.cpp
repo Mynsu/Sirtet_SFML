@@ -3,4 +3,4 @@
 std::unique_ptr< IConsole > ServiceLocator::_Console
 	= std::make_unique< ConsoleLocal >( );
 
-std::unordered_map< hashValue_t, dword > ServiceLocator::variableTable;
+std::unordered_map< HashedKey, Dword > ServiceLocator::_VariableTable;

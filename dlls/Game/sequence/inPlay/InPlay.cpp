@@ -1,23 +1,31 @@
 #include "InPlay.h"
 #include "Ready.h"
+#include "Playing.h"
 
 bool sequence::inPlay::InPlay::IsInstanciated = false;
 
 sequence::inPlay::InPlay::InPlay( sf::RenderWindow& window,
 							  ::sequence::Seq* const nextMainSequence )
-	: ::sequence::ISequence( window, nextMainSequence )
+	: mWindow( window ),
+	mNextMainSequence( nextMainSequence )
 {
 	ASSERT_FALSE( IsInstanciated );
-	*iNextMainSequence = ::sequence::Seq::NONE;
+	*mNextMainSequence = ::sequence::Seq::NONE;
+
 	auto& varT = ::global::VariableTable( );
-	varT.emplace( 1020163455, static_cast< uint32_t >( ::sequence::inPlay::Seq::READY ) ); // nextInPlaySeq
-	mNextInPlaySequence = reinterpret_cast< ::sequence::inPlay::Seq* >( &varT.find( 1020163455 )->second ); // nextInPlaySeq
-	const std::string pathAndFilename( "Images/InPlay.png" );
-	if ( false == iTexture.loadFromFile( pathAndFilename ) )
+	constexpr HashedKey key = ::util::hash::Digest( "nextInPlaySeq" );
+	varT.emplace( key, static_cast< Dword >( ::sequence::inPlay::Seq::READY ) );
+	if ( const auto& it = varT.find( key ); varT.cend( ) != it )
 	{
-		::global::Console( )->printError( "Failed to load " + pathAndFilename );
+		mNextInPlaySequence = reinterpret_cast< ::sequence::inPlay::Seq* >( &it->second );
 	}
-	iSprite.setTexture( iTexture );
+#ifdef _DEBUG
+	else
+	{
+		__debugbreak( );
+	}
+#endif
+	mBackgroundRect.setSize( sf::Vector2f( mWindow.getSize( ) ) );
 	IsInstanciated = true;
 }
 
@@ -27,6 +35,9 @@ void sequence::inPlay::InPlay::update( )
 	{
 		case ::sequence::inPlay::Seq::READY:
 			moveTo< ::sequence::inPlay::Ready >( );
+			break;
+		case ::sequence::inPlay::Seq::PLAYING:
+			moveTo< ::sequence::inPlay::Playing >( );
 			break;
 		case ::sequence::inPlay::Seq::NONE:
 			break;
@@ -39,27 +50,5 @@ void sequence::inPlay::InPlay::update( )
 
 void sequence::inPlay::InPlay::draw( )
 {
-	sf::RectangleShape rect;
-	rect.setSize( sf::Vector2f( iWindow.getSize( ) ) );
-	const unsigned BACKGROUND_RGB = 0x29cdb500u;
-	const unsigned MAX_RGB = 0xffffff00u;
-	const unsigned SHADOW = 0x7fu;
-	switch ( *mNextInPlaySequence )
-	{
-		case ::sequence::inPlay::Seq::READY:
-			rect.setFillColor( sf::Color( BACKGROUND_RGB | SHADOW ) );
-			iSprite.setColor( sf::Color( MAX_RGB | SHADOW ) );
-			break;
-		case ::sequence::inPlay::Seq::NONE:
-			rect.setFillColor( sf::Color( BACKGROUND_RGB | 0xffu ) );
-			iSprite.setColor( sf::Color( MAX_RGB | 0xffu ) );
-			break;
-		default:
-			__assume( 0 );
-			break;
-	}
-	iWindow.draw( rect );
-	iSprite.setPosition( rect.getSize( ) / 3.f );
-	iWindow.draw( iSprite );
 	mCurrentInPlaySequence->draw( );
 }

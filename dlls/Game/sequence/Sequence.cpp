@@ -9,15 +9,32 @@ sequence::Sequence::Sequence( sf::RenderWindow& window )
 	: mWindow( window ), mNextMainSequence( nullptr ), mCurrentSequence( nullptr )
 {
 	ASSERT_FALSE( IsInstanciated );
+	Dword value = static_cast< Dword >( ::sequence::Seq::INTRO );
+	const std::string scriptPathNName( "Scripts/_OnlyDuringDev.lua" );
+	const std::string varName( "StartMainSequence" );
+	const auto table = ::ServiceLocator::LoadFromScript( scriptPathNName, varName );
+	if ( const auto& it = table.find( varName ); table.cend( ) != it )
+	{
+		value = std::get< int >( it->second );
+	}
 	auto& varT = ::global::VariableTable( );
-	// NOTE: '::sequence::Seq' is enum class, not enum, thus expilcit casting is necessary.
-	// For more details, try compiling without explicit casting.
-	varT.emplace( 1956789523, static_cast< uint32_t >( ::sequence::Seq::INTRO ) ); // nextMainSeq
-	// NOTE: 'std::unordered_map::find( )' is safer than 'std::unordered_map::operator[]'
-	// as the latter inserts new one if the value to which the key is mapping doesn't exist.
-	// That means, [] can't prevent the disaster that two hash values differ from each other.
+	constexpr HashedKey key = util::hash::Digest( "nextMainSeq" );
+	varT.emplace( key, value );
+	// NOTE: For finding the key-value pair a table already has,
+	// 'std::unordered_map::find( )' is safer than 'std::unordered_map::operator[].'
+	// That's because the latter inserts new one even if there is no such key.
+	// That means, the latter can bring on a disaster.
 	// ( e.g. varT.find( 1956789523 ) returns end iterator, but varT[ 1956789523 ] inserts new one. )
-	mNextMainSequence = reinterpret_cast< ::sequence::Seq* >( &varT.find( 1956789523 )->second ); // nextMainSeq
+	if ( const auto& it = varT.find( key ); varT.cend( ) != it )
+	{
+		mNextMainSequence = reinterpret_cast< ::sequence::Seq* >( &it->second );
+	}
+#ifdef _DEBUG
+	else
+	{
+		__debugbreak( );
+	}
+#endif
 	IsInstanciated = true;
 }
 

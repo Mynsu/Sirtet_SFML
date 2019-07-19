@@ -9,15 +9,16 @@
 #define GAME_API __declspec( dllimport )
 #endif
 
-// This is not for the purpose of using static member functions,
+// This inclusion isn't for the purpose of using static member functions,
 // just sharing the header files.
 #include "../exes/Engine/ServiceLocator.h"
+
 namespace global
 {
-	// 궁금: 이거 안 되는데, 왜?
+	//궁금: 이거 안 되는데, 왜?
 	///GAME_API auto ( *Console )( ) -> std::unique_ptr< IConsole >&;
 	extern GAME_API std::unique_ptr< IConsole >& ( *Console )( );
-	extern GAME_API std::unordered_map< hashValue_t, dword >& ( *VariableTable )( );
+	extern GAME_API std::unordered_map< HashedKey, Dword >& ( *VariableTable )( );
 }
 
 #include <SFML/System.hpp>

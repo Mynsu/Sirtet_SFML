@@ -5,6 +5,14 @@
 #include <string>
 #include <SFML/Graphics.hpp>
 
+enum class ErrorLevel
+{
+	// Use the default value instead
+	WARNING,
+	// Stop the machine
+	CRITICAL,
+};
+
 class IConsole : public sf::Drawable
 {
 public:
@@ -23,8 +31,9 @@ public:
 	
 	virtual bool isVisible( ) const = 0;
 	virtual void handleEvent( const sf::Event& event ) = 0;
-	virtual void print( const std::string& message ) = 0;
-	virtual void printError( const std::string& errorMessage ) = 0;
+	virtual void print( const std::string& message, sf::Color color = sf::Color::White ) = 0;
+	virtual void printError( const ErrorLevel errorLevel, const std::string& errorMessage ) = 0;
+	virtual void printScriptError( const ErrorLevel errorLevel, const std::string& variableName, const std::string& scriptName ) = 0;
 	/*virtual void addCommand( const std::string& command,
 							 std::function< void( void ) > function,
 							 CommandType type,
@@ -45,8 +54,33 @@ public:
 		return mVisible;
 	}
 	void handleEvent( const sf::Event& event ) override;
-	void print( const std::string& message );
-	void printError( const std::string& errorMessage );
+	void print( const std::string& message, sf::Color color = sf::Color::White );
+	void printError( const ErrorLevel errorLevel, const std::string& description )
+	{
+		// Concatenate error level info with description
+		std::string concatenated;
+		switch ( errorLevel )
+		{
+			case ErrorLevel::WARNING:
+				concatenated.assign( "WARNING: " + description );
+				break;
+			case ErrorLevel::CRITICAL:
+				concatenated.assign( "CRITICAL: " + description );
+				break;
+			default:
+#ifdef _DEBUG
+				__debugbreak( );
+#elif
+				__assume( 0 );
+				break;
+#endif
+		}
+		print( concatenated, sf::Color::Red );
+	}
+	void printScriptError( const ErrorLevel errorLevel, const std::string& variableName, const std::string& scriptName )
+	{
+		printError( errorLevel, "Variable '" + variableName + "' in " + scriptName + " can't be found or has an odd value." );
+	}
 	/*void addCommand( const std::string& command,
 					 std::function< void( void ) > function,
 					 CommandType type,
@@ -60,8 +94,8 @@ private:
 		//TODO
 	}
 
-	bool mVisible;
 	bool mInitialized;
+	bool mVisible;
 	std::string mCurrentInput;
 	///std::string mCursorForeground;
 	sf::Font mFont;

@@ -1,18 +1,17 @@
 #pragma once
 #pragma hdrstop
 #include <memory>
-#include <vector>
 #include <unordered_map>
 #include <variant>
 #include <string_view>
 #include <type_traits>
-#include <intrin.h> // __debugbreak( ), int32_t
+#include <intrin.h> // __debugbreak( )
+#include <Lib/Hash.h>
 #include <SFML/System.hpp>
 #include <lua.hpp>
 #include "Console.h"
 
-using hashValue_t = int32_t;
-using dword = int32_t;
+using Dword = int32_t;
 
 class ServiceLocator
 {
@@ -23,40 +22,40 @@ public:
 		return _Console;
 	}
 	// Initialize and get console.
-	static auto Console( const sf::Vector2u& winSize ) -> std::unique_ptr< IConsole >&
+	static auto ConsoleWithInit( const sf::Vector2u& winSize ) -> std::unique_ptr< IConsole >& //TODO:이름 좀..
 	{
 		_Console->init( winSize );
 		return _Console;
 	}
-	static auto VariableTable( ) -> std::unordered_map< hashValue_t, dword >&
+	static auto VariableTable( ) -> std::unordered_map< HashedKey, Dword >&
 	{
-		return variableTable;
+		return _VariableTable;
 	}
-	// Load data from a .lua script file.  Thus, this can throw std::bad_exception when failed to open the script file.
-	// Returns an immutable hash table 'const std::unordered_map< std::string, typename Value >.'
-	//		Only is 'std::string' type allowed to function arguments for security, neither 'const char*' nor 'char[]' type allowed.
-	//		Otherwise, a complier cannot deduce or substitute this function template thanks to SFINAE.
-	//		Put in one or more variable identifiers as such on a script file as the second function argument pack.
-	// The first template argument 'Value' is that of std::pair< Key, Value > in hash table.
-	// Default is 'std::variant< bool, int, float, std::string >, which you can customize.
+	// Load data from a .lua script file.
+	// Only is 'std::string' type allowed, neither 'const char*' nor 'char[]' type allowed.
+	// Value type is now 'std::variant< bool, int, float, std::string >, which you can customize.
+	// This throws std::runtime_error when failing to open the script file.
 	template < typename Value = std::variant< bool, int, float, std::string >, typename Str, typename... Strs,
-		std::enable_if_t< std::is_same_v< std::decay_t< Str >, std::string > >* = nullptr >///,
-		///std::enable_if_t< std::is_>
-	static const std::unordered_map< std::string, Value > LoadFromScript( const Str& scriptPathNName, const Strs&... variables )//TODO: 패키지에 모은 후 파일명 암호화
+		std::enable_if_t< std::is_same_v< std::decay_t< Str >, std::string > >* = nullptr >
+	static const std::unordered_map< std::string, Value > LoadFromScript( const Str& scriptPathNName, const Strs&... variables )//TODO: 패키지에 모은 후 암호화
 	{
 		lua_State* lua = luaL_newstate( );
-		luaopen_base( lua );
+		//TODO
+		///luaopen_base( lua );
 		// Exception handling
+		// Make sure that this function returns true on failure.
 		if ( true == luaL_dofile( lua, scriptPathNName.data( ) ) )
 		{
 			lua_close( lua );
-			_Console->printError( "Failed to load " + scriptPathNName );
+			//궁금: 더 좋은 방법 없을까?
+			::global::Console( )->printError( ErrorLevel::CRITICAL, "File not found: " + scriptPathNName );
 #ifdef _DEBUG
 			__debugbreak( );
 #elif
 			throw std::runtime_error;
 #endif
 		}
+		luaopen_base( lua );
 
 		const std::string_view expansion[] = { variables... };
 		// Take care of Named Return Value Optimization.
@@ -65,18 +64,21 @@ public:
 		{
 			lua_pushstring( lua, it.data( ) );
 			lua_rawget( lua, LUA_RIDX_MAINTHREAD );
-			const int index = lua_gettop( lua );
-			switch ( lua_type( lua, index ) )
+			const int index = -1; //TODO ///lua_gettop( lua );
+			auto temp = lua_type( lua, index );
+			switch ( temp )
 			{
 				case LUA_TBOOLEAN:
 					retVals.emplace( it, static_cast< bool >( lua_toboolean( lua, index ) ) );
 					break;
 				case LUA_TNUMBER:
-				// NOTE: Braces{} are placed so as to use a local variable 'number.'
+				// NOTE: Braces{} are placed in order to use a local variable 'number.'
 				{
 					const double number = lua_tonumber( lua, index );
+					// When integer,
 					if ( std::floor( number ) == number )
 					{
+						// When either overflow or underflow occurs,
 						if ( std::numeric_limits< int >::min() > number ||
 							 std::numeric_limits< int >::max() < number )
 						{
@@ -88,8 +90,10 @@ public:
 						}
 						retVals.emplace( it, static_cast< int >( lua_tointeger( lua, index ) ) );
 					}
+					// When floating point number,
 					else
 					{
+						// Double-precision at this point, but it'll be down-cast to single-precision.
 						if ( std::numeric_limits< float >::min() > number ||
 							 std::numeric_limits< float >::max() < number )
 						{
@@ -106,7 +110,9 @@ public:
 				case LUA_TSTRING:
 					retVals.emplace( it, std::move( std::string( lua_tostring( lua, index ) ) ) );
 					break;
-				//TODO: case LUA_TTABLE:
+					// When one of variables itself doesn't exists or declared,
+				case LUA_TNIL:
+					break;
 				default:
 #ifdef _DEBUG
 					__debugbreak( );
@@ -121,5 +127,5 @@ public:
 	}
 private:
 	static std::unique_ptr< IConsole > _Console;//TODO: 콘솔을 개발용으로만 둘까, 콘솔에 유저 권한을 둘까?
-	static std::unordered_map< hashValue_t, dword > variableTable;
+	static std::unordered_map< HashedKey, Dword > _VariableTable;
 };	
