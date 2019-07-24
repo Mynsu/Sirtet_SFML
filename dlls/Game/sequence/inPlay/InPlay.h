@@ -17,6 +17,8 @@ namespace sequence::inPlay
 		{
 			IsInstanciated = false;
 		}
+		InPlay( const InPlay& ) = delete;
+		void operator=( const InPlay& ) = delete;
 
 		void update( ) override;
 		void draw( ) override;
@@ -28,7 +30,6 @@ namespace sequence::inPlay
 		{
 			mCurrentInPlaySequence.reset( );
 			mCurrentInPlaySequence = std::make_unique< InPlaySequenceType >( mWindow, mNextInPlaySequence, mBackgroundRect );
-#ifdef _DEBUG
 			if ( ::sequence::inPlay::Seq::NONE != *mNextInPlaySequence )
 			{
 				const std::string typeName( typeid( InPlaySequenceType ).name( ) );
@@ -36,7 +37,6 @@ namespace sequence::inPlay
 												  "Sequence transition just after " + typeName );
 				*mNextInPlaySequence = ::sequence::inPlay::Seq::NONE;
 			}
-#endif
 		}
 		// A single instance can live at a time, two or more can't.
 		// NOTE: Singleton pattern and service locator pattern also give this,

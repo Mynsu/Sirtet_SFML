@@ -92,10 +92,6 @@ void ConsoleLocal::init( const sf::Vector2u& winSize )
 
 void ConsoleLocal::draw( sf::RenderTarget& target, sf::RenderStates states ) const
 {
-	//sf::View view( sf::FloatRect( sf::Vector2f( 0.0f, 0.0f ),
-	//							  sf::Vector2f( target.getSize( ) ) ) );
-	//target.setView( view );
-
 	target.draw( mConsoleWindow );
 	target.draw( mCurrentInputTextField );
 	///target.draw( mCursorForegroundTextField );
@@ -103,8 +99,6 @@ void ConsoleLocal::draw( sf::RenderTarget& target, sf::RenderStates states ) con
 	{
 		target.draw( it );
 	}
-
-	//target.setView( target.getDefaultView( ) );
 }
 
 void ConsoleLocal::handleEvent( const sf::Event& event )
@@ -140,15 +134,9 @@ void ConsoleLocal::handleEvent( const sf::Event& event )
 		{
 			if ( sf::Keyboard::Enter == event.key.code )
 			{
-				/*auto size = mHistoryTextFields.size( );
-				for ( size_t i = size - 1; i != 0; --i )
-				{
-					const auto& str = mHistoryTextFields[ i - 1 ].getString( );
-					mHistoryTextFields[ i ].setString( str );
-				}*/
 				mCurrentInput.pop_back( );
-				//mHistoryTextFields[ 0 ].setString( mCurrentInput );
 				print( mCurrentInput );
+				_Command.ProcessCommand( mCurrentInput );
 				mCurrentInput.clear( );
 				//mCursorForeground.clear( );
 				mCurrentInputTextField.setString( "" );

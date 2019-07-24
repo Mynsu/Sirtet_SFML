@@ -5,14 +5,10 @@
 #include <Lib/Endian.h>
 #include "ServiceLocator.h"
 
-//TODO: config 파일 만들고 읽어오기
 //TODO: 개발 완료 후 auto 쓰는 대신 타입 명시, 브랜치에 커밋
 
 int main( int argc, char* argv[ ] )
 {
-	//궁금: 해시테이블의 reserve란?
-	//variableTable.reserve( 10 );
-
 	auto& variableTable = ServiceLocator::VariableTable( );
 	{
 		constexpr HashedKey key4 = util::hash::Digest( "debugLog" );

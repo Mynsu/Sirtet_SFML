@@ -15,7 +15,8 @@ namespace sequence
 		{
 			IsInstanciated = false;
 		};
-		//TODO: 복사 생성자, 연산자 delete
+		Sequence( const Sequence& ) = delete;
+		void operator=( const Sequence& ) = delete;
 
 		void update( );
 		void draw( );
@@ -27,7 +28,6 @@ namespace sequence
 		{
 			mCurrentSequence.reset( nullptr );
 			mCurrentSequence = std::make_unique< MainSequenceType >( mWindow, mNextMainSequence );
-#ifdef _DEBUG
 			if ( ::sequence::Seq::NONE != *mNextMainSequence )
 			{
 				const std::string typeName( typeid( MainSequenceType ).name( ) );
@@ -35,7 +35,6 @@ namespace sequence
 												  "Sequence transition just after " + typeName );
 				*mNextMainSequence = ::sequence::Seq::NONE;
 			}
-#endif
 		}
 		// A single instance can live at a time, two or more can't.
 		static bool IsInstanciated;

@@ -40,8 +40,6 @@ public:
 	static const std::unordered_map< std::string, Value > LoadFromScript( const Str& scriptPathNName, const Strs&... variables )//TODO: 패키지에 모은 후 암호화
 	{
 		lua_State* lua = luaL_newstate( );
-		//TODO
-		///luaopen_base( lua );
 		// Exception handling
 		// Make sure that this function returns true on failure.
 		if ( true == luaL_dofile( lua, scriptPathNName.data( ) ) )
@@ -64,7 +62,8 @@ public:
 		{
 			lua_pushstring( lua, it.data( ) );
 			lua_rawget( lua, LUA_RIDX_MAINTHREAD );
-			const int index = -1; //TODO ///lua_gettop( lua );
+			// Equals lua_gettop( lua );
+			const int index = -1;
 			auto temp = lua_type( lua, index );
 			switch ( temp )
 			{

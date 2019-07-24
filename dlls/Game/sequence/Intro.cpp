@@ -20,8 +20,6 @@ namespace sequence
 		// When the variable 'Image' exists in the script,
 		if ( const auto& it = table.find( varName ); table.cend( ) != it )
 		{
-			//TODO
-			///, sf::IntRect( 0u, 100u, 800u, 600u ) ) )
 			if ( false == mTexture.loadFromFile( std::get< std::string >( it->second ) ) )
 			{
 				// When the value has an odd path, or there's no such file,

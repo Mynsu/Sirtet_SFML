@@ -26,8 +26,8 @@ namespace global
 
 #ifdef _DEBUG
 #define ASSERT_FALSE( x ) if ( true == x ) __debugbreak( )
-#define ASSERT_TRUE( x ) if ( false == x ) __debugbreak( )
+#define ASSERT_TRUE( x ) if ( false == x ) __debugbreak( );
 #else
-#define ASSERT_FALSE( x ) x
-#define ASSERT_TRUE( x ) x
+#define ASSERT_FALSE( x ) if ( true == x ) ::global::Console( )->printError( ErrorLevel::CRITICAL, "ASSERT_FALSE failed." )
+#define ASSERT_TRUE( x ) if ( false == x ) ::global::Console( )->printError( ErrorLevel::CRITICAL, "ASSERT_TRUE failed." )
 #endif

@@ -4,6 +4,7 @@
 #include <functional>
 #include <string>
 #include <SFML/Graphics.hpp>
+#include "Command.h"
 
 enum class ErrorLevel
 {
@@ -94,6 +95,8 @@ private:
 		//TODO
 	}
 
+	static Command _Command;
+
 	bool mInitialized;
 	bool mVisible;
 	std::string mCurrentInput;
@@ -103,6 +106,6 @@ private:
 	sf::Text mCurrentInputTextField;
 	sf::Text mCursorForegroundTextField;
 	std::array< sf::Text, 9 > mHistoryTextFields;
-
+	
 	///std::unordered_map< std::string, std::function< void( void ) > > mDictionary;//TODO: ¶¼¾îµÎ±â
 };
