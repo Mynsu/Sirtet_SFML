@@ -1,11 +1,8 @@
 #include "Console.h"
-#include <iostream>
-#include <SFML/Graphics.hpp>
 #include "ServiceLocator.h"
-#include <Game/Common.h>//궁금: 더 좋은 방법 없을까?
+#include <Lib/ScriptLoader.h>
 
-ConsoleLocal::ConsoleLocal( ) : mInitialized( false ),
-								mVisible( false ),
+ConsoleLocal::ConsoleLocal( ) : mVisible( false ),
 								mCurrentInput( "_" )
 								//mCursorForeground( "_" )
 {
@@ -16,28 +13,28 @@ ConsoleLocal::ConsoleLocal( ) : mInitialized( false ),
 		const std::string scriptPathNName( "Scripts/Console.lua" );
 		const std::string varName0( "Font" );
 		const std::string varName1( "VisibleOnStart" );
-		const auto table = ServiceLocator::LoadFromScript( scriptPathNName, varName0, varName1 );
+		const auto table = ::util::script::LoadFromScript( scriptPathNName, varName0, varName1 );
 		// When the variable 'Font' exists in the script,
 		if ( const auto& it = table.find( varName0 ); table.cend( ) != it )
 		{
 			if ( false == mFont.loadFromFile( std::get< std::string >( it->second ) ) )
 			{
-				// When the value has an odd path, or there's no such file,
-				printError( ErrorLevel::CRITICAL, "File not found: " + varName0 + " in " + scriptPathNName );
+				// Exception: When the value has an odd path, or there's no such file,
+				printFailure( FailureLevel::CRITICAL, "File not found: " + varName0 + " in " + scriptPathNName );
 #ifdef _DEBUG
 				__debugbreak( );
 #endif
 			}
 		}
-		// When the variable 'Font' doesN'T exist in the script,
+		// Exception: When the variable 'Font' doesN'T exist in the script,
 		else
 		{
-			printScriptError( ErrorLevel::WARNING, varName0, scriptPathNName );
+			printScriptError( FailureLevel::WARNING, varName0, scriptPathNName );
 			const std::string defaultFilePathNName( "Fonts/AGENCYB.TTF" );
 			if ( false == mFont.loadFromFile( defaultFilePathNName ) )
 			{
-				// When there isn't the default file,
-				printError( ErrorLevel::CRITICAL, "File not found: " + defaultFilePathNName );
+				// Exception: When there isn't the default file,
+				printFailure( FailureLevel::CRITICAL, "File not found: " + defaultFilePathNName );
 #ifdef _DEBUG
 				__debugbreak( );
 #endif
@@ -64,30 +61,28 @@ ConsoleLocal::ConsoleLocal( ) : mInitialized( false ),
 		it.setFont( mFont );
 	}
 
-	///addCommand( "refresh", &ConsoleLocal::refresh, CommandType::SYSTEM, "Reload console's new font, vars, etc." );
+	mConsoleWindow.setOutlineColor( sf::Color::White );
+	mConsoleWindow.setOutlineThickness( 0.2f );
+	mConsoleWindow.setFillColor( sf::Color::Blue );
+	setPosition( sf::Vector2u( 800u, 600u ) );
 }
 
-void ConsoleLocal::init( const sf::Vector2u& winSize )
+void ConsoleLocal::setPosition( const sf::Vector2u& winSize )
 {
 	const sf::Vector2f _winSize( winSize );
 	const float margin = 30.f;
 	const float consoleRatio = 0.5f;
 	mConsoleWindow.setPosition( sf::Vector2f( margin, _winSize.y*consoleRatio-margin ) );
 	mConsoleWindow.setSize( sf::Vector2f( _winSize.x-margin*2, _winSize.y*consoleRatio ) );
-	mConsoleWindow.setOutlineColor( sf::Color::White );
-	mConsoleWindow.setOutlineThickness( 0.2f );
-	mConsoleWindow.setFillColor( sf::Color::Blue );
 	const auto fontSize = mCurrentInputTextField.getCharacterSize( );
 	sf::Vector2f textFieldPos( margin+5.f, _winSize.y - margin - static_cast<float>( fontSize ) );
 	mCurrentInputTextField.setPosition( textFieldPos );
 	//mCursorForegroundTextField.setPosition( textFieldPos );
-	for ( auto& it : mHistoryTextFields ) //cache
+	for ( auto& it : mHistoryTextFields )
 	{
 		textFieldPos -= sf::Vector2f( sf::Vector2u( 0u, fontSize ) );
 		it.setPosition( textFieldPos );
 	}
-
-	mInitialized = true;
 }
 
 void ConsoleLocal::draw( sf::RenderTarget& target, sf::RenderStates states ) const
@@ -136,7 +131,7 @@ void ConsoleLocal::handleEvent( const sf::Event& event )
 			{
 				mCurrentInput.pop_back( );
 				print( mCurrentInput );
-				_Command.ProcessCommand( mCurrentInput );
+				mCommand.processCommand( mCurrentInput );
 				mCurrentInput.clear( );
 				//mCursorForeground.clear( );
 				mCurrentInputTextField.setString( "" );

@@ -1,44 +1,36 @@
 #pragma once
 #pragma hdrstop
+#include <Lib/precompiled.h>
 #include <array>
 #include <functional>
-#include <string>
-#include <SFML/Graphics.hpp>
 #include "Command.h"
 
-enum class ErrorLevel
+enum class FailureLevel
 {
-	// Use the default value instead
+	// When the default value is used as a makeshift and using an explicit value is strongly recommended
 	WARNING,
-	// Stop the machine
-	CRITICAL,
+	// When it's obvious that a crush or a severe failure will happen
+	CRITICAL, //TODO: FATAL 어때?
 };
 
 class IConsole : public sf::Drawable
 {
 public:
-	enum class CommandType
-	{
-		SYSTEM,
-		UNKNOWN,
-	};
-
-public:
-	IConsole( ) = default;
 	virtual ~IConsole( ) = default;
-	virtual void init( const sf::Vector2u& winSize ) = 0;
-
 	virtual void draw( sf::RenderTarget& target, sf::RenderStates states ) const = 0;
 	
-	virtual bool isVisible( ) const = 0;
 	virtual void handleEvent( const sf::Event& event ) = 0;
 	virtual void print( const std::string& message, sf::Color color = sf::Color::White ) = 0;
-	virtual void printError( const ErrorLevel errorLevel, const std::string& errorMessage ) = 0;
-	virtual void printScriptError( const ErrorLevel errorLevel, const std::string& variableName, const std::string& scriptName ) = 0;
-	/*virtual void addCommand( const std::string& command,
-							 std::function< void( void ) > function,
-							 CommandType type,
-							 const std::string& description ) = 0;*/
+	virtual void printFailure( const FailureLevel failureLevel, const std::string& message ) = 0;
+	virtual void printScriptError( const FailureLevel failureLevel, const std::string& variableName, const std::string& scriptName ) = 0;
+	virtual void addCommand( const HashedKey command, const Command::Func& functional ) = 0;
+	virtual void processCommand( const std::string& command ) = 0;
+	virtual bool isVisible( ) const = 0;
+	// Tell how big the window size is, which decides the position and the size of the console.
+	// 800*600 assumed by default.
+	virtual void setPosition( const sf::Vector2u& winSize ) = 0;
+protected:
+	IConsole( ) = default;
 };
 
 class ConsoleLocal final : public IConsole
@@ -46,27 +38,22 @@ class ConsoleLocal final : public IConsole
 public:
 	ConsoleLocal( );
 	~ConsoleLocal( ) = default;
-	void init( const sf::Vector2u& winSize ) override;
-
 	void draw( sf::RenderTarget& target, sf::RenderStates states ) const override;
 
-	bool isVisible( ) const
-	{
-		return mVisible;
-	}
 	void handleEvent( const sf::Event& event ) override;
-	void print( const std::string& message, sf::Color color = sf::Color::White );
-	void printError( const ErrorLevel errorLevel, const std::string& description )
+	void print( const std::string& message, sf::Color color = sf::Color::White ) override;
+	void printFailure( const FailureLevel failureLevel, const std::string& message ) override
 	{
-		// Concatenate error level info with description
+		// Concatenate error level info with message
+		// NOTE: Using another timespace on memory is faster than in-place rearrangement in this situation.
 		std::string concatenated;
-		switch ( errorLevel )
+		switch ( failureLevel )
 		{
-			case ErrorLevel::WARNING:
-				concatenated.assign( "WARNING: " + description );
+			case FailureLevel::WARNING:
+				concatenated.assign( "WARNING: " + message );
 				break;
-			case ErrorLevel::CRITICAL:
-				concatenated.assign( "CRITICAL: " + description );
+			case FailureLevel::CRITICAL:
+				concatenated.assign( "CRITICAL: " + message );
 				break;
 			default:
 #ifdef _DEBUG
@@ -78,34 +65,31 @@ public:
 		}
 		print( concatenated, sf::Color::Red );
 	}
-	void printScriptError( const ErrorLevel errorLevel, const std::string& variableName, const std::string& scriptName )
+	void printScriptError( const FailureLevel failureLevel, const std::string& variableName, const std::string& scriptName ) override
 	{
-		printError( errorLevel, "Variable '" + variableName + "' in " + scriptName + " can't be found or has an odd value." );
+		printFailure( failureLevel, "Variable '" + variableName + "' in " + scriptName + " can't be found or has an odd value." );
 	}
-	/*void addCommand( const std::string& command,
-					 std::function< void( void ) > function,
-					 CommandType type,
-					 const std::string& description )
+	void addCommand( const HashedKey command, const Command::Func& functional )
 	{
-		mDictionary.emplace( command, function );
-	};*/
+		mCommand.addCommand( command, functional );
+	}
+	void processCommand( const std::string& commandLine ) override
+	{
+		mCommand.processCommand( commandLine );
+	}
+	bool isVisible( ) const
+	{
+		return mVisible;
+	}
+	void setPosition( const sf::Vector2u& winSize ) override;
 private:
-	void refresh( )
-	{
-		//TODO
-	}
-
-	static Command _Command;
-
-	bool mInitialized;
 	bool mVisible;
+	Command mCommand;
 	std::string mCurrentInput;
 	///std::string mCursorForeground;
 	sf::Font mFont;
 	sf::RectangleShape mConsoleWindow;
 	sf::Text mCurrentInputTextField;
-	sf::Text mCursorForegroundTextField;
+	///sf::Text mCursorForegroundTextField;
 	std::array< sf::Text, 9 > mHistoryTextFields;
-	
-	///std::unordered_map< std::string, std::function< void( void ) > > mDictionary;//TODO: 떼어두기
 };

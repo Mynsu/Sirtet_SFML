@@ -1,7 +1,4 @@
 #include "Common.h"
 
-namespace global
-{
-	std::unique_ptr< IConsole >& ( *Console )( ) = nullptr;
-	std::unordered_map< HashedKey, Dword >& ( *VariableTable )( ) = nullptr;
-}
+GetConsole_t ServiceLocatorMirror::_Console = nullptr;
+GetVault_t ServiceLocatorMirror::_Vault = nullptr;

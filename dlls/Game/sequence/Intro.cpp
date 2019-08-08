@@ -1,43 +1,61 @@
 #include "Intro.h"
+#include <Lib/ScriptLoader.h>
 
 namespace sequence
 {
 	bool Intro::IsInstanciated = false;
 
-	Intro::Intro( sf::RenderWindow& window, ::sequence::Seq* const nextMainSequence )
-		: mNextMainSequence( nextMainSequence ),
+	Intro::Intro( sf::RenderWindow& window, const std::function< void( const ::sequence::Seq ) >&& setSequence )
+		: mDuration( 2u ),
+		mAlpha( 0x00u ),
+		mFrameCount( 0u ),
+		mFPS( 60u ),
 		mWindow( window ),
-		mDuration( 2u ),
-		mAlpha( 0u ),
-		mFrameCount( 0u )
+		mSetSequence( std::forward< const std::function< void( const ::sequence::Seq ) >&& >( setSequence ) ),
+		mNextSequence( ::sequence::Seq::MAIN_MENU )
 	{
 		ASSERT_FALSE( IsInstanciated );
-		// Like setting car's gear neutral
-		*mNextMainSequence = ::sequence::Seq::NONE;
-		const std::string scriptPathNName( "Scripts/Intro.lua" );
-		const std::string varName( "Image" );
-		const auto table = ::ServiceLocator::LoadFromScript( scriptPathNName, varName );
-		// When the variable 'Image' exists in the script,
-		if ( const auto& it = table.find( varName ); table.cend( ) != it )
+
+		constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS" );
+		if ( const auto it = ServiceLocatorMirror::Vault( ).find( HK_FORE_FPS ); ServiceLocatorMirror::Vault( ).cend( ) != it )
 		{
-			if ( false == mTexture.loadFromFile( std::get< std::string >( it->second ) ) )
+			mFPS = static_cast< uint16_t >( it->second );
+		}
+
+		const std::string scriptPathNName( "Scripts/Intro.lua" );
+		const std::string varName0( "Image" );
+		const std::string varName1( "NextSequence" );
+		const auto result = ::util::script::LoadFromScript( scriptPathNName, varName0, varName1 );
+		// When the variable 'Image' exists in the script,
+		if ( const auto it = result.find( varName0 ); result.cend( ) != it )
+		{
+			// When its type is string,
+			if ( true == std::holds_alternative< std::string >( it->second ) )
 			{
-				// When the value has an odd path, or there's no such file,
-				::global::Console( )->printError( ErrorLevel::CRITICAL, "File not found: " + varName + " in " + scriptPathNName );
+				if ( false == mTexture.loadFromFile( std::get< std::string >( it->second ) ) )
+				{
+					// Exception: When it tells an odd path or there's no such file,
+					ServiceLocatorMirror::Console( )->printFailure( FailureLevel::CRITICAL, "File not found: " + varName0 + " in " + scriptPathNName );
 #ifdef _DEBUG
-				__debugbreak( );
+					__debugbreak( );
 #endif
+				}
+			}
+			// Exception: When its type isN'T string,
+			else
+			{
+				ServiceLocatorMirror::Console( )->printScriptError( FailureLevel::WARNING, varName0, scriptPathNName );
 			}
 		}
-		// When the variable 'Image' doesN'T exist in the script,
+		// Exception: When the variable 'Image' doesN'T exist in the script,
 		else
 		{
-			::global::Console( )->printScriptError( ErrorLevel::WARNING, varName, scriptPathNName );
+			ServiceLocatorMirror::Console( )->printScriptError( FailureLevel::WARNING, varName0, scriptPathNName );
 			const std::string defaultFilePathNName( "Images/Intro.png" );
 			if ( false == mTexture.loadFromFile( defaultFilePathNName ) )
 			{
-				// When there isn't the default file,
-				::global::Console( )->printError( ErrorLevel::CRITICAL, "File not found: " + defaultFilePathNName );
+				// Exception: When there isn't the default file,
+				ServiceLocatorMirror::Console( )->printFailure( FailureLevel::CRITICAL, "File not found: " + defaultFilePathNName );
 #ifdef _DEBUG
 				__debugbreak( );
 #endif
@@ -48,6 +66,41 @@ namespace sequence
 		mSprite.setTextureRect( sf::IntRect( 0, 0, winSize.x, winSize.y ) );
 		// NOTE: Setting scale makes an image distorted and a bunch of bricks.
 		///mSprite.scale( scaleWidthRatio, scaleWidthRatio );
+
+		bool isScriptError = false;
+		// When the variable 'NextSequence' exists in the script,
+		if ( const auto it = result.find( varName1 ); result.cend( ) != it )
+		{
+			// When its type is integer, which can be cast to enum type,
+			if ( true == std::holds_alternative< int >( it->second ) )
+			{
+				// Range check
+				if ( const ::sequence::Seq val = static_cast< ::sequence::Seq >( std::get< int >( it->second ) );
+					 val < ::sequence::Seq::MAX )
+				{
+					mNextSequence = val;
+				}
+				else
+				{
+					isScriptError = true;
+				}
+			}
+			// Exception: When its type isN'T integer,
+			else
+			{
+				isScriptError = true;
+			}
+		}
+		// Exception: When the variable 'NextSequence' doesN'T exist in the script,
+		else
+		{
+			isScriptError = true;
+		}
+		if ( true == isScriptError )
+		{
+			ServiceLocatorMirror::Console( )->printScriptError( FailureLevel::WARNING, varName1, scriptPathNName );
+		}
+
 		IsInstanciated = true;
 	}
 
@@ -56,13 +109,13 @@ namespace sequence
 		//
 		// Sequence Transition
 		//
-		// FPS change promptly permeates at the next frame, not after a new instance comes.
-		constexpr HashedKey key = ::util::hash::Digest( "foreFPS" );
-		const uint16_t fps = static_cast< uint16_t >( ::global::VariableTable( ).find( key )->second );
-		if ( fps * mDuration < mFrameCount )
+		if ( mFPS * mDuration < mFrameCount )
 		{
-			*mNextMainSequence = ::sequence::Seq::MAIN_MENU;
+			mSetSequence( mNextSequence );
 		}
+
+		// NOTE: Moved into draw( ).
+		///++mFrameCount;
 	}
 
 	void Intro::draw( )
@@ -74,7 +127,7 @@ namespace sequence
 		const uint8_t MIN_RGBA = 0x00u;
 		// FPS change promptly permeates at the next frame, not after a new instance comes.
 		constexpr HashedKey key = ::util::hash::Digest( "foreFPS" );
-		const uint16_t fps = static_cast< uint16_t >( ::global::VariableTable( ).find( key )->second );
+		const uint16_t fps = 60u;//static_cast< uint16_t >( ::global::Vault( ).find( HK_FORE_FPS )->second );
 		const uint8_t diff = MAX_RGBA / ( fps / 2u );
 		const uint16_t brokenPoint = fps * mDuration - 30u;
 		if ( mFrameCount > brokenPoint )
@@ -108,4 +161,9 @@ namespace sequence
 		mWindow.draw( mSprite );
 		++mFrameCount;
 	}
+
+	/*auto Intro::newInstanceOfEqualType( ) -> std::unique_ptr<ISequence>&&
+	{
+		return std::make_unique<::sequence::inPlay::Playing>(mWindow);
+	}*/
 }

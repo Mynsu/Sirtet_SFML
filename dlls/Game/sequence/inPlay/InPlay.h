@@ -7,7 +7,8 @@
 
 namespace sequence::inPlay
 {
-	class GAME_API InPlay final : public ::sequence::ISequence
+	///class GAME_API InPlay final : public ::sequence::ISequence
+	class InPlay final : public ::sequence::ISequence
 	{
 	public:
 		InPlay( ) = delete;
@@ -33,7 +34,7 @@ namespace sequence::inPlay
 			if ( ::sequence::inPlay::Seq::NONE != *mNextInPlaySequence )
 			{
 				const std::string typeName( typeid( InPlaySequenceType ).name( ) );
-				::global::Console( )->printError( ErrorLevel::WARNING,
+				::global::Console( )->printFailure( FailureLevel::WARNING,
 												  "Sequence transition just after " + typeName );
 				*mNextInPlaySequence = ::sequence::inPlay::Seq::NONE;
 			}

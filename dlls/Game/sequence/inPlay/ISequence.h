@@ -11,7 +11,8 @@ namespace sequence::inPlay
 		NONE,
 	};
 
-	class GAME_API ISequence
+	///class GAME_API ISequence
+	class ISequence
 	{
 	public:
 		ISequence( const ISequence& ) = delete;

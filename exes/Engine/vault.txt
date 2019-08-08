@@ -1,0 +1,11 @@
+#
+# Dictionary
+#
+
+( variable name )	|	( description )
+
+foreFPS				|	
+backFPS				|	
+
+
+nextInPlaySeq		|	

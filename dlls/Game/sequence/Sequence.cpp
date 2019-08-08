@@ -1,68 +1,88 @@
 #include "Sequence.h"
+#include <Lib/ScriptLoader.h>
+#include "../Common.h"
 #include "Intro.h"
-#include "MainMenu.h"
-#include "inPlay/InPlay.h"
 
 bool sequence::Sequence::IsInstanciated = false;
 
-sequence::Sequence::Sequence( sf::RenderWindow& window )
-	: mWindow( window ), mNextMainSequence( nullptr ), mCurrentSequence( nullptr )
+sequence::Sequence::Sequence( )
+	: mWindow( nullptr ), mSetter( std::bind( &::sequence::Sequence::setSequence, this, std::placeholders::_1 ) )
 {
 	ASSERT_FALSE( IsInstanciated );
-	Dword value = static_cast< Dword >( ::sequence::Seq::INTRO );
+	IsInstanciated = true;
+}
+
+void sequence::Sequence::lastInit( sf::RenderWindow* const window )
+{
+	mWindow = window;
+
+#ifdef _DEV
+	constexpr HashedKey HK_COMMAND = ::util::hash::Digest( "chseqto" );
+	ServiceLocatorMirror::Console( )->addCommand( HK_COMMAND, std::bind( &Sequence::_2436549370, this, std::placeholders::_1 ) );
+
+	::sequence::Seq startSequence = ::sequence::Seq::INTRO;
 	const std::string scriptPathNName( "Scripts/_OnlyDuringDev.lua" );
 	const std::string varName( "StartMainSequence" );
-	const auto table = ::ServiceLocator::LoadFromScript( scriptPathNName, varName );
-	if ( const auto& it = table.find( varName ); table.cend( ) != it )
+	const auto result = ::util::script::LoadFromScript( scriptPathNName, varName );
+	// When the variable 'StartMainSequence' exists in the script,
+	if ( const auto it = result.find( varName ); result.cend( ) != it )
 	{
-		value = std::get< int >( it->second );
+		// When its type is interger which can be cast to enum type,
+		if ( true == std::holds_alternative< int >( it->second ) )
+		{
+			startSequence = static_cast< ::sequence::Seq >( std::get< int >( it->second ) );
+		}
+		// Exception: When its type isN'T integer,
+		else
+		{
+			ServiceLocatorMirror::Console( )->printScriptError( FailureLevel::WARNING, varName, scriptPathNName );
+		}
 	}
-	auto& varT = ::global::VariableTable( );
-	constexpr HashedKey key = util::hash::Digest( "nextMainSeq" );
-	varT.emplace( key, value );
-	// NOTE: For finding the key-value pair a table already has,
-	// 'std::unordered_map::find( )' is safer than 'std::unordered_map::operator[].'
-	// That's because the latter inserts new one even if there is no such key.
-	// That means, the latter can bring on a disaster.
-	// ( e.g. varT.find( 1956789523 ) returns end iterator, but varT[ 1956789523 ] inserts new one. )
-	if ( const auto& it = varT.find( key ); varT.cend( ) != it )
-	{
-		mNextMainSequence = reinterpret_cast< ::sequence::Seq* >( &it->second );
-	}
-#ifdef _DEBUG
+	// Exception: When the variable 'StartMainSequence' doesN'T exist in the script,
 	else
 	{
-		__debugbreak( );
+		ServiceLocatorMirror::Console( )->printScriptError( FailureLevel::WARNING, varName, scriptPathNName );
 	}
+	setSequence( startSequence );
+#else
+	mCurrentSequence = std::make_unique< ::sequence::Intro >( *window, std::move( mSetter ) );
 #endif
-	IsInstanciated = true;
+}
+
+void sequence::Sequence::_2436549370( const std::string_view& args )
+{
+	setSequence( static_cast< ::sequence::Seq >( std::atoi( args.data( ) ) ) );
 }
 
 void sequence::Sequence::update( )
 {
-	switch ( *mNextMainSequence )
-	{
-		case ::sequence::Seq::INTRO:
-			moveTo< ::sequence::Intro >( );
-			break;
-		case ::sequence::Seq::MAIN_MENU:
-			moveTo< ::sequence::MainMenu >( );
-			break;
-		case ::sequence::Seq::SINGLE_PLAY://궁금: 따로 만들까?
-			[[ fallthrough ]];
-		case ::sequence::Seq::MULTI_PLAY:
-			moveTo< ::sequence::inPlay::InPlay >( );
-			break;
-		case ::sequence::Seq::NONE:
-			break;
-		default:
-			__assume( 0 );
-			break;
-	}
 	mCurrentSequence->update( );
 }
 
 void sequence::Sequence::draw( )
 {
 	mCurrentSequence->draw( );
+}
+
+void sequence::Sequence::setSequence( const ::sequence::Seq nextSequence )
+{
+	ASSERT_NOT_NULL( mWindow );
+
+	mCurrentSequence.reset( nullptr );
+	switch ( nextSequence )
+	{
+		case ::sequence::Seq::INTRO:
+			mCurrentSequence = std::make_unique< ::sequence::Intro >( *mWindow, std::move( mSetter ) );
+			break;
+		case ::sequence::Seq::MAIN_MENU:
+			//mCurrentSequence = std::make_unique< ::sequence::MainMenu >( *mWindow, std::move( mSetter ) );
+			//break;
+
+		default:
+#ifdef _DEBUG
+			__debugbreak( );
+#elif
+			__assume( 0 );
+#endif
+	}
 }

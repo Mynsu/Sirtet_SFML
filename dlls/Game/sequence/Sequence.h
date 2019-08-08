@@ -1,46 +1,38 @@
 #pragma once
 #pragma hdrstop
-#include "../Common.h"
-#include <type_traits>
 #include "ISequence.h"
+#include <functional>
 
 namespace sequence
 {
-	class GAME_API Sequence
+	class Sequence
 	{
 	public:
-		Sequence( ) = delete;
-		Sequence( sf::RenderWindow& window );
+		// NOTE: Called in compile-time, thus requires 'lastInit(...)',
+		//		 which will be called in 'GetGameAPI(...)' in 'Game.cpp.'
+		Sequence( );
 		~Sequence( )
 		{
 			IsInstanciated = false;
+			mWindow = nullptr;
 		};
 		Sequence( const Sequence& ) = delete;
 		void operator=( const Sequence& ) = delete;
+		void lastInit( sf::RenderWindow* const window );
+
+		// Pseudo-unnamed function
+		void _2436549370( const std::string_view& args ); //궁금: 인라인함수는 안 되려나?
 
 		void update( );
 		void draw( );
 	private:
-		// Be careful of what 'MainSequenceType' is.  It's not enum class type.
-		template < typename MainSequenceType,
-			std::enable_if_t< std::is_base_of_v< ::sequence::ISequence, std::decay_t< MainSequenceType > > >* = nullptr >
-		void moveTo( )
-		{
-			mCurrentSequence.reset( nullptr );
-			mCurrentSequence = std::make_unique< MainSequenceType >( mWindow, mNextMainSequence );
-			if ( ::sequence::Seq::NONE != *mNextMainSequence )
-			{
-				const std::string typeName( typeid( MainSequenceType ).name( ) );
-				::global::Console( )->printError( ErrorLevel::WARNING,
-												  "Sequence transition just after " + typeName );
-				*mNextMainSequence = ::sequence::Seq::NONE;
-			}
-		}
+		void setSequence( const ::sequence::Seq nextSequence );
 		// A single instance can live at a time, two or more can't.
+		// NOTE: Global access isn't necessary here.
 		static bool IsInstanciated;
-		sf::RenderWindow& mWindow;
-		// IMPORTANT: Please regard this type as '::sequence::Seq* const.'
-		::sequence::Seq* mNextMainSequence;
+		// NOTE: On spatial locality members win, statics lose; locality leads to better performance.
+		sf::RenderWindow* mWindow;
 		std::unique_ptr< ::sequence::ISequence > mCurrentSequence;
+		const std::function< void( const ::sequence::Seq ) > mSetter;
 	};
 }

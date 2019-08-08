@@ -5,12 +5,11 @@
 
 namespace sequence
 {
-	class GAME_API Intro final : public ::sequence::ISequence
+	class Intro final : public ::sequence::ISequence
 	{
 	public:
 		Intro( ) = delete;
-		Intro( sf::RenderWindow& window,
-				 ::sequence::Seq* const nextMainSequence );
+		Intro( sf::RenderWindow& window, const std::function< void( const ::sequence::Seq ) >&& setSequence );
 		~Intro( )
 		{
 			IsInstanciated = false;
@@ -18,15 +17,12 @@ namespace sequence
 
 		void update( ) override;
 		void draw( ) override;
+		//auto newInstanceOfEqualType( ) -> std::unique_ptr< ISequence >&& override;//TODO
 	private:
-		::sequence::Seq* const mNextMainSequence;
-		sf::RenderWindow& mWindow;
-		sf::Texture mTexture;
-		sf::Sprite mSprite;
 		// A single instance can live at a time, two or more can't.
-		// NOTE: Singleton pattern and service locator pattern also give this,
-		//		 but global access isn't necessary here.
+		// NOTE: Global access isn't necessary here.
 		static bool IsInstanciated;
+		// Time unit: Seconds.
 		// NOTE: 'uint8_t' and 'uint16_t' have been used just for saving memory, which are less than 'int.'
 		uint8_t mDuration;
 		// NOTE: It looks odd at first glance
@@ -38,7 +34,12 @@ namespace sequence
 		// the symbol still lives.
 		// THIS IS MEMORY WASTE.
 		uint8_t mAlpha;
-		// NOTE: Please look at the comment of 'mAlpha.'
 		uint16_t mFrameCount;
+		uint16_t mFPS;
+		sf::RenderWindow& mWindow;
+		const std::function< void( const ::sequence::Seq ) >&& mSetSequence;
+		::sequence::Seq mNextSequence;
+		sf::Texture mTexture;
+		sf::Sprite mSprite;
 	};
 }

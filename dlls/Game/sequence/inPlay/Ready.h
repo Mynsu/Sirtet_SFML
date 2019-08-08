@@ -5,7 +5,8 @@
 
 namespace sequence::inPlay
 {
-	class GAME_API Ready final : public ::sequence::inPlay::ISequence
+	///class GAME_API Ready final : public ::sequence::inPlay::ISequence
+	class Ready final : public ::sequence::inPlay::ISequence
 	{
 	public:
 		Ready( ) = delete;

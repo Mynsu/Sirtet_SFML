@@ -12,7 +12,7 @@ sequence::inPlay::InPlay::InPlay( sf::RenderWindow& window,
 	ASSERT_FALSE( IsInstanciated );
 	*mNextMainSequence = ::sequence::Seq::NONE;
 
-	auto& varT = ::global::VariableTable( );
+	/*auto& varT = ::global::Vault( );
 	constexpr HashedKey key = ::util::hash::Digest( "nextInPlaySeq" );
 	varT.emplace( key, static_cast< Dword >( ::sequence::inPlay::Seq::READY ) );
 	if ( const auto& it = varT.find( key ); varT.cend( ) != it )
@@ -24,7 +24,7 @@ sequence::inPlay::InPlay::InPlay( sf::RenderWindow& window,
 	{
 		__debugbreak( );
 	}
-#endif
+#endif*/
 	mBackgroundRect.setSize( sf::Vector2f( mWindow.getSize( ) ) );
 	IsInstanciated = true;
 }

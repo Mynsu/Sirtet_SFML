@@ -23,7 +23,7 @@ sequence::inPlay::Playing::Playing( sf::RenderWindow& window,
 	const std::string scriptPathNName( "Scripts/Playing.lua" );
 	if ( true == luaL_dofile( lua, scriptPathNName.data( ) ) )
 	{
-		::global::Console( )->printError( ErrorLevel::WARNING, "File not found: " + scriptPathNName );
+		::global::Console( )->printFailure( FailureLevel::WARNING, "File not found: " + scriptPathNName );
 		lua_close( lua );
 	}
 	luaL_openlibs( lua );
@@ -32,7 +32,7 @@ sequence::inPlay::Playing::Playing( sf::RenderWindow& window,
 	PanelPosNSize temp = { 100, 100, 300, 400 };
 	if ( false == lua_istable( lua, -1 ) )
 	{
-		::global::Console( )->printScriptError( ErrorLevel::WARNING,
+		::global::Console( )->printScriptError( FailureLevel::WARNING,
 												tableName, tableName + " in " + scriptPathNName + " is not table type." );
 	}
 	else

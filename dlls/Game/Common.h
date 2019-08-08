@@ -3,31 +3,34 @@
 #pragma once
 #pragma hdrstop
 
-#ifdef GAME_EXPORTS
-#define GAME_API __declspec( dllexport )
-#else
-#define GAME_API __declspec( dllimport )
-#endif
+#include <Lib/precompiled.h>
+#include "../exes/Engine/Console.h"
 
-// This inclusion isn't for the purpose of using static member functions,
-// just sharing the header files.
-#include "../exes/Engine/ServiceLocator.h"
+using GetConsole_t = const std::unique_ptr< IConsole >& (*)( );
+using GetVault_t = std::unordered_map< HashedKey, Dword >& (*)( );
+struct EngineComponents;
 
-namespace global
+class ServiceLocatorMirror
 {
-	//궁금: 이거 안 되는데, 왜?
-	///GAME_API auto ( *Console )( ) -> std::unique_ptr< IConsole >&;
-	extern GAME_API std::unique_ptr< IConsole >& ( *Console )( );
-	extern GAME_API std::unordered_map< HashedKey, Dword >& ( *VariableTable )( );
-}
+	friend void _2943305454( const EngineComponents );
+public:
+	ServiceLocatorMirror( ) = delete;
+	~ServiceLocatorMirror( ) = delete;
 
-#include <SFML/System.hpp>
-#include <SFML/Graphics.hpp>
-
-#ifdef _DEBUG
-#define ASSERT_FALSE( x ) if ( true == x ) __debugbreak( )
-#define ASSERT_TRUE( x ) if ( false == x ) __debugbreak( );
-#else
-#define ASSERT_FALSE( x ) if ( true == x ) ::global::Console( )->printError( ErrorLevel::CRITICAL, "ASSERT_FALSE failed." )
-#define ASSERT_TRUE( x ) if ( false == x ) ::global::Console( )->printError( ErrorLevel::CRITICAL, "ASSERT_TRUE failed." )
-#endif
+	static auto Console( ) -> const std::unique_ptr< IConsole >&
+	{
+		return _Console( );
+	}
+	static auto Vault( ) -> std::unordered_map< HashedKey, Dword >&
+	{
+		return _Vault( );
+	}
+	static void Release( )
+	{
+		_Console = nullptr;
+		_Vault = nullptr;
+	}
+private:
+	static GetConsole_t _Console;
+	static GetVault_t _Vault;
+};

@@ -11,10 +11,11 @@ namespace sequence
 		MAIN_MENU,
 		SINGLE_PLAY,
 		MULTI_PLAY,
-		NONE,
+		MAX,
 	};
 
-	class GAME_API ISequence
+	///class GAME_API ISequence
+	class ISequence
 	{
 	public:
 		ISequence( const ISequence& ) = delete;
@@ -23,6 +24,8 @@ namespace sequence
 
 		virtual void update( ) = 0;
 		virtual void draw( ) = 0;
+		//virtual auto newInstanceOfEqualType( ) -> std::unique_ptr< ISequence >&& = 0;//TODO
+
 		// NOTE: Protected constructor prevents users
 		// from instantiating the abstract class intended to be like INTERFACE in Java.
 	protected:

@@ -9,7 +9,7 @@ namespace util::hash
 {
 	constexpr HashedKey Digest( const char arg[ ] )
 	{
-		unsigned short len = sizeof( arg ) / sizeof( *arg );
+		constexpr unsigned short len = sizeof( arg ) / sizeof( *arg ); //궁금: 왜 8로 정해지지?
 		HashedKey retHash = 0;
 		for ( unsigned short i = 0; i != len; ++i )
 		{
