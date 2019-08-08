@@ -136,6 +136,7 @@ Main Loop
 			if ( sf::Event::Closed == event.type )
 			{
 				isOpen = false;
+				break;
 			}
 			else if ( sf::Event::KeyPressed == event.type )
 			{
@@ -144,6 +145,7 @@ Main Loop
 					if ( false == console.isVisible( ) )
 					{
 						isOpen = false;
+						break;
 					}
 					// else ... is dealt with in 'console.handleEvent( event ).'
 				}
@@ -177,6 +179,10 @@ Main Loop
 Resource Free
 =====
 */
+	// !IMPORTANT: Let .dll free only after calling 'ServiceLocator::Release( )',
+	//			   otherwise this would try to access a function in .dll through a pointer,
+	//			   which is violation and makes an exception happen.
+	ServiceLocator::Release( );
 	window.close( );
 	FreeLibrary( hGameDLL );
 }

@@ -9,7 +9,7 @@ namespace sequence
 	{
 	public:
 		Intro( ) = delete;
-		Intro( sf::RenderWindow& window, const std::function< void( const ::sequence::Seq ) >&& setSequence );
+		Intro( sf::RenderWindow& window, SetSequence_t& setSequence );
 		~Intro( )
 		{
 			IsInstanciated = false;
@@ -37,7 +37,7 @@ namespace sequence
 		uint16_t mFrameCount;
 		uint16_t mFPS;
 		sf::RenderWindow& mWindow;
-		const std::function< void( const ::sequence::Seq ) >&& mSetSequence;
+		const std::function< void( const ::sequence::Seq ) >& mSetSequence;
 		::sequence::Seq mNextSequence;
 		sf::Texture mTexture;
 		sf::Sprite mSprite;

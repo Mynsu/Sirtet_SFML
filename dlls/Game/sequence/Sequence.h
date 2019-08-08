@@ -20,12 +20,17 @@ namespace sequence
 		void operator=( const Sequence& ) = delete;
 		void lastInit( sf::RenderWindow* const window );
 
-		// Pseudo-unnamed function
-		void _2436549370( const std::string_view& args ); //궁금: 인라인함수는 안 되려나?
 
 		void update( );
 		void draw( );
 	private:
+		// Pseudo-unnamed function
+		// NOTE: A few complier may confuse this with an old inline function(just copied)
+		//		 and cause an failure in 'addCommand(...).'
+		void _2436549370( const std::string_view& args )
+		{
+			setSequence( static_cast< ::sequence::Seq >( std::atoi( args.data( ) ) ) );
+		}
 		void setSequence( const ::sequence::Seq nextSequence );
 		// A single instance can live at a time, two or more can't.
 		// NOTE: Global access isn't necessary here.
@@ -33,6 +38,6 @@ namespace sequence
 		// NOTE: On spatial locality members win, statics lose; locality leads to better performance.
 		sf::RenderWindow* mWindow;
 		std::unique_ptr< ::sequence::ISequence > mCurrentSequence;
-		const std::function< void( const ::sequence::Seq ) > mSetter;
+		SetSequence_t mSetter;
 	};
 }

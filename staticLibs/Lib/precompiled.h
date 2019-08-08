@@ -6,6 +6,8 @@
 #include <memory>
 #include <unordered_map>
 #include <string>
+#include <string_view>
+#include <functional>
 #include <intrin.h> // __debugbreak()
 
 #include "SFML/Graphics.hpp"

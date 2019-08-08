@@ -2,7 +2,6 @@
 #pragma hdrstop
 #include <Lib/precompiled.h>
 #include <array>
-#include <functional>
 #include "Command.h"
 
 enum class FailureLevel

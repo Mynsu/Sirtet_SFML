@@ -5,13 +5,13 @@ namespace sequence
 {
 	bool Intro::IsInstanciated = false;
 
-	Intro::Intro( sf::RenderWindow& window, const std::function< void( const ::sequence::Seq ) >&& setSequence )
+	Intro::Intro( sf::RenderWindow& window, SetSequence_t& setSequence )
 		: mDuration( 2u ),
 		mAlpha( 0x00u ),
 		mFrameCount( 0u ),
 		mFPS( 60u ),
 		mWindow( window ),
-		mSetSequence( std::forward< const std::function< void( const ::sequence::Seq ) >&& >( setSequence ) ),
+		mSetSequence( setSequence ),
 		mNextSequence( ::sequence::Seq::MAIN_MENU )
 	{
 		ASSERT_FALSE( IsInstanciated );
@@ -29,7 +29,7 @@ namespace sequence
 		// When the variable 'Image' exists in the script,
 		if ( const auto it = result.find( varName0 ); result.cend( ) != it )
 		{
-			// When its type is string,
+			// Type check
 			if ( true == std::holds_alternative< std::string >( it->second ) )
 			{
 				if ( false == mTexture.loadFromFile( std::get< std::string >( it->second ) ) )
@@ -41,7 +41,7 @@ namespace sequence
 #endif
 				}
 			}
-			// Exception: When its type isN'T string,
+			// Type Check Exception
 			else
 			{
 				ServiceLocatorMirror::Console( )->printScriptError( FailureLevel::WARNING, varName0, scriptPathNName );
@@ -71,12 +71,12 @@ namespace sequence
 		// When the variable 'NextSequence' exists in the script,
 		if ( const auto it = result.find( varName1 ); result.cend( ) != it )
 		{
-			// When its type is integer, which can be cast to enum type,
+			// Type check whether it can be cast to enum type or not,
 			if ( true == std::holds_alternative< int >( it->second ) )
 			{
 				// Range check
 				if ( const ::sequence::Seq val = static_cast< ::sequence::Seq >( std::get< int >( it->second ) );
-					 val < ::sequence::Seq::MAX )
+					 val < ::sequence::Seq::MAX_NONE )
 				{
 					mNextSequence = val;
 				}
@@ -85,7 +85,7 @@ namespace sequence
 					isScriptError = true;
 				}
 			}
-			// Exception: When its type isN'T integer,
+			// Type Check Exception
 			else
 			{
 				isScriptError = true;
@@ -161,7 +161,7 @@ namespace sequence
 		mWindow.draw( mSprite );
 		++mFrameCount;
 	}
-
+	//TODO
 	/*auto Intro::newInstanceOfEqualType( ) -> std::unique_ptr<ISequence>&&
 	{
 		return std::make_unique<::sequence::inPlay::Playing>(mWindow);

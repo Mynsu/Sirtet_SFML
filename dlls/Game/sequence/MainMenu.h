@@ -9,7 +9,7 @@ namespace sequence
 	{
 	public:
 		MainMenu( ) = delete;
-		MainMenu( sf::RenderWindow& window );
+		MainMenu( sf::RenderWindow& window, SetSequence_t& setSequence );
 		~MainMenu( )
 		{
 			IsInstanciated = false;
@@ -23,6 +23,7 @@ namespace sequence
 		static bool IsInstanciated;
 		::sequence::Seq mOnIndicator;
 		sf::RenderWindow& mWindow;
+		SetSequence_t& mSetSequence;
 		sf::Vector2u mSpriteClipSize;
 		sf::Texture mTexture;
 		sf::Sprite mSprite;

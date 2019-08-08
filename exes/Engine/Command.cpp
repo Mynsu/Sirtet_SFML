@@ -1,6 +1,6 @@
 #include "Command.h"
 #include "ServiceLocator.h"
-
+//TODO
 //namespace
 //{
 //	void Refresh( const std::string_view&, const char )
@@ -92,7 +92,7 @@ void Command::processCommand( const std::string& commandLine )
 	}
 
 	// When the first token, or command, e.g. 'refresh' or 'moveTo', is coined,
-	if ( const auto& it = _mDictionary.find( key ); _mDictionary.cend( ) != it )
+	if ( const auto it = mProtocols.find( key ); mProtocols.cend( ) != it )
 	{
 		it->second( argv );
 	}

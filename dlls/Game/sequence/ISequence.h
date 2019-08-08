@@ -11,10 +11,11 @@ namespace sequence
 		MAIN_MENU,
 		SINGLE_PLAY,
 		MULTI_PLAY,
-		MAX,
+		MAX_NONE,
 	};
 
-	///class GAME_API ISequence
+	using SetSequence_t = const std::function< void( const ::sequence::Seq ) >;
+
 	class ISequence
 	{
 	public:

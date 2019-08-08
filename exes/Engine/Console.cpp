@@ -133,8 +133,9 @@ void ConsoleLocal::handleEvent( const sf::Event& event )
 				print( mCurrentInput );
 				mCommand.processCommand( mCurrentInput );
 				mCurrentInput.clear( );
+				mCurrentInput += '_';
 				//mCursorForeground.clear( );
-				mCurrentInputTextField.setString( "" );
+				mCurrentInputTextField.setString( mCurrentInput );
 				//mCursorForegroundTextField.setString( '_' );
 			}
 			else if ( sf::Keyboard::Escape == event.key.code )

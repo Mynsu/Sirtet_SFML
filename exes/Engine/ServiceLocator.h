@@ -19,6 +19,10 @@ public:
 	{
 		return _Vault;
 	}
+	static void Release( )
+	{
+		_Console.reset( nullptr );
+	}
 private:
 	static std::unique_ptr< IConsole > _Console;//TODO: 콘솔을 개발용으로만 둘까, 콘솔에 유저 권한을 둘까?
 	static std::unordered_map< HashedKey, Dword > _Vault;

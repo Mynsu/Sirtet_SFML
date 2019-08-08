@@ -2,6 +2,8 @@
 #include <Lib/ScriptLoader.h>
 #include "../Common.h"
 #include "Intro.h"
+#include "MainMenu.h"
+//#include "inPlay/InPlay.h"
 
 bool sequence::Sequence::IsInstanciated = false;
 
@@ -49,11 +51,6 @@ void sequence::Sequence::lastInit( sf::RenderWindow* const window )
 #endif
 }
 
-void sequence::Sequence::_2436549370( const std::string_view& args )
-{
-	setSequence( static_cast< ::sequence::Seq >( std::atoi( args.data( ) ) ) );
-}
-
 void sequence::Sequence::update( )
 {
 	mCurrentSequence->update( );
@@ -72,12 +69,15 @@ void sequence::Sequence::setSequence( const ::sequence::Seq nextSequence )
 	switch ( nextSequence )
 	{
 		case ::sequence::Seq::INTRO:
-			mCurrentSequence = std::make_unique< ::sequence::Intro >( *mWindow, std::move( mSetter ) );
+			mCurrentSequence = std::make_unique< ::sequence::Intro >( *mWindow, mSetter );
 			break;
 		case ::sequence::Seq::MAIN_MENU:
-			//mCurrentSequence = std::make_unique< ::sequence::MainMenu >( *mWindow, std::move( mSetter ) );
+			mCurrentSequence = std::make_unique< ::sequence::MainMenu >( *mWindow, mSetter );
+			break;
+		case ::sequence::Seq::SINGLE_PLAY:
+			//mCurrentSequence = std::make_unique< ::sequence::inPlay::InPlay >( *mWindow, mSetter );
 			//break;
-
+		case ::sequence::Seq::MULTI_PLAY:
 		default:
 #ifdef _DEBUG
 			__debugbreak( );
