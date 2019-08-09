@@ -3,9 +3,14 @@
 
 namespace sequence
 {
-	bool MainMenu::IsInstanciated = false;
+	namespace
+	{
+		// At a time lives a single instance of this type, two or more can't.
+		// NOTE: Global access isn't necessary here.
+		bool IsInstanciated = false;
+	}
 
-	MainMenu::MainMenu( sf::RenderWindow& window, SetSequence_t& setSequence )
+	MainMenu::MainMenu( sf::RenderWindow& window, const SetSequence_t& setSequence )
 		: mOnIndicator( ::sequence::Seq::MAX_NONE ),
 		mWindow( window ),
 		mSetSequence( setSequence ),
@@ -115,9 +120,14 @@ namespace sequence
 		IsInstanciated = true;
 	}
 
+	MainMenu::~MainMenu( )
+	{
+		IsInstanciated = false;
+	}
+
 	void MainMenu::update( )
 	{
-		if ( true == sf::Mouse::isButtonPressed( sf::Mouse::Left ) )
+		if ( true == sf::Mouse::isButtonPressed( sf::Mouse::Left ) )//TODO: 창 밖에 클릭해도 해당되는 버그
 		{
 			mSetSequence( mOnIndicator );
 		}
@@ -127,12 +137,12 @@ namespace sequence
 	{
 		const sf::Vector2f winSize( mWindow.getSize( ) );
 		const sf::Vector2f logoMargin( 80.f, 80.f );
-		// Down right
+		// Bottom right on screen
 		mSprite.setPosition( winSize - sf::Vector2f( mSpriteClipSize ) - logoMargin );
 		mSprite.setTextureRect( sf::IntRect( 0, 0, mSpriteClipSize.x, mSpriteClipSize.y ) );
 		mWindow.draw( mSprite );
 
-		// Vertical middle
+		// Vertical middle on screen
 		mSprite.setPosition( winSize / 3.2f );
 		if ( true == mSprite.getGlobalBounds( ).contains( sf::Vector2f( sf::Mouse::getPosition( mWindow ) ) ) )
 		{
@@ -145,5 +155,10 @@ namespace sequence
 			mSprite.setTextureRect( sf::IntRect( 0, mSpriteClipSize.y, mSpriteClipSize.x, mSpriteClipSize.y ) );
 		}
 		mWindow.draw( mSprite );
+	}
+	auto MainMenu::newEqualTypeInstance( ) -> std::unique_ptr<::sequence::ISequence>
+	{
+		IsInstanciated = false;
+		return std::make_unique< ::sequence::MainMenu >( mWindow, mSetSequence );
 	}
 }

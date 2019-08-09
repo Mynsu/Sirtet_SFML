@@ -3,9 +3,14 @@
 
 namespace sequence
 {
-	bool Intro::IsInstanciated = false;
+	namespace
+	{
+		// At a time lives a single instance of this type, two or more can't.
+		// NOTE: Global access isn't necessary here.
+		bool IsInstanciated = false;
+	}
 
-	Intro::Intro( sf::RenderWindow& window, SetSequence_t& setSequence )
+	Intro::Intro( sf::RenderWindow& window, const SetSequence_t& setSequence )
 		: mDuration( 2u ),
 		mAlpha( 0x00u ),
 		mFrameCount( 0u ),
@@ -104,6 +109,11 @@ namespace sequence
 		IsInstanciated = true;
 	}
 
+	Intro::~Intro( )
+	{
+		IsInstanciated = false;
+	}
+
 	void Intro::update( )
 	{
 		//
@@ -161,9 +171,10 @@ namespace sequence
 		mWindow.draw( mSprite );
 		++mFrameCount;
 	}
-	//TODO
-	/*auto Intro::newInstanceOfEqualType( ) -> std::unique_ptr<ISequence>&&
+
+	auto sequence::Intro::newEqualTypeInstance( ) -> std::unique_ptr<::sequence::ISequence>
 	{
-		return std::make_unique<::sequence::inPlay::Playing>(mWindow);
-	}*/
+		IsInstanciated = false;
+		return std::make_unique< ::sequence::Intro >( mWindow, mSetSequence );
+	}
 }

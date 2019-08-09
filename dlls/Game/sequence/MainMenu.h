@@ -9,21 +9,16 @@ namespace sequence
 	{
 	public:
 		MainMenu( ) = delete;
-		MainMenu( sf::RenderWindow& window, SetSequence_t& setSequence );
-		~MainMenu( )
-		{
-			IsInstanciated = false;
-		}
+		MainMenu( sf::RenderWindow& window, const SetSequence_t& setSequence );
+		~MainMenu( );
 
-		void update( );
-		void draw( );
+		void update( ) override;
+		void draw( ) override;
+		auto newEqualTypeInstance( ) -> std::unique_ptr< ::sequence::ISequence > override;
 	private:
-		// A single instance can live at a time, two or more can't.
-		// NOTE: Global access isn't necessary here.
-		static bool IsInstanciated;
 		::sequence::Seq mOnIndicator;
 		sf::RenderWindow& mWindow;
-		SetSequence_t& mSetSequence;
+		const SetSequence_t& mSetSequence;
 		sf::Vector2u mSpriteClipSize;
 		sf::Texture mTexture;
 		sf::Sprite mSprite;

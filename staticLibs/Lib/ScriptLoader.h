@@ -28,8 +28,8 @@ namespace util::script
 
 #ifdef _DEBUG
 			__debugbreak( );
-#elif
-			throw std::runtime_error;
+#else
+			throw std::runtime_error( "" );
 #endif
 		}
 		luaopen_base( lua );
@@ -60,10 +60,16 @@ namespace util::script
 						if ( std::numeric_limits< int >::min( ) > number ||
 							 std::numeric_limits< int >::max( ) < number )
 						{
+#ifdef GAME_EXPORTS
+							ServiceLocatorMirror::Console( )->printScriptError( FailureLevel::CRITICAL, it.data( ), scriptPathNName );
+#else
+							ServiceLocator::Console( )->printScriptError( FailureLevel::CRITICAL, it.data( ), scriptPathNName );
+#endif
+
 #ifdef _DEBUG
 							__debugbreak( );
-#elif
-							throw std::runtime_error;
+#else
+							throw std::runtime_error( "" );
 #endif
 						}
 						retVals.emplace( it, static_cast< int >( lua_tointeger( lua, index ) ) );
@@ -71,14 +77,20 @@ namespace util::script
 					// When floating point number,
 					else
 					{
-						// Double-precision at this point, but it'll be down-cast to single-precision.
+						// Exception: Double-precision at this point, but it'll be down-cast to single-precision.
 						if ( std::numeric_limits< float >::min( ) > number ||
 							 std::numeric_limits< float >::max( ) < number )
 						{
+#ifdef GAME_EXPORTS
+							ServiceLocatorMirror::Console( )->printScriptError( FailureLevel::CRITICAL, it.data( ), scriptPathNName );
+#else
+							ServiceLocator::Console( )->printScriptError( FailureLevel::CRITICAL, it.data( ), scriptPathNName );
+#endif
+
 #ifdef _DEBUG
 							__debugbreak( );
-#elif
-							throw std::runtime_error;
+#else
+							throw std::runtime_error( "" );
 #endif
 						}
 						retVals.emplace( it, static_cast< float >( number ) );
@@ -94,7 +106,7 @@ namespace util::script
 				default:
 #ifdef _DEBUG
 					__debugbreak( );
-#elif
+#else
 					__assume( 0 );
 #endif
 			}

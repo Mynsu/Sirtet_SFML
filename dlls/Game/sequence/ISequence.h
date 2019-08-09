@@ -14,7 +14,7 @@ namespace sequence
 		MAX_NONE,
 	};
 
-	using SetSequence_t = const std::function< void( const ::sequence::Seq ) >;
+	using SetSequence_t = std::function< void( const ::sequence::Seq ) >;
 
 	class ISequence
 	{
@@ -25,7 +25,7 @@ namespace sequence
 
 		virtual void update( ) = 0;
 		virtual void draw( ) = 0;
-		//virtual auto newInstanceOfEqualType( ) -> std::unique_ptr< ISequence >&& = 0;//TODO
+		virtual auto newEqualTypeInstance( ) -> std::unique_ptr< ::sequence::ISequence > = 0;
 
 		// NOTE: Protected constructor prevents users
 		// from instantiating the abstract class intended to be like INTERFACE in Java.

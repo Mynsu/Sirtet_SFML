@@ -57,7 +57,7 @@ public:
 			default:
 #ifdef _DEBUG
 				__debugbreak( );
-#elif
+#else
 				__assume( 0 );
 				break;
 #endif

@@ -5,13 +5,11 @@
 #include "MainMenu.h"
 //#include "inPlay/InPlay.h"
 
-bool sequence::Sequence::IsInstanciated = false;
-
-sequence::Sequence::Sequence( )
-	: mWindow( nullptr ), mSetter( std::bind( &::sequence::Sequence::setSequence, this, std::placeholders::_1 ) )
+namespace
 {
-	ASSERT_FALSE( IsInstanciated );
-	IsInstanciated = true;
+	// At a time lives a single instance of this type, two or more can't.
+	// NOTE: Global access isn't necessary here.
+	bool IsInstanciated = false;
 }
 
 void sequence::Sequence::lastInit( sf::RenderWindow* const window )
@@ -19,8 +17,10 @@ void sequence::Sequence::lastInit( sf::RenderWindow* const window )
 	mWindow = window;
 
 #ifdef _DEV
-	constexpr HashedKey HK_COMMAND = ::util::hash::Digest( "chseqto" );
-	ServiceLocatorMirror::Console( )->addCommand( HK_COMMAND, std::bind( &Sequence::_2436549370, this, std::placeholders::_1 ) );
+	constexpr HashedKey HK_COMMAND0 = ::util::hash::Digest( "chseqto" );
+	ServiceLocatorMirror::Console( )->addCommand( HK_COMMAND0, std::bind( &Sequence::_2436549370, this, std::placeholders::_1 ) );
+	constexpr HashedKey HK_COMMAND1 = ::util::hash::Digest( "refresh" );
+	ServiceLocatorMirror::Console( )->addCommand( HK_COMMAND1, std::bind( &Sequence::_495146883, this, std::placeholders::_1 ) );
 
 	::sequence::Seq startSequence = ::sequence::Seq::INTRO;
 	const std::string scriptPathNName( "Scripts/_OnlyDuringDev.lua" );
@@ -51,16 +51,6 @@ void sequence::Sequence::lastInit( sf::RenderWindow* const window )
 #endif
 }
 
-void sequence::Sequence::update( )
-{
-	mCurrentSequence->update( );
-}
-
-void sequence::Sequence::draw( )
-{
-	mCurrentSequence->draw( );
-}
-
 void sequence::Sequence::setSequence( const ::sequence::Seq nextSequence )
 {
 	ASSERT_NOT_NULL( mWindow );
@@ -81,8 +71,21 @@ void sequence::Sequence::setSequence( const ::sequence::Seq nextSequence )
 		default:
 #ifdef _DEBUG
 			__debugbreak( );
-#elif
+#else
 			__assume( 0 );
 #endif
 	}
+}
+
+void sequence::Sequence::_2436549370( const std::string_view& args )
+{
+	setSequence( static_cast< ::sequence::Seq >( std::atoi( args.data( ) ) ) );
+}
+
+void sequence::Sequence::_495146883( const std::string_view& )
+{
+	::sequence::ISequence* temp = mCurrentSequence.release( );
+	mCurrentSequence = temp->newEqualTypeInstance( );
+	delete temp;
+	temp = nullptr;
 }

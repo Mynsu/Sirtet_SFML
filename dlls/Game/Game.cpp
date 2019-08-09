@@ -50,9 +50,9 @@ std::unique_ptr< IGame > _Game( std::make_unique< GameLocal >( ) );
 // Pseudo-unnamed function
 inline void _2943305454( const EngineComponents engine )
 {
-	// !IMPORTANT: Order
 	ServiceLocatorMirror::_Console = engine.console;
 	ServiceLocatorMirror::_Vault = engine.vault;
+	// !IMPORTANT: Call this only after all the engine components has been linked, or assigned.
 	_Game->setWindow( engine.window );
 }
 

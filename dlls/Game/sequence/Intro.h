@@ -9,19 +9,13 @@ namespace sequence
 	{
 	public:
 		Intro( ) = delete;
-		Intro( sf::RenderWindow& window, SetSequence_t& setSequence );
-		~Intro( )
-		{
-			IsInstanciated = false;
-		}
+		Intro( sf::RenderWindow& window, const SetSequence_t& setSequence );
+		~Intro( );
 
 		void update( ) override;
 		void draw( ) override;
-		//auto newInstanceOfEqualType( ) -> std::unique_ptr< ISequence >&& override;//TODO
+		auto newEqualTypeInstance( ) -> std::unique_ptr< ::sequence::ISequence > override;
 	private:
-		// A single instance can live at a time, two or more can't.
-		// NOTE: Global access isn't necessary here.
-		static bool IsInstanciated;
 		// Time unit: Seconds.
 		// NOTE: 'uint8_t' and 'uint16_t' have been used just for saving memory, which are less than 'int.'
 		uint8_t mDuration;
@@ -37,7 +31,7 @@ namespace sequence
 		uint16_t mFrameCount;
 		uint16_t mFPS;
 		sf::RenderWindow& mWindow;
-		const std::function< void( const ::sequence::Seq ) >& mSetSequence;
+		const SetSequence_t& mSetSequence;
 		::sequence::Seq mNextSequence;
 		sf::Texture mTexture;
 		sf::Sprite mSprite;

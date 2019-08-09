@@ -167,7 +167,9 @@ void ConsoleLocal::print( const std::string& message, sf::Color color )
 	for ( size_t i = mHistoryTextFields.size( ) - 1; i != 0; --i )
 	{
 		const auto& str = mHistoryTextFields[ i - 1 ].getString( );
+		const sf::Color _color = mHistoryTextFields[ i - 1 ].getFillColor( );
 		mHistoryTextFields[ i ].setString( str );
+		mHistoryTextFields[ i ].setFillColor( _color );
 	}
 	// Print the current message.
 	mHistoryTextFields[ 0 ].setString( message );
