@@ -1,44 +1,47 @@
 #pragma once
 #pragma hdrstop
+#include <Lib/precompiled.h>
 #include <array>
-#include <functional>
-#include <string>
-#include <SFML/Graphics.hpp>
 #include "Command.h"
 
-enum class ErrorLevel
+enum class FailureLevel
 {
-	// Use the default value instead
+	// When the default value is used as a makeshift and using an explicit value is strongly recommended
 	WARNING,
-	// Stop the machine
-	CRITICAL,
+	// When it's obvious that a crush or a severe failure will happen
+	FATAL,
+};
+
+enum class ExceptionType
+{
+	VARIABLE_NOT_FOUND,
+	TYPE_CHECK,
+	FILE_NOT_FOUND,
+	RANGE_CHECK,
+
+	_MAX,
 };
 
 class IConsole : public sf::Drawable
 {
 public:
-	enum class CommandType
-	{
-		SYSTEM,
-		UNKNOWN,
-	};
-
-public:
-	IConsole( ) = default;
 	virtual ~IConsole( ) = default;
-	virtual void init( const sf::Vector2u& winSize ) = 0;
-
 	virtual void draw( sf::RenderTarget& target, sf::RenderStates states ) const = 0;
 	
-	virtual bool isVisible( ) const = 0;
 	virtual void handleEvent( const sf::Event& event ) = 0;
 	virtual void print( const std::string& message, sf::Color color = sf::Color::White ) = 0;
-	virtual void printError( const ErrorLevel errorLevel, const std::string& errorMessage ) = 0;
-	virtual void printScriptError( const ErrorLevel errorLevel, const std::string& variableName, const std::string& scriptName ) = 0;
-	/*virtual void addCommand( const std::string& command,
-							 std::function< void( void ) > function,
-							 CommandType type,
-							 const std::string& description ) = 0;*/
+	virtual void printFailure( const FailureLevel failureLevel, const std::string& message ) = 0;
+	// Not includes the case that a script file itself can't be found.
+	virtual void printScriptError( const ExceptionType exceptionType, const std::string& variableName, const std::string& scriptName ) = 0;
+	virtual void addCommand( const HashedKey command, const Command::Func& functional ) = 0;
+	virtual void processCommand( const std::string& command ) = 0;
+	virtual bool isVisible( ) const = 0;
+	// Tell how big the window size is, which decides the position and the size of the console.
+	// 800*600 assumed by default.
+	virtual void setPosition( const sf::Vector2u& winSize ) = 0;
+	// NOTE: Protected constructor prevents users from instantiating the abstract class.
+protected:
+	IConsole( ) = default;
 };
 
 class ConsoleLocal final : public IConsole
@@ -46,66 +49,25 @@ class ConsoleLocal final : public IConsole
 public:
 	ConsoleLocal( );
 	~ConsoleLocal( ) = default;
-	void init( const sf::Vector2u& winSize ) override;
-
 	void draw( sf::RenderTarget& target, sf::RenderStates states ) const override;
 
-	bool isVisible( ) const
-	{
-		return mVisible;
-	}
 	void handleEvent( const sf::Event& event ) override;
-	void print( const std::string& message, sf::Color color = sf::Color::White );
-	void printError( const ErrorLevel errorLevel, const std::string& description )
-	{
-		// Concatenate error level info with description
-		std::string concatenated;
-		switch ( errorLevel )
-		{
-			case ErrorLevel::WARNING:
-				concatenated.assign( "WARNING: " + description );
-				break;
-			case ErrorLevel::CRITICAL:
-				concatenated.assign( "CRITICAL: " + description );
-				break;
-			default:
-#ifdef _DEBUG
-				__debugbreak( );
-#elif
-				__assume( 0 );
-				break;
-#endif
-		}
-		print( concatenated, sf::Color::Red );
-	}
-	void printScriptError( const ErrorLevel errorLevel, const std::string& variableName, const std::string& scriptName )
-	{
-		printError( errorLevel, "Variable '" + variableName + "' in " + scriptName + " can't be found or has an odd value." );
-	}
-	/*void addCommand( const std::string& command,
-					 std::function< void( void ) > function,
-					 CommandType type,
-					 const std::string& description )
-	{
-		mDictionary.emplace( command, function );
-	};*/
+	void print( const std::string& message, sf::Color color = sf::Color::White ) override;
+	void printFailure( const FailureLevel failureLevel, const std::string& message ) override;
+	void printScriptError( const ExceptionType exceptionType, const std::string& variableName, const std::string& scriptName ) override;
+	void addCommand( const HashedKey command, const Command::Func& functional ) override;
+	void processCommand( const std::string& commandLine ) override;
+	bool isVisible( ) const override;
+	void setPosition( const sf::Vector2u& winSize ) override;
 private:
-	void refresh( )
-	{
-		//TODO
-	}
-
-	static Command _Command;
-
-	bool mInitialized;
 	bool mVisible;
+	Command mCommand;
 	std::string mCurrentInput;
 	///std::string mCursorForeground;
 	sf::Font mFont;
 	sf::RectangleShape mConsoleWindow;
 	sf::Text mCurrentInputTextField;
-	sf::Text mCursorForegroundTextField;
+	///sf::Text mCursorForegroundTextField;
+	std::array< std::string, static_cast< size_t >( ExceptionType::_MAX )> mExceptionTypes;
 	std::array< sf::Text, 9 > mHistoryTextFields;
-	
-	///std::unordered_map< std::string, std::function< void( void ) > > mDictionary;//TODO: ¶¼¾îµÎ±â
 };

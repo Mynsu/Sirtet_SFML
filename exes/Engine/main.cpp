@@ -1,26 +1,17 @@
 ﻿#pragma hdrstop
+#include <Lib/precompiled.h>
 #include <iostream>
-#include <SFML/Graphics.hpp>
-#include <Game/sequence/Sequence.h>
-#include <Lib/Endian.h>
+#include <windows.h>
+#include "Game/Game.h"
 #include "ServiceLocator.h"
 
 //TODO: 개발 완료 후 auto 쓰는 대신 타입 명시, 브랜치에 커밋
 
 int main( int argc, char* argv[ ] )
 {
-	auto& variableTable = ServiceLocator::VariableTable( );
-	{
-		constexpr HashedKey key4 = util::hash::Digest( "debugLog" );
-		variableTable.emplace( key4, true );
-		//TODO: 이 3형제 필요 없을 듯
-		constexpr HashedKey key0 = util::hash::Digest( "winWidth" );
-		variableTable.emplace( key0, 800 );
-		constexpr HashedKey key1 = util::hash::Digest( "winHeight" );
-		variableTable.emplace( key1, 600 );
-		constexpr HashedKey key2 = util::hash::Digest( "winStyle" );
-		variableTable.emplace( key2, sf::Style::Close );
-	}
+	uint16_t winWidth = 800u;
+	uint16_t winHeight = 600u;
+	uint8_t winStyle = sf::Style::Close;
 /*
 =====
 Handling parameters on excution
@@ -62,8 +53,7 @@ Handling parameters on excution
 					std::cerr << "Error: Too narrow width.\n";
 					return -1;
 				}
-				constexpr HashedKey key0 = util::hash::Digest( "winWidth" );
-				variableTable.find( key0 )->second = subArg0;
+				winWidth = subArg0;
 
 				const int subArg1 = std::atoi( argv[ ++i ] );
 				// Exception: When NON-number characters has been input,
@@ -78,16 +68,14 @@ Handling parameters on excution
 					std::cerr << "Error: Too low height.\n";
 					return -1;
 				}
-				constexpr HashedKey key1 = util::hash::Digest( "winHeight" );
-				variableTable.find( key1 )->second = subArg1;
+				winHeight = subArg1;
 			}
 			// When "--FS",
 			else if ( 0 == argFullscreen.compare( cur ) )
 			{
-				constexpr HashedKey key = util::hash::Digest( "winStyle" );
-				variableTable.find( key )->second |= sf::Style::Fullscreen;
+				winStyle |= sf::Style::Fullscreen;
 			}
-			// When an undefined parameter has been passed,
+			// Exception: When an undefined parameter has been passed,
 			else
 			{
 				std::cerr << "Error: There is no such parameter.\n";
@@ -97,39 +85,53 @@ Handling parameters on excution
 	}
 /*
 =====
-Lazy Initialization
+Initialization
 =====
 */
-	{
-		::util::endian::BindConvertFunc( );
-		::global::Console = &ServiceLocator::Console;
-		::global::VariableTable = &ServiceLocator::VariableTable;
-		constexpr HashedKey key0 = util::hash::Digest( "foreFPS" );
-		variableTable.emplace( key0, 60u );
-		constexpr HashedKey key1 = util::hash::Digest( "backFPS" );
-		variableTable.emplace( key1, 30u );
-	}
+	::util::endian::BindConvertFunc( );
 
+	const uint16_t FOREGROUND_FPS = 60u;
+	auto& variableTable = ServiceLocator::Vault( );
+	constexpr HashedKey HK_FORE_FPS = util::hash::Digest( "foreFPS" ); //TODO: 한 프레임 안에 계산할 필요가 없는 게 뭐가 있을까?
+	variableTable.emplace( HK_FORE_FPS, FOREGROUND_FPS );
+	constexpr HashedKey HK_BACK_FPS = util::hash::Digest( "backFPS" );
+	variableTable.emplace( HK_BACK_FPS, 30u );
+	ServiceLocator::Console( )->setPosition( { winWidth, winHeight } );
+
+	HMODULE hGameDLL = LoadLibraryA( "game.dll" );
+	// File Not Found Exception
+	if ( nullptr == hGameDLL )
+	{
+		std::cerr << "Fatal failure: Failed to load 'game.dll.'" << std::endl;
+		return -1;
+	}
+	GetGameAPI_t getGameAPI = reinterpret_cast< GetGameAPI_t >( GetProcAddress( hGameDLL, "GetGameAPI" ) );
+	// Exception: When function 'GetGameAPI(...)' isn't declared with 'extern "C"' keyword or not registered in .def file.
+	if ( nullptr == getGameAPI )
+	{
+		std::cerr << "Fatal failure: Failed to get the address of the function 'GetGameAPI.'" << std::endl;
+		FreeLibrary( hGameDLL );
+		return -1;
+	}
+	EngineComponents engineComponents;
+	engineComponents.console = &ServiceLocator::Console;
+	engineComponents.vault = &ServiceLocator::Vault;
+	sf::RenderWindow window( sf::VideoMode( winWidth, winHeight ),
+							 "Sirtet: the Classic",
+							 winStyle );
+	window.setFramerateLimit( FOREGROUND_FPS );
+	engineComponents.window = &window;
+	const GameComponents gameComponents = getGameAPI( engineComponents );
+	// Passed by value, or copied, thus initialized for the security.
+	engineComponents = { nullptr };
 /*
 =====
-Window
+Main Loop
 =====
 */
-	constexpr HashedKey key0 = util::hash::Digest( "winWidth" );
-	constexpr HashedKey key1 = util::hash::Digest( "winHeight" );
-	constexpr HashedKey key2 = util::hash::Digest( "winStyle" );
-	sf::RenderWindow window( sf::VideoMode( variableTable.find( key0 )->second,
-											variableTable.find( key1 )->second ),
-							 "Sirtet: the Classic",
-							 variableTable.find( key2 )->second );
-	constexpr HashedKey key3 = util::hash::Digest( "foreFPS" );
-	window.setFramerateLimit( variableTable.find( key3 )->second );
-	// !IMPORTANT: Now console has been initialized.
-	auto& console = *ServiceLocator::ConsoleWithInit( window.getSize( ) );
-	::sequence::Sequence game( window );
-	
+	IConsole& console = *ServiceLocator::Console( );
 	bool isOpen = true;
-	do
+	while ( true == isOpen )
 	{
 		sf::Event event;
 		while ( true == window.pollEvent( event ) )
@@ -137,6 +139,7 @@ Window
 			if ( sf::Event::Closed == event.type )
 			{
 				isOpen = false;
+				break;
 			}
 			else if ( sf::Event::KeyPressed == event.type )
 			{
@@ -145,45 +148,44 @@ Window
 					if ( false == console.isVisible( ) )
 					{
 						isOpen = false;
+						break;
 					}
 					// else ... is dealt with in 'console.handleEvent( event ).'
 				}
 			}
 			else if ( sf::Event::LostFocus == event.type )
 			{
-				constexpr HashedKey key4 = util::hash::Digest( "backFPS" );
-				window.setFramerateLimit( variableTable.find( key4 )->second );
+				window.setFramerateLimit( variableTable.find( HK_BACK_FPS )->second );
 			}
 			else if ( sf::Event::GainedFocus == event.type )
 			{
-				window.setFramerateLimit( variableTable.find( key3 )->second );
+				window.setFramerateLimit( variableTable.find( HK_FORE_FPS )->second );
 			}
 					
 			// Console
 			console.handleEvent( event );
 		}
 
-		if ( false == isOpen )
-		{
-			break;
-		}
-
-		game.update( );
+		gameComponents.game->update( );
 
 		window.clear( );
-		game.draw( );
+		gameComponents.game->draw( );
 		if ( true == console.isVisible( ) )
 		{
 			window.draw( console );
 		}
 		window.display( );
 	}
-	while ( true );
 
 /*
 =====
 Resource Free
 =====
 */
+	// !IMPORTANT: Let .dll free only after calling 'ServiceLocator::Release( )',
+	//			   otherwise this would try to access a function in .dll through a pointer,
+	//			   which is violation and makes an exception happen.
+	ServiceLocator::Release( );
 	window.close( );
+	FreeLibrary( hGameDLL );
 }

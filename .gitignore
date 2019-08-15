@@ -1,5 +1,6 @@
 Debug
 Release
+ReleaseWithNoPDB
 x64
 .vs
 .gitignore

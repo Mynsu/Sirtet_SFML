@@ -43,7 +43,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\variableTable.txt">
+    <Text Include="vault.txt">
       <Filter>리소스 파일</Filter>
     </Text>
   </ItemGroup>
