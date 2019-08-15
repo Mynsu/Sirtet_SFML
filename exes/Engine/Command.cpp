@@ -3,7 +3,9 @@
 
 void Command::processCommand( const std::string& commandLine )
 {
+	//
 	// Parsing a command line
+	///
 	const size_t _1stIdxOfTokenizer = commandLine.find_first_of( ' ' );
 	// Exception
 	if ( 0 == _1stIdxOfTokenizer )

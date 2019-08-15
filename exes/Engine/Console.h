@@ -9,7 +9,17 @@ enum class FailureLevel
 	// When the default value is used as a makeshift and using an explicit value is strongly recommended
 	WARNING,
 	// When it's obvious that a crush or a severe failure will happen
-	CRITICAL, //TODO: FATAL ¾î¶§?
+	FATAL,
+};
+
+enum class ExceptionType
+{
+	VARIABLE_NOT_FOUND,
+	TYPE_CHECK,
+	FILE_NOT_FOUND,
+	RANGE_CHECK,
+
+	_MAX,
 };
 
 class IConsole : public sf::Drawable
@@ -21,13 +31,15 @@ public:
 	virtual void handleEvent( const sf::Event& event ) = 0;
 	virtual void print( const std::string& message, sf::Color color = sf::Color::White ) = 0;
 	virtual void printFailure( const FailureLevel failureLevel, const std::string& message ) = 0;
-	virtual void printScriptError( const FailureLevel failureLevel, const std::string& variableName, const std::string& scriptName ) = 0;
+	// Not includes the case that a script file itself can't be found.
+	virtual void printScriptError( const ExceptionType exceptionType, const std::string& variableName, const std::string& scriptName ) = 0;
 	virtual void addCommand( const HashedKey command, const Command::Func& functional ) = 0;
 	virtual void processCommand( const std::string& command ) = 0;
 	virtual bool isVisible( ) const = 0;
 	// Tell how big the window size is, which decides the position and the size of the console.
 	// 800*600 assumed by default.
 	virtual void setPosition( const sf::Vector2u& winSize ) = 0;
+	// NOTE: Protected constructor prevents users from instantiating the abstract class.
 protected:
 	IConsole( ) = default;
 };
@@ -41,45 +53,11 @@ public:
 
 	void handleEvent( const sf::Event& event ) override;
 	void print( const std::string& message, sf::Color color = sf::Color::White ) override;
-	void printFailure( const FailureLevel failureLevel, const std::string& message ) override
-	{
-		// Concatenate error level info with message
-		// NOTE: Using another timespace on memory is faster than in-place rearrangement in this situation.
-		std::string concatenated;
-		switch ( failureLevel )
-		{
-			case FailureLevel::WARNING:
-				concatenated.assign( "WARNING: " + message );
-				break;
-			case FailureLevel::CRITICAL:
-				concatenated.assign( "CRITICAL: " + message );
-				break;
-			default:
-#ifdef _DEBUG
-				__debugbreak( );
-#else
-				__assume( 0 );
-				break;
-#endif
-		}
-		print( concatenated, sf::Color::Red );
-	}
-	void printScriptError( const FailureLevel failureLevel, const std::string& variableName, const std::string& scriptName ) override
-	{
-		printFailure( failureLevel, "Variable '" + variableName + "' in " + scriptName + " can't be found or has an odd value." );
-	}
-	void addCommand( const HashedKey command, const Command::Func& functional )
-	{
-		mCommand.addCommand( command, functional );
-	}
-	void processCommand( const std::string& commandLine ) override
-	{
-		mCommand.processCommand( commandLine );
-	}
-	bool isVisible( ) const
-	{
-		return mVisible;
-	}
+	void printFailure( const FailureLevel failureLevel, const std::string& message ) override;
+	void printScriptError( const ExceptionType exceptionType, const std::string& variableName, const std::string& scriptName ) override;
+	void addCommand( const HashedKey command, const Command::Func& functional ) override;
+	void processCommand( const std::string& commandLine ) override;
+	bool isVisible( ) const override;
 	void setPosition( const sf::Vector2u& winSize ) override;
 private:
 	bool mVisible;
@@ -90,5 +68,6 @@ private:
 	sf::RectangleShape mConsoleWindow;
 	sf::Text mCurrentInputTextField;
 	///sf::Text mCursorForegroundTextField;
+	std::array< std::string, static_cast< size_t >( ExceptionType::_MAX )> mExceptionTypes;
 	std::array< sf::Text, 9 > mHistoryTextFields;
 };

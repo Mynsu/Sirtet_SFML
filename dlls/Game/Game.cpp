@@ -1,50 +1,54 @@
 #include "Game.h"
-#include "Lib/precompiled.h"
-#include "sequence/Sequence.h"
+#include <Lib/precompiled.h>
+#include "ServiceLocatorMirror.h"
+#include "scene/SceneManager.h"
 
 class GameLocal final : public IGame
 {
+private:
+	// Only a single instance for a type can live at a time, but shouldn't be accessible globally.
+	// That's the difference from the class filled with static functions, or on singleton pattern and the like.
+	//
+	// NOTE: 'private static' is better than one in an unnamed namespace
+	// because in this .cpp file there are much more than this class.
+	static bool IsInstantiated;
 public:
-	// NOTE: Called in compile-time.
+	// NOTE: Called in compile-time, thus another initialization should be done in runtime.
 	GameLocal( )
 		: mWindow( nullptr )
 	{
-		IsInstanciated = true;
+		IsInstantiated = true;
 	}
 	~GameLocal( )
 	{
-		mWindow = nullptr;
 		ServiceLocatorMirror::Release( );
+		mWindow = nullptr;
+		IsInstantiated = false;
 	};
 
 	void update( )
 	{
-		mSequence.update( );
+		mSceneManager.update( );
 	}
 	void draw( )
 	{
-		mSequence.draw( );
+		mSceneManager.draw( );
 	}
 private:
 	void setWindow( sf::RenderWindow* const window )
 	{
 		mWindow = window;
-		mSequence.lastInit( window );
+		mSceneManager.lastInit( window );
 	}
 
-	//궁금: 베이스에다 놓을까?
-	// A single instance can live at a time, two or more can't.
-	// NOTE: Global access isn't necessary here.
-	static bool IsInstanciated;
-	// NOTE: On spatial locality members win, statics lose; locality leads to better performance.
 	sf::RenderWindow* mWindow;
-	::sequence::Sequence mSequence;
+	::scene::SceneManager mSceneManager;
 };
 
-bool GameLocal::IsInstanciated = false;
+bool GameLocal::IsInstantiated = false;
 
 // NOTE: In this way an instance will be created in compile-time,
-//		 but can require another initialization, which should inevitably be in runtime.
+//		 but often needs another initialization in runtime.
 std::unique_ptr< IGame > _Game( std::make_unique< GameLocal >( ) );
 
 // Pseudo-unnamed function
@@ -52,7 +56,7 @@ inline void _2943305454( const EngineComponents engine )
 {
 	ServiceLocatorMirror::_Console = engine.console;
 	ServiceLocatorMirror::_Vault = engine.vault;
-	// !IMPORTANT: Call this only after all the engine components has been linked, or assigned.
+	// !IMPORTANT: Call this only after all the engine components has been linked, or assigned like above.
 	_Game->setWindow( engine.window );
 }
 

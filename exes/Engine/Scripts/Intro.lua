@@ -1,2 +1,2 @@
 Image = "Images/Intro.png"
-NextSequence = 1
+NextScene = 1

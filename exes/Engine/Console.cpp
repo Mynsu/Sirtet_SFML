@@ -6,6 +6,18 @@ ConsoleLocal::ConsoleLocal( ) : mVisible( false ),
 								mCurrentInput( "_" )
 								//mCursorForeground( "_" )
 {
+	//
+	// Mapping Exception Type to String
+	//
+	mExceptionTypes[ static_cast< uint8_t >( ExceptionType::VARIABLE_NOT_FOUND ) ]
+		= "Variable Not Found: ";
+	mExceptionTypes[ static_cast< uint8_t >( ExceptionType::TYPE_CHECK ) ]
+		= "Type Check: ";
+	mExceptionTypes[ static_cast< uint8_t >( ExceptionType::FILE_NOT_FOUND ) ]
+		= "File Not Found: ";
+	mExceptionTypes[ static_cast< uint8_t >( ExceptionType::RANGE_CHECK ) ]
+		= "Range Check: ";
+
 #ifndef _DEBUG
 	try
 #endif
@@ -13,38 +25,65 @@ ConsoleLocal::ConsoleLocal( ) : mVisible( false ),
 		const std::string scriptPathNName( "Scripts/Console.lua" );
 		const std::string varName0( "Font" );
 		const std::string varName1( "VisibleOnStart" );
-		const auto table = ::util::script::LoadFromScript( scriptPathNName, varName0, varName1 );
-		// When the variable 'Font' exists in the script,
-		if ( const auto& it = table.find( varName0 ); table.cend( ) != it )
+		const auto result = ::util::script::LoadFromScript( scriptPathNName, varName0, varName1 );
+		bool isDefault = false;
+		// When there's the variable 'Font' in the script,
+		if ( const auto it = result.find( varName0 ); result.cend( ) != it )
 		{
-			if ( false == mFont.loadFromFile( std::get< std::string >( it->second ) ) )
+			// Type check
+			if ( true == std::holds_alternative< std::string >( it->second ) )
 			{
-				// Exception: When the value has an odd path, or there's no such file,
-				printFailure( FailureLevel::CRITICAL, "File not found: " + varName0 + " in " + scriptPathNName );
-#ifdef _DEBUG
-				__debugbreak( );
-#endif
+				if ( false == mFont.loadFromFile( std::get< std::string >( it->second ) ) )
+				{
+					// File Not Found Exception
+					printScriptError( ExceptionType::FILE_NOT_FOUND, varName0, scriptPathNName );
+					isDefault = true;
+				}
+			}
+			// Type Check Exception
+			else
+			{
+				printScriptError( ExceptionType::TYPE_CHECK, varName0, scriptPathNName );
+				isDefault = true;
 			}
 		}
-		// Exception: When the variable 'Font' doesN'T exist in the script,
+		// Variable Not Found Exception
 		else
 		{
-			printScriptError( FailureLevel::WARNING, varName0, scriptPathNName );
+			printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName0, scriptPathNName );
+			isDefault = true;
+		}
+
+		if ( true == isDefault )
+		{
 			const std::string defaultFilePathNName( "Fonts/AGENCYB.TTF" );
 			if ( false == mFont.loadFromFile( defaultFilePathNName ) )
 			{
-				// Exception: When there isn't the default file,
-				printFailure( FailureLevel::CRITICAL, "File not found: " + defaultFilePathNName );
+				// Exception: When there's not even the default file,
+				printFailure( FailureLevel::FATAL,
+							  mExceptionTypes[ static_cast<uint8_t>( ExceptionType::FILE_NOT_FOUND ) ] + defaultFilePathNName );
 #ifdef _DEBUG
 				__debugbreak( );
 #endif
 			}
 		}
-		// When the variable 'VisibleOnStart' exists in the script,
-		if ( const auto& it = table.find( varName1 ); table.cend( ) != it )
+
+		// When there's the variable 'VisibleOnStart' in the script,
+		if ( const auto it = result.find( varName1 ); result.cend( ) != it )
 		{
-			mVisible = std::get< bool >( it->second );
+			// Type check
+			if ( true == std::holds_alternative< bool >( it->second ) )
+			{
+				mVisible = std::get< bool >( it->second );
+			}
+			// Type Check Exception
+			else
+			{
+				printScriptError( ExceptionType::TYPE_CHECK, varName1, scriptPathNName );
+			}
 		}
+		/// Variable Not Found Exception
+		/// else { // Nothing to do }
 	}
 #ifndef _DEBUG
 	catch ( std::runtime_error& )
@@ -178,4 +217,49 @@ void ConsoleLocal::print( const std::string& message, sf::Color color )
 	{
 		mHistoryTextFields[ 0 ].setFillColor( color );
 	}
+}
+
+void ConsoleLocal::printFailure( const FailureLevel failureLevel, const std::string& message )
+{
+	// Concatenate error level info with message
+	// NOTE: Using another timespace on memory is faster than in-place rearrangement in this situation.
+	std::string concatenated;
+	switch ( failureLevel )
+	{
+		case FailureLevel::WARNING:
+			concatenated.assign( "WARNING: " + message );
+			break;
+		case FailureLevel::FATAL:
+			concatenated.assign( "FATAL: " + message );
+			break;
+		default:
+#ifdef _DEBUG
+			__debugbreak( );
+#else
+			__assume( 0 );
+			break;
+#endif
+	}
+	print( concatenated, sf::Color::Red );
+}
+
+void ConsoleLocal::printScriptError( const ExceptionType exceptionType, const std::string& variableName, const std::string& scriptName )
+{
+	printFailure( FailureLevel::WARNING,
+				  mExceptionTypes[ static_cast< uint8_t >( exceptionType ) ] + "[" + variableName + ":" + scriptName + "]" );
+}
+
+void ConsoleLocal::addCommand( const HashedKey command, const Command::Func& functional )
+{
+	mCommand.addCommand( command, functional );
+}
+
+void ConsoleLocal::processCommand( const std::string& commandLine )
+{
+	mCommand.processCommand( commandLine );
+}
+
+bool ConsoleLocal::isVisible( ) const
+{
+	return mVisible;
 }

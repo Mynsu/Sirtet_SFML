@@ -20,10 +20,11 @@ namespace util::script
 		if ( true == luaL_dofile( lua, scriptPathNName.data( ) ) )
 		{
 			lua_close( lua );
+
 #ifdef GAME_EXPORTS
-			ServiceLocatorMirror::Console( )->printFailure( FailureLevel::CRITICAL, "File not found: " + scriptPathNName );
+			ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, "File Not Found: " + scriptPathNName );
 #else
-			ServiceLocator::Console( )->printFailure( FailureLevel::CRITICAL, "File not found: " + scriptPathNName );
+			ServiceLocator::Console( )->printFailure( FailureLevel::FATAL, "File Not Found: " + scriptPathNName );
 #endif
 
 #ifdef _DEBUG
@@ -50,7 +51,7 @@ namespace util::script
 					retVals.emplace( it, static_cast< bool >( lua_toboolean( lua, index ) ) );
 					break;
 				case LUA_TNUMBER:
-					// NOTE: Braces{} are placed in order to use a local variable 'number.'
+				// NOTE: Braces{} are placed to use a local variable 'number.'
 				{
 					const double number = lua_tonumber( lua, index );
 					// When integer,
@@ -60,10 +61,13 @@ namespace util::script
 						if ( std::numeric_limits< int >::min( ) > number ||
 							 std::numeric_limits< int >::max( ) < number )
 						{
+							const std::string msg( "Overflow or underflow occurs." );
 #ifdef GAME_EXPORTS
-							ServiceLocatorMirror::Console( )->printScriptError( FailureLevel::CRITICAL, it.data( ), scriptPathNName );
+							ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL,
+																			msg + it.data( ) + scriptPathNName );
 #else
-							ServiceLocator::Console( )->printScriptError( FailureLevel::CRITICAL, it.data( ), scriptPathNName );
+							ServiceLocator::Console( )->printFailure( FailureLevel::FATAL,
+																	  msg + it.data( ) + scriptPathNName );
 #endif
 
 #ifdef _DEBUG
@@ -81,10 +85,13 @@ namespace util::script
 						if ( std::numeric_limits< float >::min( ) > number ||
 							 std::numeric_limits< float >::max( ) < number )
 						{
+							const std::string msg( "Overflow or underflow occurs." );
 #ifdef GAME_EXPORTS
-							ServiceLocatorMirror::Console( )->printScriptError( FailureLevel::CRITICAL, it.data( ), scriptPathNName );
+							ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL,
+																			msg + it.data( ) + scriptPathNName );
 #else
-							ServiceLocator::Console( )->printScriptError( FailureLevel::CRITICAL, it.data( ), scriptPathNName );
+							ServiceLocator::Console( )->printFailure( FailureLevel::FATAL,
+																	  msg + it.data( ) + scriptPathNName );
 #endif
 
 #ifdef _DEBUG

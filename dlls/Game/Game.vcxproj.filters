@@ -13,81 +13,75 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="헤더 파일\sequence">
-      <UniqueIdentifier>{f6c5c087-1082-49c5-927e-59d0fea35493}</UniqueIdentifier>
+    <Filter Include="헤더 파일\scene">
+      <UniqueIdentifier>{338291f4-97d2-43c0-8168-0a138b1ef170}</UniqueIdentifier>
     </Filter>
-    <Filter Include="소스 파일\sequence">
-      <UniqueIdentifier>{4847f3bf-f588-46c9-bff7-7b562d03a64f}</UniqueIdentifier>
+    <Filter Include="소스 파일\scene">
+      <UniqueIdentifier>{9cc0056b-bb4d-4b02-9b16-bbffe85d591a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="헤더 파일\sequence\inPlay">
-      <UniqueIdentifier>{4cd5b8aa-0403-4425-9cc2-88fee38f2b75}</UniqueIdentifier>
+    <Filter Include="헤더 파일\scene\inPlay">
+      <UniqueIdentifier>{eab7eac9-bf30-4783-9222-c3229429befc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="소스 파일\sequence\inPlay">
-      <UniqueIdentifier>{d7c1f3fe-ffb2-4c13-a3bc-1e65f57fef67}</UniqueIdentifier>
+    <Filter Include="소스 파일\scene\inPlay">
+      <UniqueIdentifier>{b785f793-549c-427d-a400-0cf6c72babc7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\Common.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\sequence\MainMenu.cpp">
-      <Filter>소스 파일\sequence</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\sequence\inPlay\SinglePlay.cpp">
-      <Filter>소스 파일\sequence\inPlay</Filter>
-    </ClCompile>
-    <ClCompile Include="sequence\inPlay\InPlay.cpp">
-      <Filter>소스 파일\sequence\inPlay</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\sequence\Sequence.cpp">
-      <Filter>소스 파일\sequence</Filter>
-    </ClCompile>
-    <ClCompile Include="sequence\Intro.cpp">
-      <Filter>소스 파일\sequence</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\sequence\inPlay\Ready.cpp">
-      <Filter>소스 파일\sequence\inPlay</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\Game.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\sequence\inPlay\Playing.cpp">
-      <Filter>소스 파일\sequence\inPlay</Filter>
+    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\Intro.cpp">
+      <Filter>소스 파일\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\MainMenu.cpp">
+      <Filter>소스 파일\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\SceneManager.cpp">
+      <Filter>소스 파일\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="ServiceLocatorMirror.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\InPlay.cpp">
+      <Filter>소스 파일\scene\inPlay</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\Playing.cpp">
+      <Filter>소스 파일\scene\inPlay</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\Ready.cpp">
+      <Filter>소스 파일\scene\inPlay</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\Common.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\sequence\ISequence.h">
-      <Filter>헤더 파일\sequence</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\sequence\MainMenu.h">
-      <Filter>헤더 파일\sequence</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\sequence\inPlay\SinglePlay.h">
-      <Filter>헤더 파일\sequence\inPlay</Filter>
-    </ClInclude>
-    <ClInclude Include="sequence\inPlay\InPlay.h">
-      <Filter>헤더 파일\sequence\inPlay</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\sequence\Sequence.h">
-      <Filter>헤더 파일\sequence</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\sequence\inPlay\ISequence.h">
-      <Filter>헤더 파일\sequence\inPlay</Filter>
-    </ClInclude>
-    <ClInclude Include="sequence\Intro.h">
-      <Filter>헤더 파일\sequence</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\sequence\inPlay\Ready.h">
-      <Filter>헤더 파일\sequence\inPlay</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\sequence\inPlay\Playing.h">
-      <Filter>헤더 파일\sequence\inPlay</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\Game.h">
       <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\Intro.h">
+      <Filter>헤더 파일\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\MainMenu.h">
+      <Filter>헤더 파일\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\SceneManager.h">
+      <Filter>헤더 파일\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="scene\IScene.h">
+      <Filter>헤더 파일\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="ServiceLocatorMirror.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\InPlay.h">
+      <Filter>헤더 파일\scene\inPlay</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\Playing.h">
+      <Filter>헤더 파일\scene\inPlay</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\Ready.h">
+      <Filter>헤더 파일\scene\inPlay</Filter>
+    </ClInclude>
+    <ClInclude Include="scene\inPlay\IScene.h">
+      <Filter>헤더 파일\scene\inPlay</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

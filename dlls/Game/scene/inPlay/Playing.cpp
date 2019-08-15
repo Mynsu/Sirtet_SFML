@@ -1,4 +1,5 @@
 #include "Playing.h"
+#include "../../ServiceLocatorMirror.h"
 #include <lua.hpp>
 
 struct PanelPosNSize
@@ -6,34 +7,36 @@ struct PanelPosNSize
 	uint16_t x, y, width, height;
 };
 
-sequence::inPlay::Playing::Playing( sf::RenderWindow& window,
-									::sequence::inPlay::Seq* const nextInPlaySequence,
-									sf::Drawable& shapeOrSprite )
-	: mWindow( window ), mNextInPlaySequence( nextInPlaySequence ),
-	mBackgroundRect( static_cast< sf::RectangleShape& >( shapeOrSprite ) )
+::scene::inPlay::Playing::Playing( sf::RenderWindow& window, sf::Drawable& shapeOrSprite )
+	: mWindow( window ), mBackgroundRect( static_cast< sf::RectangleShape& >( shapeOrSprite ) )
 {
 	// Cyan
 	const uint32_t BACKGROUND_RGB = 0x29cdb5ffu;
 	mBackgroundRect.setFillColor( sf::Color( BACKGROUND_RGB ) );
 
+	loadResources( );
+}
+
+void ::scene::inPlay::Playing::loadResources( )
+{
 	//TODO: array<array<string>>
-	//TODO: console ¸í·É¾î refresh
 
 	lua_State* lua = luaL_newstate( );
 	const std::string scriptPathNName( "Scripts/Playing.lua" );
 	if ( true == luaL_dofile( lua, scriptPathNName.data( ) ) )
 	{
-		::global::Console( )->printFailure( FailureLevel::WARNING, "File not found: " + scriptPathNName );
+		// File Not Found Exception
+		ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, "File Not Found: " + scriptPathNName );
 		lua_close( lua );
 	}
 	luaL_openlibs( lua );
 	const std::string tableName( "PlayerPanel" );
-	lua_getglobal( lua, tableName.data(	) );
+	lua_getglobal( lua, tableName.data( ) );
 	PanelPosNSize temp = { 100, 100, 300, 400 };
+	// Type Check Exception
 	if ( false == lua_istable( lua, -1 ) )
 	{
-		::global::Console( )->printScriptError( FailureLevel::WARNING,
-												tableName, tableName + " in " + scriptPathNName + " is not table type." );
+		ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
 	}
 	else
 	{
@@ -64,7 +67,11 @@ sequence::inPlay::Playing::Playing( sf::RenderWindow& window,
 	mPlayerPanel.setFillColor( sf::Color::Black );
 }
 
-void sequence::inPlay::Playing::draw( )
+void ::scene::inPlay::Playing::update( std::unique_ptr<::scene::inPlay::IScene>* const currentScene )
+{
+}
+
+void ::scene::inPlay::Playing::draw( )
 {
 	mWindow.draw( mBackgroundRect );
 	mWindow.draw( mPlayerPanel );

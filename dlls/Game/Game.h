@@ -1,6 +1,14 @@
+////
+// Game API
+////
+// If you want to get the callback function to load in .exe,
+// please look at this .h file, not the others.
+////
+
 #pragma once
 #pragma hdrstop
-#include "Common.h"
+#include <Lib/precompiled.h>
+#include "../exes/Engine/Console.h"
 
 struct EngineComponents;
 
@@ -22,6 +30,8 @@ private:
 	virtual void setWindow( sf::RenderWindow* const window ) = 0;
 };
 
+using GetConsole_t = const std::unique_ptr< IConsole >& ( *)( );
+using GetVault_t = std::unordered_map< HashedKey, Dword >& ( *)( );
 // Consists of pointers.
 struct EngineComponents
 {

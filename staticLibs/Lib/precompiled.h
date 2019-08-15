@@ -28,21 +28,21 @@ using Dword = int32_t;
 if ( false != ( x ) ) \
 { \
 std::string msg( "ASSERT_FALSE disproved. (" ); \
-ServiceLocatorMirror::Console( )->printFailure( FailureLevel::CRITICAL, \
+ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, \
 												msg + __FILE__ + ":" + std::to_string( __LINE__ ) + ")" ); \
 }
 #define ASSERT_TRUE( x ) \
 if ( true != ( x ) ) \
 { \
 std::string msg( "ASSERT_TRUE disproved. (" ); \
-ServiceLocatorMirror::Console( )->printFailure( FailureLevel::CRITICAL, \
+ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, \
 												msg + __FILE__ + ":" + std::to_string( __LINE__ ) + ")" ); \
 }
 #define ASSERT_NOT_NULL( x ) \
 if ( nullptr == (x) || NULL == (x) ) \
 { \
 std::string msg( "ASSERT_NOT_NULL disproved. (" ); \
-ServiceLocatorMirror::Console( )->printFailure( FailureLevel::CRITICAL, \
+ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, \
 												msg + __FILE__ + ":" + std::to_string( __LINE__ ) + ")" ); \
 }
 #else
@@ -50,21 +50,21 @@ ServiceLocatorMirror::Console( )->printFailure( FailureLevel::CRITICAL, \
 if ( false != ( x ) ) \
 { \
 std::string msg( "ASSERT_FALSE disproved. (" ); \
-ServiceLocator::Console( )->printFailure( FailureLevel::CRITICAL, \
+ServiceLocator::Console( )->printFailure( FailureLevel::FATAL, \
 										  msg + __FILE__ + ":" + std::to_string( __LINE__ ) + ")" ); \
 }
 #define ASSERT_TRUE( x ) \
 if ( true != ( x ) ) \
 { \
 std::string msg( "ASSERT_TRUE disproved. (" ); \
-ServiceLocator::Console( )->printFailure( FailureLevel::CRITICAL, \
+ServiceLocator::Console( )->printFailure( FailureLevel::FATAL, \
 										msg + __FILE__ + ":" + std::to_string( __LINE__ ) + ")" ); \
 }
 #define ASSERT_NOT_NULL( x ) \
 if ( nullptr == (x) || NULL == (x) ) \
 { \
 std::string msg( "ASSERT_NOT_NULL disproved. (" ); \
-ServiceLocator::Console( )->printFailure( FailureLevel::CRITICAL, \
+ServiceLocator::Console( )->printFailure( FailureLevel::FATAL, \
 												msg + __FILE__ + ":" + std::to_string( __LINE__ ) + ")" ); \
 }
 #endif

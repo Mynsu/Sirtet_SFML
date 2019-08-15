@@ -1,14 +1,8 @@
-//TODO: precompile«“±Ó?
-
 #pragma once
 #pragma hdrstop
-
 #include <Lib/precompiled.h>
+#include "Game.h"
 #include "../exes/Engine/Console.h"
-
-using GetConsole_t = const std::unique_ptr< IConsole >& (*)( );
-using GetVault_t = std::unordered_map< HashedKey, Dword >& (*)( );
-struct EngineComponents;
 
 class ServiceLocatorMirror
 {

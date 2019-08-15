@@ -96,14 +96,17 @@ Initialization
 	variableTable.emplace( HK_FORE_FPS, FOREGROUND_FPS );
 	constexpr HashedKey HK_BACK_FPS = util::hash::Digest( "backFPS" );
 	variableTable.emplace( HK_BACK_FPS, 30u );
+	ServiceLocator::Console( )->setPosition( { winWidth, winHeight } );
 
 	HMODULE hGameDLL = LoadLibraryA( "game.dll" );
+	// File Not Found Exception
 	if ( nullptr == hGameDLL )
 	{
 		std::cerr << "Fatal failure: Failed to load 'game.dll.'" << std::endl;
 		return -1;
 	}
 	GetGameAPI_t getGameAPI = reinterpret_cast< GetGameAPI_t >( GetProcAddress( hGameDLL, "GetGameAPI" ) );
+	// Exception: When function 'GetGameAPI(...)' isn't declared with 'extern "C"' keyword or not registered in .def file.
 	if ( nullptr == getGameAPI )
 	{
 		std::cerr << "Fatal failure: Failed to get the address of the function 'GetGameAPI.'" << std::endl;
