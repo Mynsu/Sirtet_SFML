@@ -12,7 +12,7 @@ namespace scene::inPlay
 		virtual ~IScene( ) = default;
 		
 		virtual void loadResources( ) = 0;
-		virtual void update( std::unique_ptr< ::scene::inPlay::IScene >* const ) = 0;
+		virtual void update( ::scene::inPlay::IScene** const ) = 0;
 		virtual void draw( ) = 0;
 
 		// NOTE: Protected constructor prevents users from instantiating the abstract class.

@@ -29,7 +29,12 @@ void scene::inPlay::InPlay::loadResources( )
 
 void ::scene::inPlay::InPlay::update( )
 {
-	mCurrentScene->update( &mCurrentScene );
+	::scene::inPlay::IScene* nextScene = nullptr;
+	mCurrentScene->update( &nextScene ); //TODO: 대신 함수 안에서는 강요 안 하잖아
+	if ( nullptr != nextScene && mCurrentScene.get( ) != nextScene )
+	{
+		mCurrentScene.reset( nextScene );
+	}
 }
 
 void ::scene::inPlay::InPlay::draw( )

@@ -1,1 +1,1 @@
-PlayerPanel = { x = 80, y = 80, width = 300, height = 440 }
+PlayerPanel = { x = 130, y = 0, cellSize = 30 }

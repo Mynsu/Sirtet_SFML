@@ -13,7 +13,7 @@ namespace scene::inPlay
 		~Ready( ) = default;
 
 		void loadResources( ) override;
-		void update( std::unique_ptr< ::scene::inPlay::IScene >* const currentScene ) override;
+		void update( ::scene::inPlay::IScene** const nextScene ) override;
 		void draw( ) override;
 	private:
 		// NOTE: It looks odd at first glance

@@ -196,6 +196,7 @@ void ConsoleLocal::handleEvent( const sf::Event& event )
 					//mCursorForegroundTextField.setString( mCursorForeground );
 				}
 			}
+			//TODO: 위 방향키 누르면 최근 내역 불러오기
 		}
 	}
 }

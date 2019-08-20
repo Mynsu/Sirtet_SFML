@@ -91,6 +91,7 @@ void ::scene::SceneManager::_2436549370( const std::string_view& args )
 
 void ::scene::SceneManager::_495146883( const std::string_view& )
 {
+	mWindow->clear( );
 	mCurrentScene->loadResources( );
 }
 #endif

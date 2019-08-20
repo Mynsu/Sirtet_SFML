@@ -140,15 +140,14 @@ void scene::inPlay::Ready::loadResources( )
 	mSprite.setPosition( sf::Vector2f( mWindow.getSize( ) - mSpriteClipSize ) * 0.5f );
 }
 
-void scene::inPlay::Ready::update( std::unique_ptr< ::scene::inPlay::IScene >* const currentScene )
+void scene::inPlay::Ready::update( ::scene::inPlay::IScene** const nextScene )
 {
 	// NOTE: moved into 'draw( ).'
 	///--mFrameCount;
 
 	if ( 0 == mFrameCount )
 	{
-		currentScene->reset( nullptr );
-		*currentScene = std::make_unique< ::scene::inPlay::Playing >( mWindow, mBackgroundRect );
+		*nextScene = new ::scene::inPlay::Playing( mWindow, mBackgroundRect );
 	}
 }
 
