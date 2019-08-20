@@ -24,7 +24,7 @@ namespace scene
 		sf::RenderWindow& mWindow;
 		const SetScene_t& mSetScene;
 		::scene::ID mOnIndicator;
-		sf::Vector2u mSpriteClipSize;
+		sf::Vector2< uint16_t > mSpriteClipSize;
 		sf::Texture mTexture;
 		sf::Sprite mSprite;
 	};

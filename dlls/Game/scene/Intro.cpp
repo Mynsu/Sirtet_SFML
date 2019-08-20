@@ -78,7 +78,7 @@ void scene::Intro::loadResources( )
 		}
 	}
 	mSprite.setTexture( mTexture );
-	const sf::Vector2i winSize( mWindow.getSize( ) );
+	const sf::Vector2< int16_t > winSize( mWindow.getSize( ) );
 	mSprite.setTextureRect( sf::IntRect( 0, 0, winSize.x, winSize.y ) );
 	// NOTE: Setting scale makes an image distorted and a bunch of bricks.
 	///mSprite.scale( scaleWidthRatio, scaleWidthRatio );

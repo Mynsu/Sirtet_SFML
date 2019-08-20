@@ -6,6 +6,7 @@
 #include "ServiceLocator.h"
 
 //TODO: 개발 완료 후 auto 쓰는 대신 타입 명시, 브랜치에 커밋
+//TODO: https://tetris.fandom.com/wiki/Tetris_Guideline
 
 int main( int argc, char* argv[ ] )
 {
