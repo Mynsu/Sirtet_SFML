@@ -1,11 +1,8 @@
 #
-# Dictionary
+# Vault
 #
 
-( variable name )	|	( description )
+[ Variable_Name ]	|	[ Description ]
 
-foreFPS				|	
-backFPS				|	
-
-
-nextInPlaySeq		|	
+foreFPS			|
+backFPS			|

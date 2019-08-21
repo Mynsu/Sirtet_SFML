@@ -13,7 +13,7 @@ namespace scene::inPlay
 		~Ready( ) = default;
 
 		void loadResources( ) override;
-		void update( ::scene::inPlay::IScene** const nextScene ) override;
+		void update( ::scene::inPlay::IScene** const nextScene, std::queue< sf::Event >& eventQueue ) override;
 		void draw( ) override;
 	private:
 		// NOTE: It looks odd at first glance

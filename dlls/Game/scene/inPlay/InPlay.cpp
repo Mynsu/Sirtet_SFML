@@ -27,10 +27,10 @@ void scene::inPlay::InPlay::loadResources( )
 	mCurrentScene->loadResources( );
 }
 
-void ::scene::inPlay::InPlay::update( )
+void ::scene::inPlay::InPlay::update( std::queue< sf::Event >& eventQueue )
 {
 	::scene::inPlay::IScene* nextScene = nullptr;
-	mCurrentScene->update( &nextScene ); //TODO: 대신 함수 안에서는 강요 안 하잖아
+	mCurrentScene->update( &nextScene, eventQueue ); //TODO: 대신 함수 안에서는 강요 안 하잖아
 	if ( nullptr != nextScene && mCurrentScene.get( ) != nextScene )
 	{
 		mCurrentScene.reset( nextScene );

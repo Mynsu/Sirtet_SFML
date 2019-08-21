@@ -14,7 +14,7 @@ namespace scene::inPlay
 		~InPlay( );
 
 		void loadResources( ) override;
-		void update( ) override;
+		void update( std::queue< sf::Event >& eventQueue ) override;
 		void draw( ) override;
 		::scene::ID currentScene( ) const override;
 		///auto newEqualTypeInstance( ) -> std::unique_ptr< ::scene::IScene > override;

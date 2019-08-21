@@ -23,7 +23,7 @@ namespace scene
 		virtual ~IScene( ) = default;
 
 		virtual void loadResources( ) = 0;
-		virtual void update( ) = 0;
+		virtual void update( std::queue< sf::Event >& eventQueue ) = 0;
 		virtual void draw( ) = 0;
 		///virtual auto newEqualTypeInstance( ) -> std::unique_ptr< ::scene::IScene > = 0;
 		virtual ::scene::ID currentScene( ) const = 0;

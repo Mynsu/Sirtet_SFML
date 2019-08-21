@@ -3,14 +3,8 @@
 #include <lua.hpp>
 #include <random>
 
-//#define GRID_WIDTH 10
-//#define GRID_HEIGHT 20
-
-//constexpr uint8_t scene::inPlay::GRID_WIDTH = 10;
-//constexpr uint8_t scene::inPlay::GRID_HEIGHT = 20;
-
 ::scene::inPlay::Playing::Playing( sf::RenderWindow& window, sf::Drawable& shapeOrSprite )
-	: mFrameCount( 0u ), mCellSize( 15u ),
+	: mIsFallingDown( false ), mFrameCount( 0u ), mCellSize( 15u ),
 	mWindow( window ), mBackgroundRect( static_cast< sf::RectangleShape& >( shapeOrSprite ) )
 {
 	// Cyan
@@ -67,39 +61,116 @@ void ::scene::inPlay::Playing::loadResources( )
 	mPlayerPanel.setFillColor( sf::Color::Black );
 }
 
-void ::scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene )
+void ::scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene, std::queue< sf::Event >& eventQueue )
 {
-	// TODO: 방향키에 따라
-
-	if ( 30u == mFrameCount )
+	bool hasCollidedAtThisFrame = false;
+	if ( true == mIsFallingDown )
 	{
-		++mCurrentTetrimino.position.y;
-		mFrameCount = 0u;
-	}
-
-	bool isLanding = false;
-	for ( int8_t i = BLOCKS_A_TETRIMINO*BLOCKS_A_TETRIMINO-1; i != -1; --i )
-	{
-		if ( (mCurrentTetrimino.rotations[mCurrentTetrimino.rotationID]>>i) & 1 )
+		const uint8_t end = 3u;
+		uint8_t i = 0u;
+		while ( i != end )
 		{
-			const uint8_t x = mCurrentTetrimino.position.x + i%BLOCKS_A_TETRIMINO;//궁금: 캐스팅 잘 되려나?
-			const uint8_t y = mCurrentTetrimino.position.y + i/BLOCKS_A_TETRIMINO;//궁금: 캐스팅 잘 되려나?
-			if ( GRID_HEIGHT == y || true == mStage[ y ][ x ].blocked )
+			++mCurrentTetrimino.position.y;
+			if ( hasCollidedAtThisFrame = hasCollided( ); true == hasCollidedAtThisFrame )
 			{
-				isLanding = true;
+				// Same as '= !hasCollidedAtThisFrame.'
+				mIsFallingDown = false;
 				break;
 			}
+			++i;
+		}
+		if ( end == i )
+		{
+			return;
 		}
 	}
-
-	if ( true == isLanding )
+	else if ( 45u < mFrameCount )
 	{
-		for ( int8_t i = BLOCKS_A_TETRIMINO*BLOCKS_A_TETRIMINO-1; i != -1; --i )
+		++mCurrentTetrimino.position.y;
+		hasCollidedAtThisFrame = hasCollided( );
+		mFrameCount = 0u;
+	}
+	else
+	{
+		uint8_t minX = GRID_WIDTH, maxX = 0u;
+		for ( uint8_t i = 0u; i != BLOCKS_A_TETRIMINO*BLOCKS_A_TETRIMINO; ++i )
 		{
-			if ( (mCurrentTetrimino.rotations[mCurrentTetrimino.rotationID]>>i) & 1 )
+			if ( ( mCurrentTetrimino.rotations[ mCurrentTetrimino.rotationID ] >> i ) & 1u )
 			{
-				const uint8_t x = mCurrentTetrimino.position.x + i%BLOCKS_A_TETRIMINO;//궁금: 캐스팅 잘 되려나?
-				uint8_t y = mCurrentTetrimino.position.y + i/BLOCKS_A_TETRIMINO;//궁금: 캐스팅 잘 되려나?
+				const uint8_t x = i % 4u;
+				if ( x < minX )
+				{
+					minX = x;
+				}
+				else if ( maxX < x )
+				{
+					maxX = x;
+				}
+			}
+		}
+
+		while ( false == eventQueue.empty( ) )
+		{
+			const sf::Event event( eventQueue.front( ) ); //궁금: 복사가 나으려나, 레퍼런스가 나으려나? 실험해보자.
+			if ( sf::Event::KeyPressed == event.type )
+			{
+				switch ( event.key.code )
+				{
+					case sf::Keyboard::Space:
+						mIsFallingDown = true;
+						// NOTE: Don't 'return', or it can't come out of the infinite loop.
+						///return;
+						[[ fallthrough ]];
+					case sf::Keyboard::Down:
+						++mCurrentTetrimino.position.y;
+						hasCollidedAtThisFrame = hasCollided( );
+						break;
+					case sf::Keyboard::Left:
+						if ( 0 < mCurrentTetrimino.position.x + minX )
+						{
+							--mCurrentTetrimino.position.x;
+						}
+						break;
+					case sf::Keyboard::Right:
+						if ( mCurrentTetrimino.position.x + maxX < GRID_WIDTH - 1 )
+						{
+							++mCurrentTetrimino.position.x;
+						}
+						break;
+					default:
+						break;
+				}
+			}
+			eventQueue.pop( );
+		}
+
+		//if ( true == sf::Keyboard::isKeyPressed( sf::Keyboard::LShift ) )
+		//{
+		//	const uint8_t nextRotID = (mCurrentTetrimino.rotationID+1u) % 4u;
+		//	for ( uint8_t i = 0u; i != 16; ++i )
+		//	{
+		//		if ( (mCurrentTetrimino.rotations[nextRotID]>>i) & 1u )
+		//		{
+		//			const uint8_t x = mCurrentTetrimino.position.x + i%4u;
+
+		//		}
+		//	}
+		//	/*++mCurrentTetrimino.rotationID;
+		//	if ( ROTATION_NUM == mCurrentTetrimino.rotationID )
+		//	{
+		//		mCurrentTetrimino.rotationID = 0u;
+		//	}*/
+		//}
+	}
+
+	if ( true == hasCollidedAtThisFrame )
+	{
+		for ( uint8_t i = 0u; i != BLOCKS_A_TETRIMINO*BLOCKS_A_TETRIMINO; ++i )
+		{
+			if ( (mCurrentTetrimino.rotations[mCurrentTetrimino.rotationID]>>i) & 1u )
+			{
+				const uint8_t x = mCurrentTetrimino.position.x + i%BLOCKS_A_TETRIMINO;
+				uint8_t y = mCurrentTetrimino.position.y + i/BLOCKS_A_TETRIMINO;
 				mStage[ --y ][ x ].blocked = true;
 				mStage[ y ][ x ].color = mCurrentTetrimino.color;
 			}
@@ -148,7 +219,7 @@ void ::scene::inPlay::Playing::draw( )
 	++mFrameCount;
 }
 
-::scene::inPlay::Tetrimino scene::inPlay::Playing::spawn( )
+::scene::inPlay::Tetrimino scene::inPlay::Playing::spawn( ) //TODO
 {
 	std::random_device rD;
 	std::minstd_rand rE( rD( ) ); //궁금: 레퍼런스 문서 보자.
@@ -225,6 +296,32 @@ void ::scene::inPlay::Playing::draw( )
 	}
 	retVal.position.x = GRID_WIDTH/2 - 1u;
 	retVal.position.y = 0u;
+	mFrameCount = 0u;
+
+	return retVal;
+}
+
+bool scene::inPlay::Playing::hasCollided( )
+{
+	bool retVal = false;
+	for ( int8_t i = BLOCKS_A_TETRIMINO*BLOCKS_A_TETRIMINO - 1; i != -1; --i )
+	{
+		if ( (mCurrentTetrimino.rotations[mCurrentTetrimino.rotationID]>>i) & 1u )
+		{
+			const uint8_t x = mCurrentTetrimino.position.x + i%BLOCKS_A_TETRIMINO;
+			const uint8_t y = mCurrentTetrimino.position.y + i/BLOCKS_A_TETRIMINO;
+			if ( GRID_HEIGHT == y )
+			{
+				retVal = true;
+				break;
+			}
+			else if ( true == mStage[ y ][ x ].blocked )
+			{
+				retVal = true;
+				break;
+			}
+		}
+	}
 
 	return retVal;
 }

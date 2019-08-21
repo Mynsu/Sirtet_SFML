@@ -26,9 +26,9 @@ public:
 		IsInstantiated = false;
 	};
 
-	void update( )
+	void update( std::queue< sf::Event >& eventQueue )
 	{
-		mSceneManager.update( );
+		mSceneManager.update( eventQueue );
 	}
 	void draw( )
 	{

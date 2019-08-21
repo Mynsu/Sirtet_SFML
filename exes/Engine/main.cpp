@@ -134,6 +134,7 @@ Main Loop
 	bool isOpen = true;
 	while ( true == isOpen )
 	{
+		std::queue< sf::Event > subeventQueue;
 		sf::Event event;
 		while ( true == window.pollEvent( event ) )
 		{
@@ -153,6 +154,7 @@ Main Loop
 					}
 					// else ... is dealt with in 'console.handleEvent( event ).'
 				}
+				subeventQueue.emplace( event );
 			}
 			else if ( sf::Event::LostFocus == event.type )
 			{
@@ -167,8 +169,8 @@ Main Loop
 			console.handleEvent( event );
 		}
 
-		gameComponents.game->update( );
-
+		gameComponents.game->update( subeventQueue );
+		
 		window.clear( );
 		gameComponents.game->draw( );
 		if ( true == console.isVisible( ) )

@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <queue>
 #include <string>
 #include <string_view>
 #include <functional>

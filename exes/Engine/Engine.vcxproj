@@ -54,7 +54,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="vault.txt" />
+    <Text Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\vault.txt">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </Text>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

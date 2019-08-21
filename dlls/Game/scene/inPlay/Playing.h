@@ -30,7 +30,7 @@ namespace scene::inPlay
 		uint8_t rotationID;
 		// On global coordinate.
 		// Unit: Grid.
-		sf::Vector2< uint8_t > position;
+		sf::Vector2< int8_t > position;
 		sf::Color color;
 		LocalSpace rotations[ ROTATION_NUM ];
 	};
@@ -51,12 +51,14 @@ namespace scene::inPlay
 		~Playing( ) = default;
 
 		void loadResources( ) override;
-		void update( ::scene::inPlay::IScene** const nextScene ) override;
+		void update( ::scene::inPlay::IScene** const nextScene, std::queue< sf::Event >& eventQueue ) override;
 		void draw( ) override;
 	private:
 		// TODO: 로직은 따로 놓아볼까?
 		Tetrimino spawn( );
+		bool hasCollided( );
 
+		bool mIsFallingDown;
 		uint16_t mFrameCount;
 		float mCellSize;
 		sf::RenderWindow& mWindow;

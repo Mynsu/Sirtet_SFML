@@ -137,7 +137,7 @@ void scene::MainMenu::loadResources( )
 	mSprite.setTexture( mTexture );
 }
 
-void ::scene::MainMenu::update( )
+void ::scene::MainMenu::update( std::queue< sf::Event >& )
 {
 	if ( true == sf::Mouse::isButtonPressed( sf::Mouse::Left ) )
 	{
