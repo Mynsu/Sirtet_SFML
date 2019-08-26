@@ -46,7 +46,7 @@ void ::scene::SceneManager::lastInit( sf::RenderWindow* const window )
 	setScene( startScene );
 #else
 	// NOTE: equals setScene( ::scene::ID::INTRO ).
-	mCurrentScene = std::make_unique< ::scene::Intro >( *window, mSetScene );
+	mCurrentScene = std::make_unique< ::scene::Intro >( *window, mSetScene_ );
 #endif
 }
 

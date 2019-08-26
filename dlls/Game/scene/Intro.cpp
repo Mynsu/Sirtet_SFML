@@ -6,19 +6,19 @@ bool ::scene::Intro::IsInstantiated = false;
 
 ::scene::Intro::Intro( sf::RenderWindow& window, const SetScene_t& setScene )
 	: mDuration( 2u ),
-	mAlpha( 0x00u ),
+	mAlpha_( 0x00u ),
 	mFrameCount( 0u ),
-	mFPS( 60u ),
-	mWindow( window ),
-	mSetScene( setScene ),
-	mNextScene( ::scene::ID::MAIN_MENU )
+	mFPS_( 60u ),
+	mWindow_( window ),
+	mSetScene_( setScene ),
+	mNextScene_( ::scene::ID::MAIN_MENU )
 {
 	ASSERT_FALSE( IsInstantiated );
 
 	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS" );
 	if ( const auto it = ServiceLocatorMirror::Vault( ).find( HK_FORE_FPS ); ServiceLocatorMirror::Vault( ).cend( ) != it )
 	{
-		mFPS = static_cast< uint16_t >( it->second );
+		mFPS_ = static_cast< uint16_t >( it->second );
 	}
 
 	loadResources( );
@@ -78,7 +78,7 @@ void scene::Intro::loadResources( )
 		}
 	}
 	mSprite.setTexture( mTexture );
-	const sf::Vector2< int16_t > winSize( mWindow.getSize( ) );
+	const sf::Vector2< int16_t > winSize( mWindow_.getSize( ) );
 	mSprite.setTextureRect( sf::IntRect( 0, 0, winSize.x, winSize.y ) );
 	// NOTE: Setting scale makes an image distorted and a bunch of bricks.
 	///mSprite.scale( scaleWidthRatio, scaleWidthRatio );
@@ -94,7 +94,7 @@ void scene::Intro::loadResources( )
 			if ( const ::scene::ID val = static_cast< ::scene::ID >( std::get< int >( it->second ) );
 				 val < ::scene::ID::MAX_NONE )
 			{
-				mNextScene = val;
+				mNextScene_ = val;
 			}
 			// Range Check Exception
 			else
@@ -128,9 +128,9 @@ void ::scene::Intro::update( std::queue< sf::Event >& )
 	//
 	// Scene Transition
 	//
-	if ( mFPS * mDuration < mFrameCount )
+	if ( mFPS_ * mDuration < mFrameCount )
 	{
-		mSetScene( mNextScene );
+		mSetScene_( mNextScene_ );
 	}
 
 	// NOTE: Moved into draw( ).
@@ -145,37 +145,37 @@ void ::scene::Intro::draw( )
 	const uint8_t MAX_RGBA = 0xffu;
 	const uint8_t MIN_RGBA = 0x00u;
 	// diff accumulates 0.5 second, or 500 milliseconds after.
-	const uint8_t diff = static_cast< uint8_t >( MAX_RGBA / ( mFPS * 0.5f ) );
-	const uint16_t brokenPoint = mFPS * mDuration - 30u;
+	const uint8_t diff = static_cast< uint8_t >( MAX_RGBA / ( mFPS_ * 0.5f ) );
+	const uint16_t brokenPoint = mFPS_ * mDuration - 30u;
 	if ( mFrameCount > brokenPoint )
 	{
 		// NOTE: Both 'mAlpha' and 'diff' are 'uint8_t', but 'mAlpha - diff' is 'int', not 'int8_t.'
 		// That means 'mAlpha - diff' can be below zero, so no underflow happens.
-		if ( mAlpha - diff < MIN_RGBA )
+		if ( mAlpha_ - diff < MIN_RGBA )
 		{
-			mAlpha = MIN_RGBA;
+			mAlpha_ = MIN_RGBA;
 		}
 		// Fade Out
 		else
 		{
-			mAlpha -= diff;
+			mAlpha_ -= diff;
 		}
 	}
 	else
 	{
 		// NOTE: Same as above.
-		if ( mAlpha + diff > MAX_RGBA )
+		if ( mAlpha_ + diff > MAX_RGBA )
 		{
-			mAlpha = MAX_RGBA;
+			mAlpha_ = MAX_RGBA;
 		}
 		// Fade In
 		else
 		{
-			mAlpha += diff;
+			mAlpha_ += diff;
 		}
 	}
-	mSprite.setColor( sf::Color( MAX_RGBA, MAX_RGBA, MAX_RGBA, mAlpha ) );
-	mWindow.draw( mSprite );
+	mSprite.setColor( sf::Color( MAX_RGBA, MAX_RGBA, MAX_RGBA, mAlpha_ ) );
+	mWindow_.draw( mSprite );
 
 	++mFrameCount;
 }

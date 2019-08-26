@@ -25,6 +25,12 @@
     <Filter Include="소스 파일\scene\inPlay">
       <UniqueIdentifier>{b785f793-549c-427d-a400-0cf6c72babc7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="헤더 파일\model">
+      <UniqueIdentifier>{1a99e18c-1301-4643-8e04-92f161e7ba89}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\model">
+      <UniqueIdentifier>{171b726f-50c5-4d7a-8421-66231e6e54a2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\Game.cpp">
@@ -50,6 +56,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\Ready.cpp">
       <Filter>소스 파일\scene\inPlay</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\model\Tetrimino.cpp">
+      <Filter>소스 파일\model</Filter>
+    </ClCompile>
+    <ClCompile Include="model\Stage.cpp">
+      <Filter>소스 파일\model</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -82,6 +94,15 @@
     </ClInclude>
     <ClInclude Include="scene\inPlay\IScene.h">
       <Filter>헤더 파일\scene\inPlay</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\model\Tetrimino.h">
+      <Filter>헤더 파일\model</Filter>
+    </ClInclude>
+    <ClInclude Include="model\Stage.h">
+      <Filter>헤더 파일\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\Constant.h">
+      <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

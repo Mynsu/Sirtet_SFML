@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="리소스 파일\scripts">
+      <UniqueIdentifier>{d30fb56d-c208-4202-883f-07216f85ffad}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Console.h">
@@ -46,5 +49,25 @@
     <Text Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\vault.txt">
       <Filter>리소스 파일</Filter>
     </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\_OnlyDuringDev.lua">
+      <Filter>리소스 파일\scripts</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\Console.lua">
+      <Filter>리소스 파일\scripts</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\Intro.lua">
+      <Filter>리소스 파일\scripts</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\MainMenu.lua">
+      <Filter>리소스 파일\scripts</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\Playing.lua">
+      <Filter>리소스 파일\scripts</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\Ready.lua">
+      <Filter>리소스 파일\scripts</Filter>
+    </None>
   </ItemGroup>
 </Project>

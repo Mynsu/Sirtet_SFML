@@ -5,12 +5,12 @@ bool ::scene::inPlay::InPlay::IsInstantiated = false;
 
 ::scene::inPlay::InPlay::InPlay( sf::RenderWindow& window,
 								  const SetScene_t& setScene )
-	: mWindow( window ),
-	mSetScene( setScene )
+	: mWindow_( window ),
+	mSetScene_( setScene )
 {
 	ASSERT_FALSE( IsInstantiated );
 
-	mCurrentScene = std::make_unique< ::scene::inPlay::Ready >( mWindow, mBackgroundRect );
+	mCurrentScene = std::make_unique< ::scene::inPlay::Ready >( mWindow_, mBackgroundRect );
 	loadResources( );
 
 	IsInstantiated = true;
@@ -23,7 +23,7 @@ bool ::scene::inPlay::InPlay::IsInstantiated = false;
 
 void scene::inPlay::InPlay::loadResources( )
 {
-	mBackgroundRect.setSize( sf::Vector2f( mWindow.getSize( ) ) );
+	mBackgroundRect.setSize( sf::Vector2f( mWindow_.getSize( ) ) );
 	mCurrentScene->loadResources( );
 }
 

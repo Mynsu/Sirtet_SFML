@@ -26,16 +26,12 @@ namespace scene
 		//
 		// Time Unit: Seconds.
 		const uint8_t mDuration;
-		// NOTE: It looks odd at first glance
-		//		 that a concept 'Intro' has an attribute 'alpha of RGBA.'
-		//		 However, performance is prior to that.
-		uint8_t mAlpha;
+		uint8_t mAlpha_;
 		uint16_t mFrameCount;
-		// NOTE: Please look the note on 'mAlpha.'
-		uint16_t mFPS;
-		sf::RenderWindow& mWindow;
-		const SetScene_t& mSetScene;
-		::scene::ID mNextScene;
+		uint16_t mFPS_;
+		sf::RenderWindow& mWindow_;
+		const SetScene_t& mSetScene_;
+		::scene::ID mNextScene_;
 		sf::Texture mTexture;
 		sf::Sprite mSprite;
 	};

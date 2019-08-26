@@ -20,8 +20,8 @@ namespace scene::inPlay
 		///auto newEqualTypeInstance( ) -> std::unique_ptr< ::scene::IScene > override;
 	private:
 		static bool IsInstantiated;
-		sf::RenderWindow& mWindow;
-		const SetScene_t& mSetScene;
+		sf::RenderWindow& mWindow_;
+		const SetScene_t& mSetScene_;
 		std::unique_ptr< ::scene::inPlay::IScene > mCurrentScene;
 		sf::RectangleShape mBackgroundRect;
 	};

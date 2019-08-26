@@ -16,14 +16,11 @@ namespace scene::inPlay
 		void update( ::scene::inPlay::IScene** const nextScene, std::queue< sf::Event >& eventQueue ) override;
 		void draw( ) override;
 	private:
-		// NOTE: It looks odd at first glance
-		//		 that a concept 'Ready' has an attribute 'mFPS.'
-		//		 However, performance is prior to that.
-		uint16_t mFPS;
+		uint16_t mFPS_;
 		uint16_t mFrameCount;
-		sf::RenderWindow& mWindow;
-		sf::RectangleShape& mBackgroundRect;
-		sf::Vector2u mSpriteClipSize;
+		sf::RenderWindow& mWindow_;
+		sf::RectangleShape& mBackgroundRect_;
+		sf::Vector2u mSpriteClipSize_;
 		sf::Texture mTexture;
 		sf::Sprite mSprite;
 	};

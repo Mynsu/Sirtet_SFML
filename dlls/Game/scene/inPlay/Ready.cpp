@@ -4,16 +4,16 @@
 #include "Playing.h"
 
 scene::inPlay::Ready::Ready( sf::RenderWindow& window, sf::Drawable& shapeOrSprite )
-	: mFPS( 60u ), mFrameCount( mFPS * 3u ),
-	mWindow( window ), mBackgroundRect( static_cast< sf::RectangleShape& >( shapeOrSprite ) ),
-	mSpriteClipSize( 256u, 256u )
+	: mFPS_( 60u ), mFrameCount( mFPS_ * 3u ),
+	mWindow_( window ), mBackgroundRect_( static_cast< sf::RectangleShape& >( shapeOrSprite ) ),
+	mSpriteClipSize_( 256u, 256u )
 {
 	auto& varT = ::ServiceLocatorMirror::Vault( );
 	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS" );
 	if ( const auto it = varT.find( HK_FORE_FPS ); varT.cend( ) != it )
 	{
-		mFPS = it->second;
-		mFrameCount = mFPS * 3u;
+		mFPS_ = it->second;
+		mFrameCount = mFPS_ * 3u;
 	}
 
 	loadResources( );
@@ -21,7 +21,7 @@ scene::inPlay::Ready::Ready( sf::RenderWindow& window, sf::Drawable& shapeOrSpri
 	// Cyan
 	const uint32_t BACKGROUND_RGB = 0x29cdb500u;
 	const uint32_t FADE = 0x7fu;
-	mBackgroundRect.setFillColor( sf::Color( BACKGROUND_RGB | FADE ) );
+	mBackgroundRect_.setFillColor( sf::Color( BACKGROUND_RGB | FADE ) );
 }
 
 void scene::inPlay::Ready::loadResources( )
@@ -85,7 +85,7 @@ void scene::inPlay::Ready::loadResources( )
 			// When the value looks OK,
 			else
 			{
-				mSpriteClipSize.x = temp;
+				mSpriteClipSize_.x = temp;
 				isDefault = false;
 			}
 		}
@@ -119,7 +119,7 @@ void scene::inPlay::Ready::loadResources( )
 			// When the value looks OK,
 			else
 			{
-				mSpriteClipSize.y = temp;
+				mSpriteClipSize_.y = temp;
 				isDefault = false;
 			}
 		}
@@ -137,7 +137,7 @@ void scene::inPlay::Ready::loadResources( )
 		ServiceLocatorMirror::Console( )->print( "Thus, height clipping the READY sprite is set 256." );
 	}
 	mSprite.setTexture( mTexture );
-	mSprite.setPosition( sf::Vector2f( mWindow.getSize( ) - mSpriteClipSize ) * 0.5f );
+	mSprite.setPosition( sf::Vector2f( mWindow_.getSize( ) - mSpriteClipSize_ ) * 0.5f );
 }
 
 void scene::inPlay::Ready::update( ::scene::inPlay::IScene** const nextScene, std::queue< sf::Event >& eventQueue )
@@ -147,7 +147,7 @@ void scene::inPlay::Ready::update( ::scene::inPlay::IScene** const nextScene, st
 
 	if ( 0 == mFrameCount )
 	{
-		*nextScene = new ::scene::inPlay::Playing( mWindow, mBackgroundRect );
+		*nextScene = new ::scene::inPlay::Playing( mWindow_, mBackgroundRect_ );
 	}
 }
 
@@ -160,14 +160,14 @@ void scene::inPlay::Ready::draw( )
 	// Cyan
 	const uint32_t BACKGROUND_RGB = 0x29cdb500u;
 	const uint32_t FADE = 0x7fu;
-	mBackgroundRect.setFillColor( sf::Color( BACKGROUND_RGB | FADE ) );
-	mWindow.draw( mBackgroundRect );
+	mBackgroundRect_.setFillColor( sf::Color( BACKGROUND_RGB | FADE ) );
+	mWindow_.draw( mBackgroundRect_ );
 
 	////
 	// Countdown
 	////
-	mSprite.setTextureRect( sf::IntRect( 0, mSpriteClipSize.y*( mFrameCount/mFPS ), mSpriteClipSize.x, mSpriteClipSize.y ) );
-	mWindow.draw( mSprite );
+	mSprite.setTextureRect( sf::IntRect( 0, mSpriteClipSize_.y*( mFrameCount/mFPS_ ), mSpriteClipSize_.x, mSpriteClipSize_.y ) );
+	mWindow_.draw( mSprite );
 
 	--mFrameCount;
 }
