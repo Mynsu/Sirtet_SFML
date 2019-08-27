@@ -44,6 +44,7 @@ namespace model
 				}
 			}
 		}
+		void clearLine( );
 		inline const std::array< std::array<Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid( ) const
 		{
 			return mGrid;

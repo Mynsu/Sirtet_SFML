@@ -137,7 +137,11 @@ void ::scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene
 		mFrameCount = 0u;
 	}
 
-	//TODO: 라인 클리어
+	mPlayerStage.clearLine( );//TODO: 매 프레임 검사할 필요는 없잖아.
+	
+	//TODO: 시간 재기, 점수 내기
+
+	//TODO: 템포 점점 빠르게
 
 	//TODO: 게임오버 씬 바꾸기
 }
