@@ -16,8 +16,8 @@ namespace scene::inPlay
 		void update( ::scene::inPlay::IScene** const nextScene, std::queue< sf::Event >& eventQueue ) override;
 		void draw( ) override;
 	private:
-		uint16_t mFPS_;
-		uint16_t mFrameCount;
+		uint32_t mFPS_;
+		int32_t mFrameCount;
 		sf::RenderWindow& mWindow_;
 		sf::RectangleShape& mBackgroundRect_;
 		sf::Vector2u mSpriteClipSize_;

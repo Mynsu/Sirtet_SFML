@@ -63,11 +63,9 @@ private:
 	bool mVisible;
 	Command mCommand;
 	std::string mCurrentInput;
-	///std::string mCursorForeground;
 	sf::Font mFont;
 	sf::RectangleShape mConsoleWindow;
 	sf::Text mCurrentInputTextField;
-	///sf::Text mCursorForegroundTextField;
 	std::array< std::string, static_cast< size_t >( ExceptionType::_MAX )> mExceptionTypes;
 	std::array< sf::Text, 9 > mHistoryTextFields;
 };

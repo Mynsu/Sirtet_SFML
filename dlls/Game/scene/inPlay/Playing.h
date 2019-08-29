@@ -4,6 +4,7 @@
 #include "IScene.h"
 #include "../../model/Tetrimino.h"
 #include "../../model/Stage.h"
+#include "../../vfx/Combo.h"
 
 namespace scene::inPlay
 {
@@ -18,11 +19,13 @@ namespace scene::inPlay
 		void update( ::scene::inPlay::IScene** const nextScene, std::queue< sf::Event >& eventQueue ) override;
 		void draw( ) override;
 	private:
-		uint16_t mFrameCount;
+		uint8_t mLineCleared;
+		int32_t mFrameCount0, mFrameCount1, mFrameCount2;
 		sf::RenderWindow& mWindow_;
 		sf::RectangleShape& mBackgroundRect_;
 		::model::Tetrimino mCurrentTetrimino;
 		::model::Stage mPlayerStage;
+		::vfx::Combo mVfxCombo;
 		//sf::RectangleShape mOpponentPanel;
 	};
 }

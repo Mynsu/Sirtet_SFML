@@ -9,13 +9,13 @@ ConsoleLocal::ConsoleLocal( ) : mVisible( false ),
 	//
 	// Mapping Exception Type to String
 	//
-	mExceptionTypes[ static_cast< uint8_t >( ExceptionType::VARIABLE_NOT_FOUND ) ]
+	mExceptionTypes[ static_cast< int >( ExceptionType::VARIABLE_NOT_FOUND ) ]
 		= "Variable Not Found: ";
-	mExceptionTypes[ static_cast< uint8_t >( ExceptionType::TYPE_CHECK ) ]
+	mExceptionTypes[ static_cast< int >( ExceptionType::TYPE_CHECK ) ]
 		= "Type Check: ";
-	mExceptionTypes[ static_cast< uint8_t >( ExceptionType::FILE_NOT_FOUND ) ]
+	mExceptionTypes[ static_cast< int >( ExceptionType::FILE_NOT_FOUND ) ]
 		= "File Not Found: ";
-	mExceptionTypes[ static_cast< uint8_t >( ExceptionType::RANGE_CHECK ) ]
+	mExceptionTypes[ static_cast< int >( ExceptionType::RANGE_CHECK ) ]
 		= "Range Check: ";
 
 #ifndef _DEBUG
@@ -61,7 +61,7 @@ ConsoleLocal::ConsoleLocal( ) : mVisible( false ),
 			{
 				// Exception: When there's not even the default file,
 				printFailure( FailureLevel::FATAL,
-							  mExceptionTypes[ static_cast<uint8_t>( ExceptionType::FILE_NOT_FOUND ) ] + defaultFilePathNName );
+							  mExceptionTypes[ static_cast<int>( ExceptionType::FILE_NOT_FOUND ) ] + defaultFilePathNName );
 #ifdef _DEBUG
 				__debugbreak( );
 #endif
@@ -128,7 +128,6 @@ void ConsoleLocal::draw( sf::RenderTarget& target, sf::RenderStates states ) con
 {
 	target.draw( mConsoleWindow );
 	target.draw( mCurrentInputTextField );
-	///target.draw( mCursorForegroundTextField );
 	for ( const auto& it : mHistoryTextFields )
 	{
 		target.draw( it );
@@ -247,7 +246,7 @@ void ConsoleLocal::printFailure( const FailureLevel failureLevel, const std::str
 void ConsoleLocal::printScriptError( const ExceptionType exceptionType, const std::string& variableName, const std::string& scriptName )
 {
 	printFailure( FailureLevel::WARNING,
-				  mExceptionTypes[ static_cast< uint8_t >( exceptionType ) ] + "[" + variableName + ":" + scriptName + "]" );
+				  mExceptionTypes[ static_cast< int >( exceptionType ) ] + "[" + variableName + ":" + scriptName + "]" );
 }
 
 void ConsoleLocal::addCommand( const HashedKey command, const Command::Func& functional )

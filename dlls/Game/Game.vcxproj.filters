@@ -31,6 +31,12 @@
     <Filter Include="소스 파일\model">
       <UniqueIdentifier>{171b726f-50c5-4d7a-8421-66231e6e54a2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="헤더 파일\vfx">
+      <UniqueIdentifier>{fd336c11-d242-44bd-8b77-c1a37c37e5d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\vfx">
+      <UniqueIdentifier>{ad54fb4c-9f35-41c7-bf98-a440df72f85f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\Game.cpp">
@@ -62,6 +68,9 @@
     </ClCompile>
     <ClCompile Include="model\Stage.cpp">
       <Filter>소스 파일\model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\vfx\Combo.cpp">
+      <Filter>소스 파일\vfx</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -103,6 +112,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\Constant.h">
       <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\vfx\Combo.h">
+      <Filter>헤더 파일\vfx</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

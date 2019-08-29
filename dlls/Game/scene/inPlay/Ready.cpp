@@ -4,7 +4,7 @@
 #include "Playing.h"
 
 scene::inPlay::Ready::Ready( sf::RenderWindow& window, sf::Drawable& shapeOrSprite )
-	: mFPS_( 60u ), mFrameCount( mFPS_ * 3u ),
+	: mFPS_( 60u ), mFrameCount( mFPS_ * 3 ),
 	mWindow_( window ), mBackgroundRect_( static_cast< sf::RectangleShape& >( shapeOrSprite ) ),
 	mSpriteClipSize_( 256u, 256u )
 {
@@ -13,7 +13,7 @@ scene::inPlay::Ready::Ready( sf::RenderWindow& window, sf::Drawable& shapeOrSpri
 	if ( const auto it = varT.find( HK_FORE_FPS ); varT.cend( ) != it )
 	{
 		mFPS_ = it->second;
-		mFrameCount = mFPS_ * 3u;
+		mFrameCount = mFPS_ * 3;
 	}
 
 	loadResources( );

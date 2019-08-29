@@ -2,9 +2,9 @@
 
 namespace util::endian
 {
-	using Byte = char;
-	using Word = unsigned short;
-	using Dword = unsigned int; //int
+	using Byte = uint8_t;
+	using Word = uint16_t;
+	using Dword = uint32_t;
 
 	extern Dword ( *ConvertToLittle )( Dword arg );
 	extern Dword ( *ConvertToBig )( Dword arg );

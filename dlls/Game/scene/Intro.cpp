@@ -7,7 +7,7 @@ bool ::scene::Intro::IsInstantiated = false;
 ::scene::Intro::Intro( sf::RenderWindow& window, const SetScene_t& setScene )
 	: mDuration( 2u ),
 	mAlpha_( 0x00u ),
-	mFrameCount( 0u ),
+	mFrameCount( 0 ),
 	mFPS_( 60u ),
 	mWindow_( window ),
 	mSetScene_( setScene ),
@@ -18,7 +18,7 @@ bool ::scene::Intro::IsInstantiated = false;
 	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS" );
 	if ( const auto it = ServiceLocatorMirror::Vault( ).find( HK_FORE_FPS ); ServiceLocatorMirror::Vault( ).cend( ) != it )
 	{
-		mFPS_ = static_cast< uint16_t >( it->second );
+		mFPS_ = static_cast< uint32_t >( it->second );
 	}
 
 	loadResources( );
@@ -78,7 +78,7 @@ void scene::Intro::loadResources( )
 		}
 	}
 	mSprite.setTexture( mTexture );
-	const sf::Vector2< int16_t > winSize( mWindow_.getSize( ) );
+	const sf::Vector2u winSize( mWindow_.getSize( ) );
 	mSprite.setTextureRect( sf::IntRect( 0, 0, winSize.x, winSize.y ) );
 	// NOTE: Setting scale makes an image distorted and a bunch of bricks.
 	///mSprite.scale( scaleWidthRatio, scaleWidthRatio );
@@ -128,7 +128,7 @@ void ::scene::Intro::update( std::queue< sf::Event >& )
 	//
 	// Scene Transition
 	//
-	if ( mFPS_ * mDuration < mFrameCount )
+	if ( static_cast<int32_t>(mFPS_*mDuration) < mFrameCount )
 	{
 		mSetScene_( mNextScene_ );
 	}
@@ -146,7 +146,7 @@ void ::scene::Intro::draw( )
 	const uint8_t MIN_RGBA = 0x00u;
 	// diff accumulates 0.5 second, or 500 milliseconds after.
 	const uint8_t diff = static_cast< uint8_t >( MAX_RGBA / ( mFPS_ * 0.5f ) );
-	const uint16_t brokenPoint = mFPS_ * mDuration - 30u;
+	const int32_t brokenPoint = static_cast<int32_t>( mFPS_*mDuration*0.5f );
 	if ( mFrameCount > brokenPoint )
 	{
 		// NOTE: Both 'mAlpha' and 'diff' are 'uint8_t', but 'mAlpha - diff' is 'int', not 'int8_t.'
@@ -184,9 +184,3 @@ void ::scene::Intro::draw( )
 {
 	return ::scene::ID::INTRO;
 }
-
-//auto ::scene::Intro::newEqualTypeInstance( ) -> std::unique_ptr< ::scene::IScene >
-//{
-//	IsInstantiated = false;
-//	return std::make_unique< ::scene::Intro >( mWindow, mSetScene );
-//}

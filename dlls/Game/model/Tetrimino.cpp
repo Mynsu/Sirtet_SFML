@@ -1,7 +1,7 @@
 #include "Tetrimino.h"
 #include <random>
 
-sf::Vector2<int8_t> model::Tetrimino::Test[ static_cast< uint8_t >( Rotation::NULL_MAX ) ][ 4 ] =
+sf::Vector2<int8_t> model::Tetrimino::Test[ static_cast<int>(Rotation::NULL_MAX) ][ 4 ] =
 	{ 
 		{ {1,0}, {1,-1}, {0,2}, {1,2} },
 		{ {-1,0}, {-1,1}, {0,-2}, {-1,-2} },
@@ -126,7 +126,7 @@ void model::Tetrimino::tryRotate( const std::array<std::array<::model::Cell,::mo
 	//
 	for ( uint8_t i = 0u; i != 4u; ++i )
 	{
-		afterRot.mPosition += Test[ static_cast<uint8_t>(afterRot.mRotationID) ][ i ];
+		afterRot.mPosition += Test[ static_cast<int>(afterRot.mRotationID) ][ i ];
 		// When the rotation is possible after moving,
 		if ( false == afterRot.hasCollidedWith( grid ) )
 		{
@@ -137,7 +137,7 @@ void model::Tetrimino::tryRotate( const std::array<std::array<::model::Cell,::mo
 		// When the rotation is impossible,
 		// NOTE: 'else' is omitted.
 		///else
-		afterRot.mPosition -= Test[ static_cast<uint8_t>(afterRot.mRotationID) ][ i ];
+		afterRot.mPosition -= Test[ static_cast<int>(afterRot.mRotationID) ][ i ];
 	}
 }
 
@@ -146,7 +146,7 @@ bool model::Tetrimino::hasCollidedWith( const std::array<std::array<Cell,::model
 	bool retVal = false;
 	for ( int8_t i = ::model::tetrimino::BLOCKS_A_TETRIMINO*::model::tetrimino::BLOCKS_A_TETRIMINO-1; i != -1; --i )
 	{
-		if ( (mPossibleRotations[static_cast<uint8_t>(mRotationID)]>>i) & 1u )
+		if ( (mPossibleRotations[static_cast<int>(mRotationID)]>>i) & 1u )
 		{
 			// Coordinate transformation
 			const int8_t x = mPosition.x + i%model::tetrimino::BLOCKS_A_TETRIMINO;

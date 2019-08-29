@@ -177,9 +177,3 @@ void ::scene::MainMenu::draw( )
 {
 	return ::scene::ID::MAIN_MENU;
 }
-
-//auto ::scene::MainMenu::newEqualTypeInstance( ) -> std::unique_ptr< ::scene::IScene >
-//{
-//	IsInstantiated = false;
-//	return std::make_unique< ::scene::MainMenu >( mWindow, mSetScene );
-//}

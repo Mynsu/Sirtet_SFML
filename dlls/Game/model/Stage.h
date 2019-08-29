@@ -20,7 +20,7 @@ namespace model
 	public:
 		Stage( ) = delete;
 		explicit Stage( sf::RenderWindow& window )
-			: mWindow_( window )
+			: mCellSize_( 30.f ), mWindow_( window )
 		{
 			mPanel.setFillColor( sf::Color::Black );
 			mCellShape.setOutlineThickness( 1.f );
@@ -44,7 +44,7 @@ namespace model
 				}
 			}
 		}
-		void clearLine( );
+		uint8_t clearLine( );
 		inline const std::array< std::array<Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid( ) const
 		{
 			return mGrid;
@@ -66,7 +66,6 @@ namespace model
 		sf::RenderWindow& mWindow_;
 		sf::Vector2f mOrigin_;
 		sf::RectangleShape mPanel, mCellShape;
-		///Cell mGrid[ GRID_HEIGHT ][ GRID_WIDTH ];
 		std::array< std::array<Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT > mGrid;
 	};
 }

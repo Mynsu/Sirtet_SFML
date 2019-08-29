@@ -25,7 +25,6 @@ namespace scene
 		virtual void loadResources( ) = 0;
 		virtual void update( std::queue< sf::Event >& eventQueue ) = 0;
 		virtual void draw( ) = 0;
-		///virtual auto newEqualTypeInstance( ) -> std::unique_ptr< ::scene::IScene > = 0;
 		virtual ::scene::ID currentScene( ) const = 0;
 
 		// NOTE: Protected constructor prevents users from instantiating the abstract class.

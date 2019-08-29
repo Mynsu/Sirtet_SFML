@@ -1,55 +1,62 @@
 #include "Stage.h"
+#include <bitset>
 
-void model::Stage::clearLine( )
+uint8_t model::Stage::clearLine( )
 {
-	int8_t start = -1;
-	int8_t end = -1;
-	for ( int8_t i = ::model::stage::GRID_HEIGHT - 1; i != -1; --i )
+	std::bitset<::model::stage::GRID_HEIGHT> fLineCleared;
+	for ( int8_t i = ::model::stage::GRID_HEIGHT-1; i != -1; --i )
 	{
 		uint8_t k = 0u;
 		for ( ; k != ::model::stage::GRID_WIDTH; ++k )
 		{
 			if ( false == mGrid[ i ][ k ].blocked )
 			{
-				if ( -1 == start )
-				{
-					break;
-				}
-				else
-				{
-					goto breakbreak;
-				}
+				break;
 			}
 		}
 		if ( ::model::stage::GRID_WIDTH == k )
 		{
-			if ( -1 == start )
-			{
-				start = i;
-				end = i;
-			}
-			else
-			{
-				end = i;
-			}
-		}
-	}
-breakbreak:
-	if ( -1 != start )
-	{
-		for ( uint8_t i = 0u; i != 2*end-start-1; ++i )
-		{
-			mGrid[ start - i ] = mGrid[ end - i - 1u ];
-		}
-		for ( int8_t i = start - end; i != -1; --i )
-		{
 			for ( auto& it : mGrid[ i ] )
 			{
 				it.blocked = false;
-				it.color = sf::Color::Transparent;
+			}
+			fLineCleared.set( i );
+			if ( 4 == fLineCleared.count( ) ) //궁금: 변수 따로 놓는 게 빠르려나?
+			{
+				break;
 			}
 		}
 	}
+	uint8_t linesCleared = static_cast<uint8_t>(fLineCleared.count( ));
+	if ( 0u != linesCleared )
+	{
+		for ( int8_t i = ::model::stage::GRID_HEIGHT-1; i != 0; --i )//궁금: 이거 완죤... 정렬 아니냐? //TODO: -1 아닌 거 거슬리네.
+		{
+			if ( true == fLineCleared.test( i ) )
+			{
+				int8_t k = i-1;
+				for ( ; k != -1; --k )
+				{
+					if ( false == fLineCleared.test( k ) )
+					{
+						mGrid[ i ] = mGrid[ k ]; //TODO: 리스트가 낫겠다.
+						fLineCleared.set( i, false );
+						for ( auto& it : mGrid[ k ] )
+						{
+							it.blocked = false;
+						}
+						fLineCleared.set( k );
+						break;
+					}
+				}
+				if ( -1 == k )
+				{
+					break;
+				}
+			}
+		}
+	}
+	return linesCleared;
 }
 
 void model::Stage::setSize( const float cellSize )

@@ -10,8 +10,8 @@
 
 int main( int argc, char* argv[ ] )
 {
-	uint16_t winWidth = 800u;
-	uint16_t winHeight = 600u;
+	uint32_t winWidth = 800u;
+	uint32_t winHeight = 600u;
 	uint8_t winStyle = sf::Style::Close;
 /*
 =====
@@ -91,7 +91,7 @@ Initialization
 */
 	::util::endian::BindConvertFunc( );
 
-	const uint16_t FOREGROUND_FPS = 60u;
+	const uint32_t FOREGROUND_FPS = 60u;
 	auto& variableTable = ServiceLocator::Vault( );
 	constexpr HashedKey HK_FORE_FPS = util::hash::Digest( "foreFPS" ); //TODO: 한 프레임 안에 계산할 필요가 없는 게 뭐가 있을까?
 	variableTable.emplace( HK_FORE_FPS, FOREGROUND_FPS );
