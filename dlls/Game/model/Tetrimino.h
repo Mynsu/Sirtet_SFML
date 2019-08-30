@@ -31,7 +31,7 @@ namespace model
 			mBlockShape.setOutlineColor( sf::Color::Black );
 		}
 		inline Tetrimino( const Tetrimino& arg )
-			: mIsFallingDown( false ),
+			: mIsFallingDown( false ), mType( arg.mType ),
 			mRotationID( arg.mRotationID ), mPosition( arg.mPosition )
 		{
 			mBlockShape.setFillColor( arg.mBlockShape.getFillColor( ) );
@@ -44,6 +44,7 @@ namespace model
 		}
 		inline void operator=( const Tetrimino& arg )
 		{
+			mType = arg.mType;
 			mRotationID = arg.mRotationID;
 			mPosition = arg.mPosition;
 			mBlockShape.setFillColor( arg.mBlockShape.getFillColor( ) );
@@ -58,9 +59,10 @@ namespace model
 
 		inline void draw( sf::RenderWindow& window )
 		{
-			for ( uint8_t i = 0; i != ::model::tetrimino::BLOCKS_A_TETRIMINO*::model::tetrimino::BLOCKS_A_TETRIMINO; ++i )
+			const uint8_t area = ::model::tetrimino::BLOCKS_A_TETRIMINO*::model::tetrimino::BLOCKS_A_TETRIMINO;
+			for ( uint8_t i = 0; i != area; ++i )
 			{
-				if ( (mPossibleRotations[static_cast<int>(mRotationID)]>>i) & 1u )
+				if ( mPossibleRotations[static_cast<int>(mRotationID)] & (0x1u<<(area-i-1u)) )
 				{
 					// Coordinate transformation
 					const sf::Vector2< int8_t > localPos( i%model::tetrimino::BLOCKS_A_TETRIMINO, i/model::tetrimino::BLOCKS_A_TETRIMINO );
@@ -85,6 +87,10 @@ namespace model
 		inline LocalSpace blocks( ) const
 		{
 			return mPossibleRotations[ static_cast<int>(mRotationID) ];
+		}
+		inline ::model::tetrimino::Type type( ) const
+		{
+			return mType;
 		}
 		// Returns true when colliding with the floor or another tetrimino.
 		inline bool down( const std::array< std::array<::model::Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid, const uint8_t diff = 1u )
@@ -139,6 +145,7 @@ namespace model
 		// X and y on global coordinate.
 		// Unit: Grid.
 		sf::Vector2< int8_t > mPosition;
+		::model::tetrimino::Type mType;
 		Rotation mRotationID;
 		float mBlockSize_;
 		sf::Vector2f mOrigin_;

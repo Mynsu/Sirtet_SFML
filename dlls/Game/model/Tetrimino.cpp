@@ -9,36 +9,26 @@ sf::Vector2<int8_t> model::Tetrimino::Test[ static_cast<int>(Rotation::NULL_MAX)
 		{ {1,0}, {1,1}, {0,-2}, {1,-2} },
 	};
 
-enum class TetriminoShape
-{
-	I,
-	J, L,
-	N, S,
-	T,
-	O,
-
-	NONE_MAX,
-};
-
 ::model::Tetrimino model::Tetrimino::Spawn( )
 {
 	std::random_device rD;
 	std::minstd_rand rE( rD( ) ); //±Ã±Ý: ·¹ÆÛ·±½º ¹®¼­ º¸ÀÚ.
-	std::uniform_int_distribution shapeDist( static_cast< int32_t >( TetriminoShape::I ),
-											 static_cast< int32_t >( TetriminoShape::NONE_MAX ) - 1 ); //±Ã±Ý: ¾êµµ.
-	TetriminoShape shape = static_cast< TetriminoShape >( shapeDist( rE ) );
+	std::uniform_int_distribution shapeDist( static_cast<int>(::model::tetrimino::Type::I),
+											 static_cast<int>(::model::tetrimino::Type::NONE_MAX)-1 ); //±Ã±Ý: ¾êµµ.
+	::model::tetrimino::Type type = static_cast<::model::tetrimino::Type>(shapeDist(rE));
 	Tetrimino retVal;
-	switch ( shape )
+	retVal.mType = type;
+	switch ( type )
 	{
-		case TetriminoShape::I://TODO
+		case ::model::tetrimino::Type::I://TODO
 			retVal.mPossibleRotations[ 0 ] = 0b0100'0100'0100'0100;
 			retVal.mPossibleRotations[ 1 ] = 0b0000'0000'1111'0000;
-			retVal.mPossibleRotations[ 2 ] = retVal.mPossibleRotations[ 0 ];//TODO
-			retVal.mPossibleRotations[ 3 ] = retVal.mPossibleRotations[ 1 ];//TODO
+			retVal.mPossibleRotations[ 2 ] = 0b0010'0010'0010'0010;
+			retVal.mPossibleRotations[ 3 ] = 0b0000'1111'0000'0000;
 			retVal.mRotationID = static_cast< Rotation >( 1 );
 			retVal.setColor( sf::Color::Cyan );//TODO
 			break;
-		case TetriminoShape::J:
+		case ::model::tetrimino::Type::J:
 			retVal.mPossibleRotations[ 0 ] = 0b1000'1110'0000'0000;
 			retVal.mPossibleRotations[ 1 ] = 0b0100'0100'1100'0000;
 			retVal.mPossibleRotations[ 2 ] = 0b0000'1110'0010'0000;
@@ -46,7 +36,7 @@ enum class TetriminoShape
 			retVal.mRotationID = static_cast < Rotation >( 0 );
 			retVal.setColor( sf::Color::Blue );//TODO
 			break;
-		case TetriminoShape::L:
+		case ::model::tetrimino::Type::L:
 			retVal.mPossibleRotations[ 0 ] = 0b0010'1110'0000'0000;
 			retVal.mPossibleRotations[ 1 ] = 0b1100'0100'0100'0000;
 			retVal.mPossibleRotations[ 2 ] = 0b0000'1110'1000'0000;
@@ -55,7 +45,7 @@ enum class TetriminoShape
 			// Orange
 			retVal.setColor( sf::Color( 0xff7f00ff ) );//TODO
 			break;
-		case TetriminoShape::N:
+		case ::model::tetrimino::Type::N:
 			retVal.mPossibleRotations[ 0 ] = 0b1100'0110'0000'0000;
 			retVal.mPossibleRotations[ 1 ] = 0b0100'1100'1000'0000;
 			retVal.mPossibleRotations[ 2 ] = 0b0000'1100'0110'0000;
@@ -63,7 +53,7 @@ enum class TetriminoShape
 			retVal.mRotationID = static_cast< Rotation >( 0 );
 			retVal.setColor( sf::Color::Red );//TODO
 			break;
-		case TetriminoShape::S:
+		case ::model::tetrimino::Type::S:
 			retVal.mPossibleRotations[ 0 ] = 0b0110'1100'0000'0000;
 			retVal.mPossibleRotations[ 1 ] = 0b0100'0110'0010'0000;
 			retVal.mPossibleRotations[ 2 ] = 0b0000'0110'1100'0000;
@@ -71,7 +61,7 @@ enum class TetriminoShape
 			retVal.mRotationID = static_cast< Rotation >( 0 );
 			retVal.setColor( sf::Color::Green );//TODO
 			break;
-		case TetriminoShape::T:
+		case ::model::tetrimino::Type::T:
 			retVal.mPossibleRotations[ 0 ] = 0b0100'1110'0000'0000;
 			retVal.mPossibleRotations[ 1 ] = 0b0100'1100'0100'0000;
 			retVal.mPossibleRotations[ 2 ] = 0b0000'1110'0100'0000;
@@ -80,7 +70,7 @@ enum class TetriminoShape
 			// Purple - Old Citadel
 			retVal.setColor( sf::Color( 0x562f72ff ) );//TODO
 			break;
-		case TetriminoShape::O:
+		case ::model::tetrimino::Type::O:
 			retVal.mPossibleRotations[ 0 ] = 0b0000'0110'0110'0000;
 			retVal.mPossibleRotations[ 1 ] = retVal.mPossibleRotations[ 0 ];//TODO
 			retVal.mPossibleRotations[ 2 ] = retVal.mPossibleRotations[ 0 ];//TODO
@@ -144,9 +134,10 @@ void model::Tetrimino::tryRotate( const std::array<std::array<::model::Cell,::mo
 bool model::Tetrimino::hasCollidedWith( const std::array<std::array<Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT>& grid ) const
 {
 	bool retVal = false;
-	for ( int8_t i = ::model::tetrimino::BLOCKS_A_TETRIMINO*::model::tetrimino::BLOCKS_A_TETRIMINO-1; i != -1; --i )
+	const uint8_t area = ::model::tetrimino::BLOCKS_A_TETRIMINO*::model::tetrimino::BLOCKS_A_TETRIMINO;
+	for ( int8_t i = area-1; i != -1; --i )
 	{
-		if ( (mPossibleRotations[static_cast<int>(mRotationID)]>>i) & 1u )
+		if ( mPossibleRotations[static_cast<int>(mRotationID)] & (0x1u<<(area-i-1u)) )
 		{
 			// Coordinate transformation
 			const int8_t x = mPosition.x + i%model::tetrimino::BLOCKS_A_TETRIMINO;

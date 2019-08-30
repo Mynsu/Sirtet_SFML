@@ -303,9 +303,10 @@ void ::scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene
 	if ( true == hasCollidedAtThisFrame )
 	{
 		const ::model::LocalSpace blocks = mCurrentTetrimino.blocks( );
-		for ( uint8_t i = 0u; i != ::model::tetrimino::BLOCKS_A_TETRIMINO*::model::tetrimino::BLOCKS_A_TETRIMINO; ++i )
+		const uint8_t area = ::model::tetrimino::BLOCKS_A_TETRIMINO*::model::tetrimino::BLOCKS_A_TETRIMINO;
+		for ( uint8_t i = 0u; i != area; ++i )
 		{
-			if ( (blocks>>i) & 1u )
+			if ( blocks & (0x1u<<(area-i-1u)) )
 			{
 				const sf::Vector2<int8_t> pos = mCurrentTetrimino.position( );
 				mPlayerStage.lock( pos.x + i%model::tetrimino::BLOCKS_A_TETRIMINO,
@@ -358,9 +359,15 @@ void ::scene::inPlay::Playing::draw( )
 		if ( nextTetBlocks & (0x1u<<(::model::tetrimino::BLOCKS_A_TETRIMINO*::model::tetrimino::BLOCKS_A_TETRIMINO-i-1u)) )
 		{
 			sf::Vector2f localPos( sf::Vector2<uint8_t>(i%model::tetrimino::BLOCKS_A_TETRIMINO,i/model::tetrimino::BLOCKS_A_TETRIMINO) );
-			if ( sf::Color::Yellow == nextTet.color( ) )
+			const ::model::tetrimino::Type type = nextTet.type( );
+			if ( ::model::tetrimino::Type::O == type )
 			{
 				mNextTetriminoBlock_.setPosition( mNextTetriminoPanelPosition_ + mMargin_ + localPos*mCellSize_ );
+			}
+			else if ( ::model::tetrimino::Type::I == type )
+			{
+				mNextTetriminoBlock_.setPosition( mNextTetriminoPanelPosition_ + mMargin_ - sf::Vector2f(0.f, mCellSize_*0.5f)
+												  + localPos*mCellSize_ );
 			}
 			else
 			{

@@ -12,6 +12,17 @@ namespace model
 
 	namespace tetrimino
 	{
+		enum class Type
+		{
+			I,
+			J, L,
+			N, S,
+			T,
+			O,
+
+			NONE_MAX,
+		};
+
 		const uint8_t BLOCKS_A_TETRIMINO = 4u;
 	}
 }
