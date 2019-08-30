@@ -20,12 +20,20 @@ namespace scene::inPlay
 		void draw( ) override;
 	private:
 		uint8_t mLineCleared;
-		int32_t mFrameCount0, mFrameCount1, mFrameCount2;
+		int32_t mFrameCount0_, mFrameCount1_, mFrameCount2_;
+		float mTempo;
+		float mCellSize_;
 		sf::RenderWindow& mWindow_;
 		sf::RectangleShape& mBackgroundRect_;
-		::model::Tetrimino mCurrentTetrimino;
-		::model::Stage mPlayerStage;
+		sf::Vector2f mMargin_;
+		sf::Vector2f mNextTetriminoPanelPosition_;
+		sf::RectangleShape mNextTetriminoPanel;
+		sf::RectangleShape mNextTetriminoBlock_;
 		::vfx::Combo mVfxCombo;
+		::model::Tetrimino mCurrentTetrimino;
+		std::queue< ::model::Tetrimino > mNextTetriminos;
+		::model::Stage mPlayerStage;
+
 		//sf::RectangleShape mOpponentPanel;
 	};
 }

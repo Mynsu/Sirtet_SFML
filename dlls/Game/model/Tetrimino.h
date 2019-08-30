@@ -27,16 +27,16 @@ namespace model
 		inline Tetrimino( )
 			: mIsFallingDown( false )
 		{
-			mCellShape.setOutlineThickness( 1.f );
-			mCellShape.setOutlineColor( sf::Color::Black );
+			mBlockShape.setOutlineThickness( 1.f );
+			mBlockShape.setOutlineColor( sf::Color::Black );
 		}
 		inline Tetrimino( const Tetrimino& arg )
 			: mIsFallingDown( false ),
 			mRotationID( arg.mRotationID ), mPosition( arg.mPosition )
 		{
-			mCellShape.setFillColor( arg.mCellShape.getFillColor( ) );
-			mCellShape.setOutlineThickness( 1.f );
-			mCellShape.setOutlineColor( sf::Color::Black );
+			mBlockShape.setFillColor( arg.mBlockShape.getFillColor( ) );
+			mBlockShape.setOutlineThickness( 1.f );
+			mBlockShape.setOutlineColor( sf::Color::Black );
 			for ( uint8_t i = 0u; i != static_cast< uint8_t >( Rotation::NULL_MAX ); ++i )
 			{
 				mPossibleRotations[ i ] = arg.mPossibleRotations[ i ];
@@ -46,7 +46,7 @@ namespace model
 		{
 			mRotationID = arg.mRotationID;
 			mPosition = arg.mPosition;
-			mCellShape.setFillColor( arg.mCellShape.getFillColor( ) );
+			mBlockShape.setFillColor( arg.mBlockShape.getFillColor( ) );
 			for ( uint8_t i = 0u; i != static_cast< uint8_t >( Rotation::NULL_MAX ); ++i )
 			{
 				mPossibleRotations[ i ] = arg.mPossibleRotations[ i ];
@@ -60,12 +60,12 @@ namespace model
 		{
 			for ( uint8_t i = 0; i != ::model::tetrimino::BLOCKS_A_TETRIMINO*::model::tetrimino::BLOCKS_A_TETRIMINO; ++i )
 			{
-				if ( (mPossibleRotations[static_cast<int>(mRotationID)]>>i) & 1u ) //궁금: msb 0으로 채워질까 1일까?
+				if ( (mPossibleRotations[static_cast<int>(mRotationID)]>>i) & 1u )
 				{
 					// Coordinate transformation
 					const sf::Vector2< int8_t > localPos( i%model::tetrimino::BLOCKS_A_TETRIMINO, i/model::tetrimino::BLOCKS_A_TETRIMINO );
-					mCellShape.setPosition( mOrigin_ + sf::Vector2f(mPosition+localPos)*mCellSize_ );
-					window.draw( mCellShape );
+					mBlockShape.setPosition( mOrigin_ + sf::Vector2f(mPosition+localPos)*mBlockSize_ );
+					window.draw( mBlockShape );
 				}
 			}
 		}
@@ -79,7 +79,7 @@ namespace model
 		}
 		inline sf::Color color( ) const
 		{
-			return mCellShape.getFillColor( );
+			return mBlockShape.getFillColor( );
 		}
 		// Current blocks within their own local space.
 		inline LocalSpace blocks( ) const
@@ -123,15 +123,15 @@ namespace model
 		{
 			mOrigin_ = origin;
 		}
-		inline void setSize( const float cellSize )
+		inline void setSize( const float blockSize )
 		{
-			ASSERT_TRUE( 0 < cellSize );
-			mCellShape.setSize( sf::Vector2f( cellSize, cellSize ) );
-			mCellSize_ = cellSize;
+			ASSERT_TRUE( 0 < blockSize );
+			mBlockShape.setSize( sf::Vector2f( blockSize, blockSize ) );
+			mBlockSize_ = blockSize;
 		}
 		inline void setColor( const sf::Color color )
 		{
-			mCellShape.setFillColor( color );
+			mBlockShape.setFillColor( color );
 		}
 	private:
 		bool hasCollidedWith( const std::array< std::array<Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid ) const;
@@ -140,9 +140,9 @@ namespace model
 		// Unit: Grid.
 		sf::Vector2< int8_t > mPosition;
 		Rotation mRotationID;
-		float mCellSize_;
+		float mBlockSize_;
 		sf::Vector2f mOrigin_;
-		sf::RectangleShape mCellShape;
+		sf::RectangleShape mBlockShape;
 		LocalSpace mPossibleRotations[ static_cast<int>(Rotation::NULL_MAX) ];
 		static sf::Vector2<int8_t> Test[ static_cast<int>(Rotation::NULL_MAX) ][ 4 ];
 	};

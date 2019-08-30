@@ -6,6 +6,8 @@
 
 namespace model
 {
+	// A stage consists of cells as a tetrimino consists of blocks.
+	// Strictly, cell isn't block and vice versa, but they match up each other.
 	struct Cell
 	{
 		inline Cell( )
@@ -38,13 +40,17 @@ namespace model
 					if ( true == mGrid[ i ][ k ].blocked )
 					{
 						mCellShape.setFillColor( mGrid[ i ][ k ].color );
-						mCellShape.setPosition( mOrigin_ + sf::Vector2f(static_cast<float>(k), static_cast<float>(i))*mCellSize_ );
+						mCellShape.setPosition( mPosition_ + sf::Vector2f(static_cast<float>(k), static_cast<float>(i))*mCellSize_ );
 						mWindow_.draw( mCellShape );
 					}
 				}
 			}
 		}
 		uint8_t clearLine( );
+		inline sf::Vector2f position( ) const
+		{
+			return mPosition_;
+		}
 		inline const std::array< std::array<Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid( ) const
 		{
 			return mGrid;
@@ -52,7 +58,7 @@ namespace model
 		inline void setPosition( const sf::Vector2f& position )
 		{
 			mPanel.setPosition( position );
-			mOrigin_ = position;
+			mPosition_ = position;
 		}
 		void setSize( const float cellSize );
 		inline void lock( const uint8_t x, const uint8_t y, const sf::Color color )
@@ -64,7 +70,7 @@ namespace model
 	private:
 		float mCellSize_;
 		sf::RenderWindow& mWindow_;
-		sf::Vector2f mOrigin_;
+		sf::Vector2f mPosition_;
 		sf::RectangleShape mPanel, mCellShape;
 		std::array< std::array<Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT > mGrid;
 	};
