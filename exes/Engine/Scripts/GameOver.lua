@@ -1,0 +1,1 @@
+Sprite = { path = "Images/GameOver.png", width = 512, height = 256 }

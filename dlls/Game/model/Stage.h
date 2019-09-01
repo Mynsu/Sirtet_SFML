@@ -51,6 +51,25 @@ namespace model
 		{
 			return mPosition_;
 		}
+		inline void lock( const uint8_t x, const uint8_t y, const sf::Color color )
+		{
+			ASSERT_TRUE( (x<::model::stage::GRID_WIDTH) && (y<::model::stage::GRID_HEIGHT) );
+			mGrid[ y ][ x ].blocked = true;
+			mGrid[ y ][ x ].color = color;
+		}
+		inline bool isOver( ) const
+		{
+			bool retVal = false;
+			for ( const auto& it : mGrid[ 1 ] )
+			{
+				if ( true == it.blocked )
+				{
+					retVal = true;
+					break;
+				}
+			}
+			return retVal;
+		}
 		inline const std::array< std::array<Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid( ) const
 		{
 			return mGrid;
@@ -61,17 +80,17 @@ namespace model
 			mPosition_ = position;
 		}
 		void setSize( const float cellSize );
-		inline void lock( const uint8_t x, const uint8_t y, const sf::Color color )
-		{
-			ASSERT_TRUE( (x<::model::stage::GRID_WIDTH) && (y<::model::stage::GRID_HEIGHT) );
-			mGrid[ y ][ x ].blocked = true;
-			mGrid[ y ][ x ].color = color;
-		}
 	private:
 		float mCellSize_;
 		sf::RenderWindow& mWindow_;
 		sf::Vector2f mPosition_;
 		sf::RectangleShape mPanel, mCellShape;
+		//0
+		//1
+		//o
+		//o
+		//o
+		//19 == ::model::stage::GRID_HEIGHT
 		std::array< std::array<Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT > mGrid;
 	};
 }

@@ -1,14 +1,15 @@
 #include "Playing.h"
-#include "../../ServiceLocatorMirror.h"
 #include <lua.hpp>
+#include "../../ServiceLocatorMirror.h"
+#include "GameOver.h"
 
 ::scene::inPlay::Playing::Playing( sf::RenderWindow& window, sf::Drawable& shapeOrSprite )
 	: mLineCleared( 0u ), mFrameCount0_( 0 ), mFrameCount1_( 0 ), mFrameCount2_( 0 ), mTempo( 0.75f ),
 	mWindow_( window ), mBackgroundRect_( static_cast<sf::RectangleShape&>(shapeOrSprite) ),
 	mCurrentTetrimino( ::model::Tetrimino::Spawn( ) ), mPlayerStage( window ), mVfxCombo( window )
 {
-	const sf::Color cyan( 0x29cdb5fau );
-	mBackgroundRect_.setFillColor( cyan );
+	const sf::Color BACKGROUND_COLOR( 0x29cdb5fau );
+	mBackgroundRect_.setFillColor( BACKGROUND_COLOR );
 
 	mNextTetriminos.emplace( ::model::Tetrimino::Spawn( ) );
 	mNextTetriminos.emplace( ::model::Tetrimino::Spawn( ) );
@@ -25,8 +26,8 @@ void ::scene::inPlay::Playing::loadResources( )
 {
 	sf::Vector2f panelPos( 130.f, 0.f );
 	float cellSize = 30.f;
-	sf::Vector2i vfxWH( 256, 256 );
-	sf::Vector2f nextPanelPos( 500.f, 100.f );
+	sf::Vector2i vfxSize( 256, 256 );
+	sf::Vector2f nextTetPanelPos( 500.f, 100.f );
 	bool isDefault = true;
 
 	lua_State* lua = luaL_newstate( );
@@ -60,7 +61,7 @@ void ::scene::inPlay::Playing::loadResources( )
 				panelPos.x = static_cast<float>(lua_tonumber( lua, TOP_IDX ));
 			}
 			// Type Check Exception
-			else
+			else if ( LUA_TNIL != type )
 			{
 				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName0+":"+field0, scriptPathNName );
 			}
@@ -76,7 +77,7 @@ void ::scene::inPlay::Playing::loadResources( )
 				panelPos.y = static_cast<float>(lua_tonumber( lua, TOP_IDX ));
 			}
 			// Type Check Exception
-			else
+			else if ( LUA_TNIL != type )
 			{
 				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName0+":"+field1, scriptPathNName );
 			}
@@ -92,7 +93,7 @@ void ::scene::inPlay::Playing::loadResources( )
 				cellSize = static_cast<float>(lua_tonumber( lua, TOP_IDX ));
 			}
 			// Type Check Exception
-			else
+			else if ( LUA_TNIL != type )
 			{
 				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName0+":"+field2, scriptPathNName );
 			}
@@ -141,10 +142,10 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				vfxWH.x = static_cast<int>(lua_tointeger( lua, TOP_IDX ));
+				vfxSize.x = static_cast<int>(lua_tointeger( lua, TOP_IDX ));
 			}
 			// Type Check Exception
-			else
+			else if ( LUA_TNIL != type )
 			{
 				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName1+":"+field1, scriptPathNName );
 			}
@@ -157,10 +158,10 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				vfxWH.y = static_cast<int>(lua_tointeger( lua, TOP_IDX ));
+				vfxSize.y = static_cast<int>(lua_tointeger( lua, TOP_IDX ));
 			}
 			// Type Check Exception
-			else
+			else if ( LUA_TNIL != type )
 			{
 				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName1+":"+field1, scriptPathNName );
 			}
@@ -183,10 +184,10 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				nextPanelPos.x = static_cast<float>(lua_tonumber( lua, TOP_IDX ));
+				nextTetPanelPos.x = static_cast<float>(lua_tonumber( lua, TOP_IDX ));
 			}
 			// Type Check Exception
-			else
+			else if ( LUA_TNIL != type )
 			{
 				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName2+":"+field0, scriptPathNName );
 			}
@@ -199,10 +200,10 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				nextPanelPos.y = static_cast<float>(lua_tonumber( lua, TOP_IDX ));
+				nextTetPanelPos.y = static_cast<float>(lua_tonumber( lua, TOP_IDX ));
 			}
 			// Type Check Exception
-			else
+			else if ( LUA_TNIL != type )
 			{
 				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName2+":"+field1, scriptPathNName );
 			}
@@ -225,11 +226,11 @@ void ::scene::inPlay::Playing::loadResources( )
 	}
 	mPlayerStage.setPosition( panelPos );
 	mCurrentTetrimino.setOrigin( panelPos );
-	mVfxCombo.setOrigin( panelPos, cellSize, vfxWH );
+	mVfxCombo.setOrigin( panelPos, cellSize, vfxSize );
 	mPlayerStage.setSize( cellSize );
 	mCurrentTetrimino.setSize( cellSize );
-	mNextTetriminoPanel.setPosition( nextPanelPos );
-	mNextTetriminoPanelPosition_ = nextPanelPos;
+	mNextTetriminoPanel.setPosition( nextTetPanelPos );
+	mNextTetriminoPanelPosition_ = nextTetPanelPos;
 	mNextTetriminoPanel.setSize(
 		sf::Vector2f(::model::tetrimino::BLOCKS_A_TETRIMINO+2,::model::tetrimino::BLOCKS_A_TETRIMINO+2)*cellSize );
 	mMargin_.x = cellSize;
@@ -335,10 +336,12 @@ void ::scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene
 		}
 	}
 	
-	//TODO: 대기하고 있는 다음, 다다음 테트리미노 보여주기
 	//궁금: 숨기기, 반대로 움직이기, 일렁이기, 대기열 가리기 같은 아이템 구현하는 게 과연 좋을까?
 
-	//TODO: 게임오버 씬 바꾸기
+	if ( true == mPlayerStage.isOver( ) )
+	{
+		*nextScene = new ::scene::inPlay::GameOver( mWindow_, mBackgroundRect_ );
+	}
 }
 
 void ::scene::inPlay::Playing::draw( )

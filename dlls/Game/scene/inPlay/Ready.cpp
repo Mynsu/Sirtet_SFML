@@ -26,7 +26,7 @@ scene::inPlay::Ready::Ready( sf::RenderWindow& window, sf::Drawable& shapeOrSpri
 
 void scene::inPlay::Ready::loadResources( )
 {
-	const std::string scriptPathNName( "Scripts/Ready.lua" );
+	const std::string scriptPathNName( "Scripts/Ready.lua" ); //TODO: 테이블로 불러오기
 	const std::string varName0( "Sprite" );
 	const std::string varName1( "SpriteClipWidth" );
 	const std::string varName2( "SpriteClipHeight" );

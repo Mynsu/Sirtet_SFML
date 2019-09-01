@@ -17,8 +17,12 @@ namespace model
 		NULL_MAX,
 	};
 
-	// BLOCKS_A_TETRIMINO x BLOCKS_A_TETRIMINO
-	// 4 x 4
+	// 4 x 4 == BLOCKS_A_TETRIMINO x BLOCKS_A_TETRIMINO
+	// e.g. 0b1000'1110'0000'0000 ==
+	//		1000
+	//		1110
+	//		0000
+	//		0000
 	using LocalSpace = uint16_t;
 	class Tetrimino
 	{
