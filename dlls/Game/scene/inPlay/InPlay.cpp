@@ -1,17 +1,22 @@
 #include "InPlay.h"
 #include "Ready.h"
+#include "GameOver.h"
+#include "../../ServiceLocatorMirror.h"
 
 bool ::scene::inPlay::InPlay::IsInstantiated = false;
 
 ::scene::inPlay::InPlay::InPlay( sf::RenderWindow& window,
 								  const SetScene_t& setScene )
-	: mWindow_( window ),
-	mSetScene_( setScene )
+	: mFrameCount( 0u ),
+	mWindow_( window ), mSetScene_( setScene )
 {
 	ASSERT_FALSE( IsInstantiated );
 
 	mCurrentScene = std::make_unique< ::scene::inPlay::Ready >( mWindow_, mBackgroundRect );
 	loadResources( );
+
+	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS" );
+	mFPS = static_cast<uint32_t>(::ServiceLocatorMirror::Vault( )[ HK_FORE_FPS ]);
 
 	IsInstantiated = true;
 }
@@ -34,6 +39,17 @@ void ::scene::inPlay::InPlay::update( std::queue< sf::Event >& eventQueue )
 	if ( nullptr != nextScene && mCurrentScene.get( ) != nextScene )
 	{
 		mCurrentScene.reset( nextScene );
+	}
+	nextScene = nullptr;
+
+	if ( typeid(::scene::inPlay::GameOver) == typeid(*mCurrentScene) )
+	{
+		++mFrameCount;
+	}
+
+	if ( mFPS*5 == mFrameCount )
+	{
+		mSetScene_( ::scene::ID::MAIN_MENU );
 	}
 }
 

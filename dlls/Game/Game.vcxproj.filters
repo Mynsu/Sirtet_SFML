@@ -73,7 +73,7 @@
       <Filter>소스 파일\vfx</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\GameOver.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>소스 파일\scene\inPlay</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

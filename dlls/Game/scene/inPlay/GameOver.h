@@ -14,7 +14,7 @@ namespace scene::inPlay
 		~GameOver( ) = default;
 
 		void loadResources( ) override;
-		void update( ::scene::inPlay::IScene** const nextScene, std::queue< sf::Event >& eventQueue ) override;
+		void update( ::scene::inPlay::IScene** const, std::queue< sf::Event >& ) override;
 		void draw( ) override;
 	private:
 		uint32_t mFade;

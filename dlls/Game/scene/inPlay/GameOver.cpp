@@ -115,7 +115,7 @@ void scene::inPlay::GameOver::loadResources( )
 	mSprite.setPosition( sf::Vector2f( mWindow_.getSize( ) )*0.5f );
 }
 
-void scene::inPlay::GameOver::update( ::scene::inPlay::IScene** const nextScene, std::queue<sf::Event>& eventQueue )
+void scene::inPlay::GameOver::update( ::scene::inPlay::IScene** const, std::queue<sf::Event>& )
 {
 }
 
@@ -123,14 +123,15 @@ void scene::inPlay::GameOver::draw( )
 {
 	// Cyan
 	const uint32_t BACKGROUND_RGB = 0x29cdb500u;
-	if ( 0x7fu != mFade )
+	const uint8_t TARGET_ALPHA = 0x7fu;
+	if ( TARGET_ALPHA != mFade )
 	{
-		--mFade;
+		mFade -= 2u;
 	}
 	mBackgroundRect_.setFillColor( sf::Color( BACKGROUND_RGB | mFade ) );
 	mWindow_.draw( mBackgroundRect_ );
 
-	if ( 0x7fu == mFade )
+	if ( TARGET_ALPHA == mFade )
 	{
 		mWindow_.draw( mSprite );
 	}

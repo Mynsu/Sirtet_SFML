@@ -19,6 +19,8 @@ namespace scene::inPlay
 		::scene::ID currentScene( ) const override;
 	private:
 		static bool IsInstantiated;
+		uint32_t mFPS;
+		uint32_t mFrameCount;
 		sf::RenderWindow& mWindow_;
 		const SetScene_t& mSetScene_;
 		std::unique_ptr< ::scene::inPlay::IScene > mCurrentScene;
