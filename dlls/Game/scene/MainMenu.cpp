@@ -99,7 +99,7 @@ void scene::MainMenu::loadResources( )
 
 	if ( true == isDefault )
 	{
-		ServiceLocatorMirror::Console( )->print( "Thus, width clipping the MAIN_MENU sprite is set 256." );
+		ServiceLocatorMirror::Console( )->print( "Width clipping the MAIN_MENU sprite is set 256." );
 	}
 
 	isDefault = true;
@@ -132,7 +132,7 @@ void scene::MainMenu::loadResources( )
 
 	if ( true == isDefault )
 	{
-		ServiceLocatorMirror::Console( )->print( "Thus, height clipping the MAIN_MENU sprite is set 128." );
+		ServiceLocatorMirror::Console( )->print( "Height clipping the MAIN_MENU sprite is set 128." );
 	}
 	mSprite.setTexture( mTexture );
 }
@@ -151,24 +151,25 @@ void ::scene::MainMenu::update( std::queue< sf::Event >& )
 void ::scene::MainMenu::draw( )
 {
 	const sf::Vector2f winSize( mWindow.getSize( ) );
-	const sf::Vector2f logoMargin( 80.f, 80.f );
+	const sf::Vector2f logoMargin( 70.f, 70.f );
 	// Bottom right on screen
-	mSprite.setPosition( winSize - sf::Vector2f( mSpriteClipSize_ ) - logoMargin );
-	mSprite.setTextureRect( sf::IntRect( 0, 0, mSpriteClipSize_.x, mSpriteClipSize_.y ) );
+	const sf::Vector2i logoSize( mSpriteClipSize_.x, 2*mSpriteClipSize_.y );
+	mSprite.setPosition( winSize - sf::Vector2f(logoSize) - logoMargin );
+	mSprite.setTextureRect( sf::IntRect(sf::Vector2i(0,0), logoSize) );
 	mWindow.draw( mSprite );
 
 	// Vertical middle on screen
-	mSprite.setPosition( winSize / 3.2f );
+	mSprite.setPosition( winSize / 4.f );
+	mSprite.setTextureRect( sf::IntRect(sf::Vector2i(0,0),sf::Vector2i(mSpriteClipSize_)) );
 	if ( true == mSprite.getGlobalBounds( ).contains( sf::Vector2f( sf::Mouse::getPosition( mWindow ) ) ) )
 	{
 		mOnIndicator = ::scene::ID::SINGLE_PLAY;
-		mSprite.setTextureRect( sf::IntRect( 0, 2 * mSpriteClipSize_.y, mSpriteClipSize_.x, mSpriteClipSize_.y ) );
+		mSprite.setTextureRect( sf::IntRect( mSpriteClipSize_.x, 2*mSpriteClipSize_.y, mSpriteClipSize_.x, mSpriteClipSize_.y ) );
 	}
 	else
 	{
 		mOnIndicator = ::scene::ID::MAX_NONE;
-		mSprite.setTextureRect( sf::IntRect( 0, mSpriteClipSize_.y, mSpriteClipSize_.x, mSpriteClipSize_.y ) );
-
+		mSprite.setTextureRect( sf::IntRect( 0, 2*mSpriteClipSize_.y, mSpriteClipSize_.x, mSpriteClipSize_.y ) );
 	}
 	mWindow.draw( mSprite );
 }

@@ -33,7 +33,7 @@ namespace model
 		inline void draw( )
 		{
 			mWindow_.draw( mPanel );
-			for ( uint8_t i = 0u; i != ::model::stage::GRID_HEIGHT; ++i )
+			for ( uint8_t i = 0u; i != ::model::stage::GRID_HEIGHT; ++i )//TODO: 병렬로 하면 좋겠다.
 			{
 				for ( uint8_t k = 0u; k != ::model::stage::GRID_WIDTH; ++k )
 				{

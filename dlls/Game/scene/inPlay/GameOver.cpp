@@ -115,10 +115,6 @@ void scene::inPlay::GameOver::loadResources( )
 	mSprite.setPosition( sf::Vector2f( mWindow_.getSize( ) )*0.5f );
 }
 
-void scene::inPlay::GameOver::update( ::scene::inPlay::IScene** const, std::queue<sf::Event>& )
-{
-}
-
 void scene::inPlay::GameOver::draw( )
 {
 	// Cyan

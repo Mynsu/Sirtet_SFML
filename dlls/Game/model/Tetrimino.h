@@ -64,7 +64,7 @@ namespace model
 		inline void draw( sf::RenderWindow& window )
 		{
 			const uint8_t area = ::model::tetrimino::BLOCKS_A_TETRIMINO*::model::tetrimino::BLOCKS_A_TETRIMINO;
-			for ( uint8_t i = 0; i != area; ++i )
+			for ( uint8_t i = 0; i != area; ++i )//TODO: 병렬로 하면 좋겠다.
 			{
 				if ( mPossibleRotations[static_cast<int>(mRotationID)] & (0x1u<<(area-i-1u)) )
 				{

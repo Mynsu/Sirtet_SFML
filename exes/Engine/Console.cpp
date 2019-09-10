@@ -1,5 +1,6 @@
 #include "Console.h"
 #include "ServiceLocator.h"
+#include <sstream>
 #include <Lib/ScriptLoader.h>
 
 ConsoleLocal::ConsoleLocal( ) : mVisible( false ),
@@ -128,7 +129,7 @@ void ConsoleLocal::draw( sf::RenderTarget& target, sf::RenderStates states ) con
 {
 	target.draw( mConsoleWindow );
 	target.draw( mCurrentInputTextField );
-	for ( const auto& it : mHistoryTextFields )
+	for ( const auto& it : mHistoryTextFields )//TODO: 병렬로 하면 좋겠다.
 	{
 		target.draw( it );
 	}
@@ -203,7 +204,7 @@ void ConsoleLocal::handleEvent( const sf::Event& event )
 void ConsoleLocal::print( const std::string& message, sf::Color color )
 {
 	// Push up the past messages
-	for ( size_t i = mHistoryTextFields.size( ) - 1; i != 0; --i )
+	for ( size_t i = mHistoryTextFields.size( ) - 1; i != 0; --i )//TODO: 병렬로 하면 좋겠다.
 	{
 		const auto& str = mHistoryTextFields[ i - 1 ].getString( );
 		const sf::Color _color = mHistoryTextFields[ i - 1 ].getFillColor( );
@@ -222,15 +223,14 @@ void ConsoleLocal::print( const std::string& message, sf::Color color )
 void ConsoleLocal::printFailure( const FailureLevel failureLevel, const std::string& message )
 {
 	// Concatenate error level info with message
-	// NOTE: Using another timespace on memory is faster than in-place rearrangement in this situation.
-	std::string concatenated;
+	std::stringstream ss;
 	switch ( failureLevel )
 	{
 		case FailureLevel::WARNING:
-			concatenated.assign( "WARNING: " + message );
+			ss << "WARNING: " << message;
 			break;
 		case FailureLevel::FATAL:
-			concatenated.assign( "FATAL: " + message );
+			ss << "FATAL: " << message;
 			break;
 		default:
 #ifdef _DEBUG
@@ -240,7 +240,7 @@ void ConsoleLocal::printFailure( const FailureLevel failureLevel, const std::str
 			break;
 #endif
 	}
-	print( concatenated, sf::Color::Red );
+	print( ss.str(), sf::Color::Red );
 }
 
 void ConsoleLocal::printScriptError( const ExceptionType exceptionType, const std::string& variableName, const std::string& scriptName )
