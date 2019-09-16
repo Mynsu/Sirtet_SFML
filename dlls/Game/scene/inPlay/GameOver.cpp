@@ -11,28 +11,27 @@ scene::inPlay::GameOver::GameOver( sf::RenderWindow& window, sf::Drawable& shape
 
 void scene::inPlay::GameOver::loadResources( )
 {
-	std::string filePathNName( "Images/GameOver.png" );
 	sf::Vector2i size( 512, 256 );
 	bool isDefault = true;
 
 	lua_State* lua = luaL_newstate( );
-	const std::string scriptPathNName( "Scripts/GameOver.lua" );
-	if ( true == luaL_dofile( lua, scriptPathNName.data( ) ) )
+	const char scriptPathNName[] = "Scripts/GameOver.lua";
+	if ( true == luaL_dofile(lua, scriptPathNName) )
 	{
 		// File Not Found Exception
-		ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, "File Not Found: " + scriptPathNName );
+		ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
 		lua_close( lua );
 	}
 	else
 	{
 		luaL_openlibs( lua );
 		const int TOP_IDX = -1;
-		const std::string tableName0( "Sprite" );
-		lua_getglobal( lua, tableName0.data( ) );
+		const std::string tableName( "Sprite" );
+		lua_getglobal( lua, tableName.data() );
 		// Type Check Exception
 		if ( false == lua_istable( lua, TOP_IDX ) )
 		{
-			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName0, scriptPathNName );
+			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName.data(), scriptPathNName );
 		}
 		else
 		{
@@ -47,7 +46,7 @@ void scene::inPlay::GameOver::loadResources( )
 				{
 					// File Not Found Exception
 					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::FILE_NOT_FOUND,
-																		tableName0+":"+field0, scriptPathNName );
+																		(tableName+":"+field0).data(), scriptPathNName );
 				}
 				else
 				{
@@ -57,7 +56,8 @@ void scene::inPlay::GameOver::loadResources( )
 			// Type Check Exception
 			else
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName0+":"+field0, scriptPathNName );
+				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+																	(tableName+":"+field0).data(), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -73,7 +73,8 @@ void scene::inPlay::GameOver::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName0+":"+field1, scriptPathNName );
+				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+																	(tableName+":"+field1).data(), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -89,7 +90,8 @@ void scene::inPlay::GameOver::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName0+":"+field1, scriptPathNName );
+				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+																	(tableName+":"+field1).data(), scriptPathNName );
 			}
 			lua_pop( lua, 2 );
 		}
@@ -98,11 +100,11 @@ void scene::inPlay::GameOver::loadResources( )
 
 	if ( true == isDefault )
 	{
-		const std::string defaultFilePathNName( "Vfxs/Combo.png" );
+		const char defaultFilePathNName[] = "Vfxs/Combo.png";
 		if ( false == mTexture.loadFromFile( defaultFilePathNName ) )
 		{
 			// Exception: When there's not even the default file,
-			ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, "File Not Found: " + defaultFilePathNName );
+			ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+defaultFilePathNName );
 #ifdef _DEBUG
 			__debugbreak( );
 #endif

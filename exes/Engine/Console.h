@@ -32,7 +32,7 @@ public:
 	virtual void print( const std::string& message, sf::Color color = sf::Color::White ) = 0;
 	virtual void printFailure( const FailureLevel failureLevel, const std::string& message ) = 0;
 	// Not includes the case that a script file itself can't be found.
-	virtual void printScriptError( const ExceptionType exceptionType, const std::string& variableName, const std::string& scriptName ) = 0;
+	virtual void printScriptError( const ExceptionType exceptionType, const char* variableName, const char* scriptName ) = 0;
 	virtual void addCommand( const HashedKey command, const Command::Func& functional ) = 0;
 	virtual void processCommand( const std::string& command ) = 0;
 	virtual bool isVisible( ) const = 0;
@@ -54,7 +54,7 @@ public:
 	void handleEvent( const sf::Event& event ) override;
 	void print( const std::string& message, sf::Color color = sf::Color::White ) override;
 	void printFailure( const FailureLevel failureLevel, const std::string& message ) override;
-	void printScriptError( const ExceptionType exceptionType, const std::string& variableName, const std::string& scriptName ) override;
+	void printScriptError( const ExceptionType exceptionType, const char* variableName, const char* scriptName ) override;
 	void addCommand( const HashedKey command, const Command::Func& functional ) override;
 	void processCommand( const std::string& commandLine ) override;
 	bool isVisible( ) const override;

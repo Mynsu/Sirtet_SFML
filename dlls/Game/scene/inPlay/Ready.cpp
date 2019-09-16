@@ -26,10 +26,10 @@ scene::inPlay::Ready::Ready( sf::RenderWindow& window, sf::Drawable& shapeOrSpri
 
 void scene::inPlay::Ready::loadResources( )
 {
-	const std::string scriptPathNName( "Scripts/Ready.lua" ); //TODO: 테이블로 불러오기
-	const std::string varName0( "Sprite" );
-	const std::string varName1( "SpriteClipWidth" );
-	const std::string varName2( "SpriteClipHeight" );
+	const char scriptPathNName[] = "Scripts/Ready.lua"; //TODO: 테이블로 불러오기
+	const char varName0[] = "Sprite";
+	const char varName1[] = "SpriteClipWidth";
+	const char varName2[] = "SpriteClipHeight";
 	const auto result = ::util::script::LoadFromScript( scriptPathNName, varName0, varName1, varName2 );
 	bool isDefault = false;
 	// When there's the variable 'Sprite' in the script,
@@ -58,11 +58,11 @@ void scene::inPlay::Ready::loadResources( )
 
 	if ( true == isDefault )
 	{
-		const std::string defaultFilePathNName( "Images/Ready.png" );
+		const char defaultFilePathNName[] = "Images/Ready.png";
 		if ( false == mTexture.loadFromFile( defaultFilePathNName ) )
 		{
 			// Exception: When there's not even the default file,
-			ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, "File Not Found: " + defaultFilePathNName );
+			ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+defaultFilePathNName );
 #ifdef _DEBUG
 			__debugbreak( );
 #endif

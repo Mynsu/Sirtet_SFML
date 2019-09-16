@@ -24,8 +24,8 @@ void ::scene::SceneManager::lastInit( sf::RenderWindow* const window )
 	// Starting scene
 	///
 	::scene::ID startScene = ::scene::ID::INTRO;
-	const std::string scriptPathNName( "Scripts/_OnlyDuringDev.lua" );
-	const std::string varName( "StartScene" );
+	const char scriptPathNName[] = "Scripts/_OnlyDuringDev.lua";
+	const char varName[] = "StartScene";
 	const auto result = ::util::script::LoadFromScript( scriptPathNName, varName );
 	// When there's the variable 'StartScene' in the script,
 	if ( const auto it = result.find( varName ); result.cend( ) != it )

@@ -23,9 +23,9 @@ ConsoleLocal::ConsoleLocal( ) : mVisible( false ),
 	try
 #endif
 	{
-		const std::string scriptPathNName( "Scripts/Console.lua" );
-		const std::string varName0( "Font" );
-		const std::string varName1( "VisibleOnStart" );
+		const char scriptPathNName[ ] = "Scripts/Console.lua";
+		const char varName0[] = "Font";
+		const char varName1[] = "VisibleOnStart";
 		const auto result = ::util::script::LoadFromScript( scriptPathNName, varName0, varName1 );
 		bool isDefault = false;
 		// When there's the variable 'Font' in the script,
@@ -129,7 +129,8 @@ void ConsoleLocal::draw( sf::RenderTarget& target, sf::RenderStates states ) con
 {
 	target.draw( mConsoleWindow );
 	target.draw( mCurrentInputTextField );
-	for ( const auto& it : mHistoryTextFields )//TODO: 병렬로 하면 좋겠다.
+	#pragma omp parallel
+	for ( const auto& it : mHistoryTextFields )
 	{
 		target.draw( it );
 	}
@@ -204,10 +205,10 @@ void ConsoleLocal::handleEvent( const sf::Event& event )
 void ConsoleLocal::print( const std::string& message, sf::Color color )
 {
 	// Push up the past messages
-	for ( size_t i = mHistoryTextFields.size( ) - 1; i != 0; --i )//TODO: 병렬로 하면 좋겠다.
+	for ( size_t i = mHistoryTextFields.size( )-1; i != 0; --i )
 	{
-		const auto& str = mHistoryTextFields[ i - 1 ].getString( );
-		const sf::Color _color = mHistoryTextFields[ i - 1 ].getFillColor( );
+		const auto& str = mHistoryTextFields[i-1].getString( );
+		const sf::Color _color = mHistoryTextFields[i-1].getFillColor( );
 		mHistoryTextFields[ i ].setString( str );
 		mHistoryTextFields[ i ].setFillColor( _color );
 	}
@@ -243,10 +244,10 @@ void ConsoleLocal::printFailure( const FailureLevel failureLevel, const std::str
 	print( ss.str(), sf::Color::Red );
 }
 
-void ConsoleLocal::printScriptError( const ExceptionType exceptionType, const std::string& variableName, const std::string& scriptName )
+void ConsoleLocal::printScriptError( const ExceptionType exceptionType, const char* variableName, const char* scriptName )
 {
 	printFailure( FailureLevel::WARNING,
-				  mExceptionTypes[ static_cast< int >( exceptionType ) ] + "[" + variableName + ":" + scriptName + "]" );
+				  mExceptionTypes[static_cast<int>(exceptionType)]+"["+variableName+":"+scriptName+"]" );
 }
 
 void ConsoleLocal::addCommand( const HashedKey command, const Command::Func& functional )

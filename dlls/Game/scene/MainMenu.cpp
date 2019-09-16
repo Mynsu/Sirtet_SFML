@@ -23,10 +23,10 @@ bool ::scene::MainMenu::IsInstantiated = false;
 
 void scene::MainMenu::loadResources( )
 {
-	const std::string scriptPathNName( "Scripts/MainMenu.lua" );
-	const std::string varName0( "Sprite" );
-	const std::string varName1( "SpriteClipWidth" );
-	const std::string varName2( "SpriteClipHeight" );
+	const char scriptPathNName[] = "Scripts/MainMenu.lua";
+	const char varName0[] = "Sprite";
+	const char varName1[] = "SpriteClipWidth";
+	const char varName2[] = "SpriteClipHeight";
 	const auto result = ::util::script::LoadFromScript( scriptPathNName, varName0, varName1, varName2 );
 	bool isDefault = false;
 	// When there's the variable 'Sprite' in the script,
@@ -58,11 +58,11 @@ void scene::MainMenu::loadResources( )
 
 	if ( true == isDefault )
 	{
-		const std::string defaultFilePathNName( "Images/MainMenu.png" );
+		const char defaultFilePathNName[] = "Images/MainMenu.png";
 		if ( false == mTexture.loadFromFile( defaultFilePathNName ) )
 		{
 			// Exception: When there's not even the default file,
-			ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, "File Not Found: " + defaultFilePathNName );
+			ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+defaultFilePathNName );
 #ifdef _DEBUG
 			__debugbreak( );
 #endif

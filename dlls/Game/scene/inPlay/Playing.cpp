@@ -31,11 +31,11 @@ void ::scene::inPlay::Playing::loadResources( )
 	bool isDefault = true;
 
 	lua_State* lua = luaL_newstate( );
-	const std::string scriptPathNName( "Scripts/Playing.lua" );
-	if ( true == luaL_dofile( lua, scriptPathNName.data( ) ) )
+	const char scriptPathNName[] = "Scripts/Playing.lua";
+	if ( true == luaL_dofile(lua, scriptPathNName) )
 	{
 		// File Not Found Exception
-		ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, "File Not Found: " + scriptPathNName );
+		ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
 		lua_close( lua );
 	}
 	else
@@ -47,7 +47,7 @@ void ::scene::inPlay::Playing::loadResources( )
 		// Type Check Exception
 		if ( false == lua_istable( lua, TOP_IDX ) )
 		{
-			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName0, scriptPathNName );
+			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName0.data(), scriptPathNName );
 		}
 		else
 		{
@@ -63,7 +63,8 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName0+":"+field0, scriptPathNName );
+				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+																	(tableName0+":"+field0).data(), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -79,7 +80,8 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName0+":"+field1, scriptPathNName );
+				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+																	(tableName0+":"+field1).data(), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -95,7 +97,8 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName0+":"+field2, scriptPathNName );
+				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+																	(tableName0+":"+field2).data(), scriptPathNName );
 			}
 			lua_pop( lua, 2 );
 		}
@@ -105,7 +108,8 @@ void ::scene::inPlay::Playing::loadResources( )
 		// Type Check Exception
 		if ( false == lua_istable( lua, TOP_IDX ) )
 		{
-			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName1, scriptPathNName );
+			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+																tableName1.data(), scriptPathNName );
 		}
 		else
 		{
@@ -120,7 +124,7 @@ void ::scene::inPlay::Playing::loadResources( )
 				{
 					// File Not Found Exception
 					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::FILE_NOT_FOUND,
-																		tableName1+":"+field0, scriptPathNName );
+																		(tableName1+":"+field0).data(), scriptPathNName );
 				}
 				else
 				{
@@ -130,7 +134,8 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type Check Exception
 			else
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName0+":"+field0, scriptPathNName );
+				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+																	(tableName1+":"+field0).data(), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -147,7 +152,8 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName1+":"+field1, scriptPathNName );
+				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+																	(tableName1+":"+field1).data(), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -163,7 +169,8 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName1+":"+field1, scriptPathNName );
+				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+																	(tableName1+":"+field1).data(), scriptPathNName );
 			}
 			lua_pop( lua, 2 );
 		}
@@ -173,7 +180,7 @@ void ::scene::inPlay::Playing::loadResources( )
 		// Type Check Exception
 		if ( false == lua_istable( lua, TOP_IDX ) )
 		{
-			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName2, scriptPathNName );
+			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName2.data(), scriptPathNName );
 		}
 		else
 		{
@@ -189,7 +196,8 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName2+":"+field0, scriptPathNName );
+				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+																	(tableName2+":"+field0).data(), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -205,7 +213,8 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName2+":"+field1, scriptPathNName );
+				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+																	(tableName2+":"+field1).data(), scriptPathNName );
 			}
 			lua_pop( lua, 2 );
 		}
@@ -214,11 +223,11 @@ void ::scene::inPlay::Playing::loadResources( )
 
 	if ( true == isDefault )
 	{
-		const std::string defaultFilePathNName( "Vfxs/Combo.png" );
+		const char defaultFilePathNName[] = "Vfxs/Combo.png";
 		if ( false == mVfxCombo.loadResources( defaultFilePathNName ) )
 		{
 			// Exception: When there's not even the default file,
-			ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, "File Not Found: " + defaultFilePathNName );
+			ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+defaultFilePathNName );
 #ifdef _DEBUG
 			__debugbreak( );
 #endif
