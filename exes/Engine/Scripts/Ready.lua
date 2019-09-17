@@ -1,3 +1,1 @@
-Sprite = "Images/Ready.png"
-SpriteClipWidth = 256
-SpriteClipHeight = 256
+Sprite = { path = "Images/Ready.png", width = 256, height = 256 }

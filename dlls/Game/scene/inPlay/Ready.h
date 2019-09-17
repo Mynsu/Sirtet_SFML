@@ -20,7 +20,7 @@ namespace scene::inPlay
 		int32_t mFrameCount;
 		sf::RenderWindow& mWindow_;
 		sf::RectangleShape& mBackgroundRect_;
-		sf::Vector2u mSpriteClipSize_;
+		sf::Vector2f mSpriteClipSize_;
 		sf::Texture mTexture;
 		sf::Sprite mSprite;
 	};

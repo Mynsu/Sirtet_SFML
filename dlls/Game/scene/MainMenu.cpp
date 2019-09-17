@@ -1,5 +1,5 @@
 #include "MainMenu.h"
-#include <Lib/ScriptLoader.h>
+#include <lua.hpp>
 #include "../ServiceLocatorMirror.h"
 
 bool ::scene::MainMenu::IsInstantiated = false;
@@ -7,7 +7,7 @@ bool ::scene::MainMenu::IsInstantiated = false;
 ::scene::MainMenu::MainMenu( sf::RenderWindow& window, const SetScene_t& setScene )
 	: mWindow( window ), mSetScene( setScene ),
 	mOnIndicator( ::scene::ID::MAX_NONE ),
-	mSpriteClipSize_( 256u, 128u )
+	mSpriteClipSize_( 256.f, 128.f ), mLogoMargin_( 70.f, 70.f ), mButtonPosition_( 150.f, 150.f )
 {
 	ASSERT_FALSE( IsInstantiated );
 
@@ -23,43 +23,262 @@ bool ::scene::MainMenu::IsInstantiated = false;
 
 void scene::MainMenu::loadResources( )
 {
+	bool isPathDefault = true;
+	bool isSprWDefault = true;
+	bool isSprHDefault = true;
+	bool isMargXDefault = true;
+	bool isMargYDefault = true;
+	bool isButtXDefault = true;
+	bool isButtYDefault = true;
+
+	lua_State* lua = luaL_newstate( );
 	const char scriptPathNName[] = "Scripts/MainMenu.lua";
-	const char varName0[] = "Sprite";
-	const char varName1[] = "SpriteClipWidth";
-	const char varName2[] = "SpriteClipHeight";
-	const auto result = ::util::script::LoadFromScript( scriptPathNName, varName0, varName1, varName2 );
-	bool isDefault = false;
-	// When there's the variable 'Sprite' in the script,
-	if ( const auto it = result.find( varName0 ); result.cend( ) != it )
+	if ( true == luaL_dofile(lua, scriptPathNName) )
 	{
-		// Type check
-		if ( true == std::holds_alternative< std::string >( it->second ) )
-		{
-			if ( false == mTexture.loadFromFile( std::get< std::string >( it->second ) ) )
-			{
-				// File Not Found Exception
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::FILE_NOT_FOUND, varName0, scriptPathNName );
-				isDefault = true;
-			}
-		}
-		// Type Check Exception
-		else
-		{
-			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, varName0, scriptPathNName );
-			isDefault = true;
-		}
+		// File Not Found Exception
+		ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
+		lua_close( lua );
 	}
-	// Variable Not Found Exception
 	else
 	{
-		ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName0, scriptPathNName );
-		isDefault = true;
+		luaL_openlibs( lua );
+		const int TOP_IDX = -1;
+		const std::string tableName0( "Sprite" );
+		lua_getglobal( lua, tableName0.data( ) );
+		// Type Check Exception
+		if ( false == lua_istable(lua, TOP_IDX) )
+		{
+			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName0.data( ), scriptPathNName );
+		}
+		else
+		{
+			const char field0[ ] = "path";
+			lua_pushstring( lua, field0 );
+			lua_gettable( lua, 1 );
+			int type = lua_type( lua, TOP_IDX );
+			// Type check
+			if ( LUA_TSTRING == type )
+			{
+				if ( false == mTexture.loadFromFile(lua_tostring(lua, TOP_IDX)) )
+				{
+					// File Not Found Exception
+					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::FILE_NOT_FOUND,
+																		(tableName0+":"+field0).data( ), scriptPathNName );
+				}
+				else
+				{
+					isPathDefault = false;
+				}
+			}
+			// Type Check Exception
+			else
+			{
+				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+																	(tableName0+":"+field0).data( ), scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			const char field1[ ] = "width";
+			lua_pushstring( lua, field1 );
+			lua_gettable( lua, 1 );
+			type = lua_type( lua, TOP_IDX );
+			// Type check
+			if ( LUA_TNUMBER == type )
+			{
+				const float temp = static_cast<float>(lua_tointeger(lua, TOP_IDX));
+				// Range Check Exception
+				if ( 0 > temp )
+				{
+					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::RANGE_CHECK,
+																		(tableName0+":"+field1).data( ), scriptPathNName );
+				}
+				// When the value looks OK,
+				else
+				{
+					mSpriteClipSize_.x = temp;
+					isSprWDefault = false;
+				}
+			}
+			// Type Check Exception
+			else if ( LUA_TNIL != type )
+			{
+				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+																	(tableName0+":"+field1).data( ), scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			const char field2[ ] = "height";
+			lua_pushstring( lua, field2 );
+			lua_gettable( lua, 1 );
+			type = lua_type( lua, TOP_IDX );
+			// Type check
+			if ( LUA_TNUMBER == type )
+			{
+				const float temp = static_cast<float>(lua_tointeger(lua, TOP_IDX));
+				// Range Check Exception
+				if ( 0 > temp )
+				{
+					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::RANGE_CHECK,
+																		(tableName0+":"+field2).data( ), scriptPathNName );
+				}
+				// When the value looks OK,
+				else
+				{
+					mSpriteClipSize_.y = temp;
+					isSprHDefault = false;
+				}
+			}
+			// Type Check Exception
+			else if ( LUA_TNIL != type )
+			{
+				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+																	(tableName0+":"+field2).data( ), scriptPathNName );
+			}
+			lua_pop( lua, 2 );
+		}
+
+		const std::string tableName1( "LogoMargin" );
+		lua_getglobal( lua, tableName1.data( ) );
+		// Type Check Exception
+		if ( false == lua_istable(lua, TOP_IDX) )
+		{
+			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName1.data( ), scriptPathNName );
+		}
+		else
+		{
+			const char field0[ ] = "x";
+			lua_pushstring( lua, field0 );
+			lua_gettable( lua, 1 );
+			int type = lua_type( lua, TOP_IDX );
+			// Type check
+			if ( LUA_TNUMBER == type )
+			{
+				const float temp = static_cast<float>(lua_tointeger(lua, TOP_IDX));
+				// Range Check Exception
+				if ( 0 > temp )
+				{
+					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::RANGE_CHECK,
+																		(tableName1+":"+field0).data( ), scriptPathNName );
+				}
+				// When the value looks OK,
+				else
+				{
+					mLogoMargin_.x = temp;
+					isMargXDefault = false;
+				}
+			}
+			// Type Check Exception
+			else if ( LUA_TNIL != type )
+			{
+				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+																	(tableName1+":"+field0).data( ), scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			const char field1[ ] = "y";
+			lua_pushstring( lua, field1 );
+			lua_gettable( lua, 1 );
+			type = lua_type( lua, TOP_IDX );
+			// Type check
+			if ( LUA_TNUMBER == type )
+			{
+				const float temp = static_cast<float>(lua_tointeger(lua, TOP_IDX));
+				// Range Check Exception
+				if ( 0 > temp )
+				{
+					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::RANGE_CHECK,
+																		(tableName1+":"+field1).data( ), scriptPathNName );
+				}
+				// When the value looks OK,
+				else
+				{
+					mLogoMargin_.y = temp;
+					isMargYDefault = false;
+				}
+			}
+			// Type Check Exception
+			else if ( LUA_TNIL != type )
+			{
+				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+																	(tableName1+":"+field1).data( ), scriptPathNName );
+			}
+			lua_pop( lua, 2 );
+		}
+
+		const std::string tableName2( "Button" );
+		lua_getglobal( lua, tableName2.data( ) );
+		// Type Check Exception
+		if ( false == lua_istable(lua, TOP_IDX) )
+		{
+			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName2.data( ), scriptPathNName );
+		}
+		else
+		{
+			const char field0[ ] = "x";
+			lua_pushstring( lua, field0 );
+			lua_gettable( lua, 1 );
+			int type = lua_type( lua, TOP_IDX );
+			// Type check
+			if ( LUA_TNUMBER == type )
+			{
+				const float temp = static_cast<float>(lua_tointeger(lua, TOP_IDX));
+				// Range Check Exception
+				if ( 0 > temp )
+				{
+					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::RANGE_CHECK,
+																		(tableName2+":"+field0).data( ), scriptPathNName );
+				}
+				// When the value looks OK,
+				else
+				{
+					mButtonPosition_.x = temp;
+					isButtXDefault = false;
+				}
+			}
+			// Type Check Exception
+			else if ( LUA_TNIL != type )
+			{
+				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+																	(tableName2+":"+field0).data( ), scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			const char field1[ ] = "y";
+			lua_pushstring( lua, field1 );
+			lua_gettable( lua, 1 );
+			type = lua_type( lua, TOP_IDX );
+			// Type check
+			if ( LUA_TNUMBER == type )
+			{
+				const float temp = static_cast<float>(lua_tointeger(lua, TOP_IDX));
+				// Range Check Exception
+				if ( 0 > temp )
+				{
+					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::RANGE_CHECK,
+																		(tableName2+":"+field1).data( ), scriptPathNName );
+				}
+				// When the value looks OK,
+				else
+				{
+					mButtonPosition_.y = temp;
+					isButtYDefault = false;
+				}
+			}
+			// Type Check Exception
+			else if ( LUA_TNIL != type )
+			{
+				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+																	(tableName2+":"+field1).data( ), scriptPathNName );
+			}
+			lua_pop( lua, 2 );
+		}
+		lua_close( lua );
 	}
 
-	if ( true == isDefault )
+	if ( true == isPathDefault )
 	{
-		const char defaultFilePathNName[] = "Images/MainMenu.png";
-		if ( false == mTexture.loadFromFile( defaultFilePathNName ) )
+		const char defaultFilePathNName[ ] = "Images/MainMenu.png";
+		if ( false == mTexture.loadFromFile(defaultFilePathNName) )
 		{
 			// Exception: When there's not even the default file,
 			ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+defaultFilePathNName );
@@ -69,71 +288,19 @@ void scene::MainMenu::loadResources( )
 		}
 	}
 
-	isDefault = true;
-	// When there's the variable 'SpriteClipWidth' in the script,
-	if ( const auto it = result.find( varName1 ); result.cend( ) != it )
+	if ( true == isSprWDefault || true == isSprHDefault )
 	{
-		// Type check
-		if ( true == std::holds_alternative< int >( it->second ) )
-		{
-			// Range check
-			if ( const int second = std::get< int >( it->second ); 0 <= second )
-			{
-				mSpriteClipSize_.x = second;
-				isDefault = false;
-			}
-			// Range Check Exception
-			else
-			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::RANGE_CHECK, varName1, scriptPathNName );
-			}
-		}
-		// Type Check Exception
-		else
-		{
-			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, varName1, scriptPathNName );
-		}
+		ServiceLocatorMirror::Console( )->print( "Default: clip width 256, clip height 128" );
 	}
-	/// Variable Not Found Exception
-	/// else { // Nothing to do }
-
-	if ( true == isDefault )
+	if ( true == isMargXDefault || true == isMargYDefault )
 	{
-		ServiceLocatorMirror::Console( )->print( "Width clipping the MAIN_MENU sprite is set 256." );
+		ServiceLocatorMirror::Console( )->print( "Default: margin x 70, margin y 70" );
+	}
+	if ( true == isButtXDefault || true == isButtYDefault )
+	{
+		ServiceLocatorMirror::Console( )->print( "Default: button x 150, button y 150" );
 	}
 
-	isDefault = true;
-	// When there's the variable 'SpriteClipHeight' in the script,
-	if ( const auto it = result.find( varName2 ); result.cend( ) != it )
-	{
-		// Type check
-		if ( true == std::holds_alternative< int >( it->second ) )
-		{
-			// Range check
-			if ( const int second = std::get< int >( it->second ); 0 <= second )
-			{
-				mSpriteClipSize_.y = second;
-				isDefault = false;
-			}
-			// Range Check Exception
-			else
-			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::RANGE_CHECK, varName2, scriptPathNName );
-			}
-		}
-		// Type Check Exception
-		else
-		{
-			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, varName2, scriptPathNName );
-		}
-	}
-	/// Variable Not Found Exception
-	/// else { // Nothing to do }
-
-	if ( true == isDefault )
-	{
-		ServiceLocatorMirror::Console( )->print( "Height clipping the MAIN_MENU sprite is set 128." );
-	}
 	mSprite.setTexture( mTexture );
 }
 
@@ -151,25 +318,25 @@ void ::scene::MainMenu::update( std::queue< sf::Event >& )
 void ::scene::MainMenu::draw( )
 {
 	const sf::Vector2f winSize( mWindow.getSize( ) );
-	const sf::Vector2f logoMargin( 70.f, 70.f );
 	// Bottom right on screen
-	const sf::Vector2i logoSize( mSpriteClipSize_.x, 2*mSpriteClipSize_.y );
-	mSprite.setPosition( winSize - sf::Vector2f(logoSize) - logoMargin );
-	mSprite.setTextureRect( sf::IntRect(sf::Vector2i(0,0), logoSize) );
+	const sf::Vector2f logoSize( mSpriteClipSize_.x, 2*mSpriteClipSize_.y );
+	mSprite.setPosition( winSize - logoSize - mLogoMargin_ );
+	mSprite.setTextureRect( sf::IntRect(sf::Vector2i(0,0), sf::Vector2i(logoSize)) );
 	mWindow.draw( mSprite );
 
 	// Vertical middle on screen
-	mSprite.setPosition( winSize / 4.f );
-	mSprite.setTextureRect( sf::IntRect(sf::Vector2i(0,0),sf::Vector2i(mSpriteClipSize_)) );
-	if ( true == mSprite.getGlobalBounds( ).contains( sf::Vector2f( sf::Mouse::getPosition( mWindow ) ) ) )
+	mSprite.setPosition( mButtonPosition_ );
+	const sf::Vector2i cast( mSpriteClipSize_ );
+	mSprite.setTextureRect( sf::IntRect(sf::Vector2i(0,0),cast) );
+	if ( true == mSprite.getGlobalBounds( ).contains(sf::Vector2f(sf::Mouse::getPosition(mWindow))) )
 	{
 		mOnIndicator = ::scene::ID::SINGLE_PLAY;
-		mSprite.setTextureRect( sf::IntRect( mSpriteClipSize_.x, 2*mSpriteClipSize_.y, mSpriteClipSize_.x, mSpriteClipSize_.y ) );
+		mSprite.setTextureRect( sf::IntRect( cast.x, 2*cast.y, cast.x, cast.y ) );
 	}
 	else
 	{
 		mOnIndicator = ::scene::ID::MAX_NONE;
-		mSprite.setTextureRect( sf::IntRect( 0, 2*mSpriteClipSize_.y, mSpriteClipSize_.x, mSpriteClipSize_.y ) );
+		mSprite.setTextureRect( sf::IntRect( 0, 2*cast.y, cast.x, cast.y ) );
 	}
 	mWindow.draw( mSprite );
 }

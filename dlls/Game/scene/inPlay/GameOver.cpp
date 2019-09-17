@@ -11,8 +11,10 @@ scene::inPlay::GameOver::GameOver( sf::RenderWindow& window, sf::Drawable& shape
 
 void scene::inPlay::GameOver::loadResources( )
 {
-	sf::Vector2i size( 512, 256 );
-	bool isDefault = true;
+	sf::Vector2f size( 512.f, 256.f );
+	bool isPathDefault = true;
+	bool isWDefault = true;
+	bool isHDefault = true;
 
 	lua_State* lua = luaL_newstate( );
 	const char scriptPathNName[] = "Scripts/GameOver.lua";
@@ -29,7 +31,7 @@ void scene::inPlay::GameOver::loadResources( )
 		const std::string tableName( "Sprite" );
 		lua_getglobal( lua, tableName.data() );
 		// Type Check Exception
-		if ( false == lua_istable( lua, TOP_IDX ) )
+		if ( false == lua_istable(lua, TOP_IDX) )
 		{
 			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName.data(), scriptPathNName );
 		}
@@ -42,7 +44,7 @@ void scene::inPlay::GameOver::loadResources( )
 			// Type check
 			if ( LUA_TSTRING == type )
 			{
-				if ( false == mTexture.loadFromFile( lua_tostring( lua, TOP_IDX ) ) )
+				if ( false == mTexture.loadFromFile(lua_tostring(lua, TOP_IDX)) )
 				{
 					// File Not Found Exception
 					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::FILE_NOT_FOUND,
@@ -50,7 +52,7 @@ void scene::inPlay::GameOver::loadResources( )
 				}
 				else
 				{
-					isDefault = false;
+					isPathDefault = false;
 				}
 			}
 			// Type Check Exception
@@ -68,7 +70,19 @@ void scene::inPlay::GameOver::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				size.x = static_cast<int>(lua_tointeger( lua, TOP_IDX ));
+				const float temp = static_cast<float>(lua_tointeger( lua, TOP_IDX ));
+				// Range Check Exception
+				if ( 0 > temp )
+				{
+					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::RANGE_CHECK,
+																		(tableName+":"+field1).data( ), scriptPathNName );
+				}
+				// When the value looks OK,
+				else
+				{
+					size.x = temp;
+					isWDefault = false;
+				}
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
@@ -85,23 +99,35 @@ void scene::inPlay::GameOver::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				size.y = static_cast<int>(lua_tointeger( lua, TOP_IDX ));
+				const float temp = static_cast<float>(lua_tointeger(lua, TOP_IDX));
+				// Range Check Exception
+				if ( 0 > temp )
+				{
+					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::RANGE_CHECK,
+																		(tableName+":"+field2).data( ), scriptPathNName );
+				}
+				// When the value looks OK,
+				else
+				{
+					size.y = temp;
+					isHDefault = false;
+				}
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
 				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
-																	(tableName+":"+field1).data(), scriptPathNName );
+																	(tableName+":"+field2).data(), scriptPathNName );
 			}
 			lua_pop( lua, 2 );
 		}
 		lua_close( lua );
 	}
 
-	if ( true == isDefault )
+	if ( true == isPathDefault )
 	{
 		const char defaultFilePathNName[] = "Vfxs/Combo.png";
-		if ( false == mTexture.loadFromFile( defaultFilePathNName ) )
+		if ( false == mTexture.loadFromFile(defaultFilePathNName) )
 		{
 			// Exception: When there's not even the default file,
 			ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+defaultFilePathNName );
@@ -111,10 +137,15 @@ void scene::inPlay::GameOver::loadResources( )
 		}
 	}
 
+	if ( true == isWDefault || true == isHDefault )
+	{
+		ServiceLocatorMirror::Console( )->print( "Default: width 512, height 256" );
+	}
+
 	mSprite.setTexture( mTexture );
-	mSprite.setTextureRect( sf::IntRect(0, 0, size.x, size.y) );
-	mSprite.setOrigin( sf::Vector2f(size)*0.5f );
-	mSprite.setPosition( sf::Vector2f( mWindow_.getSize( ) )*0.5f );
+	mSprite.setTextureRect( sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(size)) );
+	mSprite.setOrigin( size*0.5f );
+	mSprite.setPosition( sf::Vector2f(mWindow_.getSize())*0.5f );
 }
 
 void scene::inPlay::GameOver::draw( )

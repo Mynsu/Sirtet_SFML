@@ -45,7 +45,7 @@ void ::scene::inPlay::Playing::loadResources( )
 		const std::string tableName0( "PlayerPanel" );
 		lua_getglobal( lua, tableName0.data( ) );
 		// Type Check Exception
-		if ( false == lua_istable( lua, TOP_IDX ) )
+		if ( false == lua_istable(lua, TOP_IDX) )
 		{
 			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName0.data(), scriptPathNName );
 		}
@@ -58,7 +58,7 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				panelPos.x = static_cast<float>(lua_tonumber( lua, TOP_IDX ));
+				panelPos.x = static_cast<float>(lua_tonumber(lua, TOP_IDX));
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
@@ -75,7 +75,7 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				panelPos.y = static_cast<float>(lua_tonumber( lua, TOP_IDX ));
+				panelPos.y = static_cast<float>(lua_tonumber(lua, TOP_IDX));
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
@@ -92,7 +92,7 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				cellSize = static_cast<float>(lua_tonumber( lua, TOP_IDX ));
+				cellSize = static_cast<float>(lua_tonumber(lua, TOP_IDX));
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
@@ -139,7 +139,6 @@ void ::scene::inPlay::Playing::loadResources( )
 			}
 			lua_pop( lua, 1 );
 
-
 			const char field1[ ] = "width";
 			lua_pushstring( lua, field1 );
 			lua_gettable( lua, 1 );
@@ -147,7 +146,7 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				vfxSize.x = static_cast<int>(lua_tointeger( lua, TOP_IDX ));
+				vfxSize.x = static_cast<int>(lua_tointeger(lua, TOP_IDX));
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
@@ -164,7 +163,7 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				vfxSize.y = static_cast<int>(lua_tointeger( lua, TOP_IDX ));
+				vfxSize.y = static_cast<int>(lua_tointeger(lua, TOP_IDX));
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
@@ -191,7 +190,7 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				nextTetPanelPos.x = static_cast<float>(lua_tonumber( lua, TOP_IDX ));
+				nextTetPanelPos.x = static_cast<float>(lua_tonumber(lua, TOP_IDX));
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
@@ -208,7 +207,7 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				nextTetPanelPos.y = static_cast<float>(lua_tonumber( lua, TOP_IDX ));
+				nextTetPanelPos.y = static_cast<float>(lua_tonumber(lua, TOP_IDX));
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )

@@ -6,7 +6,7 @@
 scene::inPlay::Ready::Ready( sf::RenderWindow& window, sf::Drawable& shapeOrSprite )
 	: mFPS_( 60u ), mFrameCount( mFPS_ * 3 ),
 	mWindow_( window ), mBackgroundRect_( static_cast< sf::RectangleShape& >( shapeOrSprite ) ),
-	mSpriteClipSize_( 256u, 256u )
+	mSpriteClipSize_( 256.f, 256.f )
 {
 	auto& varT = ::ServiceLocatorMirror::Vault( );
 	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS" );
@@ -26,40 +26,122 @@ scene::inPlay::Ready::Ready( sf::RenderWindow& window, sf::Drawable& shapeOrSpri
 
 void scene::inPlay::Ready::loadResources( )
 {
-	const char scriptPathNName[] = "Scripts/Ready.lua"; //TODO: 테이블로 불러오기
-	const char varName0[] = "Sprite";
-	const char varName1[] = "SpriteClipWidth";
-	const char varName2[] = "SpriteClipHeight";
-	const auto result = ::util::script::LoadFromScript( scriptPathNName, varName0, varName1, varName2 );
-	bool isDefault = false;
-	// When there's the variable 'Sprite' in the script,
-	if ( const auto it = result.find( varName0 ); result.cend( ) != it )
+	bool isPathDefault = true;
+	bool isWDefault = true;
+	bool isHDefault = true;
+
+	lua_State* lua = luaL_newstate( );
+	const char scriptPathNName[ ] = "Scripts/Ready.lua";
+	if ( true == luaL_dofile(lua, scriptPathNName) )
 	{
-		// Type check
-		if ( true == std::holds_alternative< std::string >( it->second ) )
-		{
-			if ( false == mTexture.loadFromFile( std::get< std::string >( it->second ) ) )
-			{
-				// File Not Found Exception
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::FILE_NOT_FOUND, varName0, scriptPathNName );
-			}
-		}
-		// Type Check Exception
-		else
-		{
-			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, varName0, scriptPathNName );
-		}
+		// File Not Found Exception
+		ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
+		lua_close( lua );
 	}
-	// Variable Not Found Exception
 	else
 	{
-		ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName0, scriptPathNName );
+		luaL_openlibs( lua );
+		const int TOP_IDX = -1;
+		const std::string tableName0( "Sprite" );
+		lua_getglobal( lua, tableName0.data( ) );
+		// Type Check Exception
+		if ( false == lua_istable(lua, TOP_IDX) )
+		{
+			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName0.data( ), scriptPathNName );
+		}
+		else
+		{
+			const char field0[ ] = "path";
+			lua_pushstring( lua, field0 );
+			lua_gettable( lua, 1 );
+			int type = lua_type( lua, TOP_IDX );
+			// Type check
+			if ( LUA_TSTRING == type )
+			{
+				if ( false == mTexture.loadFromFile(lua_tostring(lua, TOP_IDX)) )
+				{
+					// File Not Found Exception
+					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::FILE_NOT_FOUND,
+																		(tableName0+":"+field0).data( ), scriptPathNName );
+				}
+				else
+				{
+					isPathDefault = false;
+				}
+			}
+			// Type Check Exception
+			else
+			{
+				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+																	(tableName0+":"+field0).data( ), scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			const char field1[ ] = "width";
+			lua_pushstring( lua, field1 );
+			lua_gettable( lua, 1 );
+			type = lua_type( lua, TOP_IDX );
+			// Type check
+			if ( LUA_TNUMBER == type )
+			{
+				const float temp = static_cast<float>(lua_tointeger(lua, TOP_IDX));
+				// Range Check Exception
+				if ( 0 > temp )
+				{
+					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::RANGE_CHECK,
+																		(tableName0+":"+field1).data( ), scriptPathNName );
+				}
+				// When the value looks OK,
+				else
+				{
+					mSpriteClipSize_.x = temp;
+					isWDefault = false;
+				}
+			}
+			// Type Check Exception
+			else if ( LUA_TNIL != type )
+			{
+				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+																	(tableName0+":"+field1).data( ), scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			const char field2[ ] = "height";
+			lua_pushstring( lua, field2 );
+			lua_gettable( lua, 1 );
+			type = lua_type( lua, TOP_IDX );
+			// Type check
+			if ( LUA_TNUMBER == type )
+			{
+				const float temp = static_cast<float>(lua_tointeger(lua, TOP_IDX));
+				// Range Check Exception
+				if ( 0 > temp )
+				{
+					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::RANGE_CHECK,
+																		(tableName0+":"+field2).data( ), scriptPathNName );
+				}
+				// When the value looks OK,
+				else
+				{
+					mSpriteClipSize_.y = temp;
+					isHDefault = false;
+				}
+			}
+			// Type Check Exception
+			else if ( LUA_TNIL != type )
+			{
+				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+																	(tableName0+":"+field2).data( ), scriptPathNName );
+			}
+			lua_pop( lua, 2 );
+		}
+		lua_close( lua );
 	}
 
-	if ( true == isDefault )
+	if ( true == isPathDefault )
 	{
-		const char defaultFilePathNName[] = "Images/Ready.png";
-		if ( false == mTexture.loadFromFile( defaultFilePathNName ) )
+		const char defaultFilePathNName[ ] = "Images/Ready.png";
+		if ( false == mTexture.loadFromFile(defaultFilePathNName) )
 		{
 			// Exception: When there's not even the default file,
 			ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+defaultFilePathNName );
@@ -68,76 +150,14 @@ void scene::inPlay::Ready::loadResources( )
 #endif
 		}
 	}
-	
-	isDefault = true;
-	// When there's the variable 'SpriteClipWidth' in the script,
-	if ( const auto it = result.find( varName1 ); result.cend( ) != it )
-	{
-		// Type check
-		if ( true == std::holds_alternative< int >( it->second ) )
-		{
-			int temp = std::get< int >( it->second );
-			// Range Check Exception
-			if ( 0 > temp )
-			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::RANGE_CHECK, varName1, scriptPathNName );
-			}
-			// When the value looks OK,
-			else
-			{
-				mSpriteClipSize_.x = temp;
-				isDefault = false;
-			}
-		}
-		// Type Check Exception
-		else
-		{
-			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, varName1, scriptPathNName );
-		}
-	}
-	/// Variable Not Found Exception
-	/// else { // Nothing to do }
 
-	if ( true == isDefault )
+	if ( true == isWDefault || true == isHDefault )
 	{
-		ServiceLocatorMirror::Console( )->print( "Thus, width clipping the READY sprite is set 256." );
+		ServiceLocatorMirror::Console( )->print( "Default: width 256, height 256" );
 	}
 
-	isDefault = true;
-	// When there's the variable 'SpriteClipHeight' in the script,
-	if ( const auto it = result.find( varName2 ); result.cend( ) != it )
-	{
-		// Type check
-		if ( true == std::holds_alternative< int >( it->second ) )
-		{
-			int temp = std::get< int >( it->second );
-			// Range Check Exception
-			if ( 0 > temp )
-			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::RANGE_CHECK, varName2, scriptPathNName );
-			}
-			// When the value looks OK,
-			else
-			{
-				mSpriteClipSize_.y = temp;
-				isDefault = false;
-			}
-		}
-		// Type Check Exception
-		else
-		{
-			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, varName2, scriptPathNName );
-		}
-	}
-	/// Variable Not Found Exception
-	/// else { // Nothing to do }
-
-	if ( true == isDefault )
-	{
-		ServiceLocatorMirror::Console( )->print( "Thus, height clipping the READY sprite is set 256." );
-	}
 	mSprite.setTexture( mTexture );
-	mSprite.setPosition( sf::Vector2f( mWindow_.getSize( ) - mSpriteClipSize_ ) * 0.5f );
+	mSprite.setPosition( (sf::Vector2f(mWindow_.getSize())-mSpriteClipSize_)*0.5f );
 }
 
 void scene::inPlay::Ready::update( ::scene::inPlay::IScene** const nextScene, std::queue< sf::Event >& eventQueue )
@@ -166,7 +186,8 @@ void scene::inPlay::Ready::draw( )
 	////
 	// Countdown
 	////
-	mSprite.setTextureRect( sf::IntRect( 0, mSpriteClipSize_.y*( mFrameCount/mFPS_ ), mSpriteClipSize_.x, mSpriteClipSize_.y ) );
+	const sf::Vector2i cast( mSpriteClipSize_ );
+	mSprite.setTextureRect( sf::IntRect( 0, cast.y*( mFrameCount/mFPS_ ), cast.x, cast.y ) );
 	mWindow_.draw( mSprite );
 
 	--mFrameCount;
