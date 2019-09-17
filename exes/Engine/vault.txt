@@ -4,5 +4,6 @@
 
 [ Variable_Name ]	|	[ Description ]
 
-foreFPS			|
-backFPS			|
+foreFPS				|
+backFPS				|
+isRunning			|

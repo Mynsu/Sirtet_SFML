@@ -136,68 +136,77 @@ void ConsoleLocal::draw( sf::RenderTarget& target, sf::RenderStates states ) con
 	}
 }
 
-void ConsoleLocal::handleEvent( const sf::Event& event )
+///void ConsoleLocal::handleEvent( const sf::Event& event )
+void ConsoleLocal::handleEvent( std::vector< sf::Event >& eventQueue )
 {
-	if ( sf::Event::KeyPressed == event.type )
+	for ( auto it = eventQueue.cbegin(); eventQueue.cend() != it; )
 	{
-		if ( sf::Keyboard::Tab == event.key.code )
+		// When Tab is pressed down whether the console is visible or not,
+		if ( sf::Event::KeyPressed == it->type && sf::Keyboard::Tab == it->key.code )
 		{
-			// Toggle console on/off
+			// Toggling console on/off
 			mVisible = !mVisible;
+			eventQueue.erase( it );
 			return;
 		}
-	}
 
-	if ( true == mVisible )
-	{
-		if ( sf::Event::TextEntered == event.type )
+		// Only while the console is visible,
+		if ( true == mVisible )
 		{
-			if ( auto input = event.text.unicode;
-				 input > 0x1f && input < 0x7f )
+			if ( sf::Event::TextEntered == it->type )
 			{
-				mCurrentInput.pop_back( );
-				mCurrentInput += static_cast< char >( input );
-				mCurrentInput += '_';
-				//mCursorForeground.pop_back( );
-				//mCursorForeground += ' ';
-				//mCursorForeground += '_';
-				mCurrentInputTextField.setString( mCurrentInput );
-				//mCursorForegroundTextField.setString( mCursorForeground );
-			}
-		}
-		else if ( sf::Event::KeyPressed == event.type )
-		{
-			if ( sf::Keyboard::Enter == event.key.code )
-			{
-				mCurrentInput.pop_back( );
-				print( mCurrentInput );
-				mCommand.processCommand( mCurrentInput );
-				mCurrentInput.clear( );
-				mCurrentInput += '_';
-				//mCursorForeground.clear( );
-				mCurrentInputTextField.setString( mCurrentInput );
-				//mCursorForegroundTextField.setString( '_' );
-			}
-			else if ( sf::Keyboard::Escape == event.key.code )
-			{
-				mVisible = false;
-			}
-			else if ( sf::Keyboard::Backspace == event.key.code )
-			{
-				//if ( false == mCurrentInput.empty( ) )
-				if ( 1 != mCurrentInput.size( ) )
+				if ( auto input = it->text.unicode;
+					 input > 0x1f && input < 0x7f )
 				{
 					mCurrentInput.pop_back( );
-					mCurrentInput.pop_back( );
+					mCurrentInput += static_cast< char >( input );
 					mCurrentInput += '_';
 					//mCursorForeground.pop_back( );
-					//mCursorForeground.pop_back( );
+					//mCursorForeground += ' ';
 					//mCursorForeground += '_';
 					mCurrentInputTextField.setString( mCurrentInput );
 					//mCursorForegroundTextField.setString( mCursorForeground );
 				}
 			}
-			//TODO: 위 방향키 누르면 최근 내역 불러오기
+			else if ( sf::Event::KeyPressed == it->type )
+			{
+				if ( sf::Keyboard::Enter == it->key.code )
+				{
+					mCurrentInput.pop_back( );
+					print( mCurrentInput );
+					mCommand.processCommand( mCurrentInput );
+					mCurrentInput.clear( );
+					mCurrentInput += '_';
+					//mCursorForeground.clear( );
+					mCurrentInputTextField.setString( mCurrentInput );
+					//mCursorForegroundTextField.setString( '_' );
+				}
+				else if ( sf::Keyboard::Escape == it->key.code )
+				{
+					mVisible = false;
+				}
+				else if ( sf::Keyboard::Backspace == it->key.code )
+				{
+					//if ( false == mCurrentInput.empty( ) )
+					if ( 1 != mCurrentInput.size( ) )
+					{
+						mCurrentInput.pop_back( );
+						mCurrentInput.pop_back( );
+						mCurrentInput += '_';
+						//mCursorForeground.pop_back( );
+						//mCursorForeground.pop_back( );
+						//mCursorForeground += '_';
+						mCurrentInputTextField.setString( mCurrentInput );
+						//mCursorForegroundTextField.setString( mCursorForeground );
+					}
+				}
+				//TODO: 위 방향키 누르면 최근 내역 불러오기
+			}
+			it = eventQueue.erase( it );
+		}
+		else
+		{
+			++it;
 		}
 	}
 }

@@ -123,7 +123,7 @@ void scene::Intro::loadResources( )
 	}
 }
 
-void ::scene::Intro::update( std::queue< sf::Event >& )
+void ::scene::Intro::update( std::vector< sf::Event >& )
 {
 	//
 	// Scene Transition

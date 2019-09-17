@@ -66,7 +66,9 @@ void ::scene::SceneManager::setScene( const ::scene::ID nextScene )
 		case ::scene::ID::SINGLE_PLAY:
 			mCurrentScene = std::make_unique< ::scene::inPlay::InPlay >( *mWindow, mSetScene );
 			break;
-		case ::scene::ID::MULTI_PLAY:
+		case ::scene::ID::ONLINE_BATTLE:
+			mCurrentScene = std::make_unique< ::scene::inPlay::InPlay >( *mWindow, mSetScene );
+			break;
 		default:
 #ifdef _DEBUG
 			__debugbreak( );

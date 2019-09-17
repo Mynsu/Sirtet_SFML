@@ -3,10 +3,13 @@
 #include "../../ServiceLocatorMirror.h"
 
 scene::inPlay::GameOver::GameOver( sf::RenderWindow& window, sf::Drawable& shapeOrSprite )
-	: mFade( 0xffu ),
+	: TARGET_ALPHA( 0x7fu ), mFade( 0xffu ), mFrameCount( 0u ),
 	mWindow_( window ), mBackgroundRect_( static_cast<sf::RectangleShape&>(shapeOrSprite) )
 {
 	loadResources( );
+
+	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS" );
+	mFPS = static_cast<uint32_t>(::ServiceLocatorMirror::Vault()[ HK_FORE_FPS ]);
 }
 
 void scene::inPlay::GameOver::loadResources( )
@@ -151,15 +154,13 @@ void scene::inPlay::GameOver::loadResources( )
 void scene::inPlay::GameOver::draw( )
 {
 	// Cyan
-	const uint32_t BACKGROUND_RGB = 0x29cdb500u;
-	const uint8_t TARGET_ALPHA = 0x7fu;
 	if ( TARGET_ALPHA != mFade )
 	{
+		const uint32_t BACKGROUND_RGB = 0x29cdb500u;
 		mFade -= 2u;
+		mBackgroundRect_.setFillColor( sf::Color(BACKGROUND_RGB | mFade) );
 	}
-	mBackgroundRect_.setFillColor( sf::Color( BACKGROUND_RGB | mFade ) );
 	mWindow_.draw( mBackgroundRect_ );
-
 	if ( TARGET_ALPHA == mFade )
 	{
 		mWindow_.draw( mSprite );

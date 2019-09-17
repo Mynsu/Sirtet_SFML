@@ -28,7 +28,7 @@ public:
 	virtual ~IConsole( ) = default;
 	virtual void draw( sf::RenderTarget& target, sf::RenderStates states ) const = 0;
 	
-	virtual void handleEvent( const sf::Event& event ) = 0;
+	virtual void handleEvent( std::vector< sf::Event >& eventQueue ) = 0;
 	virtual void print( const std::string& message, sf::Color color = sf::Color::White ) = 0;
 	virtual void printFailure( const FailureLevel failureLevel, const std::string& message ) = 0;
 	// Not includes the case that a script file itself can't be found.
@@ -51,7 +51,7 @@ public:
 	~ConsoleLocal( ) = default;
 	void draw( sf::RenderTarget& target, sf::RenderStates states ) const override;
 
-	void handleEvent( const sf::Event& event ) override;
+	void handleEvent( std::vector< sf::Event >& eventQueue ) override;
 	void print( const std::string& message, sf::Color color = sf::Color::White ) override;
 	void printFailure( const FailureLevel failureLevel, const std::string& message ) override;
 	void printScriptError( const ExceptionType exceptionType, const char* variableName, const char* scriptName ) override;

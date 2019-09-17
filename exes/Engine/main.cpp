@@ -131,30 +131,19 @@ Main Loop
 =====
 */
 	IConsole& console = *ServiceLocator::Console( );
-	bool isOpen = true;
-	while ( true == isOpen )
+	constexpr HashedKey HK_IS_RUNNING = ::util::hash::Digest( "isRunning" );
+	::ServiceLocator::Vault().emplace( HK_IS_RUNNING, 1 );
+	while ( 1 == ::ServiceLocator::Vault()[HK_IS_RUNNING] )
 	{
-		std::queue< sf::Event > subeventQueue;
+		///std::queue< sf::Event > subeventQueue;
+		std::vector< sf::Event > subeventQueue;//TODO:list로 바꿔야할까?
 		sf::Event event;
-		while ( true == window.pollEvent( event ) )
+		while ( true == window.pollEvent(event) )
 		{
 			if ( sf::Event::Closed == event.type )
 			{
-				isOpen = false;
+				::ServiceLocator::Vault( )[ HK_IS_RUNNING ] = 0;
 				break;
-			}
-			else if ( sf::Event::KeyPressed == event.type )
-			{
-				if ( sf::Keyboard::Escape == event.key.code )
-				{
-					if ( false == console.isVisible( ) )
-					{
-						isOpen = false;
-						break;
-					}
-					// else ... is dealt with in 'console.handleEvent( event ).'
-				}
-				subeventQueue.emplace( event );
 			}
 			else if ( sf::Event::LostFocus == event.type )
 			{
@@ -164,12 +153,19 @@ Main Loop
 			{
 				window.setFramerateLimit( variableTable.find( HK_FORE_FPS )->second );
 			}
+			else
+			{
+				subeventQueue.emplace_back( event );
+			}
 					
 			// Console
-			console.handleEvent( event );
+			console.handleEvent( subeventQueue );
 		}
 
 		gameComponents.game->update( subeventQueue );
+
+		// NOTE: Skipped.
+		///subeventQueue.clear();
 		
 		window.clear( );
 		gameComponents.game->draw( );

@@ -48,7 +48,7 @@ namespace model
 				}
 			}
 		}
-		uint8_t clearLine( );
+		uint8_t tryClearRow( );
 		inline sf::Vector2f position( ) const
 		{
 			return mPosition_;

@@ -1,18 +1,33 @@
 #include "InPlay.h"
 #include "Ready.h"
 #include "GameOver.h"
+#include "Assertion.h"
 #include "../../ServiceLocatorMirror.h"
 
 bool ::scene::inPlay::InPlay::IsInstantiated = false;
 
-::scene::inPlay::InPlay::InPlay( sf::RenderWindow& window,
-								  const SetScene_t& setScene )
-	: mFrameCount( 0u ),
-	mWindow_( window ), mSetScene_( setScene )
+::scene::inPlay::InPlay::InPlay( sf::RenderWindow& window, 
+								 const SetScene_t& setScene, 
+								 const ::scene::ID nextScene )
+	: mWindow_( window ), mSetScene_( setScene )
 {
 	ASSERT_FALSE( IsInstantiated );
 
-	mCurrentScene = std::make_unique< ::scene::inPlay::Ready >( mWindow_, mBackgroundRect );
+	switch ( nextScene )
+	{
+		case ::scene::ID::SINGLE_PLAY:
+			mCurrentScene = std::make_unique< ::scene::inPlay::Ready >( mWindow_, mBackgroundRect );
+			break;
+		case ::scene::ID::ONLINE_BATTLE:
+			///mCurrentScene = std::make_unique< ::scene::inPlay::Lobby >(  )
+			break;
+		default:
+#ifdef _DEBUG
+			__debugbreak();
+#else
+			__assume(0);
+#endif
+	}
 	loadResources( );
 
 	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS" );
@@ -28,34 +43,55 @@ bool ::scene::inPlay::InPlay::IsInstantiated = false;
 
 void scene::inPlay::InPlay::loadResources( )
 {
-	mBackgroundRect.setSize( sf::Vector2f( mWindow_.getSize( ) ) );
+	mBackgroundRect.setSize( sf::Vector2f(mWindow_.getSize()) );
 	mCurrentScene->loadResources( );
 }
 
-void ::scene::inPlay::InPlay::update( std::queue< sf::Event >& eventQueue )
+void ::scene::inPlay::InPlay::update( std::vector< sf::Event >& eventQueue )
 {
 	::scene::inPlay::IScene* nextScene = nullptr;
-	mCurrentScene->update( &nextScene, eventQueue ); //TODO: 대신 함수 안에서는 강요 안 하잖아
-	if ( nullptr != nextScene && mCurrentScene.get( ) != nextScene )
-	{
-		mCurrentScene.reset( nextScene );
-	}
-	nextScene = nullptr;
-
-	if ( typeid(::scene::inPlay::GameOver) == typeid(*mCurrentScene) )
-	{
-		++mFrameCount;
-	}
-
-	if ( mFPS*5 == mFrameCount )
+	if ( const int8_t bi = mCurrentScene->update( &nextScene, eventQueue ); 1 == bi )
 	{
 		mSetScene_( ::scene::ID::MAIN_MENU );
+		return;
+	}
+	if ( nullptr != mOverlappedScene )
+	{
+		// NOTE: _ignored won't be used.
+		::scene::inPlay::IScene* _ignored = nullptr;
+		const int8_t tri = mOverlappedScene->update( &_ignored, eventQueue );
+		if ( -1 == tri )
+		{
+			mOverlappedScene.reset( );
+		}
+		else if ( 1 == tri )
+		{
+			mSetScene_( ::scene::ID::MAIN_MENU );
+			return;
+		}
+	}
+	// When a sort of scene change has triggered in update(...),
+	if ( nullptr != nextScene && mCurrentScene.get( ) != nextScene )
+	{
+		if ( typeid(::scene::inPlay::Assertion) == typeid(*nextScene) )
+		{
+			mOverlappedScene.reset( nextScene );
+		}
+		else
+		{
+			mCurrentScene.reset( nextScene );
+		}
+		nextScene = nullptr;
 	}
 }
 
 void ::scene::inPlay::InPlay::draw( )
 {
 	mCurrentScene->draw( );
+	if ( nullptr != mOverlappedScene )
+	{
+		mOverlappedScene->draw( );
+	}
 }
 
 ::scene::ID scene::inPlay::InPlay::currentScene( ) const

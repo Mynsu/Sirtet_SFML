@@ -9,7 +9,7 @@ namespace scene
 		INTRO = 0,
 		MAIN_MENU,
 		SINGLE_PLAY,
-		MULTI_PLAY,
+		ONLINE_BATTLE,
 		MAX_NONE,
 	};
 
@@ -23,7 +23,8 @@ namespace scene
 		virtual ~IScene( ) = default;
 
 		virtual void loadResources( ) = 0;
-		virtual void update( std::queue< sf::Event >& eventQueue ) = 0;
+		///virtual void update( std::queue< sf::Event >& eventQueue ) = 0;
+		virtual void update( std::vector< sf::Event >& eventQueue ) = 0;
 		virtual void draw( ) = 0;
 		virtual ::scene::ID currentScene( ) const = 0;
 

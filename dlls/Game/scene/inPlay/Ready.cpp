@@ -3,7 +3,7 @@
 #include <Lib/ScriptLoader.h>
 #include "Playing.h"
 
-scene::inPlay::Ready::Ready( sf::RenderWindow& window, sf::Drawable& shapeOrSprite )
+::scene::inPlay::Ready::Ready( sf::RenderWindow& window, sf::Drawable& shapeOrSprite )
 	: mFPS_( 60u ), mFrameCount( mFPS_ * 3 ),
 	mWindow_( window ), mBackgroundRect_( static_cast< sf::RectangleShape& >( shapeOrSprite ) ),
 	mSpriteClipSize_( 256.f, 256.f )
@@ -24,7 +24,7 @@ scene::inPlay::Ready::Ready( sf::RenderWindow& window, sf::Drawable& shapeOrSpri
 	mBackgroundRect_.setFillColor( sf::Color( BACKGROUND_RGB | FADE ) );
 }
 
-void scene::inPlay::Ready::loadResources( )
+void ::scene::inPlay::Ready::loadResources( )
 {
 	bool isPathDefault = true;
 	bool isWDefault = true;
@@ -160,8 +160,9 @@ void scene::inPlay::Ready::loadResources( )
 	mSprite.setPosition( (sf::Vector2f(mWindow_.getSize())-mSpriteClipSize_)*0.5f );
 }
 
-void scene::inPlay::Ready::update( ::scene::inPlay::IScene** const nextScene, std::queue< sf::Event >& eventQueue )
+int8_t scene::inPlay::Ready::update( ::scene::inPlay::IScene** const nextScene, std::vector< sf::Event >& )
 {
+	int8_t retVal = 0;
 	// NOTE: moved into 'draw( ).'
 	///--mFrameCount;
 
@@ -169,9 +170,11 @@ void scene::inPlay::Ready::update( ::scene::inPlay::IScene** const nextScene, st
 	{
 		*nextScene = new ::scene::inPlay::Playing( mWindow_, mBackgroundRect_ );
 	}
+
+	return retVal;
 }
 
-void scene::inPlay::Ready::draw( )
+void ::scene::inPlay::Ready::draw( )
 {
 	////
 	// Background

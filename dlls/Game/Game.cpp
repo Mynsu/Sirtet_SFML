@@ -26,7 +26,7 @@ public:
 		IsInstantiated = false;
 	};
 
-	void update( std::queue< sf::Event >& eventQueue )
+	void update( std::vector< sf::Event >& eventQueue )
 	{
 		mSceneManager.update( eventQueue );
 	}

@@ -18,7 +18,8 @@ class IGame
 public:
 	virtual ~IGame( ) = default;
 
-	virtual void update( std::queue< sf::Event >& eventQueue ) = 0;
+	///virtual void update( std::queue< sf::Event >& eventQueue ) = 0;
+	virtual void update( std::vector< sf::Event >& eventQueue ) = 0;
 	virtual void draw( ) = 0;
 protected:
 	IGame( ) = default;

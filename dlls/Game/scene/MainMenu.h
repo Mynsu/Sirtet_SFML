@@ -13,10 +13,12 @@ namespace scene
 		~MainMenu( );
 
 		void loadResources( ) override;
-		void update( std::queue< sf::Event >& ) override;
+		void update( std::vector< sf::Event >& ) override;
 		void draw( ) override;
 		::scene::ID currentScene( ) const override;
 	private:
+		void touchButton( );
+
 		// Only a single instance for a type can live at a time, but shouldn't be accessible globally.
 		// That's the difference from the class filled with static functions, or on singleton pattern and the like.
 		static bool IsInstantiated;

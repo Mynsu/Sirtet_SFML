@@ -1,5 +1,6 @@
 #pragma once
 #pragma hdrstop
+#include <queue>
 #include <Lib/precompiled.h>
 #include "IScene.h"
 #include "../../model/Tetrimino.h"
@@ -16,11 +17,12 @@ namespace scene::inPlay
 		~Playing( ) = default;
 
 		void loadResources( ) override;
-		void update( ::scene::inPlay::IScene** const nextScene, std::queue< sf::Event >& eventQueue ) override;
+		int8_t update( ::scene::inPlay::IScene** const nextScene, std::vector< sf::Event >& eventQueue ) override;
 		void draw( ) override;
 	private:
-		uint8_t mLineCleared;
-		int32_t mFrameCount0_, mFrameCount1_, mFrameCount2_;
+		bool mIsESCPressed;
+		uint8_t mRowCleared;
+		int32_t mFrameCount_fallDown_, mFrameCount_clearingInterval_, mFrameCount_clearingVfx_;
 		float mTempo;
 		float mCellSize_;
 		sf::RenderWindow& mWindow_;

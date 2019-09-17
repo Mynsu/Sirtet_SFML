@@ -304,11 +304,26 @@ void scene::MainMenu::loadResources( )
 	mSprite.setTexture( mTexture );
 }
 
-void ::scene::MainMenu::update( std::queue< sf::Event >& )
+void ::scene::MainMenu::update( std::vector< sf::Event >& eventQueue )
 {
-	if ( true == sf::Mouse::isButtonPressed( sf::Mouse::Left ) )
+	for ( const auto& it : eventQueue )
+	{
+		if ( sf::Event::KeyPressed == it.type && sf::Keyboard::Escape == it.key.code )
+		{
+			constexpr HashedKey HK_IS_RUNNING = ::util::hash::Digest( "isRunning" );
+			::ServiceLocatorMirror::Vault( )[ HK_IS_RUNNING ] = 0;
+		}
+	}
+
+	// NOTE: Here is no boundary check.
+	if ( false == ::ServiceLocatorMirror::Console()->isVisible()
+		 && true == sf::Mouse::isButtonPressed(sf::Mouse::Left) )
 	{
 		if ( ::scene::ID::SINGLE_PLAY == mOnIndicator )
+		{
+			mSetScene( mOnIndicator );
+		}
+		else if ( ::scene::ID::ONLINE_BATTLE == mOnIndicator )
 		{
 			mSetScene( mOnIndicator );
 		}
@@ -323,25 +338,53 @@ void ::scene::MainMenu::draw( )
 	mSprite.setPosition( winSize - logoSize - mLogoMargin_ );
 	mSprite.setTextureRect( sf::IntRect(sf::Vector2i(0,0), sf::Vector2i(logoSize)) );
 	mWindow.draw( mSprite );
-
-	// Vertical middle on screen
-	mSprite.setPosition( mButtonPosition_ );
-	const sf::Vector2i cast( mSpriteClipSize_ );
-	mSprite.setTextureRect( sf::IntRect(sf::Vector2i(0,0),cast) );
-	if ( true == mSprite.getGlobalBounds( ).contains(sf::Vector2f(sf::Mouse::getPosition(mWindow))) )
-	{
-		mOnIndicator = ::scene::ID::SINGLE_PLAY;
-		mSprite.setTextureRect( sf::IntRect( cast.x, 2*cast.y, cast.x, cast.y ) );
-	}
-	else
-	{
-		mOnIndicator = ::scene::ID::MAX_NONE;
-		mSprite.setTextureRect( sf::IntRect( 0, 2*cast.y, cast.x, cast.y ) );
-	}
-	mWindow.draw( mSprite );
+	
+	touchButton();
 }
 
 ::scene::ID scene::MainMenu::currentScene( ) const
 {
 	return ::scene::ID::MAIN_MENU;
+}
+
+void scene::MainMenu::touchButton( )
+{
+	const sf::Vector2f mouseGlobalPos( sf::Mouse::getPosition( ) );
+	const sf::Vector2i cast( mSpriteClipSize_ );
+	const sf::Vector2f height( 0.f, mSpriteClipSize_.y );
+	const sf::Vector2f titlebarHeight( 0.f, 20.f );
+	sf::Vector2f buttGlobalPos( sf::Vector2f( mWindow.getPosition( ) )+mButtonPosition_+titlebarHeight );
+	if ( buttGlobalPos.x < mouseGlobalPos.x && mouseGlobalPos.x < buttGlobalPos.x+mSpriteClipSize_.x
+		 && buttGlobalPos.y < mouseGlobalPos.y && mouseGlobalPos.y < buttGlobalPos.y+mSpriteClipSize_.y )
+	{
+		mOnIndicator = ::scene::ID::SINGLE_PLAY;
+		mSprite.setPosition( mButtonPosition_ );
+		mSprite.setTextureRect( sf::IntRect( cast.x, 2*cast.y, cast.x, cast.y ) );
+		mWindow.draw( mSprite );
+		mSprite.setPosition( mButtonPosition_+2.f*height );
+		mSprite.setTextureRect( sf::IntRect( 0, 3*cast.y, cast.x, cast.y ) );
+		mWindow.draw( mSprite );
+	}
+	else if ( buttGlobalPos += 2.f*height;
+			  buttGlobalPos.x < mouseGlobalPos.x && mouseGlobalPos.x < buttGlobalPos.x+mSpriteClipSize_.x
+			  && buttGlobalPos.y < mouseGlobalPos.y && mouseGlobalPos.y < buttGlobalPos.y+mSpriteClipSize_.y )
+	{
+		mOnIndicator = ::scene::ID::ONLINE_BATTLE;
+		mSprite.setPosition( mButtonPosition_+2.f*height );
+		mSprite.setTextureRect( sf::IntRect( cast.x, 3*cast.y, cast.x, cast.y ) );
+		mWindow.draw( mSprite );
+		mSprite.setPosition( mButtonPosition_ );
+		mSprite.setTextureRect( sf::IntRect( 0, 2*cast.y, cast.x, cast.y ) );
+		mWindow.draw( mSprite );
+	}
+	else
+	{
+		mOnIndicator = ::scene::ID::MAX_NONE;
+		mSprite.setPosition( mButtonPosition_ );
+		mSprite.setTextureRect( sf::IntRect( 0, 2*cast.y, cast.x, cast.y ) );
+		mWindow.draw( mSprite );
+		mSprite.setPosition( mButtonPosition_+2.f*height );
+		mSprite.setTextureRect( sf::IntRect( 0, 3*cast.y, cast.x, cast.y ) );
+		mWindow.draw( mSprite );
+	}
 }

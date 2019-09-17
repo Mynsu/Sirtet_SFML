@@ -2,9 +2,12 @@
 #include <lua.hpp>
 #include "../../ServiceLocatorMirror.h"
 #include "GameOver.h"
+#include "Assertion.h"
 
 ::scene::inPlay::Playing::Playing( sf::RenderWindow& window, sf::Drawable& shapeOrSprite )
-	: mLineCleared( 0u ), mFrameCount0_( 0 ), mFrameCount1_( 0 ), mFrameCount2_( 0 ), mTempo( 0.75f ),
+	: mIsESCPressed( false ), mRowCleared( 0u ),
+	mFrameCount_fallDown_( 0 ), mFrameCount_clearingInterval_( 0 ), mFrameCount_clearingVfx_( 0 ),
+	mTempo( 0.75f ),
 	mWindow_( window ), mBackgroundRect_( static_cast<sf::RectangleShape&>(shapeOrSprite) ),
 	mCurrentTetrimino( ::model::Tetrimino::Spawn( ) ), mPlayerStage( window ), mVfxCombo( window )
 {
@@ -247,8 +250,9 @@ void ::scene::inPlay::Playing::loadResources( )
 	mCellSize_ = cellSize;
 }
 
-void ::scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene, std::queue< sf::Event >& eventQueue )
+int8_t scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene, std::vector< sf::Event >& eventQueue )
 {
+	int8_t retVal = 0;
 	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS" );
 	const int32_t fps = ::ServiceLocatorMirror::Vault( ).at( HK_FORE_FPS );
 	bool hasCollidedAtThisFrame = false;
@@ -263,16 +267,15 @@ void ::scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene
 				goto last;
 			}
 		}
-		return;
+		return retVal;
 	}
 	else
 	{
-		while ( false == eventQueue.empty( ) )
+		for ( auto it = eventQueue.cbegin(); eventQueue.cend() != it; ++it )
 		{
-			const sf::Event event( eventQueue.front( ) ); //궁금: 복사가 나으려나, 레퍼런스가 나으려나? 실험해보자.
-			if ( sf::Event::KeyPressed == event.type )
+			if ( sf::Event::KeyPressed == it->type )
 			{
-				switch ( event.key.code )
+				switch ( it->key.code )
 				{
 					case sf::Keyboard::Space:
 						mCurrentTetrimino.fallDown( );
@@ -281,7 +284,7 @@ void ::scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene
 						[[ fallthrough ]];
 					case sf::Keyboard::Down:
 						hasCollidedAtThisFrame = mCurrentTetrimino.down( mPlayerStage.grid( ) );
-						mFrameCount0_ = 0;
+						mFrameCount_fallDown_ = 0;
 						break;
 					case sf::Keyboard::Left:
 						mCurrentTetrimino.tryMoveLeft( mPlayerStage.grid( ) );
@@ -294,18 +297,65 @@ void ::scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene
 					case sf::Keyboard::Up:
 						mCurrentTetrimino.tryRotate( mPlayerStage.grid( ) );
 						break;
+					case sf::Keyboard::Escape:
+						if ( false == mIsESCPressed )
+						{
+							*nextScene = new ::scene::inPlay::Assertion( mWindow_, &mIsESCPressed );
+							it = eventQueue.erase( it );
+							//--it;//TODO
+						}
+						break;
 					default:
 						break;
 				}
 			}
-			eventQueue.pop( );
 		}
+		///
+		//while ( false == eventQueue.empty( ) )
+		//{
+		//	const sf::Event& event( eventQueue.front( ) );
+		//	if ( sf::Event::KeyPressed == event.type )
+		//	{
+		//		switch ( event.key.code )
+		//		{
+		//			case sf::Keyboard::Space:
+		//				mCurrentTetrimino.fallDown( );
+		//				// NOTE: Don't 'return', or it can't come out of the infinite loop.
+		//				///return;
+		//				[[ fallthrough ]];
+		//			case sf::Keyboard::Down:
+		//				hasCollidedAtThisFrame = mCurrentTetrimino.down( mPlayerStage.grid( ) );
+		//				mFrameCount_fallDown_ = 0;
+		//				break;
+		//			case sf::Keyboard::Left:
+		//				mCurrentTetrimino.tryMoveLeft( mPlayerStage.grid( ) );
+		//				break;
+		//			case sf::Keyboard::Right:
+		//				mCurrentTetrimino.tryMoveRight( mPlayerStage.grid( ) );
+		//				break;
+		//			case sf::Keyboard::LShift:
+		//				[[ fallthrough ]];
+		//			case sf::Keyboard::Up:
+		//				mCurrentTetrimino.tryRotate( mPlayerStage.grid( ) );
+		//				break;
+		//			case sf::Keyboard::Escape:
+		//				if ( false == mIsESCPressed )
+		//				{
+		//					*nextScene = new ::scene::inPlay::Assertion( mWindow_, &mIsESCPressed );
+		//				}
+		//				break;
+		//			default:
+		//				break;
+		//		}
+		//	}
+		//	eventQueue.pop( );
+		//}
 	}
 	
-	if ( static_cast<int>(fps*mTempo) < mFrameCount0_ )
+	if ( static_cast<int>(fps*mTempo) < mFrameCount_fallDown_ )
 	{
 		hasCollidedAtThisFrame = mCurrentTetrimino.down( mPlayerStage.grid( ) );
-		mFrameCount0_ = 0;
+		mFrameCount_fallDown_ = 0;
 	}
 
 	last:
@@ -329,18 +379,21 @@ void ::scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene
 		mNextTetriminos.pop( );
 		mNextTetriminos.emplace( ::model::Tetrimino::Spawn( ) );
 		mNextTetriminoBlock_.setFillColor( mNextTetriminos.front( ).color( ) );
-		mFrameCount0_ = 0;
+		mFrameCount_fallDown_ = 0;
 	}
 
-	if ( static_cast<int>(fps*0.1f) < mFrameCount1_ )
+	// Check if a row or more have to be cleared,
+	// NOTE: It's better to check that every several frames than every frame.
+	if ( static_cast<int>(fps*0.1f) < mFrameCount_clearingInterval_ )
 	{
-		const uint8_t lineCleared = mPlayerStage.clearLine( );
-		mFrameCount1_ = 0;
-		if ( 0 != lineCleared )
+		const uint8_t cardinalRowCleared = mPlayerStage.tryClearRow( );
+		mFrameCount_clearingInterval_ = 0;
+		if ( 0 != cardinalRowCleared )
 		{
-			mLineCleared = lineCleared;
+			mRowCleared = cardinalRowCleared;
 			mTempo -= 0.02f;
-			++mFrameCount2_;
+			// Making 0 to 1 so as to start the timer.
+			++mFrameCount_clearingVfx_;
 		}
 	}
 	
@@ -350,6 +403,8 @@ void ::scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene
 	{
 		*nextScene = new ::scene::inPlay::GameOver( mWindow_, mBackgroundRect_ );
 	}
+
+	return retVal;
 }
 
 void ::scene::inPlay::Playing::draw( )
@@ -357,10 +412,10 @@ void ::scene::inPlay::Playing::draw( )
 	mWindow_.draw( mBackgroundRect_ ); //TODO: Z 버퍼로 컬링해서 부하를 줄여볼까?
 	mPlayerStage.draw( );
 	mCurrentTetrimino.draw( mWindow_ );
-	if ( 0 != mFrameCount2_ )
+	if ( 0 != mFrameCount_clearingVfx_ )
 	{
-		mVfxCombo.draw( mLineCleared );
-		++mFrameCount2_;
+		mVfxCombo.draw( mRowCleared );
+		++mFrameCount_clearingVfx_;
 	}
 	mWindow_.draw( mNextTetriminoPanel );
 	const ::model::Tetrimino& nextTet = mNextTetriminos.front( );
@@ -391,10 +446,10 @@ void ::scene::inPlay::Playing::draw( )
 
 	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS" );
 	const int32_t fps = ::ServiceLocatorMirror::Vault( )[ HK_FORE_FPS ];
-	if ( fps <= mFrameCount2_ )
+	if ( fps <= mFrameCount_clearingVfx_ )
 	{
-		mFrameCount2_ = 0;
+		mFrameCount_clearingVfx_ = 0;
 	}
-	++mFrameCount0_;
-	++mFrameCount1_;
+	++mFrameCount_fallDown_;
+	++mFrameCount_clearingInterval_;
 }

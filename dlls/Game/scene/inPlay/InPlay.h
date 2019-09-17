@@ -10,20 +10,20 @@ namespace scene::inPlay
 	{
 	public:
 		InPlay( ) = delete;
-		InPlay( sf::RenderWindow& window, const SetScene_t& setScene );
+		InPlay( sf::RenderWindow& window, const SetScene_t& setScene, const ::scene::ID nextScene = ::scene::ID::SINGLE_PLAY );
 		~InPlay( );
 
 		void loadResources( ) override;
-		void update( std::queue< sf::Event >& eventQueue ) override;
+		void update( std::vector< sf::Event >& eventQueue ) override;
 		void draw( ) override;
 		::scene::ID currentScene( ) const override;
 	private:
 		static bool IsInstantiated;
 		uint32_t mFPS;
-		uint32_t mFrameCount;
 		sf::RenderWindow& mWindow_;
 		const SetScene_t& mSetScene_;
 		std::unique_ptr< ::scene::inPlay::IScene > mCurrentScene;
+		std::unique_ptr< ::scene::inPlay::IScene > mOverlappedScene;
 		sf::RectangleShape mBackgroundRect;
 	};
 }

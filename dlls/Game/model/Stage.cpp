@@ -1,7 +1,7 @@
 #include "Stage.h"
 #include <bitset>
 
-uint8_t model::Stage::clearLine( )
+uint8_t model::Stage::tryClearRow( )
 {
 	std::bitset<::model::stage::GRID_HEIGHT> fLineCleared;
 	// From the bottommost to the topmost,
