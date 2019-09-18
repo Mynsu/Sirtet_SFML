@@ -4,7 +4,7 @@
 scene::inPlay::Assertion::Assertion( sf::RenderWindow& window, bool* isESCPressed )
 	: mFrameCount( 0u ), mIsESCPressed( isESCPressed ), mWindow( window )
 {
-	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS" );
+	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
 	mFPS = static_cast<uint32_t>(::ServiceLocatorMirror::Vault( )[ HK_FORE_FPS ]);
 
 	*mIsESCPressed = true;
@@ -18,7 +18,7 @@ void scene::inPlay::Assertion::loadResources( )
 {
 }
 
-int8_t scene::inPlay::Assertion::update( ::scene::inPlay::IScene** const, std::vector<sf::Event>& eventQueue )
+int8_t scene::inPlay::Assertion::update( ::scene::inPlay::IScene** const, std::list<sf::Event>& eventQueue )
 {
 	int8_t retVal = 0;
 

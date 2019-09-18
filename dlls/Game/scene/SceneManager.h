@@ -29,7 +29,7 @@ namespace scene
 		void operator=( const SceneManager& ) = delete;
 		void lastInit( sf::RenderWindow* const window );
 
-		inline void update( std::vector< sf::Event >& eventQueue )
+		inline void update( std::list< sf::Event >& eventQueue )
 		{
 			mCurrentScene->update( eventQueue );
 		}

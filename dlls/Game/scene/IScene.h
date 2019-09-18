@@ -23,8 +23,7 @@ namespace scene
 		virtual ~IScene( ) = default;
 
 		virtual void loadResources( ) = 0;
-		///virtual void update( std::queue< sf::Event >& eventQueue ) = 0;
-		virtual void update( std::vector< sf::Event >& eventQueue ) = 0;
+		virtual void update( std::list< sf::Event >& eventQueue ) = 0;
 		virtual void draw( ) = 0;
 		virtual ::scene::ID currentScene( ) const = 0;
 

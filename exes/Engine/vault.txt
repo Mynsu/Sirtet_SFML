@@ -4,6 +4,6 @@
 
 [ Variable_Name ]	|	[ Description ]
 
-foreFPS				|
-backFPS				|
-isRunning			|
+foreFPS				|	Frames per second while the window gains focus.
+backFPS				|	Frames per second while the window loses focus.
+isRunning			|	When this's false, game loop terminates promptly.

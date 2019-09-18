@@ -93,9 +93,9 @@ Initialization
 
 	const uint32_t FOREGROUND_FPS = 60u;
 	auto& variableTable = ServiceLocator::Vault( );
-	constexpr HashedKey HK_FORE_FPS = util::hash::Digest( "foreFPS" ); //TODO: 한 프레임 안에 계산할 필요가 없는 게 뭐가 있을까?
+	constexpr HashedKey HK_FORE_FPS = util::hash::Digest( "foreFPS", 7 ); //TODO: 한 프레임 안에 계산할 필요가 없는 게 뭐가 있을까?
 	variableTable.emplace( HK_FORE_FPS, FOREGROUND_FPS );
-	constexpr HashedKey HK_BACK_FPS = util::hash::Digest( "backFPS" );
+	constexpr HashedKey HK_BACK_FPS = util::hash::Digest( "backFPS", 7 );
 	variableTable.emplace( HK_BACK_FPS, 30u );
 	ServiceLocator::Console( )->setPosition( { winWidth, winHeight } );
 
@@ -131,12 +131,11 @@ Main Loop
 =====
 */
 	IConsole& console = *ServiceLocator::Console( );
-	constexpr HashedKey HK_IS_RUNNING = ::util::hash::Digest( "isRunning" );
+	constexpr HashedKey HK_IS_RUNNING = ::util::hash::Digest( "isRunning", ::util::hash::Measure("isRunning") );
 	::ServiceLocator::Vault().emplace( HK_IS_RUNNING, 1 );
 	while ( 1 == ::ServiceLocator::Vault()[HK_IS_RUNNING] )
 	{
-		///std::queue< sf::Event > subeventQueue;
-		std::vector< sf::Event > subeventQueue;//TODO:list로 바꿔야할까?
+		std::list< sf::Event > subEventQueue;
 		sf::Event event;
 		while ( true == window.pollEvent(event) )
 		{
@@ -155,17 +154,17 @@ Main Loop
 			}
 			else
 			{
-				subeventQueue.emplace_back( event );
+				subEventQueue.emplace_back( event );
 			}
 					
 			// Console
-			console.handleEvent( subeventQueue );
+			console.handleEvent( subEventQueue );
 		}
 
-		gameComponents.game->update( subeventQueue );
+		gameComponents.game->update( subEventQueue );
 
 		// NOTE: Skipped.
-		///subeventQueue.clear();
+		///subEventQueue.clear();
 		
 		window.clear( );
 		gameComponents.game->draw( );

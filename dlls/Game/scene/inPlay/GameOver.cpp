@@ -8,7 +8,7 @@ scene::inPlay::GameOver::GameOver( sf::RenderWindow& window, sf::Drawable& shape
 {
 	loadResources( );
 
-	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS" );
+	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
 	mFPS = static_cast<uint32_t>(::ServiceLocatorMirror::Vault()[ HK_FORE_FPS ]);
 }
 
@@ -149,6 +149,25 @@ void scene::inPlay::GameOver::loadResources( )
 	mSprite.setTextureRect( sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(size)) );
 	mSprite.setOrigin( size*0.5f );
 	mSprite.setPosition( sf::Vector2f(mWindow_.getSize())*0.5f );
+}
+
+int8_t scene::inPlay::GameOver::update( ::scene::inPlay::IScene** const, std::list<sf::Event>& )
+{
+	int8_t retVal = 0;
+
+	// When mFade reaches the target,
+	if ( TARGET_ALPHA == mFade )
+	{
+		// Frame counting starts.
+		++mFrameCount;
+		// 3 seconds after,
+		if ( 3*mFPS == mFrameCount )
+		{
+			retVal = 1;
+		}
+	}
+
+	return retVal;
 }
 
 void scene::inPlay::GameOver::draw( )

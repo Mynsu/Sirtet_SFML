@@ -136,8 +136,7 @@ void ConsoleLocal::draw( sf::RenderTarget& target, sf::RenderStates states ) con
 	}
 }
 
-///void ConsoleLocal::handleEvent( const sf::Event& event )
-void ConsoleLocal::handleEvent( std::vector< sf::Event >& eventQueue )
+void ConsoleLocal::handleEvent( std::list< sf::Event >& eventQueue )
 {
 	for ( auto it = eventQueue.cbegin(); eventQueue.cend() != it; )
 	{

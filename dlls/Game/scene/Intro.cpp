@@ -15,7 +15,7 @@ bool ::scene::Intro::IsInstantiated = false;
 {
 	ASSERT_FALSE( IsInstantiated );
 
-	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS" );
+	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
 	if ( const auto it = ServiceLocatorMirror::Vault( ).find( HK_FORE_FPS ); ServiceLocatorMirror::Vault( ).cend( ) != it )
 	{
 		mFPS_ = static_cast< uint32_t >( it->second );
@@ -123,7 +123,7 @@ void scene::Intro::loadResources( )
 	}
 }
 
-void ::scene::Intro::update( std::vector< sf::Event >& )
+void ::scene::Intro::update( std::list< sf::Event >& )
 {
 	//
 	// Scene Transition

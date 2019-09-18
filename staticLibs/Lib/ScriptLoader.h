@@ -105,7 +105,7 @@ namespace util::script
 					break;
 				}
 				case LUA_TSTRING:
-					retVals.emplace( it, std::move(std::string(lua_tostring(lua, index))) ); // 궁금: 길어도 잘 될까?
+					retVals.emplace( it, lua_tostring(lua, index) );
 					break;
 					// When one of variables itself doesn't exists or declared,
 				case LUA_TNIL:

@@ -13,24 +13,7 @@ namespace scene::inPlay
 		~GameOver( ) = default;
 
 		void loadResources( ) override;
-		int8_t update( ::scene::inPlay::IScene** const, std::vector< sf::Event >& ) override
-		{
-			int8_t retVal = 0;
-
-			// When mFade reaches the target,
-			if ( TARGET_ALPHA == mFade )
-			{
-				// Frame counting starts.
-				++mFrameCount;
-				// 5 seconds after,
-				if ( 5*mFPS == mFrameCount )
-				{
-					retVal = 1;
-				}
-			}
-
-			return retVal;
-		}
+		int8_t update( ::scene::inPlay::IScene** const ignored, std::list< sf::Event >& ignored_eventQueue ) override;
 		void draw( ) override;
 	private:
 		const uint8_t TARGET_ALPHA;

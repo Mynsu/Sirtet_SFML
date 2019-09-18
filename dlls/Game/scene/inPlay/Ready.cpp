@@ -9,7 +9,7 @@
 	mSpriteClipSize_( 256.f, 256.f )
 {
 	auto& varT = ::ServiceLocatorMirror::Vault( );
-	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS" );
+	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
 	if ( const auto it = varT.find( HK_FORE_FPS ); varT.cend( ) != it )
 	{
 		mFPS_ = it->second;
@@ -160,7 +160,7 @@ void ::scene::inPlay::Ready::loadResources( )
 	mSprite.setPosition( (sf::Vector2f(mWindow_.getSize())-mSpriteClipSize_)*0.5f );
 }
 
-int8_t scene::inPlay::Ready::update( ::scene::inPlay::IScene** const nextScene, std::vector< sf::Event >& )
+int8_t scene::inPlay::Ready::update( ::scene::inPlay::IScene** const nextScene, std::list< sf::Event >& )
 {
 	int8_t retVal = 0;
 	// NOTE: moved into 'draw( ).'

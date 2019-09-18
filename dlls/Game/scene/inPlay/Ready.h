@@ -13,7 +13,7 @@ namespace scene::inPlay
 		~Ready( ) = default;
 
 		void loadResources( ) override;
-		int8_t update( ::scene::inPlay::IScene** const nextScene, std::vector< sf::Event >& eventQueue ) override;
+		int8_t update( ::scene::inPlay::IScene** const nextScene, std::list< sf::Event >& ignored_eventQueue ) override;
 		void draw( ) override;
 	private:
 		uint32_t mFPS_;

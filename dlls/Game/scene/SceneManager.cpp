@@ -15,9 +15,9 @@ void ::scene::SceneManager::lastInit( sf::RenderWindow* const window )
 	//
 	// Registering commands
 	///
-	constexpr HashedKey HK_COMMAND0 = ::util::hash::Digest( "chseqto" );
+	constexpr HashedKey HK_COMMAND0 = ::util::hash::Digest( "chseqto", 7 );
 	ServiceLocatorMirror::Console( )->addCommand( HK_COMMAND0, std::bind( &SceneManager::_2436549370, this, std::placeholders::_1 ) );
-	constexpr HashedKey HK_COMMAND1 = ::util::hash::Digest( "refresh" );
+	constexpr HashedKey HK_COMMAND1 = ::util::hash::Digest( "refresh", 7 );
 	ServiceLocatorMirror::Console( )->addCommand( HK_COMMAND1, std::bind( &SceneManager::_495146883, this, std::placeholders::_1 ) );
 
 	//

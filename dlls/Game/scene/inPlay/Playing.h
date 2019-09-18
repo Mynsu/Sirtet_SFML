@@ -17,7 +17,7 @@ namespace scene::inPlay
 		~Playing( ) = default;
 
 		void loadResources( ) override;
-		int8_t update( ::scene::inPlay::IScene** const nextScene, std::vector< sf::Event >& eventQueue ) override;
+		int8_t update( ::scene::inPlay::IScene** const nextScene, std::list< sf::Event >& eventQueue ) override;
 		void draw( ) override;
 	private:
 		bool mIsESCPressed;

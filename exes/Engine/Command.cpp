@@ -18,14 +18,14 @@ void Command::processCommand( const std::string& commandLine )
 	// When the command line has the one token, like 'refresh',
 	if ( std::string::npos == _1stIdxOfTokenizer )
 	{
-		key = ::util::hash::Digest( commandLine.data( ) );
+		key = ::util::hash::Digest( commandLine.data( ), ::util::hash::Measure(commandLine.data()) );
 	}
 	// When the command line consists of two or more tokens,
 	else if ( ' ' != commandLine.at( _1stIdxOfTokenizer + 1 ) )
 	{
 		// NOTE: substr() of std::string_view costs less than that of std::string.
 		const std::string command( commandLine.substr( 0, _1stIdxOfTokenizer ) );
-		key = ::util::hash::Digest( command.data( ) );
+		key = ::util::hash::Digest( command.data( ), ::util::hash::Measure(command.data()) );
 		argv = commandLine;
 		argv = argv.substr( _1stIdxOfTokenizer + 1 );
 	}

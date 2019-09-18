@@ -13,7 +13,7 @@ namespace scene
 		~MainMenu( );
 
 		void loadResources( ) override;
-		void update( std::vector< sf::Event >& ) override;
+		void update( std::list< sf::Event >& eventQueue ) override;
 		void draw( ) override;
 		::scene::ID currentScene( ) const override;
 	private:

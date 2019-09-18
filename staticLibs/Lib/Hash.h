@@ -7,11 +7,15 @@ using HashedKey = uint32_t;
 
 namespace util::hash
 {
-	constexpr HashedKey Digest( const char arg[ ] )
+	constexpr uint8_t Measure( const char* str )
 	{
-		constexpr unsigned short len = sizeof( arg ) / sizeof( *arg ); //궁금: 왜 8로 정해지지?
+		return ('\0'==*str)? 0: 1+Measure(++str);
+	}
+
+	constexpr HashedKey Digest( const char* arg, const uint8_t len )
+	{
 		HashedKey retHash = 0;
-		for ( unsigned short i = 0; i != len; ++i )
+		for ( uint8_t i = 0; i != len; ++i )
 		{
 			retHash += 65599 * retHash + arg[ i ];
 		}

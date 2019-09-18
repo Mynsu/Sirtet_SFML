@@ -304,13 +304,13 @@ void scene::MainMenu::loadResources( )
 	mSprite.setTexture( mTexture );
 }
 
-void ::scene::MainMenu::update( std::vector< sf::Event >& eventQueue )
+void ::scene::MainMenu::update( std::list< sf::Event >& eventQueue )
 {
 	for ( const auto& it : eventQueue )
 	{
 		if ( sf::Event::KeyPressed == it.type && sf::Keyboard::Escape == it.key.code )
 		{
-			constexpr HashedKey HK_IS_RUNNING = ::util::hash::Digest( "isRunning" );
+			constexpr HashedKey HK_IS_RUNNING = ::util::hash::Digest( "isRunning", ::util::hash::Measure("isRunning") );
 			::ServiceLocatorMirror::Vault( )[ HK_IS_RUNNING ] = 0;
 		}
 	}

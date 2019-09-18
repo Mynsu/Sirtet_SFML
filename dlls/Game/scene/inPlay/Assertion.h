@@ -11,7 +11,7 @@ namespace scene::inPlay
 		Assertion( sf::RenderWindow& window, bool* isESCPressed );
 		~Assertion( ) = default;
 		void loadResources( ) override;
-		int8_t update( ::scene::inPlay::IScene** const, std::vector< sf::Event >& eventQueue ) override;
+		int8_t update( ::scene::inPlay::IScene** const, std::list< sf::Event >& eventQueue ) override;
 		void draw( ) override;
 	private:
 		uint32_t mFPS, mFrameCount;

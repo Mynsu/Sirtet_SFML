@@ -250,10 +250,10 @@ void ::scene::inPlay::Playing::loadResources( )
 	mCellSize_ = cellSize;
 }
 
-int8_t scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene, std::vector< sf::Event >& eventQueue )
+int8_t scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene, std::list< sf::Event >& eventQueue )
 {
 	int8_t retVal = 0;
-	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS" );
+	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
 	const int32_t fps = ::ServiceLocatorMirror::Vault( ).at( HK_FORE_FPS );
 	bool hasCollidedAtThisFrame = false;
 	if ( true == mCurrentTetrimino.isFallingDown( ) )
@@ -271,8 +271,9 @@ int8_t scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene
 	}
 	else
 	{
-		for ( auto it = eventQueue.cbegin(); eventQueue.cend() != it; ++it )
+		for ( auto it = eventQueue.cbegin(); eventQueue.cend() != it; )
 		{
+			bool isAlreadyNext = false;
 			if ( sf::Event::KeyPressed == it->type )
 			{
 				switch ( it->key.code )
@@ -302,54 +303,18 @@ int8_t scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene
 						{
 							*nextScene = new ::scene::inPlay::Assertion( mWindow_, &mIsESCPressed );
 							it = eventQueue.erase( it );
-							//--it;//TODO
+							isAlreadyNext = true;
 						}
 						break;
 					default:
 						break;
 				}
 			}
+			if ( false == isAlreadyNext )
+			{
+				++it;
+			}
 		}
-		///
-		//while ( false == eventQueue.empty( ) )
-		//{
-		//	const sf::Event& event( eventQueue.front( ) );
-		//	if ( sf::Event::KeyPressed == event.type )
-		//	{
-		//		switch ( event.key.code )
-		//		{
-		//			case sf::Keyboard::Space:
-		//				mCurrentTetrimino.fallDown( );
-		//				// NOTE: Don't 'return', or it can't come out of the infinite loop.
-		//				///return;
-		//				[[ fallthrough ]];
-		//			case sf::Keyboard::Down:
-		//				hasCollidedAtThisFrame = mCurrentTetrimino.down( mPlayerStage.grid( ) );
-		//				mFrameCount_fallDown_ = 0;
-		//				break;
-		//			case sf::Keyboard::Left:
-		//				mCurrentTetrimino.tryMoveLeft( mPlayerStage.grid( ) );
-		//				break;
-		//			case sf::Keyboard::Right:
-		//				mCurrentTetrimino.tryMoveRight( mPlayerStage.grid( ) );
-		//				break;
-		//			case sf::Keyboard::LShift:
-		//				[[ fallthrough ]];
-		//			case sf::Keyboard::Up:
-		//				mCurrentTetrimino.tryRotate( mPlayerStage.grid( ) );
-		//				break;
-		//			case sf::Keyboard::Escape:
-		//				if ( false == mIsESCPressed )
-		//				{
-		//					*nextScene = new ::scene::inPlay::Assertion( mWindow_, &mIsESCPressed );
-		//				}
-		//				break;
-		//			default:
-		//				break;
-		//		}
-		//	}
-		//	eventQueue.pop( );
-		//}
 	}
 	
 	if ( static_cast<int>(fps*mTempo) < mFrameCount_fallDown_ )
@@ -444,7 +409,7 @@ void ::scene::inPlay::Playing::draw( )
 		}
 	}
 
-	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS" );
+	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
 	const int32_t fps = ::ServiceLocatorMirror::Vault( )[ HK_FORE_FPS ];
 	if ( fps <= mFrameCount_clearingVfx_ )
 	{

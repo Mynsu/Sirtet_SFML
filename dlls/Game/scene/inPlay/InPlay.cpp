@@ -30,7 +30,7 @@ bool ::scene::inPlay::InPlay::IsInstantiated = false;
 	}
 	loadResources( );
 
-	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS" );
+	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
 	mFPS = static_cast<uint32_t>(::ServiceLocatorMirror::Vault( )[ HK_FORE_FPS ]);
 
 	IsInstantiated = true;
@@ -47,7 +47,7 @@ void scene::inPlay::InPlay::loadResources( )
 	mCurrentScene->loadResources( );
 }
 
-void ::scene::inPlay::InPlay::update( std::vector< sf::Event >& eventQueue )
+void ::scene::inPlay::InPlay::update( std::list< sf::Event >& eventQueue )
 {
 	::scene::inPlay::IScene* nextScene = nullptr;
 	if ( const int8_t bi = mCurrentScene->update( &nextScene, eventQueue ); 1 == bi )
