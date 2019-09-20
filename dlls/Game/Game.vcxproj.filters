@@ -37,6 +37,12 @@
     <Filter Include="소스 파일\vfx">
       <UniqueIdentifier>{ad54fb4c-9f35-41c7-bf98-a440df72f85f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="헤더 파일\scene\online">
+      <UniqueIdentifier>{762c1885-243b-426f-bdc4-5dccd8d8fbd9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\scene\online">
+      <UniqueIdentifier>{e768cd50-acf1-4063-ac6d-52976f2964be}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\Game.cpp">
@@ -77,6 +83,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\Assertion.cpp">
       <Filter>소스 파일\scene\inPlay</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\online\Lobby.cpp">
+      <Filter>소스 파일\scene\online</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\pch.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -127,6 +139,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\Assertion.h">
       <Filter>헤더 파일\scene\inPlay</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\online\Lobby.h">
+      <Filter>헤더 파일\scene\online</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\pch.h">
+      <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

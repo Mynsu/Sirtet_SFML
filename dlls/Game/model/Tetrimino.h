@@ -1,7 +1,4 @@
 #pragma once
-#pragma hdrstop
-#include <Lib/precompiled.h>
-#include <array>
 #include "Stage.h"
 #include "../Constant.h"
 

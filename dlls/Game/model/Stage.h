@@ -1,7 +1,4 @@
 #pragma once
-#pragma hdrstop
-#include <Lib/precompiled.h>
-#include <array>
 #include "../Constant.h"
 
 namespace model
@@ -71,6 +68,19 @@ namespace model
 				}
 			}
 			return retVal;
+		}
+		inline void blackout( )
+		{
+			const sf::Color GRAY( 0x808080ff );
+			#pragma omp parallel
+			for ( auto& it : mGrid )
+			{
+				for ( auto& itit : it )
+				{
+					// Gray
+					itit.color = GRAY;
+				}
+			}
 		}
 		inline const std::array< std::array<Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid( ) const
 		{

@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Command.h"
 #include "ServiceLocator.h"
 
@@ -43,6 +44,6 @@ void Command::processCommand( const std::string& commandLine )
 	// Exception: Otherwise,
 	else
 	{
-		ServiceLocator::Console( )->printFailure( FailureLevel::WARNING, "Command '" + commandLine + "' isn't coined." );
+		gService.console()->printFailure( FailureLevel::WARNING, "Command '" + commandLine + "' isn't coined." );
 	}
 }

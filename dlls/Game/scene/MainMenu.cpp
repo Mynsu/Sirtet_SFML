@@ -1,5 +1,5 @@
+#include "../pch.h"
 #include "MainMenu.h"
-#include <lua.hpp>
 #include "../ServiceLocatorMirror.h"
 
 bool ::scene::MainMenu::IsInstantiated = false;
@@ -7,7 +7,8 @@ bool ::scene::MainMenu::IsInstantiated = false;
 ::scene::MainMenu::MainMenu( sf::RenderWindow& window, const SetScene_t& setScene )
 	: mWindow( window ), mSetScene( setScene ),
 	mOnIndicator( ::scene::ID::MAX_NONE ),
-	mSpriteClipSize_( 256.f, 128.f ), mLogoMargin_( 70.f, 70.f ), mButtonPosition_( 150.f, 150.f )
+	mSpriteClipSize_( 256.f, 128.f ), mLogoMargin_( 70.f, 70.f ),
+	mButtonSinglePosition_( 150.f, 150.f ), mButtonOnlinePosition_( 150.f, 300.f )
 {
 	ASSERT_FALSE( IsInstantiated );
 
@@ -36,7 +37,7 @@ void scene::MainMenu::loadResources( )
 	if ( true == luaL_dofile(lua, scriptPathNName) )
 	{
 		// File Not Found Exception
-		ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
+		(*glpService).console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
 		lua_close( lua );
 	}
 	else
@@ -48,7 +49,7 @@ void scene::MainMenu::loadResources( )
 		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName0.data( ), scriptPathNName );
+			(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName0.data( ), scriptPathNName );
 		}
 		else
 		{
@@ -62,7 +63,7 @@ void scene::MainMenu::loadResources( )
 				if ( false == mTexture.loadFromFile(lua_tostring(lua, TOP_IDX)) )
 				{
 					// File Not Found Exception
-					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::FILE_NOT_FOUND,
+					(*glpService).console( )->printScriptError( ExceptionType::FILE_NOT_FOUND,
 																		(tableName0+":"+field0).data( ), scriptPathNName );
 				}
 				else
@@ -73,7 +74,7 @@ void scene::MainMenu::loadResources( )
 			// Type Check Exception
 			else
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName0+":"+field0).data( ), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -89,7 +90,7 @@ void scene::MainMenu::loadResources( )
 				// Range Check Exception
 				if ( 0 > temp )
 				{
-					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::RANGE_CHECK,
+					(*glpService).console( )->printScriptError( ExceptionType::RANGE_CHECK,
 																		(tableName0+":"+field1).data( ), scriptPathNName );
 				}
 				// When the value looks OK,
@@ -102,7 +103,7 @@ void scene::MainMenu::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName0+":"+field1).data( ), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -118,7 +119,7 @@ void scene::MainMenu::loadResources( )
 				// Range Check Exception
 				if ( 0 > temp )
 				{
-					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::RANGE_CHECK,
+					(*glpService).console( )->printScriptError( ExceptionType::RANGE_CHECK,
 																		(tableName0+":"+field2).data( ), scriptPathNName );
 				}
 				// When the value looks OK,
@@ -131,7 +132,7 @@ void scene::MainMenu::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName0+":"+field2).data( ), scriptPathNName );
 			}
 			lua_pop( lua, 2 );
@@ -142,7 +143,7 @@ void scene::MainMenu::loadResources( )
 		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName1.data( ), scriptPathNName );
+			(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName1.data( ), scriptPathNName );
 		}
 		else
 		{
@@ -157,7 +158,7 @@ void scene::MainMenu::loadResources( )
 				// Range Check Exception
 				if ( 0 > temp )
 				{
-					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::RANGE_CHECK,
+					(*glpService).console( )->printScriptError( ExceptionType::RANGE_CHECK,
 																		(tableName1+":"+field0).data( ), scriptPathNName );
 				}
 				// When the value looks OK,
@@ -170,7 +171,7 @@ void scene::MainMenu::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName1+":"+field0).data( ), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -186,7 +187,7 @@ void scene::MainMenu::loadResources( )
 				// Range Check Exception
 				if ( 0 > temp )
 				{
-					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::RANGE_CHECK,
+					(*glpService).console( )->printScriptError( ExceptionType::RANGE_CHECK,
 																		(tableName1+":"+field1).data( ), scriptPathNName );
 				}
 				// When the value looks OK,
@@ -199,18 +200,18 @@ void scene::MainMenu::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName1+":"+field1).data( ), scriptPathNName );
 			}
 			lua_pop( lua, 2 );
 		}
 
-		const std::string tableName2( "Button" );
+		const std::string tableName2( "ButtonSingle" );
 		lua_getglobal( lua, tableName2.data( ) );
 		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName2.data( ), scriptPathNName );
+			(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName2.data( ), scriptPathNName );
 		}
 		else
 		{
@@ -225,20 +226,20 @@ void scene::MainMenu::loadResources( )
 				// Range Check Exception
 				if ( 0 > temp )
 				{
-					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::RANGE_CHECK,
+					(*glpService).console( )->printScriptError( ExceptionType::RANGE_CHECK,
 																		(tableName2+":"+field0).data( ), scriptPathNName );
 				}
 				// When the value looks OK,
 				else
 				{
-					mButtonPosition_.x = temp;
+					mButtonSinglePosition_.x = temp;
 					isButtXDefault = false;
 				}
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName2+":"+field0).data( ), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -254,21 +255,89 @@ void scene::MainMenu::loadResources( )
 				// Range Check Exception
 				if ( 0 > temp )
 				{
-					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::RANGE_CHECK,
+					(*glpService).console( )->printScriptError( ExceptionType::RANGE_CHECK,
 																		(tableName2+":"+field1).data( ), scriptPathNName );
 				}
 				// When the value looks OK,
 				else
 				{
-					mButtonPosition_.y = temp;
+					mButtonSinglePosition_.y = temp;
 					isButtYDefault = false;
 				}
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName2+":"+field1).data( ), scriptPathNName );
+			}
+			lua_pop( lua, 2 );
+		}
+
+		const std::string tableName3( "ButtonOnline" );
+		lua_getglobal( lua, tableName3.data( ) );
+		// Type Check Exception
+		if ( false == lua_istable( lua, TOP_IDX ) )
+		{
+			(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName3.data( ), scriptPathNName );
+		}
+		else
+		{
+			const char field0[ ] = "x";
+			lua_pushstring( lua, field0 );
+			lua_gettable( lua, 1 );
+			int type = lua_type( lua, TOP_IDX );
+			// Type check
+			if ( LUA_TNUMBER == type )
+			{
+				const float temp = static_cast<float>(lua_tointeger( lua, TOP_IDX ));
+				// Range Check Exception
+				if ( 0 > temp )
+				{
+					(*glpService).console( )->printScriptError( ExceptionType::RANGE_CHECK,
+						(tableName3+":"+field0).data( ), scriptPathNName );
+				}
+				// When the value looks OK,
+				else
+				{
+					mButtonOnlinePosition_.x = temp;
+					isButtXDefault = false;
+				}
+			}
+			// Type Check Exception
+			else if ( LUA_TNIL != type )
+			{
+				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
+					(tableName3+":"+field0).data( ), scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			const char field1[ ] = "y";
+			lua_pushstring( lua, field1 );
+			lua_gettable( lua, 1 );
+			type = lua_type( lua, TOP_IDX );
+			// Type check
+			if ( LUA_TNUMBER == type )
+			{
+				const float temp = static_cast<float>(lua_tointeger( lua, TOP_IDX ));
+				// Range Check Exception
+				if ( 0 > temp )
+				{
+					(*glpService).console( )->printScriptError( ExceptionType::RANGE_CHECK,
+						(tableName3+":"+field1).data( ), scriptPathNName );
+				}
+				// When the value looks OK,
+				else
+				{
+					mButtonOnlinePosition_.y = temp;
+					isButtYDefault = false;
+				}
+			}
+			// Type Check Exception
+			else if ( LUA_TNIL != type )
+			{
+				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
+					(tableName3+":"+field1).data( ), scriptPathNName );
 			}
 			lua_pop( lua, 2 );
 		}
@@ -281,7 +350,7 @@ void scene::MainMenu::loadResources( )
 		if ( false == mTexture.loadFromFile(defaultFilePathNName) )
 		{
 			// Exception: When there's not even the default file,
-			ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+defaultFilePathNName );
+			(*glpService).console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+defaultFilePathNName );
 #ifdef _DEBUG
 			__debugbreak( );
 #endif
@@ -290,15 +359,15 @@ void scene::MainMenu::loadResources( )
 
 	if ( true == isSprWDefault || true == isSprHDefault )
 	{
-		ServiceLocatorMirror::Console( )->print( "Default: clip width 256, clip height 128" );
+		(*glpService).console( )->print( "Default: clip width 256, clip height 128" );
 	}
 	if ( true == isMargXDefault || true == isMargYDefault )
 	{
-		ServiceLocatorMirror::Console( )->print( "Default: margin x 70, margin y 70" );
+		(*glpService).console( )->print( "Default: margin x 70, margin y 70" );
 	}
 	if ( true == isButtXDefault || true == isButtYDefault )
 	{
-		ServiceLocatorMirror::Console( )->print( "Default: button x 150, button y 150" );
+		(*glpService).console( )->print( "Default: button x 150, button y 150" );
 	}
 
 	mSprite.setTexture( mTexture );
@@ -311,12 +380,12 @@ void ::scene::MainMenu::update( std::list< sf::Event >& eventQueue )
 		if ( sf::Event::KeyPressed == it.type && sf::Keyboard::Escape == it.key.code )
 		{
 			constexpr HashedKey HK_IS_RUNNING = ::util::hash::Digest( "isRunning", ::util::hash::Measure("isRunning") );
-			::ServiceLocatorMirror::Vault( )[ HK_IS_RUNNING ] = 0;
+			(*glpService).vault()[ HK_IS_RUNNING ] = 0;
 		}
 	}
 
 	// NOTE: Here is no boundary check.
-	if ( false == ::ServiceLocatorMirror::Console()->isVisible()
+	if ( false == (*glpService).console( )->isVisible()
 		 && true == sf::Mouse::isButtonPressed(sf::Mouse::Left) )
 	{
 		if ( ::scene::ID::SINGLE_PLAY == mOnIndicator )
@@ -351,40 +420,45 @@ void scene::MainMenu::touchButton( )
 {
 	const sf::Vector2f mouseGlobalPos( sf::Mouse::getPosition( ) );
 	const sf::Vector2i cast( mSpriteClipSize_ );
-	const sf::Vector2f height( 0.f, mSpriteClipSize_.y );
 	const sf::Vector2f titlebarHeight( 0.f, 20.f );
-	sf::Vector2f buttGlobalPos( sf::Vector2f( mWindow.getPosition( ) )+mButtonPosition_+titlebarHeight );
-	if ( buttGlobalPos.x < mouseGlobalPos.x && mouseGlobalPos.x < buttGlobalPos.x+mSpriteClipSize_.x
-		 && buttGlobalPos.y < mouseGlobalPos.y && mouseGlobalPos.y < buttGlobalPos.y+mSpriteClipSize_.y )
+	if ( const sf::Vector2f btSingleGlobalPos( sf::Vector2f(mWindow.getPosition())+titlebarHeight+mButtonSinglePosition_ ); 
+		 btSingleGlobalPos.x < mouseGlobalPos.x && mouseGlobalPos.x < btSingleGlobalPos.x+mSpriteClipSize_.x
+		 && btSingleGlobalPos.y < mouseGlobalPos.y && mouseGlobalPos.y < btSingleGlobalPos.y+mSpriteClipSize_.y )
 	{
 		mOnIndicator = ::scene::ID::SINGLE_PLAY;
-		mSprite.setPosition( mButtonPosition_ );
-		mSprite.setTextureRect( sf::IntRect( cast.x, 2*cast.y, cast.x, cast.y ) );
+		mSprite.setPosition( mButtonSinglePosition_ );
+		mSprite.setTextureRect( sf::IntRect( cast.x,
+											 2*cast.y, cast.x, cast.y ) );
 		mWindow.draw( mSprite );
-		mSprite.setPosition( mButtonPosition_+2.f*height );
-		mSprite.setTextureRect( sf::IntRect( 0, 3*cast.y, cast.x, cast.y ) );
+		mSprite.setPosition( mButtonOnlinePosition_ );
+		mSprite.setTextureRect( sf::IntRect( 0,
+											 3*cast.y, cast.x, cast.y ) );
 		mWindow.draw( mSprite );
 	}
-	else if ( buttGlobalPos += 2.f*height;
-			  buttGlobalPos.x < mouseGlobalPos.x && mouseGlobalPos.x < buttGlobalPos.x+mSpriteClipSize_.x
-			  && buttGlobalPos.y < mouseGlobalPos.y && mouseGlobalPos.y < buttGlobalPos.y+mSpriteClipSize_.y )
+	else if ( const sf::Vector2f btOnlineGlobalPos( sf::Vector2f(mWindow.getPosition())+titlebarHeight+mButtonOnlinePosition_ );
+			  btOnlineGlobalPos.x < mouseGlobalPos.x && mouseGlobalPos.x < btOnlineGlobalPos.x+mSpriteClipSize_.x
+			  && btOnlineGlobalPos.y < mouseGlobalPos.y && mouseGlobalPos.y < btOnlineGlobalPos.y+mSpriteClipSize_.y )
 	{
 		mOnIndicator = ::scene::ID::ONLINE_BATTLE;
-		mSprite.setPosition( mButtonPosition_+2.f*height );
-		mSprite.setTextureRect( sf::IntRect( cast.x, 3*cast.y, cast.x, cast.y ) );
+		mSprite.setPosition( mButtonSinglePosition_ );
+		mSprite.setTextureRect( sf::IntRect( 0,
+											 2*cast.y, cast.x, cast.y ) );
 		mWindow.draw( mSprite );
-		mSprite.setPosition( mButtonPosition_ );
-		mSprite.setTextureRect( sf::IntRect( 0, 2*cast.y, cast.x, cast.y ) );
+		mSprite.setPosition( mButtonOnlinePosition_ );
+		mSprite.setTextureRect( sf::IntRect( cast.x,
+											 3*cast.y, cast.x, cast.y ) );
 		mWindow.draw( mSprite );
 	}
 	else
 	{
 		mOnIndicator = ::scene::ID::MAX_NONE;
-		mSprite.setPosition( mButtonPosition_ );
-		mSprite.setTextureRect( sf::IntRect( 0, 2*cast.y, cast.x, cast.y ) );
+		mSprite.setPosition( mButtonSinglePosition_ );
+		mSprite.setTextureRect( sf::IntRect( 0,
+											 2*cast.y, cast.x, cast.y ) );
 		mWindow.draw( mSprite );
-		mSprite.setPosition( mButtonPosition_+2.f*height );
-		mSprite.setTextureRect( sf::IntRect( 0, 3*cast.y, cast.x, cast.y ) );
+		mSprite.setPosition( mButtonOnlinePosition_ );
+		mSprite.setTextureRect( sf::IntRect( 0,
+											 3*cast.y, cast.x, cast.y ) );
 		mWindow.draw( mSprite );
 	}
 }

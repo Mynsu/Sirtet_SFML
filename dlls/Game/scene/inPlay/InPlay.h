@@ -1,6 +1,4 @@
 #pragma once
-#pragma hdrstop
-#include <Lib/precompiled.h>
 #include "../IScene.h"
 #include "IScene.h"
 
@@ -10,7 +8,7 @@ namespace scene::inPlay
 	{
 	public:
 		InPlay( ) = delete;
-		InPlay( sf::RenderWindow& window, const SetScene_t& setScene, const ::scene::ID nextScene = ::scene::ID::SINGLE_PLAY );
+		InPlay( sf::RenderWindow& window, const SetScene_t& setScene, const ::scene::ID mode = ::scene::ID::SINGLE_PLAY );
 		~InPlay( );
 
 		void loadResources( ) override;
@@ -20,6 +18,7 @@ namespace scene::inPlay
 	private:
 		static bool IsInstantiated;
 		uint32_t mFPS;
+		const ::scene::ID mMode;
 		sf::RenderWindow& mWindow_;
 		const SetScene_t& mSetScene_;
 		std::unique_ptr< ::scene::inPlay::IScene > mCurrentScene;

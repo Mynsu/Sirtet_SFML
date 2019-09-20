@@ -1,7 +1,4 @@
-﻿#pragma hdrstop
-#include <Lib/precompiled.h>
-#include <iostream>
-#include <windows.h>
+﻿#include "pch.h"
 #include "Game/Game.h"
 #include "ServiceLocator.h"
 
@@ -92,12 +89,12 @@ Initialization
 	::util::endian::BindConvertFunc( );
 
 	const uint32_t FOREGROUND_FPS = 60u;
-	auto& variableTable = ServiceLocator::Vault( );
+	auto& variableTable = gService.vault( );
 	constexpr HashedKey HK_FORE_FPS = util::hash::Digest( "foreFPS", 7 ); //TODO: 한 프레임 안에 계산할 필요가 없는 게 뭐가 있을까?
 	variableTable.emplace( HK_FORE_FPS, FOREGROUND_FPS );
 	constexpr HashedKey HK_BACK_FPS = util::hash::Digest( "backFPS", 7 );
 	variableTable.emplace( HK_BACK_FPS, 30u );
-	ServiceLocator::Console( )->setPosition( { winWidth, winHeight } );
+	gService.console( )->setPosition( {winWidth, winHeight} );
 
 	HMODULE hGameDLL = LoadLibraryA( "game.dll" );
 	// File Not Found Exception
@@ -115,8 +112,7 @@ Initialization
 		return -1;
 	}
 	EngineComponents engineComponents;
-	engineComponents.console = &ServiceLocator::Console;
-	engineComponents.vault = &ServiceLocator::Vault;
+	engineComponents.service = &gService;
 	sf::RenderWindow window( sf::VideoMode( winWidth, winHeight ),
 							 "Sirtet: the Classic",
 							 winStyle );
@@ -130,10 +126,9 @@ Initialization
 Main Loop
 =====
 */
-	IConsole& console = *ServiceLocator::Console( );
 	constexpr HashedKey HK_IS_RUNNING = ::util::hash::Digest( "isRunning", ::util::hash::Measure("isRunning") );
-	::ServiceLocator::Vault().emplace( HK_IS_RUNNING, 1 );
-	while ( 1 == ::ServiceLocator::Vault()[HK_IS_RUNNING] )
+	gService.vault().emplace( HK_IS_RUNNING, 1 );
+	while ( 1 == gService.vault( )[HK_IS_RUNNING] )
 	{
 		std::list< sf::Event > subEventQueue;
 		sf::Event event;
@@ -141,7 +136,7 @@ Main Loop
 		{
 			if ( sf::Event::Closed == event.type )
 			{
-				::ServiceLocator::Vault( )[ HK_IS_RUNNING ] = 0;
+				gService.vault( )[ HK_IS_RUNNING ] = 0;
 				break;
 			}
 			else if ( sf::Event::LostFocus == event.type )
@@ -158,7 +153,7 @@ Main Loop
 			}
 					
 			// Console
-			console.handleEvent( subEventQueue );
+			gService.console()->handleEvent( subEventQueue );
 		}
 
 		gameComponents.game->update( subEventQueue );
@@ -168,9 +163,9 @@ Main Loop
 		
 		window.clear( );
 		gameComponents.game->draw( );
-		if ( true == console.isVisible( ) )
+		if ( true == gService.console( )->isVisible( ) )
 		{
-			window.draw( console );
+			window.draw( *gService.console( ) );
 		}
 		window.display( );
 	}
@@ -183,7 +178,7 @@ Resource Free
 	// !IMPORTANT: Let .dll free only after calling 'ServiceLocator::Release( )',
 	//			   otherwise this would try to access a function in .dll through a pointer,
 	//			   which is violation and makes an exception happen.
-	ServiceLocator::Release( );
+	gService.release( ); // 궁금: 왜?
 	window.close( );
 	FreeLibrary( hGameDLL );
 }

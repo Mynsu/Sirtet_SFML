@@ -1,9 +1,11 @@
+#include "../pch.h"
 #include "SceneManager.h"
 #include <Lib/ScriptLoader.h>
 #include "../ServiceLocatorMirror.h"
 #include "Intro.h"
 #include "MainMenu.h"
 #include "inPlay/InPlay.h"
+#include "online/Lobby.h"
 
 bool ::scene::SceneManager::IsInstantiated = false;
 
@@ -16,9 +18,9 @@ void ::scene::SceneManager::lastInit( sf::RenderWindow* const window )
 	// Registering commands
 	///
 	constexpr HashedKey HK_COMMAND0 = ::util::hash::Digest( "chseqto", 7 );
-	ServiceLocatorMirror::Console( )->addCommand( HK_COMMAND0, std::bind( &SceneManager::_2436549370, this, std::placeholders::_1 ) );
+	(*glpService).console()->addCommand( HK_COMMAND0, std::bind( &SceneManager::_2436549370, this, std::placeholders::_1 ) );
 	constexpr HashedKey HK_COMMAND1 = ::util::hash::Digest( "refresh", 7 );
-	ServiceLocatorMirror::Console( )->addCommand( HK_COMMAND1, std::bind( &SceneManager::_495146883, this, std::placeholders::_1 ) );
+	(*glpService).console( )->addCommand( HK_COMMAND1, std::bind( &SceneManager::_495146883, this, std::placeholders::_1 ) );
 
 	//
 	// Starting scene
@@ -38,7 +40,7 @@ void ::scene::SceneManager::lastInit( sf::RenderWindow* const window )
 		// Type Check Exception
 		else
 		{
-			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, varName, scriptPathNName );
+			(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK, varName, scriptPathNName );
 		}
 	}
 	/// Variable Not Found Exception
@@ -67,7 +69,7 @@ void ::scene::SceneManager::setScene( const ::scene::ID nextScene )
 			mCurrentScene = std::make_unique< ::scene::inPlay::InPlay >( *mWindow, mSetScene );
 			break;
 		case ::scene::ID::ONLINE_BATTLE:
-			mCurrentScene = std::make_unique< ::scene::inPlay::InPlay >( *mWindow, mSetScene );
+			mCurrentScene = std::make_unique< ::scene::online::Lobby >( *mWindow, mSetScene );
 			break;
 		default:
 #ifdef _DEBUG
@@ -85,7 +87,7 @@ void ::scene::SceneManager::_2436549370( const std::string_view& args )
 	// Exception: When the current scene id equals with the next scene id,
 	if ( nextScene == mCurrentScene->currentScene( ) )
 	{
-		::ServiceLocatorMirror::Console( )->print( "We are already where you want to go." );
+		(*glpService).console( )->print( "We are already where you want to go." );
 		return;
 	}
 	setScene( nextScene );

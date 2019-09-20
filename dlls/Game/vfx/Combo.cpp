@@ -1,5 +1,5 @@
+#include "../pch.h"
 #include "Combo.h"
-#include <thread>
 
 void vfx::Combo::draw( const uint8_t lineCleared )
 {

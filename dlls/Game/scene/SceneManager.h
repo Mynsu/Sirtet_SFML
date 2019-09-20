@@ -1,6 +1,4 @@
 #pragma once
-#pragma hdrstop
-#include <Lib/precompiled.h>
 #include "IScene.h"
 
 namespace scene

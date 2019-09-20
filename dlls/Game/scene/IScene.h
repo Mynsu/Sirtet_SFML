@@ -1,6 +1,7 @@
 #pragma once
-#pragma hdrstop
-#include <Lib/precompiled.h>
+#include <list>
+#include <functional>
+#include <SFML/Window.hpp>
 
 namespace scene
 {

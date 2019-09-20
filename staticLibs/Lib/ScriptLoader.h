@@ -3,6 +3,11 @@
 #include <string>
 #include <unordered_map>
 #include <lua.hpp>
+#ifdef GAME_EXPORTS
+#include "../dlls/Game/ServiceLocatorMirror.h"
+#else
+#include "../exes/Engine/ServiceLocator.h"
+#endif
 
 namespace util::script
 {
@@ -20,11 +25,11 @@ namespace util::script
 		if ( true == luaL_dofile(lua, scriptPathNName) )
 		{
 			lua_close( lua );
-
+			
 #ifdef GAME_EXPORTS
-			ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
+			(*glpService).console()->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
 #else
-			ServiceLocator::Console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
+			gService.console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
 #endif
 
 #ifdef _DEBUG
@@ -63,10 +68,10 @@ namespace util::script
 						{
 							const std::string msg( "Overflow or underflow occurs." );
 #ifdef GAME_EXPORTS
-							ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL,
+							(*glpService).console( )->printFailure( FailureLevel::FATAL,
 																			msg + it + scriptPathNName );
 #else
-							ServiceLocator::Console( )->printFailure( FailureLevel::FATAL,
+							gService.console( )->printFailure( FailureLevel::FATAL,
 																	  msg + it + scriptPathNName );
 #endif
 
@@ -87,10 +92,10 @@ namespace util::script
 						{
 							const std::string msg( "Overflow or underflow occurs." );
 #ifdef GAME_EXPORTS
-							ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL,
+							(*glpService).console( )->printFailure( FailureLevel::FATAL,
 																			msg + it + scriptPathNName );
 #else
-							ServiceLocator::Console( )->printFailure( FailureLevel::FATAL,
+							gService.console( )->printFailure( FailureLevel::FATAL,
 																	  msg + it + scriptPathNName );
 #endif
 
@@ -105,7 +110,7 @@ namespace util::script
 					break;
 				}
 				case LUA_TSTRING:
-					retVals.emplace( it, lua_tostring(lua, index) );
+					retVals.emplace( it, std::string(lua_tostring(lua, index)) );
 					break;
 					// When one of variables itself doesn't exists or declared,
 				case LUA_TNIL:

@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "Game.h"
-#include <Lib/precompiled.h>
 #include "ServiceLocatorMirror.h"
 #include "scene/SceneManager.h"
 
@@ -21,7 +21,6 @@ public:
 	}
 	~GameLocal( )
 	{
-		ServiceLocatorMirror::Release( );
 		mWindow = nullptr;
 		IsInstantiated = false;
 	};
@@ -54,8 +53,7 @@ std::unique_ptr< IGame > _Game( std::make_unique< GameLocal >( ) );
 // Pseudo-unnamed function
 inline void _2943305454( const EngineComponents engine )
 {
-	ServiceLocatorMirror::_Console = engine.console;
-	ServiceLocatorMirror::_Vault = engine.vault;
+	glpService.mPtr = engine.service;
 	// !IMPORTANT: Call this only after all the engine components has been linked, or assigned like above.
 	_Game->setWindow( engine.window );
 }

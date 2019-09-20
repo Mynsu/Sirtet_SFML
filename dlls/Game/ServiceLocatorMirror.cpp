@@ -1,4 +1,4 @@
+#include "pch.h"
 #include "ServiceLocatorMirror.h"
 
-GetConsole_t ServiceLocatorMirror::_Console = nullptr;
-GetVault_t ServiceLocatorMirror::_Vault = nullptr;
+::ServiceLocatorMirror glpService;

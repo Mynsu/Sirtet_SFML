@@ -6,9 +6,7 @@
 ////
 
 #pragma once
-#pragma hdrstop
-#include <Lib/precompiled.h>
-#include "../exes/Engine/Console.h"
+#include "../exes/Engine/ServiceLocator.h"
 
 struct EngineComponents;
 
@@ -30,13 +28,10 @@ private:
 	virtual void setWindow( sf::RenderWindow* const window ) = 0;
 };
 
-using GetConsole_t = const std::unique_ptr< IConsole >& ( *)( );
-using GetVault_t = std::unordered_map< HashedKey, Dword >& ( *)( );
 // Consists of pointers.
 struct EngineComponents
 {
-	GetConsole_t console;
-	GetVault_t vault;
+	ServiceLocator* service;
 	sf::RenderWindow* window;
 };
 

@@ -1,5 +1,4 @@
 #pragma once
-#pragma hdrstop
 #include "IScene.h"
 
 namespace scene::inPlay

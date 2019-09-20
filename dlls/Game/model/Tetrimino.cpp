@@ -1,5 +1,5 @@
+#include "../pch.h"
 #include "Tetrimino.h"
-#include <random>
 
 sf::Vector2<int8_t> model::Tetrimino::Test[ static_cast<int>(Rotation::NULL_MAX) ][ 4 ] =
 	{ 

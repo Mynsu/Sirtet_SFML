@@ -1,5 +1,5 @@
+#include "../pch.h"
 #include "Stage.h"
-#include <bitset>
 
 uint8_t model::Stage::tryClearRow( )
 {

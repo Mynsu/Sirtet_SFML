@@ -1,12 +1,12 @@
+#include "../../pch.h"
 #include "Playing.h"
-#include <lua.hpp>
 #include "../../ServiceLocatorMirror.h"
 #include "GameOver.h"
 #include "Assertion.h"
 
 ::scene::inPlay::Playing::Playing( sf::RenderWindow& window, sf::Drawable& shapeOrSprite )
 	: mIsESCPressed( false ), mRowCleared( 0u ),
-	mFrameCount_fallDown_( 0 ), mFrameCount_clearingInterval_( 0 ), mFrameCount_clearingVfx_( 0 ),
+	mFrameCount_fallDown_( 0 ), mFrameCount_clearingInterval_( 0 ), mFrameCount_clearingVfx_( 0 ), mFrameCount_gameOver_( 0 ),
 	mTempo( 0.75f ),
 	mWindow_( window ), mBackgroundRect_( static_cast<sf::RectangleShape&>(shapeOrSprite) ),
 	mCurrentTetrimino( ::model::Tetrimino::Spawn( ) ), mPlayerStage( window ), mVfxCombo( window )
@@ -38,7 +38,7 @@ void ::scene::inPlay::Playing::loadResources( )
 	if ( true == luaL_dofile(lua, scriptPathNName) )
 	{
 		// File Not Found Exception
-		ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
+		(*glpService).console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
 		lua_close( lua );
 	}
 	else
@@ -50,7 +50,7 @@ void ::scene::inPlay::Playing::loadResources( )
 		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName0.data(), scriptPathNName );
+			(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName0.data(), scriptPathNName );
 		}
 		else
 		{
@@ -66,7 +66,7 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName0+":"+field0).data(), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -83,7 +83,7 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName0+":"+field1).data(), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -100,7 +100,7 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName0+":"+field2).data(), scriptPathNName );
 			}
 			lua_pop( lua, 2 );
@@ -111,7 +111,7 @@ void ::scene::inPlay::Playing::loadResources( )
 		// Type Check Exception
 		if ( false == lua_istable( lua, TOP_IDX ) )
 		{
-			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+			(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
 																tableName1.data(), scriptPathNName );
 		}
 		else
@@ -126,7 +126,7 @@ void ::scene::inPlay::Playing::loadResources( )
 				if ( false == mVfxCombo.loadResources(lua_tostring(lua, TOP_IDX)) )
 				{
 					// File Not Found Exception
-					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::FILE_NOT_FOUND,
+					(*glpService).console( )->printScriptError( ExceptionType::FILE_NOT_FOUND,
 																		(tableName1+":"+field0).data(), scriptPathNName );
 				}
 				else
@@ -137,7 +137,7 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type Check Exception
 			else
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName1+":"+field0).data(), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -154,7 +154,7 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName1+":"+field1).data(), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -171,7 +171,7 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName1+":"+field1).data(), scriptPathNName );
 			}
 			lua_pop( lua, 2 );
@@ -182,7 +182,7 @@ void ::scene::inPlay::Playing::loadResources( )
 		// Type Check Exception
 		if ( false == lua_istable( lua, TOP_IDX ) )
 		{
-			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName2.data(), scriptPathNName );
+			(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName2.data(), scriptPathNName );
 		}
 		else
 		{
@@ -198,7 +198,7 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName2+":"+field0).data(), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -215,7 +215,7 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName2+":"+field1).data(), scriptPathNName );
 			}
 			lua_pop( lua, 2 );
@@ -229,7 +229,7 @@ void ::scene::inPlay::Playing::loadResources( )
 		if ( false == mVfxCombo.loadResources( defaultFilePathNName ) )
 		{
 			// Exception: When there's not even the default file,
-			ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+defaultFilePathNName );
+			(*glpService).console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+defaultFilePathNName );
 #ifdef _DEBUG
 			__debugbreak( );
 #endif
@@ -252,9 +252,17 @@ void ::scene::inPlay::Playing::loadResources( )
 
 int8_t scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene, std::list< sf::Event >& eventQueue )
 {
-	int8_t retVal = 0;
 	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
-	const int32_t fps = ::ServiceLocatorMirror::Vault( ).at( HK_FORE_FPS );
+	const int32_t fps = (*glpService).vault().at( HK_FORE_FPS );
+	if ( fps < mFrameCount_gameOver_ )
+	{
+		*nextScene = new ::scene::inPlay::GameOver( mWindow_, mBackgroundRect_ );
+		return 0;
+	}
+	else if ( 0 != mFrameCount_gameOver_ )
+	{
+		return 0;
+	}
 	bool hasCollidedAtThisFrame = false;
 	if ( true == mCurrentTetrimino.isFallingDown( ) )
 	{
@@ -267,7 +275,7 @@ int8_t scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene
 				goto last;
 			}
 		}
-		return retVal;
+		return 0;
 	}
 	else
 	{
@@ -360,16 +368,19 @@ int8_t scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene
 			// Making 0 to 1 so as to start the timer.
 			++mFrameCount_clearingVfx_;
 		}
+		if ( true == mPlayerStage.isOver( ) )
+		{
+			mPlayerStage.blackout( );
+			const sf::Color GRAY( 0x808080ff );
+			mCurrentTetrimino.setColor( GRAY );
+			// Making 0 to 1 so as to start the timer.
+			++mFrameCount_gameOver_;
+		}
 	}
 	
 	//궁금: 숨기기, 반대로 움직이기, 일렁이기, 대기열 가리기 같은 아이템 구현하는 게 과연 좋을까?
 
-	if ( true == mPlayerStage.isOver( ) )
-	{
-		*nextScene = new ::scene::inPlay::GameOver( mWindow_, mBackgroundRect_ );
-	}
-
-	return retVal;
+	return 0;
 }
 
 void ::scene::inPlay::Playing::draw( )
@@ -410,11 +421,15 @@ void ::scene::inPlay::Playing::draw( )
 	}
 
 	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
-	const int32_t fps = ::ServiceLocatorMirror::Vault( )[ HK_FORE_FPS ];
+	const int32_t fps = (*glpService).vault( )[ HK_FORE_FPS ];
 	if ( fps <= mFrameCount_clearingVfx_ )
 	{
 		mFrameCount_clearingVfx_ = 0;
 	}
 	++mFrameCount_fallDown_;
 	++mFrameCount_clearingInterval_;
+	if ( 0 != mFrameCount_gameOver_ )
+	{
+		++mFrameCount_gameOver_;
+	}
 }

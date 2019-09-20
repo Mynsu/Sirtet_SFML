@@ -1,6 +1,4 @@
 #pragma once
-#pragma hdrstop
-#include <Lib/precompiled.h>
 #include "IScene.h"
 
 namespace scene
@@ -27,7 +25,7 @@ namespace scene
 		::scene::ID mOnIndicator;
 		sf::Vector2f mSpriteClipSize_;
 		sf::Vector2f mLogoMargin_;
-		sf::Vector2f mButtonPosition_;
+		sf::Vector2f mButtonSinglePosition_, mButtonOnlinePosition_;
 		sf::Texture mTexture;
 		sf::Sprite mSprite;
 	};

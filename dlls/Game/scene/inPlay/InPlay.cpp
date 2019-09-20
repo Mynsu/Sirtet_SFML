@@ -1,3 +1,4 @@
+#include "../../pch.h"
 #include "InPlay.h"
 #include "Ready.h"
 #include "GameOver.h"
@@ -8,12 +9,12 @@ bool ::scene::inPlay::InPlay::IsInstantiated = false;
 
 ::scene::inPlay::InPlay::InPlay( sf::RenderWindow& window, 
 								 const SetScene_t& setScene, 
-								 const ::scene::ID nextScene )
-	: mWindow_( window ), mSetScene_( setScene )
+								 const ::scene::ID mode )
+	: mMode( mode ), mWindow_( window ), mSetScene_( setScene )
 {
 	ASSERT_FALSE( IsInstantiated );
 
-	switch ( nextScene )
+	switch ( mode )
 	{
 		case ::scene::ID::SINGLE_PLAY:
 			mCurrentScene = std::make_unique< ::scene::inPlay::Ready >( mWindow_, mBackgroundRect );
@@ -31,7 +32,7 @@ bool ::scene::inPlay::InPlay::IsInstantiated = false;
 	loadResources( );
 
 	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
-	mFPS = static_cast<uint32_t>(::ServiceLocatorMirror::Vault( )[ HK_FORE_FPS ]);
+	mFPS = static_cast<uint32_t>((*glpService).vault( )[ HK_FORE_FPS ]);
 
 	IsInstantiated = true;
 }

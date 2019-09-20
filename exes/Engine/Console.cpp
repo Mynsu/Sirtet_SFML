@@ -1,6 +1,5 @@
+#include "pch.h"
 #include "Console.h"
-#include "ServiceLocator.h"
-#include <sstream>
 #include <Lib/ScriptLoader.h>
 
 ConsoleLocal::ConsoleLocal( ) : mVisible( false ),

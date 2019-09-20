@@ -1,7 +1,4 @@
 #pragma once
-#pragma hdrstop
-#include <queue>
-#include <Lib/precompiled.h>
 #include "IScene.h"
 #include "../../model/Tetrimino.h"
 #include "../../model/Stage.h"
@@ -22,7 +19,7 @@ namespace scene::inPlay
 	private:
 		bool mIsESCPressed;
 		uint8_t mRowCleared;
-		int32_t mFrameCount_fallDown_, mFrameCount_clearingInterval_, mFrameCount_clearingVfx_;
+		int32_t mFrameCount_fallDown_, mFrameCount_clearingInterval_, mFrameCount_clearingVfx_, mFrameCount_gameOver_;
 		float mTempo;
 		float mCellSize_;
 		sf::RenderWindow& mWindow_;

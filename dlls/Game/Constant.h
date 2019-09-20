@@ -1,5 +1,4 @@
 #pragma once
-#pragma hdrstop
 #include <cstdint>
 
 namespace model

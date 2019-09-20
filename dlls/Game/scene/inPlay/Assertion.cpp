@@ -1,3 +1,4 @@
+#include "../../pch.h"
 #include "Assertion.h"
 #include "../../ServiceLocatorMirror.h"
 
@@ -5,7 +6,7 @@ scene::inPlay::Assertion::Assertion( sf::RenderWindow& window, bool* isESCPresse
 	: mFrameCount( 0u ), mIsESCPressed( isESCPressed ), mWindow( window )
 {
 	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
-	mFPS = static_cast<uint32_t>(::ServiceLocatorMirror::Vault( )[ HK_FORE_FPS ]);
+	mFPS = static_cast<uint32_t>( (*glpService).vault( )[ HK_FORE_FPS ] );
 
 	*mIsESCPressed = true;
 

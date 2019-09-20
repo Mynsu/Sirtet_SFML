@@ -1,3 +1,4 @@
+#include "../pch.h"
 #include "Intro.h"
 #include <Lib/ScriptLoader.h>
 #include "../ServiceLocatorMirror.h"
@@ -16,7 +17,7 @@ bool ::scene::Intro::IsInstantiated = false;
 	ASSERT_FALSE( IsInstantiated );
 
 	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
-	if ( const auto it = ServiceLocatorMirror::Vault( ).find( HK_FORE_FPS ); ServiceLocatorMirror::Vault( ).cend( ) != it )
+	if ( const auto it = (*glpService).vault().find(HK_FORE_FPS); (*glpService).vault().cend() != it )
 	{
 		mFPS_ = static_cast< uint32_t >( it->second );
 	}
@@ -47,21 +48,21 @@ void scene::Intro::loadResources( )
 			if ( false == mTexture.loadFromFile( std::get< std::string >( it->second ) ) )
 			{
 				// File Not Found Exception
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::FILE_NOT_FOUND, varName0, scriptPathNName );
+				(*glpService).console()->printScriptError( ExceptionType::FILE_NOT_FOUND, varName0, scriptPathNName );
 				isDefault = true;
 			}
 		}
 		// Type Check Exception
 		else
 		{
-			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, varName0, scriptPathNName );
+			(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK, varName0, scriptPathNName );
 			isDefault = true;
 		}
 	}
 	// Variable Not Found Exception
 	else
 	{
-		ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName0, scriptPathNName );
+		(*glpService).console( )->printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName0, scriptPathNName );
 		isDefault = true;
 	}
 
@@ -71,7 +72,7 @@ void scene::Intro::loadResources( )
 		if ( false == mTexture.loadFromFile( defaultFilePathNName ) )
 		{
 			// Exception: When there's not even the default file,
-			ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+defaultFilePathNName );
+			(*glpService).console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+defaultFilePathNName );
 #ifdef _DEBUG
 			__debugbreak( );
 #endif
@@ -99,27 +100,27 @@ void scene::Intro::loadResources( )
 			// Range Check Exception
 			else
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::RANGE_CHECK, varName1, scriptPathNName );
+				(*glpService).console( )->printScriptError( ExceptionType::RANGE_CHECK, varName1, scriptPathNName );
 				isDefault = true;
 			}
 		}
 		// Type Check Exception
 		else
 		{
-			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, varName1, scriptPathNName );
+			(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK, varName1, scriptPathNName );
 			isDefault = true;
 		}
 	}
 	// Variable Not Found Exception
 	else
 	{
-		ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName1, scriptPathNName );
+		(*glpService).console( )->printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName1, scriptPathNName );
 		isDefault = true;
 	}
 
 	if ( true == isDefault )
 	{
-		ServiceLocatorMirror::Console( )->print( "Thus, scene MAIN_MENU appears after scene INTRO." );
+		(*glpService).console( )->print( "Thus, scene MAIN_MENU appears after scene INTRO." );
 	}
 }
 

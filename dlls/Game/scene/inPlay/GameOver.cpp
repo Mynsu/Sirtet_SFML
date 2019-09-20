@@ -1,3 +1,4 @@
+#include "../../pch.h"
 #include "GameOver.h"
 #include <Lib/ScriptLoader.h>
 #include "../../ServiceLocatorMirror.h"
@@ -9,7 +10,7 @@ scene::inPlay::GameOver::GameOver( sf::RenderWindow& window, sf::Drawable& shape
 	loadResources( );
 
 	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
-	mFPS = static_cast<uint32_t>(::ServiceLocatorMirror::Vault()[ HK_FORE_FPS ]);
+	mFPS = static_cast<uint32_t>((*glpService).vault( )[ HK_FORE_FPS ]);
 }
 
 void scene::inPlay::GameOver::loadResources( )
@@ -24,7 +25,7 @@ void scene::inPlay::GameOver::loadResources( )
 	if ( true == luaL_dofile(lua, scriptPathNName) )
 	{
 		// File Not Found Exception
-		ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
+		(*glpService).console()->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
 		lua_close( lua );
 	}
 	else
@@ -36,7 +37,7 @@ void scene::inPlay::GameOver::loadResources( )
 		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName.data(), scriptPathNName );
+			(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName.data(), scriptPathNName );
 		}
 		else
 		{
@@ -50,7 +51,7 @@ void scene::inPlay::GameOver::loadResources( )
 				if ( false == mTexture.loadFromFile(lua_tostring(lua, TOP_IDX)) )
 				{
 					// File Not Found Exception
-					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::FILE_NOT_FOUND,
+					(*glpService).console( )->printScriptError( ExceptionType::FILE_NOT_FOUND,
 																		(tableName+":"+field0).data(), scriptPathNName );
 				}
 				else
@@ -61,7 +62,7 @@ void scene::inPlay::GameOver::loadResources( )
 			// Type Check Exception
 			else
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName+":"+field0).data(), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -77,7 +78,7 @@ void scene::inPlay::GameOver::loadResources( )
 				// Range Check Exception
 				if ( 0 > temp )
 				{
-					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::RANGE_CHECK,
+					(*glpService).console( )->printScriptError( ExceptionType::RANGE_CHECK,
 																		(tableName+":"+field1).data( ), scriptPathNName );
 				}
 				// When the value looks OK,
@@ -90,7 +91,7 @@ void scene::inPlay::GameOver::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName+":"+field1).data(), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -106,7 +107,7 @@ void scene::inPlay::GameOver::loadResources( )
 				// Range Check Exception
 				if ( 0 > temp )
 				{
-					ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::RANGE_CHECK,
+					(*glpService).console( )->printScriptError( ExceptionType::RANGE_CHECK,
 																		(tableName+":"+field2).data( ), scriptPathNName );
 				}
 				// When the value looks OK,
@@ -119,7 +120,7 @@ void scene::inPlay::GameOver::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				ServiceLocatorMirror::Console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName+":"+field2).data(), scriptPathNName );
 			}
 			lua_pop( lua, 2 );
@@ -133,7 +134,7 @@ void scene::inPlay::GameOver::loadResources( )
 		if ( false == mTexture.loadFromFile(defaultFilePathNName) )
 		{
 			// Exception: When there's not even the default file,
-			ServiceLocatorMirror::Console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+defaultFilePathNName );
+			(*glpService).console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+defaultFilePathNName );
 #ifdef _DEBUG
 			__debugbreak( );
 #endif
@@ -142,7 +143,7 @@ void scene::inPlay::GameOver::loadResources( )
 
 	if ( true == isWDefault || true == isHDefault )
 	{
-		ServiceLocatorMirror::Console( )->print( "Default: width 512, height 256" );
+		(*glpService).console( )->print( "Default: width 512, height 256" );
 	}
 
 	mSprite.setTexture( mTexture );
