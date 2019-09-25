@@ -10,7 +10,7 @@ scene::inPlay::GameOver::GameOver( sf::RenderWindow& window, sf::Drawable& shape
 	loadResources( );
 
 	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
-	mFPS = static_cast<uint32_t>((*glpService).vault( )[ HK_FORE_FPS ]);
+	mFPS_ = static_cast<uint32_t>((*glpService).vault( )[ HK_FORE_FPS ]);
 }
 
 void scene::inPlay::GameOver::loadResources( )
@@ -162,7 +162,7 @@ int8_t scene::inPlay::GameOver::update( ::scene::inPlay::IScene** const, std::li
 		// Frame counting starts.
 		++mFrameCount;
 		// 3 seconds after,
-		if ( 3*mFPS == mFrameCount )
+		if ( 3*mFPS_ == mFrameCount )
 		{
 			retVal = 1;
 		}

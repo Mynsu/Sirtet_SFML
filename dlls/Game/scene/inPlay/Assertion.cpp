@@ -3,10 +3,10 @@
 #include "../../ServiceLocatorMirror.h"
 
 scene::inPlay::Assertion::Assertion( sf::RenderWindow& window, bool* isESCPressed )
-	: mFrameCount( 0u ), mIsESCPressed( isESCPressed ), mWindow( window )
+	: mFrameCount( 0u ), mIsESCPressed( isESCPressed ), mWindow_( window )
 {
 	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
-	mFPS = static_cast<uint32_t>( (*glpService).vault( )[ HK_FORE_FPS ] );
+	mFPS_ = static_cast<uint32_t>( (*glpService).vault( )[ HK_FORE_FPS ] );
 
 	*mIsESCPressed = true;
 
@@ -24,7 +24,7 @@ int8_t scene::inPlay::Assertion::update( ::scene::inPlay::IScene** const, std::l
 	int8_t retVal = 0;
 
 	// 2 seconds after created,
-	if ( 2*mFPS == mFrameCount )
+	if ( 2*mFPS_ == mFrameCount )
 	{
 		*mIsESCPressed = false;
 		retVal = -1;
@@ -47,6 +47,6 @@ int8_t scene::inPlay::Assertion::update( ::scene::inPlay::IScene** const, std::l
 
 void scene::inPlay::Assertion::draw( )
 {
-	mWindow.draw( mRect );
+	mWindow_.draw( mRect );
 	++mFrameCount;
 }

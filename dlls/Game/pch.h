@@ -16,6 +16,7 @@
 #include <SFML/System.hpp>
 #include <lua.hpp>
 #include <Lib/Hash.h>
+#include <Lib/Socket.h>
 
 // !IMPORTANT: On delivery, make sure that this macro is canceled, or undefined for the security.
 #define _DEV

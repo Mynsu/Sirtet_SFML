@@ -17,10 +17,10 @@ namespace scene::inPlay
 		::scene::ID currentScene( ) const override;
 	private:
 		static bool IsInstantiated;
-		uint32_t mFPS;
+		uint32_t mFPS_;
 		const ::scene::ID mMode;
 		sf::RenderWindow& mWindow_;
-		const SetScene_t& mSetScene_;
+		const SetScene_t& mSetScene;
 		std::unique_ptr< ::scene::inPlay::IScene > mCurrentScene;
 		std::unique_ptr< ::scene::inPlay::IScene > mOverlappedScene;
 		sf::RectangleShape mBackgroundRect;

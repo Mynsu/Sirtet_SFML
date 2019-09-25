@@ -10,7 +10,7 @@ EndPoint::EndPoint( )
 	mIPv4EP.sin_family = AF_INET;
 }
 
-EndPoint::EndPoint( const char* ipAddress, uint16_t port )
+EndPoint::EndPoint( char* const ipAddress, uint16_t port )
 {
 	ZeroMemory( &mIPv4EP, sizeof( mIPv4EP ) );
 	mIPv4EP.sin_family = AF_INET;

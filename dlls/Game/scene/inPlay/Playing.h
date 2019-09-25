@@ -19,7 +19,7 @@ namespace scene::inPlay
 	private:
 		bool mIsESCPressed;
 		uint8_t mRowCleared;
-		int32_t mFrameCount_fallDown_, mFrameCount_clearingInterval_, mFrameCount_clearingVfx_, mFrameCount_gameOver_;
+		uint32_t mFrameCount_fallDown, mFrameCount_clearingInterval_, mFrameCount_clearingVfx_, mFrameCount_gameOver;
 		float mTempo;
 		float mCellSize_;
 		sf::RenderWindow& mWindow_;

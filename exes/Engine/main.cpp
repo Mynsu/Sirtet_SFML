@@ -87,6 +87,7 @@ Initialization
 =====
 */
 	::util::endian::BindConvertFunc( );
+	ASSERT_TRUE( -1 != gService.socket( ).bind( EndPoint::Any ) );
 
 	const uint32_t FOREGROUND_FPS = 60u;
 	auto& variableTable = gService.vault( );
@@ -175,10 +176,10 @@ Main Loop
 Resource Free
 =====
 */
-	// !IMPORTANT: Let .dll free only after calling 'ServiceLocator::Release( )',
-	//			   otherwise this would try to access a function in .dll through a pointer,
+	// !IMPORTANT: Let .dll free only after having destructed Command System,
+	//			   otherwise Command System would try to access and delete function pointers in and of .dll,
 	//			   which is violation and makes an exception happen.
-	gService.release( ); // 궁금: 왜?
+	gService.release( );
 	window.close( );
 	FreeLibrary( hGameDLL );
 }

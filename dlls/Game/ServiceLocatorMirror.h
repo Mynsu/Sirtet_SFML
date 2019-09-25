@@ -8,10 +8,14 @@ class ServiceLocatorMirror
 public:
 	inline ServiceLocatorMirror( )
 		: mPtr( nullptr )
-	{ }
+	{
+		ASSERT_FALSE( IsInstantiated );
+		IsInstantiated = true;
+	}
 	inline ~ServiceLocatorMirror( )
 	{
 		mPtr = nullptr;
+		IsInstantiated = false;
 	}
 
 	::ServiceLocator& operator*( )
@@ -19,6 +23,7 @@ public:
 		return *mPtr;
 	}
 private:
+	static bool IsInstantiated;
 	::ServiceLocator* mPtr;
 };
 

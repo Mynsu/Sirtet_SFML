@@ -8,10 +8,10 @@ bool ::scene::Intro::IsInstantiated = false;
 ::scene::Intro::Intro( sf::RenderWindow& window, const SetScene_t& setScene )
 	: mDuration( 2u ),
 	mAlpha_( 0x00u ),
-	mFrameCount( 0 ),
+	mFrameCount( 0u ),
 	mFPS_( 60u ),
 	mWindow_( window ),
-	mSetScene_( setScene ),
+	mSetScene( setScene ),
 	mNextScene_( ::scene::ID::MAIN_MENU )
 {
 	ASSERT_FALSE( IsInstantiated );
@@ -129,9 +129,10 @@ void ::scene::Intro::update( std::list< sf::Event >& )
 	//
 	// Scene Transition
 	//
-	if ( static_cast<int32_t>(mFPS_*mDuration) < mFrameCount )
+	if ( static_cast<uint32_t>(mFPS_*mDuration) < mFrameCount )
 	{
-		mSetScene_( mNextScene_ );
+		mSetScene( mNextScene_ );
+		return;
 	}
 
 	// NOTE: Moved into draw( ).
@@ -147,7 +148,7 @@ void ::scene::Intro::draw( )
 	const uint8_t MIN_RGBA = 0x00u;
 	// diff accumulates 0.5 second, or 500 milliseconds after.
 	const uint8_t diff = static_cast< uint8_t >( MAX_RGBA / ( mFPS_ * 0.5f ) );
-	const int32_t brokenPoint = static_cast<int32_t>( mFPS_*mDuration*0.5f );
+	const uint32_t brokenPoint = static_cast<uint32_t>( mFPS_*mDuration*0.5f );
 	if ( mFrameCount > brokenPoint )
 	{
 		// NOTE: Both 'mAlpha' and 'diff' are 'uint8_t', but 'mAlpha - diff' is 'int', not 'int8_t.'

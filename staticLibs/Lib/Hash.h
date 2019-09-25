@@ -20,7 +20,6 @@ namespace util::hash
 		{
 			retHash += 65599 * retHash + arg[ i ];
 		}
-		constexpr auto test = Measure( "HOLLA!" );
 		return retHash ^ ( retHash >> 16 );
 	}
 }

@@ -13,9 +13,9 @@ namespace scene::inPlay
 		int8_t update( ::scene::inPlay::IScene** const, std::list< sf::Event >& eventQueue ) override;
 		void draw( ) override;
 	private:
-		uint32_t mFPS, mFrameCount;
+		uint32_t mFPS_, mFrameCount;
 		bool* mIsESCPressed;
-		sf::RenderWindow& mWindow;
+		sf::RenderWindow& mWindow_;
 		sf::RectangleShape mRect;
 	};
 }

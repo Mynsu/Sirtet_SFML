@@ -6,7 +6,7 @@
 
 ::scene::inPlay::Playing::Playing( sf::RenderWindow& window, sf::Drawable& shapeOrSprite )
 	: mIsESCPressed( false ), mRowCleared( 0u ),
-	mFrameCount_fallDown_( 0 ), mFrameCount_clearingInterval_( 0 ), mFrameCount_clearingVfx_( 0 ), mFrameCount_gameOver_( 0 ),
+	mFrameCount_fallDown( 0u ), mFrameCount_clearingInterval_( 0u ), mFrameCount_clearingVfx_( 0u ), mFrameCount_gameOver( 0u ),
 	mTempo( 0.75f ),
 	mWindow_( window ), mBackgroundRect_( static_cast<sf::RectangleShape&>(shapeOrSprite) ),
 	mCurrentTetrimino( ::model::Tetrimino::Spawn( ) ), mPlayerStage( window ), mVfxCombo( window )
@@ -253,13 +253,13 @@ void ::scene::inPlay::Playing::loadResources( )
 int8_t scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene, std::list< sf::Event >& eventQueue )
 {
 	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
-	const int32_t fps = (*glpService).vault().at( HK_FORE_FPS );
-	if ( fps < mFrameCount_gameOver_ )
+	const uint32_t fps = static_cast<uint32_t>((*glpService).vault().at( HK_FORE_FPS ));
+	if ( fps < mFrameCount_gameOver )
 	{
 		*nextScene = new ::scene::inPlay::GameOver( mWindow_, mBackgroundRect_ );
 		return 0;
 	}
-	else if ( 0 != mFrameCount_gameOver_ )
+	else if ( 0u != mFrameCount_gameOver )
 	{
 		return 0;
 	}
@@ -293,7 +293,7 @@ int8_t scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene
 						[[ fallthrough ]];
 					case sf::Keyboard::Down:
 						hasCollidedAtThisFrame = mCurrentTetrimino.down( mPlayerStage.grid( ) );
-						mFrameCount_fallDown_ = 0;
+						mFrameCount_fallDown = 0u;
 						break;
 					case sf::Keyboard::Left:
 						mCurrentTetrimino.tryMoveLeft( mPlayerStage.grid( ) );
@@ -325,10 +325,10 @@ int8_t scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene
 		}
 	}
 	
-	if ( static_cast<int>(fps*mTempo) < mFrameCount_fallDown_ )
+	if ( static_cast<uint32_t>(fps*mTempo) < mFrameCount_fallDown )
 	{
 		hasCollidedAtThisFrame = mCurrentTetrimino.down( mPlayerStage.grid( ) );
-		mFrameCount_fallDown_ = 0;
+		mFrameCount_fallDown = 0u;
 	}
 
 	last:
@@ -352,15 +352,15 @@ int8_t scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene
 		mNextTetriminos.pop( );
 		mNextTetriminos.emplace( ::model::Tetrimino::Spawn( ) );
 		mNextTetriminoBlock_.setFillColor( mNextTetriminos.front( ).color( ) );
-		mFrameCount_fallDown_ = 0;
+		mFrameCount_fallDown = 0u;
 	}
 
 	// Check if a row or more have to be cleared,
 	// NOTE: It's better to check that every several frames than every frame.
-	if ( static_cast<int>(fps*0.1f) < mFrameCount_clearingInterval_ )
+	if ( static_cast<uint32_t>(fps*0.1f) < mFrameCount_clearingInterval_ )
 	{
 		const uint8_t cardinalRowCleared = mPlayerStage.tryClearRow( );
-		mFrameCount_clearingInterval_ = 0;
+		mFrameCount_clearingInterval_ = 0u;
 		if ( 0 != cardinalRowCleared )
 		{
 			mRowCleared = cardinalRowCleared;
@@ -374,7 +374,7 @@ int8_t scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene
 			const sf::Color GRAY( 0x808080ff );
 			mCurrentTetrimino.setColor( GRAY );
 			// Making 0 to 1 so as to start the timer.
-			++mFrameCount_gameOver_;
+			++mFrameCount_gameOver;
 		}
 	}
 	
@@ -388,7 +388,7 @@ void ::scene::inPlay::Playing::draw( )
 	mWindow_.draw( mBackgroundRect_ ); //TODO: Z 버퍼로 컬링해서 부하를 줄여볼까?
 	mPlayerStage.draw( );
 	mCurrentTetrimino.draw( mWindow_ );
-	if ( 0 != mFrameCount_clearingVfx_ )
+	if ( 0u != mFrameCount_clearingVfx_ )
 	{
 		mVfxCombo.draw( mRowCleared );
 		++mFrameCount_clearingVfx_;
@@ -421,15 +421,15 @@ void ::scene::inPlay::Playing::draw( )
 	}
 
 	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
-	const int32_t fps = (*glpService).vault( )[ HK_FORE_FPS ];
+	const uint32_t fps = static_cast<uint32_t>((*glpService).vault( )[ HK_FORE_FPS ]);
 	if ( fps <= mFrameCount_clearingVfx_ )
 	{
-		mFrameCount_clearingVfx_ = 0;
+		mFrameCount_clearingVfx_ = 0u;
 	}
-	++mFrameCount_fallDown_;
+	++mFrameCount_fallDown;
 	++mFrameCount_clearingInterval_;
-	if ( 0 != mFrameCount_gameOver_ )
+	if ( 0u != mFrameCount_gameOver )
 	{
-		++mFrameCount_gameOver_;
+		++mFrameCount_gameOver;
 	}
 }

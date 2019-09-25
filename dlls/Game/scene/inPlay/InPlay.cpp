@@ -10,7 +10,7 @@ bool ::scene::inPlay::InPlay::IsInstantiated = false;
 ::scene::inPlay::InPlay::InPlay( sf::RenderWindow& window, 
 								 const SetScene_t& setScene, 
 								 const ::scene::ID mode )
-	: mMode( mode ), mWindow_( window ), mSetScene_( setScene )
+	: mMode( mode ), mWindow_( window ), mSetScene( setScene )
 {
 	ASSERT_FALSE( IsInstantiated );
 
@@ -32,7 +32,7 @@ bool ::scene::inPlay::InPlay::IsInstantiated = false;
 	loadResources( );
 
 	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
-	mFPS = static_cast<uint32_t>((*glpService).vault( )[ HK_FORE_FPS ]);
+	mFPS_ = static_cast<uint32_t>((*glpService).vault( )[ HK_FORE_FPS ]);
 
 	IsInstantiated = true;
 }
@@ -53,7 +53,7 @@ void ::scene::inPlay::InPlay::update( std::list< sf::Event >& eventQueue )
 	::scene::inPlay::IScene* nextScene = nullptr;
 	if ( const int8_t bi = mCurrentScene->update( &nextScene, eventQueue ); 1 == bi )
 	{
-		mSetScene_( ::scene::ID::MAIN_MENU );
+		mSetScene( ::scene::ID::MAIN_MENU );
 		return;
 	}
 	if ( nullptr != mOverlappedScene )
@@ -67,7 +67,7 @@ void ::scene::inPlay::InPlay::update( std::list< sf::Event >& eventQueue )
 		}
 		else if ( 1 == tri )
 		{
-			mSetScene_( ::scene::ID::MAIN_MENU );
+			mSetScene( ::scene::ID::MAIN_MENU );
 			return;
 		}
 	}

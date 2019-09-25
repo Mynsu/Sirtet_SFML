@@ -5,7 +5,7 @@
 bool ::scene::MainMenu::IsInstantiated = false;
 
 ::scene::MainMenu::MainMenu( sf::RenderWindow& window, const SetScene_t& setScene )
-	: mWindow( window ), mSetScene( setScene ),
+	: mWindow_( window ), mSetScene( setScene ),
 	mOnIndicator( ::scene::ID::MAX_NONE ),
 	mSpriteClipSize_( 256.f, 128.f ), mLogoMargin_( 70.f, 70.f ),
 	mButtonSinglePosition_( 150.f, 150.f ), mButtonOnlinePosition_( 150.f, 300.f )
@@ -401,12 +401,12 @@ void ::scene::MainMenu::update( std::list< sf::Event >& eventQueue )
 
 void ::scene::MainMenu::draw( )
 {
-	const sf::Vector2f winSize( mWindow.getSize( ) );
+	const sf::Vector2f winSize( mWindow_.getSize( ) );
 	// Bottom right on screen
 	const sf::Vector2f logoSize( mSpriteClipSize_.x, 2*mSpriteClipSize_.y );
 	mSprite.setPosition( winSize - logoSize - mLogoMargin_ );
 	mSprite.setTextureRect( sf::IntRect(sf::Vector2i(0,0), sf::Vector2i(logoSize)) );
-	mWindow.draw( mSprite );
+	mWindow_.draw( mSprite );
 	
 	touchButton();
 }
@@ -421,7 +421,7 @@ void scene::MainMenu::touchButton( )
 	const sf::Vector2f mouseGlobalPos( sf::Mouse::getPosition( ) );
 	const sf::Vector2i cast( mSpriteClipSize_ );
 	const sf::Vector2f titlebarHeight( 0.f, 20.f );
-	if ( const sf::Vector2f btSingleGlobalPos( sf::Vector2f(mWindow.getPosition())+titlebarHeight+mButtonSinglePosition_ ); 
+	if ( const sf::Vector2f btSingleGlobalPos( sf::Vector2f(mWindow_.getPosition())+titlebarHeight+mButtonSinglePosition_ ); 
 		 btSingleGlobalPos.x < mouseGlobalPos.x && mouseGlobalPos.x < btSingleGlobalPos.x+mSpriteClipSize_.x
 		 && btSingleGlobalPos.y < mouseGlobalPos.y && mouseGlobalPos.y < btSingleGlobalPos.y+mSpriteClipSize_.y )
 	{
@@ -429,13 +429,13 @@ void scene::MainMenu::touchButton( )
 		mSprite.setPosition( mButtonSinglePosition_ );
 		mSprite.setTextureRect( sf::IntRect( cast.x,
 											 2*cast.y, cast.x, cast.y ) );
-		mWindow.draw( mSprite );
+		mWindow_.draw( mSprite );
 		mSprite.setPosition( mButtonOnlinePosition_ );
 		mSprite.setTextureRect( sf::IntRect( 0,
 											 3*cast.y, cast.x, cast.y ) );
-		mWindow.draw( mSprite );
+		mWindow_.draw( mSprite );
 	}
-	else if ( const sf::Vector2f btOnlineGlobalPos( sf::Vector2f(mWindow.getPosition())+titlebarHeight+mButtonOnlinePosition_ );
+	else if ( const sf::Vector2f btOnlineGlobalPos( sf::Vector2f(mWindow_.getPosition())+titlebarHeight+mButtonOnlinePosition_ );
 			  btOnlineGlobalPos.x < mouseGlobalPos.x && mouseGlobalPos.x < btOnlineGlobalPos.x+mSpriteClipSize_.x
 			  && btOnlineGlobalPos.y < mouseGlobalPos.y && mouseGlobalPos.y < btOnlineGlobalPos.y+mSpriteClipSize_.y )
 	{
@@ -443,11 +443,11 @@ void scene::MainMenu::touchButton( )
 		mSprite.setPosition( mButtonSinglePosition_ );
 		mSprite.setTextureRect( sf::IntRect( 0,
 											 2*cast.y, cast.x, cast.y ) );
-		mWindow.draw( mSprite );
+		mWindow_.draw( mSprite );
 		mSprite.setPosition( mButtonOnlinePosition_ );
 		mSprite.setTextureRect( sf::IntRect( cast.x,
 											 3*cast.y, cast.x, cast.y ) );
-		mWindow.draw( mSprite );
+		mWindow_.draw( mSprite );
 	}
 	else
 	{
@@ -455,10 +455,10 @@ void scene::MainMenu::touchButton( )
 		mSprite.setPosition( mButtonSinglePosition_ );
 		mSprite.setTextureRect( sf::IntRect( 0,
 											 2*cast.y, cast.x, cast.y ) );
-		mWindow.draw( mSprite );
+		mWindow_.draw( mSprite );
 		mSprite.setPosition( mButtonOnlinePosition_ );
 		mSprite.setTextureRect( sf::IntRect( 0,
 											 3*cast.y, cast.x, cast.y ) );
-		mWindow.draw( mSprite );
+		mWindow_.draw( mSprite );
 	}
 }

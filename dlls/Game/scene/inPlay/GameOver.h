@@ -16,8 +16,7 @@ namespace scene::inPlay
 	private:
 		const uint8_t TARGET_ALPHA;
 		uint32_t mFade;
-		uint32_t mFPS;
-		uint32_t mFrameCount;
+		uint32_t mFPS_, mFrameCount;
 		sf::RenderWindow& mWindow_;
 		sf::RectangleShape& mBackgroundRect_;
 		sf::Texture mTexture;
