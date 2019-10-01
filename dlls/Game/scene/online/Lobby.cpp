@@ -6,27 +6,73 @@
 bool ::scene::online::Lobby::IsInstantiated = false;
 
 scene::online::Lobby::Lobby( sf::RenderWindow& window, const SetScene_t& setScene )
-	: mFrameCount_disconnection( 0u ),
-	mWindow_( window ), mSetScene( setScene ), mSocket_( (*glpService).socket() )
+	: mFrameCount_disconnection( 0u ), mQueueNumber( MAXINT32 ),
+	mSocketToQueueServer( std::make_unique<Socket>(Socket::Type::TCP) ),
+	mSocketToMainServer( std::make_unique<Socket>(Socket::Type::TCP) ),
+	mWindow_( window ), mSetScene( setScene )
 {
 	ASSERT_FALSE( IsInstantiated );
 
 	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
 	mFPS_ = static_cast<uint32_t>((*glpService).vault( )[ HK_FORE_FPS ]);
 
-	char ipAddress[] = "192.168.219.102";
-	if ( -1 == mSocket_.connect(EndPoint(ipAddress, 10000)) )
+	ASSERT_TRUE( -1 != mSocketToQueueServer->bind(EndPoint::Any) );
+	if ( char queueServerIPAddress[ ] = "192.168.219.102";
+		 -1 == mSocketToQueueServer->connect(EndPoint(queueServerIPAddress, 10000)) )
 	{
 		// Exception
+		(*glpService).console( )->printFailure( FailureLevel::WARNING, "Connection to queue server failed.\n" );
+		// Triggering
 		++mFrameCount_disconnection;
 	}
 	else
 	{
-		//TODO
-		(*glpService).console( )->print( "Connection succeed.", sf::Color::Green );
-		char rcvBuf[ 100 ];
-		///ASSERT_TRUE( -1 != ::recv( mSocket_.handle( ), rcvBuf, 100, 0 ) );
-		ASSERT_TRUE( -1 != ::send( mSocket_.handle(), "", 0, 0 ) );
+		(*glpService).console( )->print( "Connection to queue server succeeded.", sf::Color::Green );
+		// Awaiting 
+		char* const rcvBuf = mSocketToQueueServer->receivingBuffer( );
+		if ( -1 == ::recv(mSocketToQueueServer->handle(),
+						   rcvBuf, mSocketToQueueServer->MAX_RCV_BUF_LEN, 0) )
+		{
+			// Exception
+			(*glpService).console( )->printFailure( FailureLevel::WARNING, "Receiving from queue server failed.\n" );
+		}
+		const uint8_t qTTagLen = 3u;
+		const HashedKey refinedQTTag = ::util::hash::Digest( "qT:", qTTagLen );
+		if ( refinedQTTag == ::util::hash::Digest(rcvBuf, qTTagLen) )
+		{
+			mQueueNumber = std::atoi( &rcvBuf[qTTagLen] );
+#ifdef _DEBUG
+			std::string msg( "Received a queue ticket: " );
+			(*glpService).console( )->print( msg + rcvBuf, sf::Color::Green );
+#endif
+		}
+		else
+		{
+			ASSERT_TRUE( -1 != mSocketToMainServer->bind(EndPoint::Any) );
+			if ( char mainServerIPAddress[ ] = "192.168.219.102";
+				 -1 == mSocketToMainServer->connect(EndPoint(mainServerIPAddress, 54321)) )
+			{
+				// Exception
+				(*glpService).console( )->printFailure( FailureLevel::WARNING, "Connection to main server failed.\n" );
+				// Triggering
+				++mFrameCount_disconnection;
+			}
+			else
+			{
+				if ( -1 == ::send(mSocketToMainServer->handle(),
+								   rcvBuf, (int)std::strlen(rcvBuf)+1, 0) )
+				{
+					// Exception
+					(*glpService).console( )->printFailure( FailureLevel::WARNING, "Sending the ticket to the main server failed.\n" );
+					// Triggering
+					++mFrameCount_disconnection;
+				}
+				else
+				{
+					(*glpService).console( )->print( "Connection to main server succeeded.", sf::Color::Green );
+				}
+			}
+		}
 	}
 	loadResources( );
 
@@ -35,8 +81,9 @@ scene::online::Lobby::Lobby( sf::RenderWindow& window, const SetScene_t& setScen
 
 ::scene::online::Lobby::~Lobby( )
 {
-	// Disconnect
-	///::send( mSocket_.handle(), "", 0, 0 );
+	mSocketToQueueServer->close( );
+	mSocketToMainServer->close( );
+
 	IsInstantiated = false;
 }
 
@@ -180,7 +227,6 @@ void ::scene::online::Lobby::loadResources( )
 	}
 	else
 	{
-		//TODO
 		mSprite.setTextureRect( sf::IntRect(0, 0, cast.x, cast.y) );
 	}
 }
@@ -192,6 +238,55 @@ void ::scene::online::Lobby::update( std::list<sf::Event>& eventQueue )
 		mSetScene( ::scene::ID::MAIN_MENU );
 		return;
 	}
+
+	char* rcvBuf = mSocketToQueueServer->receivingBuffer( );
+	if ( MAXINT32 != mQueueNumber )
+	{
+		if ( 0 < mQueueNumber )
+		{
+			if ( -1 == ::recv(mSocketToQueueServer->handle(), rcvBuf,
+							  mSocketToQueueServer->MAX_RCV_BUF_LEN, 0) )
+			{
+				// Exception
+				(*glpService).console( )->printFailure( FailureLevel::WARNING, "Receiving from queue server failed.\n" );
+			}
+			else
+			{
+				mQueueNumber -= std::atoi( &rcvBuf[4] );
+#ifdef _DEBUG
+				std::string msg( "Received the shorter queue number: " );
+				(*glpService).console( )->print( msg + rcvBuf, sf::Color::Green );
+#endif
+			}
+		}
+		else
+		{
+			ASSERT_TRUE( -1 != mSocketToMainServer->bind(EndPoint::Any) );
+			if ( char mainServerIPAddress[ ] = "192.168.219.102";
+				 -1 == mSocketToMainServer->connect(EndPoint(mainServerIPAddress, 54321)) )
+			{
+				// Exception
+				(*glpService).console( )->printFailure( FailureLevel::WARNING, "Connection to main server failed.\n" );
+				// Triggering
+				++mFrameCount_disconnection;
+			}
+			else
+			{
+				if ( -1 == ::send(mSocketToMainServer->handle( ), rcvBuf, (int)std::strlen(rcvBuf)+1, 0) )
+				{
+					// Exception
+					(*glpService).console( )->printFailure( FailureLevel::WARNING, "Sending the ticket to the main server failed.\n" );
+					// Triggering
+					++mFrameCount_disconnection;
+				}
+				else
+				{
+					(*glpService).console( )->print( "Connection to main server succeeded.", sf::Color::Green );
+				}
+			}
+		}
+	}
+
 	//char sndBuf[ ] = "Testing Testing";
 	//const int sndLen = ::send( (*glpService).socket( ).handle( ),
 	//						   sndBuf,

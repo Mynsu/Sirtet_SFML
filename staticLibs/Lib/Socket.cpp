@@ -1,32 +1,59 @@
 #pragma hdrstop
 #include "Socket.h"
+#ifdef _DEBUG
+#include <intrin.h>
+#else
+#include <iostream>
+#endif
 
-int Socket::updateAcceptContext( Socket & listener )
+Socket::Socket( const::Socket::Type type )
+	: mIsPending( false ), mHasTicket( false ),
+	mCompletedWork( Socket::CompletedWork::RECEIVE ),
+	mhSocket( NULL ), AcceptEx( nullptr ), DisconnectEx( nullptr )
 {
-	SOCKADDR_IN ignore1, ignore3;
-	INT ignore2, ignore4;
-	char ignore[ 1000 ];
-	GetAcceptExSockaddrs( ignore, 0, 50, 50, (SOCKADDR**)&ignore1, &ignore2,
-		(SOCKADDR**)&ignore3, &ignore4 );
-	return setsockopt( mhSocket, SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT,
-		(char*)&listener.mhSocket, sizeof( listener.mhSocket ) );
+	switch ( type )
+	{
+		case ::Socket::Type::UDP:
+			mhSocket = WSASocket( AF_INET, SOCK_DGRAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED );
+			break;
+		case ::Socket::Type::TCP:
+			[[ fallthrough ]];
+		case ::Socket::Type::TCP_LISTENER:
+			mhSocket = WSASocket( AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED );
+			break;
+		default:
+			__assume(0);
+	}
+	ZeroMemory( &mOverlappedStruct, sizeof( mOverlappedStruct ) );
+	ZeroMemory( mRcvBuffer, sizeof( mRcvBuffer ) );
 }
 
-int Socket::receiveOverlapped( )
+Socket::~Socket( )
 {
-	WSABUF b;
-	b.len = MAX_RCV_BUF_LEN;
-	b.buf = mRcvBuffer;
-	DWORD flag = 0;
-	mCompletedWork = CompletedWork::RECEIVE;
-	return WSARecv( mhSocket, &b, 1, NULL, &flag, &mOverlappedStruct, NULL );
+	mhSocket = NULL;
+	AcceptEx = nullptr;
+	DisconnectEx = nullptr;
 }
 
-int Socket::sendOverlapped( char * data, ULONG length )
+int Socket::bind( const EndPoint& endpoint )
 {
-	WSABUF b;
-	b.len = length;
-	b.buf = data;
-	mCompletedWork = CompletedWork::SEND;
-	return ::WSASend( mhSocket, &b, 1, NULL, 0, &mOverlappedStruct, NULL );
+	if ( NULL == mhSocket )
+	{
+#ifdef _DEBUG
+		__debugbreak( );
+#else
+		std::cerr << "Socket must be initialized before binding.\n";
+		return -1;
+#endif
+	}
+	const SOCKADDR_IN ep = endpoint.get( );
+	int retVal = ::bind( mhSocket, (SOCKADDR*)&ep, sizeof( decltype(endpoint.get( )) ) );
+	return retVal;
+}
+
+int Socket::connect( const EndPoint& endpoint )
+{
+	const SOCKADDR_IN ep = endpoint.get( );
+	int retVal = ::connect( mhSocket, (SOCKADDR*)&ep, sizeof( decltype(endpoint.get( )) ) );
+	return retVal;
 }

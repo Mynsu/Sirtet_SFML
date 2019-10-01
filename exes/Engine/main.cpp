@@ -87,7 +87,6 @@ Initialization
 =====
 */
 	::util::endian::BindConvertFunc( );
-	ASSERT_TRUE( -1 != gService.socket( ).bind( EndPoint::Any ) );
 
 	const uint32_t FOREGROUND_FPS = 60u;
 	auto& variableTable = gService.vault( );

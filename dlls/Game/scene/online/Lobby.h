@@ -16,12 +16,13 @@ namespace scene::online
 		virtual ::scene::ID currentScene( ) const override;
 	private:
 		static bool IsInstantiated;
-		///bool mHasConnectionFailed_;
 		uint32_t mFPS_, mFrameCount_disconnection;
+		int32_t mQueueNumber;
 		sf::Vector2f mSpriteClipSize_;
 		sf::RenderWindow& mWindow_;
 		const SetScene_t& mSetScene;
-		Socket& mSocket_;
+		std::unique_ptr< Socket > mSocketToQueueServer;
+		std::unique_ptr< Socket > mSocketToMainServer;
 		sf::Texture mTexture;
 		sf::Sprite mSprite;
 	};

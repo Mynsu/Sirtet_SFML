@@ -1,13 +1,7 @@
 #pragma once
 #include "Common.h"
-#include <string>
-#include <MSWSock.h> // LPFN_ACCEPTEX
+#include <MSWSock.h>
 #pragma comment (lib, "mswsock")
-#ifdef _DEBUG
-#include <intrin.h>
-#else
-#include <iostream>
-#endif
 #include "EndPoint.h"
 
 using SOCKET_HANDLE = SOCKET;
@@ -26,92 +20,39 @@ public:
 	{
 		RECEIVE,
 		SEND,
+		DISCONNECT,
 	};
 
 	static const uint32_t MAX_RCV_BUF_LEN = 8192;
-	//static const uint32_t MAX_SND_BUF_LEN = 1024;//TODO
 
-	Socket( )
-		: mHasTicket( false ), mIsPending( false ), mCompletedWork( Socket::CompletedWork::RECEIVE ),
-		mhSocket( NULL ), AcceptEx( nullptr )
-	{
-		ZeroMemory( &mOverlappedStruct, sizeof(mOverlappedStruct) );
-		ZeroMemory( mRcvBuffer, sizeof(mRcvBuffer) );
-		//ZeroMemory( mSndBuffer, sizeof( mSndBuffer ) );//TODO
-	}
-	Socket( const ::Socket::Type type )
-		: Socket( )
-	{
-		lazyInitialize( type );
-	}
-	~Socket( )
-	{
-		mhSocket = NULL;
-		AcceptEx = nullptr;
-		ZeroMemory( &mOverlappedStruct, sizeof(mOverlappedStruct) );
-	}
-	void lazyInitialize( const ::Socket::Type type )
-	{
-		switch ( type )
-		{
-			case ::Socket::Type::UDP:
-				mhSocket = WSASocket( AF_INET, SOCK_DGRAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED );
-				break;
-			case ::Socket::Type::TCP:
-				[[ fallthrough ]];
-			case ::Socket::Type::TCP_LISTENER:
-				mhSocket = WSASocket( AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED );
-				break;
-			default:
-				__assume(0);
-		}
-	}
-	int bind( const EndPoint& endpoint )
-	{
-		if ( NULL == mhSocket )
-		{
-#ifdef _DEBUG
-			__debugbreak();
-#else
-			std::cerr << "Socket must be initialized before binding.\n";
-			return -1;
-#endif
-		}
-		const SOCKADDR_IN ep = endpoint.get( );
-		int retVal = ::bind( mhSocket, (SOCKADDR*)&ep, sizeof( decltype(endpoint.get( )) ) );
-		return retVal;
-	}
-	inline void listen( )
+	Socket( ) = delete;
+	Socket( const ::Socket::Type type );
+	~Socket( );
+	int bind( const EndPoint& endpoint );
+	void listen( )
 	{
 		::listen( mhSocket, 5000 );
 	}
-	int connect( const EndPoint& endpoint )
-	{
-		const SOCKADDR_IN ep = endpoint.get( );
-		int retVal = ::connect( mhSocket, (SOCKADDR*)&ep, sizeof( decltype(endpoint.get( )) ) );
-		return retVal;
-	}
-	inline int acceptOverlapped( Socket& candidateClientSocket, std::string& errorMessage )
+	int acceptOverlapped( Socket& candidateClientSocket )
 	{
 		if ( nullptr == AcceptEx )
 		{
 			DWORD bytes;
 			WSAIoctl( mhSocket, SIO_GET_EXTENSION_FUNCTION_POINTER,
-					  &UUID( WSAID_ACCEPTEX ), sizeof( UUID ), //±Ã±Ý: UUID ÀÌ°Å ¹¹²¿?
-					  &AcceptEx, sizeof( AcceptEx ),
-					  &bytes, //±Ã±Ý: ÀÌ°Å ¹¹Áö?
-					  NULL, NULL );//±Ã±Ý: ÀÌ°Å ¹¹Áö?
-			if ( NULL == AcceptEx )
+					  &UUID(WSAID_ACCEPTEX), sizeof(UUID),
+					  &AcceptEx, sizeof(AcceptEx),
+					  &bytes,
+					  NULL, NULL );
+			if ( nullptr == AcceptEx )
 			{
 				return -1;
 			}
 		}
-		char acceptedAddress[ 200 ];
-		DWORD what = 0;
-		if ( 1 == AcceptEx( mhSocket, candidateClientSocket.mhSocket,
-							&acceptedAddress,
-							0, 50, 50, &what, //±Ã±Ý: ÀÌ°Å ¹¹Áö?
-							&mOverlappedStruct ) )
+		char ignored[ 120 ];
+		DWORD ignored2 = 0;
+		if ( TRUE == AcceptEx( mhSocket, candidateClientSocket.mhSocket,
+								&ignored, 0, 50, 50, &ignored2,
+								&mOverlappedStruct) )
 		{
 			return 1;
 		}
@@ -120,21 +61,62 @@ public:
 			return 0;
 		}
 	}
-	// ±Ã±Ý: MSDN º¸ÀÚ
-	int updateAcceptContext( Socket& listener );
-	int receiveOverlapped( );
-	int sendOverlapped( char* data, ULONG length );
+	int updateAcceptContext( Socket& listener )
+	{
+		SOCKADDR_IN ignore1, ignore3;
+		INT ignore2, ignore4;
+		char ignore[ 120 ];
+		GetAcceptExSockaddrs( ignore, 0, 50, 50, (SOCKADDR**)&ignore1, &ignore2,
+			(SOCKADDR**)&ignore3, &ignore4 );
+		return setsockopt( mhSocket, SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT,
+			(char*)&listener.mhSocket, sizeof( listener.mhSocket ) );
+	}
+	int connect( const EndPoint& endpoint );
+	int disconnectOverlapped( )
+	{
+		if ( nullptr == DisconnectEx )
+		{
+			DWORD ignored;
+			WSAIoctl( mhSocket, SIO_GET_EXTENSION_FUNCTION_POINTER,
+					  &UUID( WSAID_DISCONNECTEX ), (DWORD)sizeof(UUID),
+					  &DisconnectEx, (DWORD)sizeof(DisconnectEx),
+					  &ignored, NULL, NULL );
+			if ( nullptr == DisconnectEx )
+			{
+				return -1;
+			}
+		}
+		mCompletedWork = CompletedWork::DISCONNECT;
+		return DisconnectEx( mhSocket, &mOverlappedStruct, TF_REUSE_SOCKET, 0 );
+	}
+	int receiveOverlapped( )
+	{
+		WSABUF b;
+		b.len = MAX_RCV_BUF_LEN;
+		b.buf = mRcvBuffer;
+		DWORD flag = 0;
+		mCompletedWork = CompletedWork::RECEIVE;
+		return WSARecv( mhSocket, &b, 1, NULL, &flag, &mOverlappedStruct, NULL );
+	}
+	int sendOverlapped( char* data, ULONG length )
+	{
+		WSABUF b;
+		b.len = length;
+		b.buf = data;
+		mCompletedWork = CompletedWork::SEND;
+		return ::WSASend( mhSocket, &b, 1, NULL, 0, &mOverlappedStruct, NULL );
+	}
 	void close( )
 	{
 		closesocket( mhSocket );
 	}
-	bool hasTicket( ) const
-	{
-		return mHasTicket;
-	}
 	bool isPending( ) const
 	{
 		return mIsPending;
+	}
+	bool hasTicket( ) const
+	{
+		return mHasTicket;
 	}
 	CompletedWork completedWork( ) const
 	{
@@ -148,23 +130,22 @@ public:
 	{
 		return mRcvBuffer;
 	}
-	void earnTicket( )
-	{
-		mHasTicket = true;
-	}
 	// Set true while the socket gets ready or waiting for an event, I/O completion.
 	// Set false when you touch.
 	void pend( const bool isPending = true )
 	{
 		mIsPending = isPending;
 	}
+	void earnTicket( bool b = true )
+	{
+		mHasTicket = b;
+	}
 private:
-	bool mHasTicket;
-	bool mIsPending;
+	bool mIsPending, mHasTicket;
 	CompletedWork mCompletedWork;
 	SOCKET_HANDLE mhSocket;
 	LPFN_ACCEPTEX AcceptEx;
+	LPFN_DISCONNECTEX DisconnectEx;
 	WSAOVERLAPPED mOverlappedStruct;
 	char mRcvBuffer[ MAX_RCV_BUF_LEN ];
-	//char mSndBuffer[ MAX_SND_BUF_LEN ];//TODO
 };

@@ -19,16 +19,19 @@ public:
 	{ }
 	~IOCP( ) = default;
 
-	inline int add( Socket& socket, void* userPtr )
+	inline int add( Socket& socket, ULONG_PTR id )
 	{
-		if ( nullptr == CreateIoCompletionPort( reinterpret_cast<HANDLE>(socket.handle( )),
+		if ( NULL == CreateIoCompletionPort( reinterpret_cast<HANDLE>(socket.handle( )),
 									  mhIOCP,
-									  reinterpret_cast<ULONG_PTR>(userPtr),
+									  id,
 									  mNumOfThreads ) )
 		{
 			return -1;
 		}
-		return 0;
+		else
+		{
+			return 0;
+		}
 	}
 	inline void wait( IOCPEvent& event, int timeoutMs )
 	{
