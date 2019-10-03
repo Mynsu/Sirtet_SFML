@@ -26,7 +26,7 @@ public:
 	static const uint32_t MAX_RCV_BUF_LEN = 8192;
 
 	Socket( ) = delete;
-	Socket( const ::Socket::Type type );
+	Socket( const ::Socket::Type type, const Socket::CompletedWork work = Socket::CompletedWork::RECEIVE );
 	~Socket( );
 	int bind( const EndPoint& endpoint );
 	void listen( )
@@ -101,7 +101,8 @@ public:
 	int sendOverlapped( char* data, ULONG length )
 	{
 		WSABUF b;
-		b.len = length;
+		// Includes c-style null terminator '\0'.
+		b.len = length + 1;
 		b.buf = data;
 		mCompletedWork = CompletedWork::SEND;
 		return ::WSASend( mhSocket, &b, 1, NULL, 0, &mOverlappedStruct, NULL );

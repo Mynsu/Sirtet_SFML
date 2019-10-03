@@ -6,9 +6,9 @@
 #include <iostream>
 #endif
 
-Socket::Socket( const::Socket::Type type )
+Socket::Socket( const::Socket::Type type, const Socket::CompletedWork work )
 	: mIsPending( false ), mHasTicket( false ),
-	mCompletedWork( Socket::CompletedWork::RECEIVE ),
+	mCompletedWork( work ),
 	mhSocket( NULL ), AcceptEx( nullptr ), DisconnectEx( nullptr )
 {
 	switch ( type )

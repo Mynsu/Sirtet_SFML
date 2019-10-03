@@ -9,6 +9,8 @@
 #include <sstream>
 #include <iostream>
 #include <functional>
+#include <thread>
+#include <future>
 #include <stdint.h>
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>

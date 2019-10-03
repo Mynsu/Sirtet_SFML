@@ -16,7 +16,7 @@ namespace scene::online
 		virtual ::scene::ID currentScene( ) const override;
 	private:
 		static bool IsInstantiated;
-		uint32_t mFPS_, mFrameCount_disconnection;
+		uint32_t mFPS_, mFrameCount_disconnection, mFrameCount_knock;
 		int32_t mQueueNumber;
 		sf::Vector2f mSpriteClipSize_;
 		sf::RenderWindow& mWindow_;
