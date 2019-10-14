@@ -43,6 +43,7 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\Hash.h" />
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\IOCP.h" />
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\IteratoredQueue.h" />
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\ScriptLoader.h" />
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\Socket.h" />
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\targetver.h">

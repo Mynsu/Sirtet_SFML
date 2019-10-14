@@ -16,8 +16,10 @@ namespace scene::online
 		virtual ::scene::ID currentScene( ) const override;
 	private:
 		static bool IsInstantiated;
+		// When 0, frame counters don't increase. While 1 or more, they increase.
+		// In other words, setting the value 0 to 1( or any number except 0 ) acts like a trigger.
 		uint32_t mFPS_, mFrameCount_disconnection, mFrameCount_knock;
-		int32_t mQueueNumber;
+		int32_t mMyOrderInQueueLine;
 		sf::Vector2f mSpriteClipSize_;
 		sf::RenderWindow& mWindow_;
 		const SetScene_t& mSetScene;

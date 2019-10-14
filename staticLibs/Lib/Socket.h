@@ -26,6 +26,9 @@ public:
 	static const uint32_t MAX_RCV_BUF_LEN = 8192;
 
 	Socket( ) = delete;
+	// !IMPORTANT: When replacing an old socket by new one, after having failed disconnecting successfully,
+	// you should set the 2nd argument 'work' to Socket::CompletedWork::DISCONNECT.
+	// Otherwise, the new socket with the old but same index would act like the old socket did.
 	Socket( const ::Socket::Type type, const Socket::CompletedWork work = Socket::CompletedWork::RECEIVE );
 	~Socket( );
 	int bind( const EndPoint& endpoint );
