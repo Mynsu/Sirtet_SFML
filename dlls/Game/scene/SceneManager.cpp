@@ -83,7 +83,7 @@ void ::scene::SceneManager::setScene( const ::scene::ID nextScene )
 #ifdef _DEV
 void ::scene::SceneManager::_2436549370( const std::string_view& args )
 {
-	const ::scene::ID nextScene = static_cast< ::scene::ID >( std::atoi( args.data( ) ) );
+	const ::scene::ID nextScene = (::scene::ID)std::atoi( args.data() );
 	// Exception: When the current scene id equals with the next scene id,
 	if ( nextScene == mCurrentScene->currentScene( ) )
 	{

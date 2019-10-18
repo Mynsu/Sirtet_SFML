@@ -1,0 +1,8 @@
+#
+# Tag
+#
+
+[ Tag ]	|	[ Description ]
+t:		|	Ticket
+inv:	|	Invitation card
+qL:		|	N-th order in the wating queue line

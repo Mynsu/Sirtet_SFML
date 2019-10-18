@@ -379,7 +379,8 @@ void ::scene::MainMenu::update( std::list< sf::Event >& eventQueue )
 	{
 		if ( sf::Event::KeyPressed == it.type && sf::Keyboard::Escape == it.key.code )
 		{
-			constexpr HashedKey HK_IS_RUNNING = ::util::hash::Digest( "isRunning", ::util::hash::Measure("isRunning") );
+			constexpr char IS_RUNNING[ ] = "isRunning";
+			constexpr HashedKey HK_IS_RUNNING = ::util::hash::Digest( IS_RUNNING, ::util::hash::Measure(IS_RUNNING) );
 			(*glpService).vault()[ HK_IS_RUNNING ] = 0;
 		}
 	}

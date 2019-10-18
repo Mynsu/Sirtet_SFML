@@ -15,6 +15,7 @@
 #include <string>
 #include <string_view>
 #include <iostream>
+#include <sstream>
 #include <thread>
 #include <intrin.h>
 #include <stdint.h>

@@ -5,6 +5,8 @@
 //TODO: 개발 완료 후 auto 쓰는 대신 타입 명시, 브랜치에 커밋
 //TODO: https://tetris.fandom.com/wiki/Tetris_Guideline
 
+const uint32_t VERSION = 8191015;
+
 int main( int argc, char* argv[ ] )
 {
 	uint32_t winWidth = 800u;
@@ -88,12 +90,15 @@ Initialization
 */
 	::util::endian::BindConvertFunc( );
 
-	const uint32_t FOREGROUND_FPS = 60u;
 	auto& variableTable = gService.vault( );
+	constexpr HashedKey HK_VERSION = util::hash::Digest( "version", 7 );
+	variableTable.emplace( HK_VERSION, VERSION );
 	constexpr HashedKey HK_FORE_FPS = util::hash::Digest( "foreFPS", 7 ); //TODO: 한 프레임 안에 계산할 필요가 없는 게 뭐가 있을까?
+	const uint32_t FOREGROUND_FPS = 60u;
 	variableTable.emplace( HK_FORE_FPS, FOREGROUND_FPS );
 	constexpr HashedKey HK_BACK_FPS = util::hash::Digest( "backFPS", 7 );
-	variableTable.emplace( HK_BACK_FPS, 30u );
+	const uint32_t BACKGROUND_FPS = 30u;
+	variableTable.emplace( HK_BACK_FPS, BACKGROUND_FPS );
 	gService.console( )->setPosition( {winWidth, winHeight} );
 
 	HMODULE hGameDLL = LoadLibraryA( "game.dll" );
@@ -126,7 +131,8 @@ Initialization
 Main Loop
 =====
 */
-	constexpr HashedKey HK_IS_RUNNING = ::util::hash::Digest( "isRunning", ::util::hash::Measure("isRunning") );
+	constexpr char IS_RUNNING[ ] = "isRunning";
+	constexpr HashedKey HK_IS_RUNNING = ::util::hash::Digest( IS_RUNNING, ::util::hash::Measure(IS_RUNNING) );
 	gService.vault().emplace( HK_IS_RUNNING, 1 );
 	while ( 1 == gService.vault( )[HK_IS_RUNNING] )
 	{

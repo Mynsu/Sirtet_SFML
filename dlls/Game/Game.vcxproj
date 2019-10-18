@@ -103,6 +103,9 @@
   <ItemGroup>
     <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\Game.def" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Server\tag.txt" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{BD93EAD9-F247-4A0A-ABE9-79D6756FE4E8}</ProjectGuid>

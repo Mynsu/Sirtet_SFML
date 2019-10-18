@@ -10,6 +10,7 @@
 #include <unordered_set>
 #include <string>
 #include <iostream>
+#include <sstream>
 #include <stdint.h>
 #include <intrin.h>
 #include <lua.hpp>

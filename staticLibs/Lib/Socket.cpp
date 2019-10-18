@@ -57,3 +57,24 @@ int Socket::connect( const EndPoint& endpoint )
 	int retVal = ::connect( mhSocket, (SOCKADDR*)&ep, sizeof( decltype(endpoint.get( )) ) );
 	return retVal;
 }
+
+int Socket::receiveBlock( )
+{
+	return ::recv(mhSocket, mRcvBuffer, (int)MAX_RCV_BUF_LEN, 0 );
+}
+
+int Socket::sendBlock( char* const data, const int length, const char separator )
+{
+	int res = -2;
+	if ( separator != data[length-1u] )
+	{
+		std::string _data( data );
+		_data += separator;
+		res = ::send( mhSocket, _data.data(), length+1u, 0 );
+	}
+	else
+	{
+		res = ::send( mhSocket, data, length, 0 );
+	}
+	return res;
+}

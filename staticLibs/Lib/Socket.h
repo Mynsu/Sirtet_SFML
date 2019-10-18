@@ -2,6 +2,7 @@
 #include "Common.h"
 #include <MSWSock.h>
 #pragma comment (lib, "mswsock")
+#include <string>
 #include "EndPoint.h"
 
 using SOCKET_HANDLE = SOCKET;
@@ -21,6 +22,7 @@ public:
 		RECEIVE,
 		SEND,
 		DISCONNECT,
+		NONE,
 	};
 
 	static const uint32_t MAX_RCV_BUF_LEN = 8192;
@@ -29,7 +31,7 @@ public:
 	// !IMPORTANT: When replacing an old socket by new one, after having failed disconnecting successfully,
 	// you should set the 2nd argument 'work' to Socket::CompletedWork::DISCONNECT.
 	// Otherwise, the new socket with the old but same index would act like the old socket did.
-	Socket( const ::Socket::Type type, const Socket::CompletedWork work = Socket::CompletedWork::RECEIVE );
+	Socket( const ::Socket::Type type, const Socket::CompletedWork work = Socket::CompletedWork::NONE );
 	~Socket( );
 	int bind( const EndPoint& endpoint );
 	void listen( )
@@ -101,15 +103,30 @@ public:
 		mCompletedWork = CompletedWork::RECEIVE;
 		return WSARecv( mhSocket, &b, 1, NULL, &flag, &mOverlappedStruct, NULL );
 	}
-	int sendOverlapped( char* data, ULONG length )
+	int receiveBlock( );
+	int sendOverlapped( char* const data, const size_t length, const char separator = ' ' )
 	{
+		int res = -2;
 		WSABUF b;
-		// Includes c-style null terminator '\0'.
-		b.len = length + 1;
-		b.buf = data;
+		if ( separator != data[length-1u] )
+		{
+			std::string _data( data );
+			_data += separator;
+			b.buf = _data.data( );
+			b.len = (ULONG)length + 1u;
+			res = ::WSASend( mhSocket, &b, 1, NULL, 0, &mOverlappedStruct, NULL );
+		}
+		else
+		{
+			b.buf = data;
+			b.len = (ULONG)length;
+			res = ::WSASend( mhSocket, &b, 1, NULL, 0, &mOverlappedStruct, NULL );
+		}
 		mCompletedWork = CompletedWork::SEND;
-		return ::WSASend( mhSocket, &b, 1, NULL, 0, &mOverlappedStruct, NULL );
+		return res;
 	}
+	int sendBlock( char* const data, const int length, const char separator = ' ' );
+
 	void close( )
 	{
 		closesocket( mhSocket );
