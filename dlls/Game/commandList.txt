@@ -1,0 +1,14 @@
+#
+# Command List
+#
+
+[ Command ]		|	[ Discription ]													|	[ Where this's added ]
+
+chscnto NUMBER		Change the current scene to the specifically NUMBERed scene.	|	::scene::SceneManager.cpp
+					As for the version 8191015,
+					Intro 0, Main Menu 1, Singleplay 2, Multiplay 3.
+
+refresh				Refresh the current scene,										|	::scene::SceneManager.cpp
+					in other words, reload its script and resources.
+
+exit				Break the game loop and close the window.						|	::scene::SceneManager.cpp

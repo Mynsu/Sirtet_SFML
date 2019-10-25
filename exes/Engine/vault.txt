@@ -7,4 +7,4 @@
 version				|	Current version.  Used matching the engine with the .dll game file, and also verifying a client.
 foreFPS				|	Frames per second while the window gains focus.
 backFPS				|	Frames per second while the window loses focus.
-isRunning			|	When this's false, game loop terminates promptly.
+isRunning			|	When 0, game loop terminates promptly.

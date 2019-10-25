@@ -8,19 +8,30 @@
 #include "online/Lobby.h"
 
 bool ::scene::SceneManager::IsInstantiated = false;
+namespace
+{
+	void _772060336( const std::string_view& )
+	{
+		constexpr char IS_RUNNING[ ] = "isRunning";
+		constexpr HashedKey HK_IS_RUNNING = ::util::hash::Digest( IS_RUNNING, ::util::hash::Measure(IS_RUNNING) );
+		(*glpService).vault( )[ HK_IS_RUNNING ] = 0;
+	}
+}
 
 void ::scene::SceneManager::lastInit( sf::RenderWindow* const window )
 {
 	mWindow = window;
 
-#ifdef _DEV
 	//
 	// Registering commands
 	///
-	constexpr HashedKey HK_COMMAND0 = ::util::hash::Digest( "chseqto", 7 );
-	(*glpService).console()->addCommand( HK_COMMAND0, std::bind( &SceneManager::_2436549370, this, std::placeholders::_1 ) );
+	constexpr HashedKey HK_COMMAND2 = ::util::hash::Digest( "exit", 4 );
+	(*glpService).console( )->addCommand( HK_COMMAND2, &::_772060336 );
+#ifdef _DEV
+	constexpr HashedKey HK_COMMAND0 = ::util::hash::Digest( "chscnto", 7 );
+	(*glpService).console( )->addCommand( HK_COMMAND0, std::bind(&SceneManager::_2436549370, this, std::placeholders::_1) );
 	constexpr HashedKey HK_COMMAND1 = ::util::hash::Digest( "refresh", 7 );
-	(*glpService).console( )->addCommand( HK_COMMAND1, std::bind( &SceneManager::_495146883, this, std::placeholders::_1 ) );
+	(*glpService).console( )->addCommand( HK_COMMAND1, std::bind(&SceneManager::_495146883, this, std::placeholders::_1) );
 
 	//
 	// Starting scene

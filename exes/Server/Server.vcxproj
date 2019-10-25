@@ -31,7 +31,9 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Server\tag.txt" />
+    <Text Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Server\tag.txt">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </Text>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

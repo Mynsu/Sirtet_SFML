@@ -8,7 +8,7 @@ const uint32_t CAPACITY = 10u;
 // Capacity in the main server defaults to 10000u.
 // You can resize it indirectly here without re-compliing or rescaling the main server.
 // !IMPORTANT: This must be less than the real capacity of the server.
-const uint32_t MAIN_SERVER_CAPACITY = 1u;
+const uint32_t MAIN_SERVER_CAPACITY = 2u;
 constexpr char TAG_INVITATION[ ] = "inv:";
 constexpr uint8_t TAG_INVITATION_LEN = ::util::hash::Measure( TAG_INVITATION );
 const Dword VERSION = 8191015;
@@ -565,12 +565,15 @@ int main( )
 
 		const auto now = std::chrono::high_resolution_clock::now( );
 		// Notifying their own order in the queue line.
+		uint32_t order = 0u;
 		for ( auto it = queue.cbegin(); queue.cend()!=it && std::chrono::seconds(1)<now-old0; )
 		{
 			// Reset
 			old0 = now;
+
 			Socket& clientSocket = clientS[ *it ];
-			std::string itsOrderInQueueLine( TAG_ORDER_IN_QUEUE + std::to_string(*it) );
+			++order;
+			std::string itsOrderInQueueLine( TAG_ORDER_IN_QUEUE + std::to_string(order) );
 #ifdef _DEBUG
 			if ( false != clientSocket.isPending( ) ) __debugbreak( );
 #endif

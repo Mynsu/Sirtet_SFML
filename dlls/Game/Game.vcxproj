@@ -104,7 +104,12 @@
     <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\Game.def" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Server\tag.txt" />
+    <Text Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\commandList.txt">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </Text>
+    <Text Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Server\tag.txt">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </Text>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

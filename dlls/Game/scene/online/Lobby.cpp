@@ -13,19 +13,15 @@ namespace
 	const int ADDITIVE = 1246;
 	constexpr char TAG_TICKET[ ] = "t:";
 	constexpr uint8_t TAG_TICKET_LEN = ::util::hash::Measure( TAG_TICKET );
-	constexpr HashedKey DIGESTED_TAG_TICKET = ::util::hash::Digest( TAG_TICKET, TAG_TICKET_LEN );
 	constexpr char TAG_ORDER_IN_QUEUE[ ] = "qL:";
 	constexpr uint8_t TAG_ORDER_IN_QUEUE_LEN = ::util::hash::Measure( TAG_ORDER_IN_QUEUE );
-	constexpr HashedKey DIGESTED_TAG_ORDER_IN_QUEUE = ::util::hash::Digest( TAG_ORDER_IN_QUEUE, TAG_ORDER_IN_QUEUE_LEN );
 	const uint16_t QUEUE_SERVER_PORT = 10000u;
 	const uint16_t MAIN_SERVER_PORT = 54321u;
-// TODO: 뮤텍스 있어야할 수도 있음
 	int SendingResult = -2;
+	int ReceivingResult = -2;
 	// Set false to stop the reception from the queue server( and start that from the main server.)
 	bool IsReceiving = true;
-	// Set false manually after.
-	bool HasReceived = false;
-	std::unique_ptr<std::thread> Thread1, Thread2;
+	std::unique_ptr<std::thread> Thread;
 	std::condition_variable CvUpdated;
 	std::mutex MutexRcvBuf;
 
@@ -36,24 +32,15 @@ namespace
 	}
 	void Receive( Socket& socket )
 	{
-		// NOTE: No mutex can prevent the case, for example,
-		// that IsReceiving has been set false elsewhere to stop this thread but soon IsReceiving is set true here,
-		// which keeps this thread running on.
-		///{
-		///std::scoped_lock lock( Mutex_IsReceiving_ );
 		IsReceiving = true;
-		///}
 		while ( true == IsReceiving )
 		{
-			int res = socket.receiveBlock( );
-			if ( 0 == res || 0 > res && WSAETIMEDOUT != WSAGetLastError() )
+			ReceivingResult = socket.receiveBlock( );
+			if ( 0 == ReceivingResult || ReceivingResult < 0 && WSAETIMEDOUT != WSAGetLastError() )
 			{
 				break;
 			}
-			else if ( 0 < res )
-			{
-				HasReceived = true;
-			}
+			else if ( 0 < ReceivingResult )
 			{
 				std::unique_lock uLock( MutexRcvBuf );
 				CvUpdated.wait( uLock );
@@ -101,80 +88,18 @@ scene::online::Lobby::Lobby( sf::RenderWindow& window, const SetScene_t& setScen
 		// Sending the digested, or encrypted version info for a client to be verified.
 		if ( -1 == mSocketToQueueServer->sendBlock(encryptedInvitation.data(),(int)encryptedInvitation.size()) )
 		{
+#ifdef _DEBUG
 			// Exception
 			(*glpService).console( )->printFailure( FailureLevel::WARNING, "Sending the invitation to the queue server failed.\n" );
+#endif
 			// Triggering
 			++mFrameCount_disconnection;
 		}
 		else
 		{
-			const int res = mSocketToQueueServer->receiveBlock( );
-			const int err = WSAGetLastError( );
-			if ( 0 < res )
-			{
-				char* const rcvBuf = mSocketToQueueServer->receivingBuffer( );
-				// When having received a ticket for the main server,
-				// NOTE: Matching tag is being skipped now.
-				if ( DIGESTED_TAG_TICKET == ::util::hash::Digest(rcvBuf,TAG_TICKET_LEN) )
-				{
-					ASSERT_TRUE( -1 != mSocketToMainServer->bind(EndPoint::Any) );
-					if ( char mainServerIPAddress[ ] = "192.168.219.102";
-						 -1 == mSocketToMainServer->connect(EndPoint(mainServerIPAddress, MAIN_SERVER_PORT)) )
-					{
-						// Exception
-						(*glpService).console( )->printFailure( FailureLevel::WARNING, "Connection to the main server failed.\n" );
-						// Triggering
-						++mFrameCount_disconnection;
-					}
-					else
-					{
-						(*glpService).console( )->print( "Connection to the main server succeeded.\n", sf::Color::Green );
-						// Sending to the main server the ticket, which the main server will verify.
-						// NOTE: Assuming no message arrives following the ticket.
-						Thread2 = std::make_unique<std::thread>( &Send, std::ref(*mSocketToMainServer),
-																 rcvBuf, (int)std::strlen(rcvBuf), 1000u );
-						mIsWaitingForTicketVerification = true;
-					}
-				}
-				// When having received the updated order in the waiting queue line instead of a ticket for the main server,
-				// NOTE: Matching tag is being skipped now.
-				else if ( DIGESTED_TAG_ORDER_IN_QUEUE == ::util::hash::Digest(rcvBuf,TAG_ORDER_IN_QUEUE_LEN) )
-				{
-					const char* updatedOrder = &rcvBuf[ TAG_ORDER_IN_QUEUE_LEN ];
-					mMyOrderInQueueLine = (int32_t)std::atoi( updatedOrder );
-					// Running another thread for blocking socket reception.
-					Thread1 = std::make_unique< std::thread >( &Receive, std::ref(*mSocketToQueueServer) );
-					// Triggering, waiting
-					++mFrameCount_receivingInterval_;
-#ifdef _DEBUG
-					std::string msg( "My order in the queue line: " );
-					(*glpService).console( )->print( msg + std::to_string(mMyOrderInQueueLine), sf::Color::Green );
-#endif
-				}
-				else
-				{
-					(*glpService).console( )->printFailure( FailureLevel::FATAL, "Unknown message from the queue server." );
-					++mFrameCount_disconnection;
-				}
-			}
-			else if ( 0 == res )
-			{
-				(*glpService).console( )->printFailure( FailureLevel::WARNING, "Invitation verification failed.\n" );
-				// Triggering
-				++mFrameCount_disconnection;
-			}
-			else if ( -1 == res && WSAETIMEDOUT == err )
-			{
-				// Triggering, waiting
-				++mFrameCount_receivingInterval_;
-			}
-			else
-			{
-				// Exception
-				(*glpService).console( )->printFailure( FailureLevel::WARNING, "Receiving from the queue server failed.\n" );
-				// Triggering
-				++mFrameCount_disconnection;
-			}
+			Thread = std::make_unique< std::thread >( &Receive, std::ref(*mSocketToQueueServer) );
+			//Triggering, waiting
+			++mFrameCount_receivingInterval_;
 		}
 	}
 	loadResources( );
@@ -184,25 +109,15 @@ scene::online::Lobby::Lobby( sf::RenderWindow& window, const SetScene_t& setScen
 
 ::scene::online::Lobby::~Lobby( )
 {
-	// NOTE: No mutex can prevent the case, for example,
-	// that IsReceiving has been set false here to stop this thread but soon IsReceiving is set true elsewhere,
-	// which keeps this thread running on.
-	///{
-	///	std::scoped_lock lock( Mutex_IsReceiving_ );
 	IsReceiving = false;
-	///}
-	// NOTE: Must be done after setting IsReceiving false to break loop.
 	CvUpdated.notify_one( );
-	if ( nullptr != Thread1 && true == Thread1->joinable() )
+	if ( nullptr != Thread && true == Thread->joinable() )
 	{
-		Thread1->join( );
-	}
-	if ( nullptr != Thread2 && true == Thread2->joinable() )
-	{
-		Thread2->join( );
+		Thread->join( );
 	}
 
-	HasReceived = false;
+	SendingResult = -2;
+	ReceivingResult = -2;
 	mSocketToQueueServer->close( );
 	mSocketToMainServer->close( );
 
@@ -348,46 +263,35 @@ void ::scene::online::Lobby::update( std::list<sf::Event>& eventQueue )
 {
 	if ( true == mIsWaitingForTicketVerification )
 	{
+		// Reset
+		mIsWaitingForTicketVerification = false;
 		if ( 0 < SendingResult )
 		{
-			// Reset
-			SendingResult = -2;
-			mIsWaitingForTicketVerification = false;
 //TODO: 로비 만들기
 		}
 		else if ( -1 == SendingResult )
 		{
+#ifdef _DEBUG
 			// Exception
 			(*glpService).console( )->printFailure( FailureLevel::WARNING, "Sending the ticket to the main server failed.\n" );
+#endif
 			// Triggering
 			++mFrameCount_disconnection;
-			// Reset
-			SendingResult = -2;
-			mIsWaitingForTicketVerification = false;
-			if ( true == Thread2->joinable() )
-			{
-				Thread2->join( );
-			}
 		}
 		else if ( 0 == SendingResult )
 		{
+#ifdef _DEBUG
 			(*glpService).console( )->printFailure( FailureLevel::WARNING, "Ticket verification failed.\n" );
+#endif
 			// Triggering
 			++mFrameCount_disconnection;
-			// Reset
-			SendingResult = -2;
-			mIsWaitingForTicketVerification = false;
-			if ( true == Thread2->joinable( ) )
-			{
-				Thread2->join( );
-			}
 		}
+		// Reset
+		SendingResult = -2;
 	}
 	// Checking if a message has arrived or not every 1 second.
-	else if ( 1u*mFPS_ == mFrameCount_receivingInterval_ && true == HasReceived )
+	else if ( 1u*mFPS_ <= mFrameCount_receivingInterval_ && 0 < ReceivingResult )
 	{
-		// Reset
-		HasReceived = false;
 		char* const rcvBuf = mSocketToQueueServer->receivingBuffer( );
 		std::string_view strView( rcvBuf );
 		// When having received a ticket for the main server,
@@ -395,6 +299,13 @@ void ::scene::online::Lobby::update( std::list<sf::Event>& eventQueue )
 		{
 			// Reset
 			mFrameCount_receivingInterval_ = 0u;
+			IsReceiving = false;
+			CvUpdated.notify_one( );
+			if ( true == Thread->joinable() )
+			{
+				Thread->join( );
+			}
+
 			ASSERT_TRUE( -1 != mSocketToMainServer->bind(EndPoint::Any) );
 			if ( char mainServerIPAddress[ ] = "192.168.219.102";
 					-1 == mSocketToMainServer->connect(EndPoint(mainServerIPAddress, MAIN_SERVER_PORT)) )
@@ -411,27 +322,24 @@ void ::scene::online::Lobby::update( std::list<sf::Event>& eventQueue )
 				ASSERT_TRUE( std::string_view::npos != end );
 				std::string ticket( strView.substr(pos,end-pos) );
 				// Sending to the main server the ticket, which the main server will verify.
-				Thread2 = std::make_unique< std::thread >( &Send, std::ref(*mSocketToMainServer),
-														   &rcvBuf[pos], (int)(end-pos+1), 1000u );
-				// Reset
 				mIsWaitingForTicketVerification = true;
-				IsReceiving = false;
-				CvUpdated.notify_one( );
-				if ( true == Thread1->joinable() )
-				{
-					Thread1->join( );
-				}
+				Thread = std::make_unique< std::thread >( &Send, std::ref(*mSocketToMainServer),
+														   &rcvBuf[pos], (int)(end-pos+1), 1000u );
 			}
 		}
 		// When having received only the updated order(s) in the waiting queue line without any ticket for the main server,
 		else if ( const size_t pos = strView.find_last_of( TAG_ORDER_IN_QUEUE[0] );
 				  std::string_view::npos != pos && 0 == strView.substr(pos,TAG_ORDER_IN_QUEUE_LEN).compare(TAG_ORDER_IN_QUEUE) )
 		{
+			// Reset
+			mFrameCount_receivingInterval_ = 1u;
+
 			const size_t end = strView.find( TOKEN_SEPARATOR, pos );
 			ASSERT_TRUE( std::string_view::npos != end );
 			const size_t len = end - (pos+TAG_ORDER_IN_QUEUE_LEN);
 			const std::string updated( strView.substr(pos+TAG_ORDER_IN_QUEUE_LEN,len) );
 			mMyOrderInQueueLine = (int32_t)std::atoi( updated.data() );
+			// Resuming reception
 			CvUpdated.notify_one( );
 #ifdef _DEBUG
 			std::string msg( "My order in the queue line: " );
@@ -441,6 +349,7 @@ void ::scene::online::Lobby::update( std::list<sf::Event>& eventQueue )
 		else
 		{
 			(*glpService).console( )->printFailure( FailureLevel::FATAL, "Unknown message from the queue server." );
+			// Triggering
 			++mFrameCount_disconnection;
 		}
 	}
@@ -448,6 +357,12 @@ void ::scene::online::Lobby::update( std::list<sf::Event>& eventQueue )
 	{
 		mSetScene( ::scene::ID::MAIN_MENU );
 		return;
+	}
+	else if ( 0==ReceivingResult || ReceivingResult<0 && WSAETIMEDOUT != WSAGetLastError() )
+	{
+		(*glpService).console( )->printFailure( FailureLevel::FATAL, "Disconnected from the queue server." );
+		// Triggering
+		++mFrameCount_disconnection;
 	}
 }
 
@@ -459,12 +374,12 @@ void ::scene::online::Lobby::draw( )
 		// "Connecting"
 		mSprite.setTextureRect( sf::IntRect(0, 0, cast.x, cast.y) );
 	}
-	else if ( 1u*mFPS_ == mFrameCount_receivingInterval_ )
-	{
-		mFrameCount_receivingInterval_ = 1u;
+	//else if ( 1u*mFPS_ == mFrameCount_receivingInterval_ )
+	//{
+		//mFrameCount_receivingInterval_ = 1u;
 //TODO: 대기열 순서
-		///setTextureRect
-	}
+		//setTextureRect
+	//}
 	else if ( 0u != mFrameCount_receivingInterval_ )
 	{
 		++mFrameCount_receivingInterval_;

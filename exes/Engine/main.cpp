@@ -134,7 +134,7 @@ Main Loop
 	constexpr char IS_RUNNING[ ] = "isRunning";
 	constexpr HashedKey HK_IS_RUNNING = ::util::hash::Digest( IS_RUNNING, ::util::hash::Measure(IS_RUNNING) );
 	gService.vault().emplace( HK_IS_RUNNING, 1 );
-	while ( 1 == gService.vault( )[HK_IS_RUNNING] )
+	while ( 0 != gService.vault( )[HK_IS_RUNNING] )
 	{
 		std::list< sf::Event > subEventQueue;
 		sf::Event event;

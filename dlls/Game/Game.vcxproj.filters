@@ -156,5 +156,8 @@
     <Text Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Server\tag.txt">
       <Filter>리소스 파일</Filter>
     </Text>
+    <Text Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\commandList.txt">
+      <Filter>리소스 파일</Filter>
+    </Text>
   </ItemGroup>
 </Project>
