@@ -1,6 +1,4 @@
 #pragma once
-#include "Game.h"
-#include "../exes/Engine/Console.h"
 
 class ServiceLocatorMirror
 {
@@ -18,13 +16,13 @@ public:
 		IsInstantiated = false;
 	}
 
-	::ServiceLocator& operator*( )
+	IServiceLocator& operator*( )
 	{
 		return *mPtr;
 	}
 private:
 	static bool IsInstantiated;
-	::ServiceLocator* mPtr;
+	IServiceLocator* mPtr;
 };
 
 extern ::ServiceLocatorMirror glpService;

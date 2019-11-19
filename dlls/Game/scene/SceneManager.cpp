@@ -2,18 +2,18 @@
 #include "SceneManager.h"
 #include <Lib/ScriptLoader.h>
 #include "../ServiceLocatorMirror.h"
+#include "CommandList.h"
+#include "../VaultKeyList.h"
 #include "Intro.h"
 #include "MainMenu.h"
 #include "inPlay/InPlay.h"
-#include "online/Lobby.h"
+#include "online/Online.h"
 
 bool ::scene::SceneManager::IsInstantiated = false;
 namespace
 {
-	void _772060336( const std::string_view& )
+	void Exit( const std::string_view& )
 	{
-		constexpr char IS_RUNNING[ ] = "isRunning";
-		constexpr HashedKey HK_IS_RUNNING = ::util::hash::Digest( IS_RUNNING, ::util::hash::Measure(IS_RUNNING) );
 		(*glpService).vault( )[ HK_IS_RUNNING ] = 0;
 	}
 }
@@ -25,13 +25,10 @@ void ::scene::SceneManager::lastInit( sf::RenderWindow* const window )
 	//
 	// Registering commands
 	///
-	constexpr HashedKey HK_COMMAND2 = ::util::hash::Digest( "exit", 4 );
-	(*glpService).console( )->addCommand( HK_COMMAND2, &::_772060336 );
+	(*glpService).console( )->addCommand( CMD_EXIT, &::Exit );
 #ifdef _DEV
-	constexpr HashedKey HK_COMMAND0 = ::util::hash::Digest( "chscnto", 7 );
-	(*glpService).console( )->addCommand( HK_COMMAND0, std::bind(&SceneManager::_2436549370, this, std::placeholders::_1) );
-	constexpr HashedKey HK_COMMAND1 = ::util::hash::Digest( "refresh", 7 );
-	(*glpService).console( )->addCommand( HK_COMMAND1, std::bind(&SceneManager::_495146883, this, std::placeholders::_1) );
+	(*glpService).console( )->addCommand( CMD_CHANGE_SCENE, std::bind(&SceneManager::chscnto, this, std::placeholders::_1) );
+	(*glpService).console( )->addCommand( CMD_RELOAD, std::bind(&SceneManager::refresh, this, std::placeholders::_1) );
 
 	//
 	// Starting scene
@@ -41,12 +38,12 @@ void ::scene::SceneManager::lastInit( sf::RenderWindow* const window )
 	const char varName[] = "StartScene";
 	const auto result = ::util::script::LoadFromScript( scriptPathNName, varName );
 	// When there's the variable 'StartScene' in the script,
-	if ( const auto it = result.find( varName ); result.cend( ) != it )
+	if ( const auto it = result.find(varName); result.cend() != it )
 	{
 		// When its type is interger which can be cast to enum type,
-		if ( true == std::holds_alternative< int >( it->second ) )
+		if ( true == std::holds_alternative<int>(it->second) )
 		{
-			startScene = static_cast< ::scene::ID >( std::get< int >( it->second ) );
+			startScene = (::scene::ID)std::get< int >( it->second );
 		}
 		// Type Check Exception
 		else
@@ -67,20 +64,20 @@ void ::scene::SceneManager::setScene( const ::scene::ID nextScene )
 {
 	ASSERT_NOT_NULL( mWindow );
 
-	mCurrentScene.reset( nullptr );
 	switch ( nextScene )
 	{
 		case ::scene::ID::INTRO:
-			mCurrentScene = std::make_unique< ::scene::Intro >( *mWindow, mSetScene );
+			mCurrentScene = std::make_unique< ::scene::Intro >( *mWindow );
 			break;
 		case ::scene::ID::MAIN_MENU:
-			mCurrentScene = std::make_unique< ::scene::MainMenu >( *mWindow, mSetScene );
+			mCurrentScene = std::make_unique< ::scene::MainMenu >( *mWindow );
 			break;
 		case ::scene::ID::SINGLE_PLAY:
-			mCurrentScene = std::make_unique< ::scene::inPlay::InPlay >( *mWindow, mSetScene );
+			mCurrentScene = std::make_unique< ::scene::inPlay::InPlay >( *mWindow );
 			break;
+//TODO:싱글 플레이 하위 씬들도 여기에 추가.
 		case ::scene::ID::ONLINE_BATTLE:
-			mCurrentScene = std::make_unique< ::scene::online::Lobby >( *mWindow, mSetScene );
+			mCurrentScene = std::make_unique< ::scene::online::Online >( *mWindow );
 			break;
 		default:
 #ifdef _DEBUG
@@ -92,11 +89,17 @@ void ::scene::SceneManager::setScene( const ::scene::ID nextScene )
 }
 
 #ifdef _DEV
-void ::scene::SceneManager::_2436549370( const std::string_view& args )
+void ::scene::SceneManager::chscnto( const std::string_view& args )
 {
+	if ( args[0] < '0' || '9' < args[0] )
+	{
+		// Exception
+		(*glpService).console( )->printFailure( FailureLevel::WARNING, "Invalid Scene ID" );
+		return;
+	}
 	const ::scene::ID nextScene = (::scene::ID)std::atoi( args.data() );
 	// Exception: When the current scene id equals with the next scene id,
-	if ( nextScene == mCurrentScene->currentScene( ) )
+	if ( nextScene == mCurrentScene->currentScene() )
 	{
 		(*glpService).console( )->print( "We are already where you want to go." );
 		return;
@@ -104,7 +107,7 @@ void ::scene::SceneManager::_2436549370( const std::string_view& args )
 	setScene( nextScene );
 }
 
-void ::scene::SceneManager::_495146883( const std::string_view& )
+void ::scene::SceneManager::refresh( const std::string_view& )
 {
 	mWindow->clear( );
 	mCurrentScene->loadResources( );

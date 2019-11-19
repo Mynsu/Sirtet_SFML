@@ -1,19 +1,8 @@
 #pragma once
 #include "Stage.h"
-#include "../Constant.h"
 
 namespace model
 {
-	enum class Rotation
-	{
-		A,
-		B,
-		C,
-		D,
-
-		NULL_MAX,
-	};
-
 	// 4 x 4 == BLOCKS_A_TETRIMINO x BLOCKS_A_TETRIMINO
 	// e.g. 0b1000'1110'0000'0000 ==
 	//		1000
@@ -38,7 +27,7 @@ namespace model
 			mBlockShape.setFillColor( arg.mBlockShape.getFillColor( ) );
 			mBlockShape.setOutlineThickness( 1.f );
 			mBlockShape.setOutlineColor( sf::Color::Black );
-			for ( uint8_t i = 0u; i != static_cast< uint8_t >( Rotation::NULL_MAX ); ++i )
+			for ( uint8_t i = 0u; i != (uint8_t)::model::tetrimino::Rotation::NULL_MAX; ++i )
 			{
 				mPossibleRotations[ i ] = arg.mPossibleRotations[ i ];
 			}
@@ -49,7 +38,7 @@ namespace model
 			mRotationID = arg.mRotationID;
 			mPosition = arg.mPosition;
 			mBlockShape.setFillColor( arg.mBlockShape.getFillColor( ) );
-			for ( uint8_t i = 0u; i != static_cast< uint8_t >( Rotation::NULL_MAX ); ++i )
+			for ( uint8_t i = 0u; i != (uint8_t)::model::tetrimino::Rotation::NULL_MAX; ++i )
 			{
 				mPossibleRotations[ i ] = arg.mPossibleRotations[ i ];
 			}
@@ -61,11 +50,11 @@ namespace model
 		inline void draw( sf::RenderWindow& window )
 		{
 			const uint8_t area = ::model::tetrimino::BLOCKS_A_TETRIMINO*::model::tetrimino::BLOCKS_A_TETRIMINO;
-			// NOTE: The failure regarding OpenGL occurs.
+			// NOTE: The OpenGL failure occurs.
 			///#pragma omp parallel
 			for ( uint8_t i = 0; i != area; ++i )
 			{
-				if ( mPossibleRotations[static_cast<int>(mRotationID)] & (0x1u<<(area-i-1u)) )
+				if ( mPossibleRotations[(int)mRotationID] & (0x1u<<(area-i-1u)) )
 				{
 					// Coordinate transformation
 					const sf::Vector2< int8_t > localPos( i%model::tetrimino::BLOCKS_A_TETRIMINO, i/model::tetrimino::BLOCKS_A_TETRIMINO );
@@ -128,6 +117,12 @@ namespace model
 		{
 			mIsFallingDown = isFallingDown;
 		}
+		inline void setInfo( const ::model::tetrimino::Info& info )
+		{
+			mPosition = info.position;
+			setType( info.type );
+			///mRotationID = info.rotationID;
+		}
 		inline void setOrigin( const sf::Vector2f& origin )
 		{
 			mOrigin_ = origin;
@@ -144,16 +139,18 @@ namespace model
 		}
 	private:
 		bool hasCollidedWith( const std::array< std::array<Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid ) const;
+		void setType( const ::model::tetrimino::Type type );
+		
 		bool mIsFallingDown;
 		// X and y on global coordinate.
 		// Unit: Grid.
 		sf::Vector2< int8_t > mPosition;
 		::model::tetrimino::Type mType;
-		Rotation mRotationID;
+		::model::tetrimino::Rotation mRotationID;
 		float mBlockSize_;
 		sf::Vector2f mOrigin_;
 		sf::RectangleShape mBlockShape;
-		LocalSpace mPossibleRotations[ static_cast<int>(Rotation::NULL_MAX) ];
-		static sf::Vector2<int8_t> Test[ static_cast<int>(Rotation::NULL_MAX) ][ 4 ];
+		LocalSpace mPossibleRotations[ (int)::model::tetrimino::Rotation::NULL_MAX ];
+		static sf::Vector2<int8_t> Test[ (int)::model::tetrimino::Rotation::NULL_MAX ][ 4 ];
 	};
 }

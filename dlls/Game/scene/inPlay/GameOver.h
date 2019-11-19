@@ -7,11 +7,11 @@ namespace scene::inPlay
 	{
 	public:
 		GameOver( ) = delete;
-		GameOver( sf::RenderWindow& window, sf::Drawable& shapeOrSprite );
+		GameOver( sf::RenderWindow& window, sf::Drawable& shapeOrSprite, std::unique_ptr<::scene::inPlay::IScene>& overlappedScene );
 		~GameOver( ) = default;
 
 		void loadResources( ) override;
-		int8_t update( ::scene::inPlay::IScene** const ignored, std::list< sf::Event >& ignored_eventQueue ) override;
+		::scene::inPlay::ID update( std::list< sf::Event >& ignored_eventQueue ) override;
 		void draw( ) override;
 	private:
 		const uint8_t TARGET_ALPHA;

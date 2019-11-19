@@ -3,16 +3,23 @@
 #include "../../ServiceLocatorMirror.h"
 #include "GameOver.h"
 #include "Assertion.h"
+#include "../VaultKeyList.h"
 
-::scene::inPlay::Playing::Playing( sf::RenderWindow& window, sf::Drawable& shapeOrSprite )
-	: mIsESCPressed( false ), mRowCleared( 0u ),
+const uint8_t FALLING_DIFF = 3u;
+
+::scene::inPlay::Playing::Playing( sf::RenderWindow& window,
+								   sf::Drawable& shapeOrSprite,
+								   const std::unique_ptr<::scene::inPlay::IScene>& overlappedScene )
+	: mRowCleared( 0u ),
 	mFrameCount_fallDown( 0u ), mFrameCount_clearingInterval_( 0u ), mFrameCount_clearingVfx_( 0u ), mFrameCount_gameOver( 0u ),
 	mTempo( 0.75f ),
-	mWindow_( window ), mBackgroundRect_( static_cast<sf::RectangleShape&>(shapeOrSprite) ),
+	mWindow_( window ), mBackgroundRect_( (sf::RectangleShape&)shapeOrSprite ),
+	mOverlappedScene_( overlappedScene ),
 	mCurrentTetrimino( ::model::Tetrimino::Spawn( ) ), mPlayerStage( window ), mVfxCombo( window )
 {
-	const sf::Color BACKGROUND_COLOR( 0x29cdb5fau );
-	mBackgroundRect_.setFillColor( BACKGROUND_COLOR );
+//TODO: 스크립트로 옮기기
+	const sf::Color CYAN( 0x29cdb5fau );
+	mBackgroundRect_.setFillColor( CYAN );
 
 	mNextTetriminos.emplace( ::model::Tetrimino::Spawn( ) );
 	mNextTetriminos.emplace( ::model::Tetrimino::Spawn( ) );
@@ -30,7 +37,7 @@ void ::scene::inPlay::Playing::loadResources( )
 	sf::Vector2f panelPos( 130.f, 0.f );
 	float cellSize = 30.f;
 	sf::Vector2i vfxSize( 256, 256 );
-	sf::Vector2f nextTetPanelPos( 500.f, 100.f );
+	sf::Vector2f nextTetPanelPos( 525.f, 70.f );
 	bool isDefault = true;
 
 	lua_State* lua = luaL_newstate( );
@@ -47,9 +54,9 @@ void ::scene::inPlay::Playing::loadResources( )
 		const int TOP_IDX = -1;
 		const std::string tableName0( "PlayerPanel" );
 		lua_getglobal( lua, tableName0.data( ) );
-		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
+			// Type Check Exception
 			(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName0.data(), scriptPathNName );
 		}
 		else
@@ -61,7 +68,7 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				panelPos.x = static_cast<float>(lua_tonumber(lua, TOP_IDX));
+				panelPos.x = (float)lua_tonumber(lua, TOP_IDX);
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
@@ -78,7 +85,7 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				panelPos.y = static_cast<float>(lua_tonumber(lua, TOP_IDX));
+				panelPos.y = (float)lua_tonumber(lua, TOP_IDX);
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
@@ -95,7 +102,7 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				cellSize = static_cast<float>(lua_tonumber(lua, TOP_IDX));
+				cellSize = (float)lua_tonumber(lua, TOP_IDX);
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
@@ -149,7 +156,7 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				vfxSize.x = static_cast<int>(lua_tointeger(lua, TOP_IDX));
+				vfxSize.x = (int)lua_tointeger(lua, TOP_IDX);
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
@@ -166,7 +173,7 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				vfxSize.y = static_cast<int>(lua_tointeger(lua, TOP_IDX));
+				vfxSize.y = (int)lua_tointeger(lua, TOP_IDX);
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
@@ -193,7 +200,7 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				nextTetPanelPos.x = static_cast<float>(lua_tonumber(lua, TOP_IDX));
+				nextTetPanelPos.x = (float)lua_tonumber(lua, TOP_IDX);
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
@@ -210,7 +217,7 @@ void ::scene::inPlay::Playing::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				nextTetPanelPos.y = static_cast<float>(lua_tonumber(lua, TOP_IDX));
+				nextTetPanelPos.y = (float)lua_tonumber(lua, TOP_IDX);
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
@@ -250,38 +257,37 @@ void ::scene::inPlay::Playing::loadResources( )
 	mCellSize_ = cellSize;
 }
 
-int8_t scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene, std::list< sf::Event >& eventQueue )
+::scene::inPlay::ID scene::inPlay::Playing::update( std::list< sf::Event >& eventQueue )
 {
-	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
-	const uint32_t fps = static_cast<uint32_t>((*glpService).vault().at( HK_FORE_FPS ));
+	const uint32_t fps = static_cast< uint32_t >( (*glpService).vault()[HK_FORE_FPS] );
 	if ( fps < mFrameCount_gameOver )
 	{
-		*nextScene = new ::scene::inPlay::GameOver( mWindow_, mBackgroundRect_ );
-		return 0;
+		return ::scene::inPlay::ID::GAME_OVER;
 	}
 	else if ( 0u != mFrameCount_gameOver )
 	{
-		return 0;
+		return ::scene::inPlay::ID::AS_IS;
 	}
+
+	::scene::inPlay::ID retVal = ::scene::inPlay::ID::AS_IS;
 	bool hasCollidedAtThisFrame = false;
 	if ( true == mCurrentTetrimino.isFallingDown( ) )
 	{
-		for ( uint8_t i = 0u; i != 3u; ++i )
+		for ( uint8_t i = 0u; i != FALLING_DIFF; ++i )
 		{
-			if ( hasCollidedAtThisFrame = mCurrentTetrimino.down( mPlayerStage.grid( ) ); true == hasCollidedAtThisFrame )
+			if ( hasCollidedAtThisFrame = mCurrentTetrimino.down(mPlayerStage.grid()); true == hasCollidedAtThisFrame )
 			{
 				mCurrentTetrimino.fallDown( false );
 				// NOTE: Break the loop and stop stuff in the 1st if-scope immediately.
 				goto last;
 			}
 		}
-		return 0;
+		return ::scene::inPlay::ID::AS_IS;
 	}
 	else
 	{
 		for ( auto it = eventQueue.cbegin(); eventQueue.cend() != it; )
 		{
-			bool isAlreadyNext = false;
 			if ( sf::Event::KeyPressed == it->type )
 			{
 				switch ( it->key.code )
@@ -294,31 +300,40 @@ int8_t scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene
 					case sf::Keyboard::Down:
 						hasCollidedAtThisFrame = mCurrentTetrimino.down( mPlayerStage.grid( ) );
 						mFrameCount_fallDown = 0u;
+						it = eventQueue.erase( it );
 						break;
 					case sf::Keyboard::Left:
 						mCurrentTetrimino.tryMoveLeft( mPlayerStage.grid( ) );
+						it = eventQueue.erase( it );
 						break;
 					case sf::Keyboard::Right:
 						mCurrentTetrimino.tryMoveRight( mPlayerStage.grid( ) );
+						it = eventQueue.erase( it );
 						break;
 					case sf::Keyboard::LShift:
 						[[ fallthrough ]];
 					case sf::Keyboard::Up:
 						mCurrentTetrimino.tryRotate( mPlayerStage.grid( ) );
+						it = eventQueue.erase( it );
 						break;
 					case sf::Keyboard::Escape:
-						if ( false == mIsESCPressed )
+						if ( nullptr == mOverlappedScene_ ||
+							typeid(*mOverlappedScene_) != typeid(::scene::inPlay::Assertion) )
 						{
-							*nextScene = new ::scene::inPlay::Assertion( mWindow_, &mIsESCPressed );
+							retVal = ::scene::inPlay::ID::ASSERTION;
 							it = eventQueue.erase( it );
-							isAlreadyNext = true;
+						}
+						else
+						{
+							++it;
 						}
 						break;
 					default:
+						++it;
 						break;
 				}
 			}
-			if ( false == isAlreadyNext )
+			else
 			{
 				++it;
 			}
@@ -380,7 +395,7 @@ int8_t scene::inPlay::Playing::update( ::scene::inPlay::IScene** const nextScene
 	
 	//궁금: 숨기기, 반대로 움직이기, 일렁이기, 대기열 가리기 같은 아이템 구현하는 게 과연 좋을까?
 
-	return 0;
+	return retVal;
 }
 
 void ::scene::inPlay::Playing::draw( )
@@ -420,8 +435,7 @@ void ::scene::inPlay::Playing::draw( )
 		}
 	}
 
-	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
-	const uint32_t fps = static_cast<uint32_t>((*glpService).vault( )[ HK_FORE_FPS ]);
+	const uint32_t fps = static_cast< uint32_t >( (*glpService).vault()[HK_FORE_FPS] );
 	if ( fps <= mFrameCount_clearingVfx_ )
 	{
 		mFrameCount_clearingVfx_ = 0u;

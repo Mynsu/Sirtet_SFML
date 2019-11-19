@@ -43,6 +43,12 @@
     <Filter Include="소스 파일\scene\online">
       <UniqueIdentifier>{e768cd50-acf1-4063-ac6d-52976f2964be}</UniqueIdentifier>
     </Filter>
+    <Filter Include="헤더 파일\ui">
+      <UniqueIdentifier>{baf5caa3-9942-41ad-abb1-48184cd33740}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\ui">
+      <UniqueIdentifier>{ec317a9e-d9d4-42d9-8294-64667b16a2a3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\Game.cpp">
@@ -84,17 +90,26 @@
     <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\Assertion.cpp">
       <Filter>소스 파일\scene\inPlay</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\online\Lobby.cpp">
-      <Filter>소스 파일\scene\online</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\pch.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="scene\online\Online.cpp">
+      <Filter>소스 파일\scene\online</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\online\Waiting.cpp">
+      <Filter>소스 파일\scene\online</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\ui\StageView.cpp">
+      <Filter>소스 파일\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="scene\online\InLobby.cpp">
+      <Filter>소스 파일\scene\online</Filter>
+    </ClCompile>
+    <ClCompile Include="scene\online\InRoom.cpp">
+      <Filter>소스 파일\scene\online</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\Game.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\Intro.h">
       <Filter>헤더 파일\scene</Filter>
     </ClInclude>
@@ -128,9 +143,6 @@
     <ClInclude Include="model\Stage.h">
       <Filter>헤더 파일\model</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\Constant.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\vfx\Combo.h">
       <Filter>헤더 파일\vfx</Filter>
     </ClInclude>
@@ -140,24 +152,37 @@
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\Assertion.h">
       <Filter>헤더 파일\scene\inPlay</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\online\Lobby.h">
-      <Filter>헤더 파일\scene\online</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\pch.h">
       <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\CommandList.h">
+      <Filter>헤더 파일\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="scene\online\Online.h">
+      <Filter>헤더 파일\scene\online</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\online\IScene.h">
+      <Filter>헤더 파일\scene\online</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\VaultKeyList.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\online\Waiting.h">
+      <Filter>헤더 파일\scene\online</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\ui\StageView.h">
+      <Filter>헤더 파일\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="scene\online\InLobby.h">
+      <Filter>헤더 파일\scene\online</Filter>
+    </ClInclude>
+    <ClInclude Include="scene\online\InRoom.h">
+      <Filter>헤더 파일\scene\online</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\Game.def">
       <Filter>소스 파일</Filter>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Server\tag.txt">
-      <Filter>리소스 파일</Filter>
-    </Text>
-    <Text Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\commandList.txt">
-      <Filter>리소스 파일</Filter>
-    </Text>
   </ItemGroup>
 </Project>

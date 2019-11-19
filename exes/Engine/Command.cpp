@@ -44,6 +44,6 @@ void Command::processCommand( const std::string& commandLine )
 	// Exception: Otherwise,
 	else
 	{
-		gService.console()->printFailure( FailureLevel::WARNING, "Command '" + commandLine + "' isn't coined." );
+		gService._console().printFailure( FailureLevel::WARNING, "Command '" + commandLine + "' isn't coined." );
 	}
 }

@@ -2,14 +2,17 @@
 #include "GameOver.h"
 #include <Lib/ScriptLoader.h>
 #include "../../ServiceLocatorMirror.h"
+#include "../VaultKeyList.h"
 
-scene::inPlay::GameOver::GameOver( sf::RenderWindow& window, sf::Drawable& shapeOrSprite )
+scene::inPlay::GameOver::GameOver( sf::RenderWindow& window, sf::Drawable& shapeOrSprite,
+								   std::unique_ptr<::scene::inPlay::IScene>& overlappedScene )
 	: TARGET_ALPHA( 0x7fu ), mFade( 0xffu ), mFrameCount( 0u ),
-	mWindow_( window ), mBackgroundRect_( static_cast<sf::RectangleShape&>(shapeOrSprite) )
+	mWindow_( window ), mBackgroundRect_( (sf::RectangleShape&)shapeOrSprite )
 {
+	overlappedScene.reset( );
+
 	loadResources( );
 
-	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
 	mFPS_ = static_cast<uint32_t>((*glpService).vault( )[ HK_FORE_FPS ]);
 }
 
@@ -74,7 +77,7 @@ void scene::inPlay::GameOver::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				const float temp = static_cast<float>(lua_tointeger( lua, TOP_IDX ));
+				const float temp = (float)lua_tointeger( lua, TOP_IDX );
 				// Range Check Exception
 				if ( 0 > temp )
 				{
@@ -103,7 +106,7 @@ void scene::inPlay::GameOver::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				const float temp = static_cast<float>(lua_tointeger(lua, TOP_IDX));
+				const float temp = (float)lua_tointeger(lua, TOP_IDX);
 				// Range Check Exception
 				if ( 0 > temp )
 				{
@@ -152,19 +155,19 @@ void scene::inPlay::GameOver::loadResources( )
 	mSprite.setPosition( sf::Vector2f(mWindow_.getSize())*0.5f );
 }
 
-int8_t scene::inPlay::GameOver::update( ::scene::inPlay::IScene** const, std::list<sf::Event>& )
+::scene::inPlay::ID scene::inPlay::GameOver::update( std::list<sf::Event>& )
 {
-	int8_t retVal = 0;
+	::scene::inPlay::ID retVal = ::scene::inPlay::ID::AS_IS;
 
 	// When mFade reaches the target,
-	if ( TARGET_ALPHA == mFade )
+	if ( mFade <= TARGET_ALPHA )
 	{
 		// Frame counting starts.
 		++mFrameCount;
 		// 3 seconds after,
 		if ( 3*mFPS_ == mFrameCount )
 		{
-			retVal = 1;
+			retVal = ::scene::inPlay::ID::MAIN_MENU;
 		}
 	}
 
@@ -174,15 +177,16 @@ int8_t scene::inPlay::GameOver::update( ::scene::inPlay::IScene** const, std::li
 void scene::inPlay::GameOver::draw( )
 {
 	// Cyan
-	if ( TARGET_ALPHA != mFade )
+	if ( TARGET_ALPHA < mFade )
 	{
 		const uint32_t BACKGROUND_RGB = 0x29cdb500u;
 		mFade -= 2u;
 		mBackgroundRect_.setFillColor( sf::Color(BACKGROUND_RGB | mFade) );
+		mWindow_.draw( mBackgroundRect_ );
 	}
-	mWindow_.draw( mBackgroundRect_ );
-	if ( TARGET_ALPHA == mFade )
+	else
 	{
+		mWindow_.draw( mBackgroundRect_ );
 		mWindow_.draw( mSprite );
 	}
 }

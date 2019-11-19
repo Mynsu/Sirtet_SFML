@@ -15,9 +15,11 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 #include <lua.hpp>
-#include <Lib/Endian.h>
 #include <Lib/Hash.h>
 #include <Lib/Socket.h>
+#include <Lib/IServiceLocator.h>
+#include <Lib/IGame.h>
+#include <Lib/IConsole.h>
 
 #ifdef _DEBUG
 #define ASSERT_FALSE( x ) if ( false != (x) ) __debugbreak( )
@@ -29,21 +31,21 @@
 if ( false != ( x ) ) \
 { \
 	std::string msg( "ASSERT_FALSE disproved. (" ); \
-	gService.console()->printFailure( FailureLevel::FATAL, \
-											msg + __FILE__ + ":" + std::to_string( __LINE__ ) + ")" ); \
+	gService._console()->printFailure( FailureLevel::FATAL, \
+											msg + __FILE__ + ':' + std::to_string( __LINE__ ) + ')' ); \
 }
 #define ASSERT_TRUE( x ) \
 if ( true != ( x ) ) \
 { \
 	std::string msg( "ASSERT_TRUE disproved. (" ); \
-	gService.console()->printFailure( FailureLevel::FATAL, \
-											msg + __FILE__ + ":" + std::to_string( __LINE__ ) + ")" ); \
+	gService._console()->printFailure( FailureLevel::FATAL, \
+											msg + __FILE__ + ':' + std::to_string( __LINE__ ) + ')' ); \
 }
 #define ASSERT_NOT_NULL( x ) \
 if ( nullptr == (x) || NULL == (x) ) \
 { \
 	std::string msg( "ASSERT_NOT_NULL disproved. (" ); \
-	gService.console()->printFailure( FailureLevel::FATAL, \
-											msg + __FILE__ + ":" + std::to_string( __LINE__ ) + ")" ); \
+	gService._console()->printFailure( FailureLevel::FATAL, \
+											msg + __FILE__ + ':' + std::to_string( __LINE__ ) + ')' ); \
 }
 #endif

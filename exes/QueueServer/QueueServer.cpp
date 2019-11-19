@@ -1,23 +1,16 @@
 ﻿#include "pch.h"
 
 //TODO: 소켓 핸들 랜덤이 아닌데?
-
-//DOING: 로직
+//TODO: Server.cpp랑 동기화, RDBMS로부터 ID와 Password 매칭
 
 const uint32_t CAPACITY = 10u;
 // Capacity in the main server defaults to 10000u.
 // You can resize it indirectly here without re-compliing or rescaling the main server.
 // !IMPORTANT: This must be less than the real capacity of the server.
 const uint32_t MAIN_SERVER_CAPACITY = 2u;
-constexpr char TAG_INVITATION[ ] = "inv:";
-constexpr uint8_t TAG_INVITATION_LEN = ::util::hash::Measure( TAG_INVITATION );
 const Dword VERSION = 8191015;
-// Recommended to be renewed periodically for security.
-const int ADDITIVE = 1246;
 constexpr HashedKey ENCRYPTED_INVITATION = ::util::hash::Digest(VERSION+ADDITIVE);
-constexpr char TAG_TICKET[ ] = "t:";
-constexpr char TAG_ORDER_IN_QUEUE[ ] = "qL:";
-const uint16_t LISTENER_PORT = 10000u;
+const uint16_t LISTENER_PORT = QUEUE_SERVER_PORT;
 
 volatile bool IsWorking = true;
 void ProcessSignal( int signal )
@@ -395,7 +388,7 @@ int main( )
 #ifdef _DEBUG
 						if ( true == clientSocket.hasTicket() )
 						{
-							std::cout << "A client " << clientIdx << "  left with a ticket. (Now " << CAPACITY-clientS.size( ) << '/' << CAPACITY << " connections.)\n";
+							std::cout << "A client " << clientIdx << " left with a ticket. (Now " << CAPACITY-clientS.size( ) << '/' << CAPACITY << " connections.)\n";
 						}
 						else
 #endif
@@ -470,7 +463,8 @@ int main( )
 							// NOTE: Assuming that the message only comes from a new connection.
 							// NOTE: Assuming that there're no impurities but an invitation in the message.
 							if ( char* const rcvBuf = clientSocket.receivingBuffer( );
-								ENCRYPTED_INVITATION == static_cast<HashedKey>(std::atoll(&rcvBuf[TAG_INVITATION_LEN])) )
+								///ENCRYPTED_INVITATION == static_cast<HashedKey>(std::atoll(&rcvBuf[TAG_INVITATION_LEN])) )
+								ENCRYPTED_INVITATION == static_cast<HashedKey>(std::atoll(rcvBuf)) )
 							{
 								queue.emplace_back( clientIdx );
 #ifdef _DEBUG
@@ -557,7 +551,7 @@ int main( )
 				postmanToMainServer.pack( ticket );
 				--roomInMainServer;
 #ifdef _DEBUG
-				std::cout << "Sending a ticket " << ticket.data( ) << " to the main server, too.\n";
+				std::cout << "Sending a ticket " << ticket.data( ) << " to the main server succeeded, too.\n";
 #endif
 			}
 			it = queue.erase( it );

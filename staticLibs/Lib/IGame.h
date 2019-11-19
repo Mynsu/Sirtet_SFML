@@ -1,14 +1,16 @@
 ////
 // Game API
 ////
-// If you want to get the callback function to load in .exe,
-// please look at this .h file, not the others.
-////
 
 #pragma once
-#include "../exes/Engine/ServiceLocator.h"
+#include "IServiceLocator.h"
 
-struct EngineComponents;
+// Consists of pointers.
+struct EngineComponents
+{
+	IServiceLocator* service;
+	sf::RenderWindow* window;
+};
 
 class IGame
 {
@@ -28,13 +30,6 @@ private:
 	virtual void setWindow( sf::RenderWindow* const window ) = 0;
 };
 
-// Consists of pointers.
-struct EngineComponents
-{
-	ServiceLocator* service;
-	sf::RenderWindow* window;
-};
-
 // Just alias.
 using Game = IGame;
 // Consists of pointers.
@@ -43,4 +38,4 @@ struct GameComponents
 	Game* game;
 };
 
-using GetGameAPI_t = const GameComponents (*)( const EngineComponents );
+using GetGameAPI_t = const GameComponents( *)( const EngineComponents );

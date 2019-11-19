@@ -60,21 +60,21 @@ int Socket::connect( const EndPoint& endpoint )
 
 int Socket::receiveBlock( )
 {
-	return ::recv(mhSocket, mRcvBuffer, (int)MAX_RCV_BUF_LEN, 0 );
+	return ::recv(mhSocket, mRcvBuffer, (int)RCV_BUF_SIZ, 0 );
 }
 
-int Socket::sendBlock( char* const data, const int length, const char separator )
+int Socket::sendBlock( char* const data, const int size, const char separator )
 {
 	int res = -2;
-	if ( separator != data[length-1u] )
+	if ( separator != data[size-1u] )
 	{
 		std::string _data( data );
 		_data += separator;
-		res = ::send( mhSocket, _data.data(), length+1u, 0 );
+		res = ::send( mhSocket, _data.data(), size+1u, 0 );
 	}
 	else
 	{
-		res = ::send( mhSocket, data, length, 0 );
+		res = ::send( mhSocket, data, size, 0 );
 	}
 	return res;
 }

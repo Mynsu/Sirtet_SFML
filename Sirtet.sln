@@ -27,6 +27,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Server", "exes\Server\Serve
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QueueServer", "exes\QueueServer\QueueServer.vcxproj", "{14E4043E-FC53-493C-BC2F-0484BDC75787}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C0995A75-C656-430E-A388-2CF1677FDB48} = {C0995A75-C656-430E-A388-2CF1677FDB48}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

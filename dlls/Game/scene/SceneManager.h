@@ -13,7 +13,7 @@ namespace scene
 		// NOTE: Called in compile-time, thus another initialization should be done.
 		// 'lastInit(...)' will be called in 'GetGameAPI(...)' in 'Game.cpp.' in runtime.
 		inline SceneManager( )
-			: mWindow( nullptr ), mSetScene( std::bind( &::scene::SceneManager::setScene, this, std::placeholders::_1 ) )
+			: mWindow( nullptr )
 		{
 			ASSERT_FALSE( IsInstantiated );
 			IsInstantiated = true;
@@ -29,7 +29,11 @@ namespace scene
 
 		inline void update( std::list< sf::Event >& eventQueue )
 		{
-			mCurrentScene->update( eventQueue );
+			const ::scene::ID nextSceneID = mCurrentScene->update( eventQueue );
+			if ( ::scene::ID::AS_IS != nextSceneID )
+			{
+				setScene( nextSceneID );
+			}
 		}
 		inline void draw( )
 		{
@@ -38,13 +42,10 @@ namespace scene
 	private:
 		void setScene( const ::scene::ID nextSceneID );
 #ifdef _DEV
-		// Pseudo-unnamed function
-		void _2436549370( const std::string_view& args );
-		// Pseudo-unnamed function
-		void _495146883( const std::string_view& );
+		void chscnto( const std::string_view& args );
+		void refresh( const std::string_view& );
 #endif
 		sf::RenderWindow* mWindow;
-		const SetScene_t mSetScene;
 		std::unique_ptr< ::scene::IScene > mCurrentScene;
 	};
 }

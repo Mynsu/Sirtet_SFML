@@ -3,13 +3,13 @@
 #include "../../ServiceLocatorMirror.h"
 #include <Lib/ScriptLoader.h>
 #include "Playing.h"
+#include "../VaultKeyList.h"
 
 ::scene::inPlay::Ready::Ready( sf::RenderWindow& window, sf::Drawable& shapeOrSprite )
 	: mFPS_( 60u ), mFrameCount( mFPS_ * 3 ),
 	mWindow_( window ), mBackgroundRect_( static_cast< sf::RectangleShape& >( shapeOrSprite ) ),
 	mSpriteClipSize_( 256.f, 256.f )
 {
-	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
 	if ( const auto it = (*glpService).vault().find(HK_FORE_FPS); (*glpService).vault().cend() != it )
 	{
 		mFPS_ = it->second;
@@ -84,7 +84,7 @@ void ::scene::inPlay::Ready::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				const float temp = static_cast<float>(lua_tointeger(lua, TOP_IDX));
+				const float temp = (float)lua_tointeger(lua, TOP_IDX);
 				// Range Check Exception
 				if ( 0 > temp )
 				{
@@ -113,7 +113,7 @@ void ::scene::inPlay::Ready::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				const float temp = static_cast<float>(lua_tointeger(lua, TOP_IDX));
+				const float temp = (float)lua_tointeger(lua, TOP_IDX);
 				// Range Check Exception
 				if ( 0 > temp )
 				{
@@ -160,18 +160,17 @@ void ::scene::inPlay::Ready::loadResources( )
 	mSprite.setPosition( (sf::Vector2f(mWindow_.getSize())-mSpriteClipSize_)*0.5f );
 }
 
-int8_t scene::inPlay::Ready::update( ::scene::inPlay::IScene** const nextScene, std::list< sf::Event >& )
+::scene::inPlay::ID scene::inPlay::Ready::update( std::list< sf::Event >& )
 {
-	int8_t retVal = 0;
 	// NOTE: moved into 'draw( ).'
 	///--mFrameCount;
 
 	if ( 0 == mFrameCount )
 	{
-		*nextScene = new ::scene::inPlay::Playing( mWindow_, mBackgroundRect_ );
+		return ::scene::inPlay::ID::PLAYING;
 	}
 
-	return retVal;
+	return ::scene::inPlay::ID::AS_IS;
 }
 
 void ::scene::inPlay::Ready::draw( )

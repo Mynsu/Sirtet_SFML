@@ -29,7 +29,7 @@ namespace util::script
 #ifdef GAME_EXPORTS
 			(*glpService).console()->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
 #else
-			gService.console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
+			gService._console( ).printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
 #endif
 
 #ifdef _DEBUG
@@ -71,7 +71,7 @@ namespace util::script
 							(*glpService).console( )->printFailure( FailureLevel::FATAL,
 																			msg + it + scriptPathNName );
 #else
-							gService.console( )->printFailure( FailureLevel::FATAL,
+							gService._console( ).printFailure( FailureLevel::FATAL,
 																	  msg + it + scriptPathNName );
 #endif
 
@@ -95,7 +95,7 @@ namespace util::script
 							(*glpService).console( )->printFailure( FailureLevel::FATAL,
 																			msg + it + scriptPathNName );
 #else
-							gService.console( )->printFailure( FailureLevel::FATAL,
+							gService._console( ).printFailure( FailureLevel::FATAL,
 																	  msg + it + scriptPathNName );
 #endif
 

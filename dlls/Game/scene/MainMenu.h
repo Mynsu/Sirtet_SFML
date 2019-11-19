@@ -7,13 +7,15 @@ namespace scene
 	{
 	public:
 		MainMenu( ) = delete;
-		MainMenu( sf::RenderWindow& window, const SetScene_t& setScene );
+		MainMenu( sf::RenderWindow& window );
 		~MainMenu( );
 
 		void loadResources( ) override;
-		void update( std::list< sf::Event >& eventQueue ) override;
+		::scene::ID update( std::list< sf::Event >& eventQueue ) override;
 		void draw( ) override;
+#ifdef _DEV
 		::scene::ID currentScene( ) const override;
+#endif
 	private:
 		void touchButton( );
 
@@ -21,8 +23,7 @@ namespace scene
 		// That's the difference from the class filled with static functions, or on singleton pattern and the like.
 		static bool IsInstantiated;
 		sf::RenderWindow& mWindow_;
-		const SetScene_t& mSetScene;
-		::scene::ID mOnIndicator;
+		::scene::ID mNextSceneID;
 		sf::Vector2f mSpriteClipSize_;
 		sf::Vector2f mLogoMargin_;
 		sf::Vector2f mButtonSinglePosition_, mButtonOnlinePosition_;

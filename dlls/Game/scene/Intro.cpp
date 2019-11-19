@@ -2,21 +2,19 @@
 #include "Intro.h"
 #include <Lib/ScriptLoader.h>
 #include "../ServiceLocatorMirror.h"
+#include "../VaultKeyList.h"
 
 bool ::scene::Intro::IsInstantiated = false;
 
-::scene::Intro::Intro( sf::RenderWindow& window, const SetScene_t& setScene )
+::scene::Intro::Intro( sf::RenderWindow& window )
 	: mDuration( 2u ),
 	mAlpha_( 0x00u ),
-	mFrameCount( 0u ),
-	mFPS_( 60u ),
+	mFrameCount( 0u ),	mFPS_( 60u ),
 	mWindow_( window ),
-	mSetScene( setScene ),
 	mNextScene_( ::scene::ID::MAIN_MENU )
 {
 	ASSERT_FALSE( IsInstantiated );
 
-	constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
 	if ( const auto it = (*glpService).vault().find(HK_FORE_FPS); (*glpService).vault().cend() != it )
 	{
 		mFPS_ = static_cast< uint32_t >( it->second );
@@ -93,7 +91,7 @@ void scene::Intro::loadResources( )
 		{
 			// Range check
 			if ( const ::scene::ID val = static_cast< ::scene::ID >( std::get< int >( it->second ) );
-				 val < ::scene::ID::MAX_NONE )
+				 val < ::scene::ID::MAX )
 			{
 				mNextScene_ = val;
 			}
@@ -124,19 +122,20 @@ void scene::Intro::loadResources( )
 	}
 }
 
-void ::scene::Intro::update( std::list< sf::Event >& )
+::scene::ID scene::Intro::update( std::list< sf::Event >& )
 {
 	//
 	// Scene Transition
 	//
 	if ( static_cast<uint32_t>(mFPS_*mDuration) < mFrameCount )
 	{
-		mSetScene( mNextScene_ );
-		return;
+		return mNextScene_ ;
 	}
 
 	// NOTE: Moved into draw( ).
 	///++mFrameCount;
+
+	return ::scene::ID::AS_IS;
 }
 
 void ::scene::Intro::draw( )
@@ -182,7 +181,9 @@ void ::scene::Intro::draw( )
 	++mFrameCount;
 }
 
+#ifdef _DEV
 ::scene::ID scene::Intro::currentScene( ) const
 {
 	return ::scene::ID::INTRO;
 }
+#endif

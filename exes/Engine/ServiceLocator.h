@@ -2,11 +2,10 @@
 #include "pch.h" // Commonly included headers, not pch.
 #include "Console.h"
 
-class ServiceLocator
+class ServiceLocator : public IServiceLocator
 {
 public:
 	inline ServiceLocator( )
-		: mConsole( std::make_unique<ConsoleLocal>() )
 	{
 		ASSERT_FALSE( IsInstantiated );
 
@@ -19,35 +18,35 @@ public:
 	void operator=( const ServiceLocator& ) = delete;
 	inline ~ServiceLocator( )
 	{
-		///mSocket.close();
 		WSACleanup();
 
 		IsInstantiated = false;
 	}
 
-	// Access console.
-	auto console( ) -> const std::unique_ptr< IConsole >&
+	// Access the console.  For API.
+	IConsole* console( ) override
+	{
+		return &mConsole;
+	}
+	// Access the console.  For internal use.
+	inline Console& _console( )
 	{
 		return mConsole;
 	}
-	// Access the variable table.
+	// Access global variables.
 	auto vault( ) -> std::unordered_map< HashedKey, Dword >&
 	{
 		return mVault;
 	}
-	///auto socket( ) -> std::unique_ptr< Socket >&
-	///{
-	///	return mSocket;
-	///}
 	void release( )
 	{
 		// !IMPORTANT: MUST NOT get rid of this line.
-		mConsole.reset( );
+		mConsole.release( );
 	}
 private:
 	static bool IsInstantiated;
-	std::unique_ptr< IConsole > mConsole;//TODO: 콘솔을 개발용으로만 둘까, 콘솔에 유저 권한을 둘까?
-	///std::unique_ptr< Socket > mSocket;
+//TODO: 콘솔을 개발용으로만 둘까, 콘솔에 유저 권한을 둘까?
+	Console mConsole;
 	std::unordered_map< HashedKey, Dword > mVault;
 };
 

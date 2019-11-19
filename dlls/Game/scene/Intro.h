@@ -7,13 +7,15 @@ namespace scene
 	{
 	public:
 		Intro( ) = delete;
-		Intro( sf::RenderWindow& window, const SetScene_t& setScene );
+		Intro( sf::RenderWindow& window );
 		~Intro( );
 
 		void loadResources( ) override;
-		void update( std::list< sf::Event >& ignored_eventQueue ) override;
+		::scene::ID update( std::list< sf::Event >& ignored_eventQueue ) override;
 		void draw( ) override;
+#ifdef _DEV
 		::scene::ID currentScene( ) const override;
+#endif
 	private:
 		// Only a single instance for a type can live at a time, but shouldn't be accessible globally.
 		// That's the difference from the class filled with static functions, or on singleton pattern and the like.
@@ -23,7 +25,6 @@ namespace scene
 		uint8_t mAlpha_;
 		uint32_t mFPS_, mFrameCount;
 		sf::RenderWindow& mWindow_;
-		const SetScene_t& mSetScene;
 		::scene::ID mNextScene_;
 		sf::Texture mTexture;
 		sf::Sprite mSprite;

@@ -1,12 +1,13 @@
 #include "../pch.h"
 #include "MainMenu.h"
 #include "../ServiceLocatorMirror.h"
+#include "../VaultKeyList.h"
 
 bool ::scene::MainMenu::IsInstantiated = false;
 
-::scene::MainMenu::MainMenu( sf::RenderWindow& window, const SetScene_t& setScene )
-	: mWindow_( window ), mSetScene( setScene ),
-	mOnIndicator( ::scene::ID::MAX_NONE ),
+::scene::MainMenu::MainMenu( sf::RenderWindow& window )
+	: mWindow_( window ),/// mSetScene( setScene ),
+	mNextSceneID( ::scene::ID::AS_IS ),
 	mSpriteClipSize_( 256.f, 128.f ), mLogoMargin_( 70.f, 70.f ),
 	mButtonSinglePosition_( 150.f, 150.f ), mButtonOnlinePosition_( 150.f, 300.f )
 {
@@ -86,7 +87,7 @@ void scene::MainMenu::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				const float temp = static_cast<float>(lua_tointeger(lua, TOP_IDX));
+				const float temp = (float)lua_tointeger(lua, TOP_IDX);
 				// Range Check Exception
 				if ( 0 > temp )
 				{
@@ -115,7 +116,7 @@ void scene::MainMenu::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				const float temp = static_cast<float>(lua_tointeger(lua, TOP_IDX));
+				const float temp = (float)lua_tointeger(lua, TOP_IDX);
 				// Range Check Exception
 				if ( 0 > temp )
 				{
@@ -154,7 +155,7 @@ void scene::MainMenu::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				const float temp = static_cast<float>(lua_tointeger(lua, TOP_IDX));
+				const float temp = (float)lua_tointeger(lua, TOP_IDX);
 				// Range Check Exception
 				if ( 0 > temp )
 				{
@@ -183,7 +184,7 @@ void scene::MainMenu::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				const float temp = static_cast<float>(lua_tointeger(lua, TOP_IDX));
+				const float temp = (float)lua_tointeger(lua, TOP_IDX);
 				// Range Check Exception
 				if ( 0 > temp )
 				{
@@ -222,7 +223,7 @@ void scene::MainMenu::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				const float temp = static_cast<float>(lua_tointeger(lua, TOP_IDX));
+				const float temp = (float)lua_tointeger(lua, TOP_IDX);
 				// Range Check Exception
 				if ( 0 > temp )
 				{
@@ -251,7 +252,7 @@ void scene::MainMenu::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				const float temp = static_cast<float>(lua_tointeger(lua, TOP_IDX));
+				const float temp = (float)lua_tointeger(lua, TOP_IDX);
 				// Range Check Exception
 				if ( 0 > temp )
 				{
@@ -290,7 +291,7 @@ void scene::MainMenu::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				const float temp = static_cast<float>(lua_tointeger( lua, TOP_IDX ));
+				const float temp = (float)lua_tointeger( lua, TOP_IDX );
 				// Range Check Exception
 				if ( 0 > temp )
 				{
@@ -319,7 +320,7 @@ void scene::MainMenu::loadResources( )
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				const float temp = static_cast<float>(lua_tointeger( lua, TOP_IDX ));
+				const float temp = (float)lua_tointeger( lua, TOP_IDX );
 				// Range Check Exception
 				if ( 0 > temp )
 				{
@@ -373,31 +374,17 @@ void scene::MainMenu::loadResources( )
 	mSprite.setTexture( mTexture );
 }
 
-void ::scene::MainMenu::update( std::list< sf::Event >& eventQueue )
+::scene::ID scene::MainMenu::update( std::list< sf::Event >& eventQueue )
 {
 	for ( const auto& it : eventQueue )
 	{
 		if ( sf::Event::KeyPressed == it.type && sf::Keyboard::Escape == it.key.code )
 		{
-			constexpr char IS_RUNNING[ ] = "isRunning";
-			constexpr HashedKey HK_IS_RUNNING = ::util::hash::Digest( IS_RUNNING, ::util::hash::Measure(IS_RUNNING) );
 			(*glpService).vault()[ HK_IS_RUNNING ] = 0;
 		}
 	}
 
-	// NOTE: Here is no boundary check.
-	if ( false == (*glpService).console( )->isVisible()
-		 && true == sf::Mouse::isButtonPressed(sf::Mouse::Left) )
-	{
-		if ( ::scene::ID::SINGLE_PLAY == mOnIndicator )
-		{
-			mSetScene( mOnIndicator );
-		}
-		else if ( ::scene::ID::ONLINE_BATTLE == mOnIndicator )
-		{
-			mSetScene( mOnIndicator );
-		}
-	}
+	return mNextSceneID;
 }
 
 void ::scene::MainMenu::draw( )
@@ -412,47 +399,71 @@ void ::scene::MainMenu::draw( )
 	touchButton();
 }
 
+#ifdef _DEV
 ::scene::ID scene::MainMenu::currentScene( ) const
 {
 	return ::scene::ID::MAIN_MENU;
 }
+#endif
 
 void scene::MainMenu::touchButton( )
 {
 	const sf::Vector2f mouseGlobalPos( sf::Mouse::getPosition( ) );
 	const sf::Vector2i cast( mSpriteClipSize_ );
 	const sf::Vector2f titlebarHeight( 0.f, 20.f );
-	if ( const sf::Vector2f btSingleGlobalPos( sf::Vector2f(mWindow_.getPosition())+titlebarHeight+mButtonSinglePosition_ ); 
-		 btSingleGlobalPos.x < mouseGlobalPos.x && mouseGlobalPos.x < btSingleGlobalPos.x+mSpriteClipSize_.x
-		 && btSingleGlobalPos.y < mouseGlobalPos.y && mouseGlobalPos.y < btSingleGlobalPos.y+mSpriteClipSize_.y )
+		 
+	if ( 1 == (*glpService).vault()[HK_HAS_GAINED_FOCUS] && false == (*glpService).console( )->isVisible() )
 	{
-		mOnIndicator = ::scene::ID::SINGLE_PLAY;
-		mSprite.setPosition( mButtonSinglePosition_ );
-		mSprite.setTextureRect( sf::IntRect( cast.x,
-											 2*cast.y, cast.x, cast.y ) );
-		mWindow_.draw( mSprite );
-		mSprite.setPosition( mButtonOnlinePosition_ );
-		mSprite.setTextureRect( sf::IntRect( 0,
-											 3*cast.y, cast.x, cast.y ) );
-		mWindow_.draw( mSprite );
-	}
-	else if ( const sf::Vector2f btOnlineGlobalPos( sf::Vector2f(mWindow_.getPosition())+titlebarHeight+mButtonOnlinePosition_ );
-			  btOnlineGlobalPos.x < mouseGlobalPos.x && mouseGlobalPos.x < btOnlineGlobalPos.x+mSpriteClipSize_.x
-			  && btOnlineGlobalPos.y < mouseGlobalPos.y && mouseGlobalPos.y < btOnlineGlobalPos.y+mSpriteClipSize_.y )
-	{
-		mOnIndicator = ::scene::ID::ONLINE_BATTLE;
-		mSprite.setPosition( mButtonSinglePosition_ );
-		mSprite.setTextureRect( sf::IntRect( 0,
-											 2*cast.y, cast.x, cast.y ) );
-		mWindow_.draw( mSprite );
-		mSprite.setPosition( mButtonOnlinePosition_ );
-		mSprite.setTextureRect( sf::IntRect( cast.x,
-											 3*cast.y, cast.x, cast.y ) );
-		mWindow_.draw( mSprite );
+		if ( const sf::Vector2f btSingleGlobalPos( sf::Vector2f(mWindow_.getPosition())+titlebarHeight+mButtonSinglePosition_ ); 
+			 btSingleGlobalPos.x < mouseGlobalPos.x && mouseGlobalPos.x < btSingleGlobalPos.x+mSpriteClipSize_.x
+			 && btSingleGlobalPos.y < mouseGlobalPos.y && mouseGlobalPos.y < btSingleGlobalPos.y+mSpriteClipSize_.y )
+		{
+			if ( true == sf::Mouse::isButtonPressed(sf::Mouse::Left) )
+			{
+				mNextSceneID = ::scene::ID::SINGLE_PLAY;
+			}
+			mSprite.setPosition( mButtonSinglePosition_ );
+			mSprite.setTextureRect( sf::IntRect( cast.x,
+												 2*cast.y, cast.x, cast.y ) );
+			mWindow_.draw( mSprite );
+			mSprite.setPosition( mButtonOnlinePosition_ );
+			mSprite.setTextureRect( sf::IntRect( 0,
+												 3*cast.y, cast.x, cast.y ) );
+			mWindow_.draw( mSprite );
+		}
+		else if ( const sf::Vector2f btOnlineGlobalPos( sf::Vector2f(mWindow_.getPosition())+titlebarHeight+mButtonOnlinePosition_ );
+				  btOnlineGlobalPos.x < mouseGlobalPos.x && mouseGlobalPos.x < btOnlineGlobalPos.x+mSpriteClipSize_.x
+				  && btOnlineGlobalPos.y < mouseGlobalPos.y && mouseGlobalPos.y < btOnlineGlobalPos.y+mSpriteClipSize_.y )
+		{
+			if ( true == sf::Mouse::isButtonPressed(sf::Mouse::Left) )
+			{
+				mNextSceneID = ::scene::ID::ONLINE_BATTLE;
+			}
+			mSprite.setPosition( mButtonSinglePosition_ );
+			mSprite.setTextureRect( sf::IntRect( 0,
+												 2*cast.y, cast.x, cast.y ) );
+			mWindow_.draw( mSprite );
+			mSprite.setPosition( mButtonOnlinePosition_ );
+			mSprite.setTextureRect( sf::IntRect( cast.x,
+												 3*cast.y, cast.x, cast.y ) );
+			mWindow_.draw( mSprite );
+		}
+		else
+		{
+			mNextSceneID = ::scene::ID::AS_IS;
+			mSprite.setPosition( mButtonSinglePosition_ );
+			mSprite.setTextureRect( sf::IntRect( 0,
+												 2*cast.y, cast.x, cast.y ) );
+			mWindow_.draw( mSprite );
+			mSprite.setPosition( mButtonOnlinePosition_ );
+			mSprite.setTextureRect( sf::IntRect( 0,
+												 3*cast.y, cast.x, cast.y ) );
+			mWindow_.draw( mSprite );
+		}
 	}
 	else
 	{
-		mOnIndicator = ::scene::ID::MAX_NONE;
+		mNextSceneID = ::scene::ID::AS_IS;
 		mSprite.setPosition( mButtonSinglePosition_ );
 		mSprite.setTextureRect( sf::IntRect( 0,
 											 2*cast.y, cast.x, cast.y ) );

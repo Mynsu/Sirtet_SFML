@@ -7,14 +7,13 @@ namespace scene::inPlay
 	{
 	public:
 		Assertion( ) = delete;
-		Assertion( sf::RenderWindow& window, bool* isESCPressed );
+		Assertion( sf::RenderWindow& window );
 		~Assertion( ) = default;
 		void loadResources( ) override;
-		int8_t update( ::scene::inPlay::IScene** const, std::list< sf::Event >& eventQueue ) override;
+		::scene::inPlay::ID update( std::list< sf::Event >& eventQueue ) override;
 		void draw( ) override;
 	private:
 		uint32_t mFPS_, mFrameCount;
-		bool* mIsESCPressed;
 		sf::RenderWindow& mWindow_;
 		sf::RectangleShape mRect;
 	};

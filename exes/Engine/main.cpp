@@ -1,13 +1,15 @@
 ﻿#include "pch.h"
-#include "Game/Game.h"
+#include "../VaultKeyList.h"
 #include "ServiceLocator.h"
 
 //TODO: 개발 완료 후 auto 쓰는 대신 타입 명시, 브랜치에 커밋
 //TODO: https://tetris.fandom.com/wiki/Tetris_Guideline
 
 const uint32_t VERSION = 8191015;
+const uint32_t DEFAULT_FOREGROUND_FPS = 60u;
+const uint32_t DEFAULT_BACKGROUND_FPS = 30u;
 
-int main( int argc, char* argv[ ] )
+int main( int argc, char* argv[] )
 {
 	uint32_t winWidth = 800u;
 	uint32_t winHeight = 600u;
@@ -26,9 +28,9 @@ Handling parameters on excution
 
 		for ( int i = 1; i < argc; ++i )
 		{
-			const char* cur = argv[ i ];
+			const char* const cur = argv[ i ];
 			// When "--help" or "--h",
-			if ( 0 == argHelp0.compare( cur ) || 0 == argHelp1.compare( cur ) )
+			if ( 0==argHelp0.compare(cur) || 0==argHelp1.compare(cur) )
 			{
 				std::cout << "Here are case-sensitive parameters available:\n";
 				std::cout << "\t" << argHelp0.data( ) << ", " << argHelp1.data( ) << ": Show parameters with their own arguments.\n";
@@ -38,9 +40,9 @@ Handling parameters on excution
 				return 0;
 			}
 			// When "--WS",
-			else if ( 0 == argWinSize.compare( cur ) )
+			else if ( 0 == argWinSize.compare(cur) )
 			{
-				const int subArg0 = std::atoi( argv[ ++i ] );
+				const int subArg0 = std::atoi( argv[++i] );
 				// Exception: When NON-number characters has been input,
 				if ( 0 == subArg0 )
 				{
@@ -55,7 +57,7 @@ Handling parameters on excution
 				}
 				winWidth = subArg0;
 
-				const int subArg1 = std::atoi( argv[ ++i ] );
+				const int subArg1 = std::atoi( argv[++i] );
 				// Exception: When NON-number characters has been input,
 				if ( 0 == subArg1 )
 				{
@@ -71,7 +73,7 @@ Handling parameters on excution
 				winHeight = subArg1;
 			}
 			// When "--FS",
-			else if ( 0 == argFullscreen.compare( cur ) )
+			else if ( 0 == argFullscreen.compare(cur) )
 			{
 				winStyle |= sf::Style::Fullscreen;
 			}
@@ -88,31 +90,24 @@ Handling parameters on excution
 Initialization
 =====
 */
-	::util::endian::BindConvertFunc( );
-
 	auto& variableTable = gService.vault( );
-	constexpr HashedKey HK_VERSION = util::hash::Digest( "version", 7 );
 	variableTable.emplace( HK_VERSION, VERSION );
-	constexpr HashedKey HK_FORE_FPS = util::hash::Digest( "foreFPS", 7 ); //TODO: 한 프레임 안에 계산할 필요가 없는 게 뭐가 있을까?
-	const uint32_t FOREGROUND_FPS = 60u;
-	variableTable.emplace( HK_FORE_FPS, FOREGROUND_FPS );
-	constexpr HashedKey HK_BACK_FPS = util::hash::Digest( "backFPS", 7 );
-	const uint32_t BACKGROUND_FPS = 30u;
-	variableTable.emplace( HK_BACK_FPS, BACKGROUND_FPS );
-	gService.console( )->setPosition( {winWidth, winHeight} );
+	variableTable.emplace( HK_FORE_FPS, DEFAULT_FOREGROUND_FPS );
+	variableTable.emplace( HK_BACK_FPS, DEFAULT_BACKGROUND_FPS );
+	gService._console( ).setPosition( {winWidth, winHeight} );
 
 	HMODULE hGameDLL = LoadLibraryA( "game.dll" );
 	// File Not Found Exception
 	if ( nullptr == hGameDLL )
 	{
-		std::cerr << "Fatal failure: Failed to load 'game.dll.'" << std::endl;
+		std::cerr << "FATAL: Failed to load 'game.dll.'" << std::endl;
 		return -1;
 	}
-	GetGameAPI_t getGameAPI = reinterpret_cast< GetGameAPI_t >( GetProcAddress( hGameDLL, "GetGameAPI" ) );
+	GetGameAPI_t GetGameAPI = (GetGameAPI_t)GetProcAddress( hGameDLL, "GetGameAPI" );
 	// Exception: When function 'GetGameAPI(...)' isn't declared with 'extern "C"' keyword or not registered in .def file.
-	if ( nullptr == getGameAPI )
+	if ( nullptr == GetGameAPI )
 	{
-		std::cerr << "Fatal failure: Failed to get the address of the function 'GetGameAPI.'" << std::endl;
+		std::cerr << "FATAL: Failed to get GetGameAPI(...)." << std::endl;
 		FreeLibrary( hGameDLL );
 		return -1;
 	}
@@ -121,20 +116,19 @@ Initialization
 	sf::RenderWindow window( sf::VideoMode( winWidth, winHeight ),
 							 "Sirtet: the Classic",
 							 winStyle );
-	window.setFramerateLimit( FOREGROUND_FPS );
+	window.setFramerateLimit( DEFAULT_FOREGROUND_FPS );
 	engineComponents.window = &window;
-	const GameComponents gameComponents = getGameAPI( engineComponents );
-	// Passed by value, or copied, thus initialized for the security.
+	const GameComponents gameComponents = GetGameAPI( engineComponents );
+	// Passed by value, or copied, thus initialized for security.
 	engineComponents = { nullptr };
 /*
 =====
 Main Loop
 =====
 */
-	constexpr char IS_RUNNING[ ] = "isRunning";
-	constexpr HashedKey HK_IS_RUNNING = ::util::hash::Digest( IS_RUNNING, ::util::hash::Measure(IS_RUNNING) );
-	gService.vault().emplace( HK_IS_RUNNING, 1 );
-	while ( 0 != gService.vault( )[HK_IS_RUNNING] )
+	gService.vault( ).emplace( HK_IS_RUNNING, 1 );
+	gService.vault( ).emplace( HK_HAS_GAINED_FOCUS, 1 );
+	while ( 0 != gService.vault()[HK_IS_RUNNING] )
 	{
 		std::list< sf::Event > subEventQueue;
 		sf::Event event;
@@ -147,11 +141,17 @@ Main Loop
 			}
 			else if ( sf::Event::LostFocus == event.type )
 			{
-				window.setFramerateLimit( variableTable.find( HK_BACK_FPS )->second );
+				window.setFramerateLimit( variableTable.find(HK_BACK_FPS)->second );
+				gService.vault( )[ HK_HAS_GAINED_FOCUS ] = 0;
 			}
 			else if ( sf::Event::GainedFocus == event.type )
 			{
-				window.setFramerateLimit( variableTable.find( HK_FORE_FPS )->second );
+				window.setFramerateLimit( variableTable.find(HK_FORE_FPS)->second );
+				gService.vault( )[ HK_HAS_GAINED_FOCUS ] = 1;
+			}
+			else if ( 0 == gService.vault()[HK_HAS_GAINED_FOCUS] )
+			{
+				break;
 			}
 			else
 			{
@@ -159,7 +159,7 @@ Main Loop
 			}
 					
 			// Console
-			gService.console()->handleEvent( subEventQueue );
+			gService._console( ).handleEvent( subEventQueue );
 		}
 
 		gameComponents.game->update( subEventQueue );
@@ -169,9 +169,9 @@ Main Loop
 		
 		window.clear( );
 		gameComponents.game->draw( );
-		if ( true == gService.console( )->isVisible( ) )
+		if ( true == gService._console().isVisible() )
 		{
-			window.draw( *gService.console( ) );
+			window.draw( gService._console() );
 		}
 		window.display( );
 	}

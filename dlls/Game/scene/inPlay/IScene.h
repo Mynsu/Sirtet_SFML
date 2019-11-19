@@ -1,10 +1,20 @@
 #pragma once
 #include <list>
-#include <stdint.h>
 #include <SFML/Window.hpp>
 
 namespace scene::inPlay
 {
+	enum class ID
+	{
+		MAIN_MENU = -3,
+		OFF = -2,
+		AS_IS = -1,
+		READY,
+		PLAYING,
+		GAME_OVER,
+		ASSERTION,
+	};
+
 	class IScene
 	{
 	public:
@@ -14,7 +24,7 @@ namespace scene::inPlay
 		
 		virtual void loadResources( ) = 0;
 		// Returns 0 when doing nothing, -1 when coming back, 1 when going on.
-		virtual int8_t update( ::scene::inPlay::IScene** const, std::list< sf::Event >& eventQueue ) = 0;
+		virtual ::scene::inPlay::ID update( std::list< sf::Event >& eventQueue ) = 0;
 		virtual void draw( ) = 0;
 
 		// NOTE: Protected constructor prevents users from instantiating the abstract class.
