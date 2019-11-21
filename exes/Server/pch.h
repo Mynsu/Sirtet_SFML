@@ -10,6 +10,7 @@
 #include <unordered_set>
 #include <queue>
 #include <array>
+#include <forward_list>
 #include <bitset>
 #include <string>
 #include <iostream>

@@ -1,13 +1,12 @@
 ﻿#include "pch.h"
 
-//TODO: 소켓 핸들 랜덤이 아닌데?
-//TODO: Server.cpp랑 동기화, RDBMS로부터 ID와 Password 매칭
+//TODO: 티켓 랜덤하게, RDBMS로 ID와 Password 매칭.
 
-const uint32_t CAPACITY = 10u;
+const uint32_t CAPACITY = 10000u;
 // Capacity in the main server defaults to 10000u.
 // You can resize it indirectly here without re-compliing or rescaling the main server.
 // !IMPORTANT: This must be less than the real capacity of the server.
-const uint32_t MAIN_SERVER_CAPACITY = 2u;
+const uint32_t MAIN_SERVER_CAPACITY = 3u;
 const Dword VERSION = 8191015;
 constexpr HashedKey ENCRYPTED_INVITATION = ::util::hash::Digest(VERSION+ADDITIVE);
 const uint16_t LISTENER_PORT = QUEUE_SERVER_PORT;
@@ -32,7 +31,7 @@ inline int ConnectToMainServer( std::unique_ptr<Socket>& toMainServer )
 	while ( -1 == toMainServer->connect(EndPoint(mainServerIPAddress, mainServerPort)) )
 	{
 		// Exception
-		std::cerr << "Connection to the main server failed.\n";
+		std::cerr << "Failed to connect to the main server.\n";
 		++tolerance;
 		if ( 3 == tolerance )
 		{
@@ -40,7 +39,7 @@ inline int ConnectToMainServer( std::unique_ptr<Socket>& toMainServer )
 		}
 		std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
 	}
-	std::cout << "Connection to the main server succeeded.\n";
+	std::cout << "Succeeded in connecting to the main server.\n";
 
 	return 0;
 }
@@ -52,7 +51,7 @@ inline int ResetMainServerSocket( std::unique_ptr<Socket>& toMainServer )
 	if ( -1 == toMainServer->bind(EndPoint::Any) )
 	{
 		// Exception
-		std::cerr << "Binding to-main-server socket failed.\n";
+		std::cerr << "Failed to bind to-main-server socket.\n";
 		return -1;
 	}
 	return ConnectToMainServer( toMainServer );
@@ -107,7 +106,7 @@ int main( )
 	if ( -1 == socketToMainServer->bind(EndPoint::Any) )
 	{
 		// Exception
-		std::cerr << "Binding to-main-server socket failed.\n";
+		std::cerr << "Failed to bind to-main-server socket.\n";
 		socketToMainServer->close( );
 		WSACleanup( );
 		return -1;
@@ -119,8 +118,8 @@ int main( )
 		WSACleanup( );
 		return -1;
 	}
-	using index = uint32_t;
-	const index MAIN_SERV_IDX = CAPACITY;
+	using Index = uint32_t;
+	const Index MAIN_SERV_IDX = CAPACITY;
 	IOCP iocp( 2 );
 	std::cout << "\n##########\n### QUEUE SERVER\n##########\n\nWhat is today's salt, Sir?" << std::endl;
 	std::string todaysSalt;
@@ -133,7 +132,7 @@ int main( )
 	if ( -1 == iocp.add(*socketToMainServer, MAIN_SERV_IDX) )
 	{
 		// Exception
-		std::cerr << "Adding to-main-server socket into IOCP failed.\n";
+		std::cerr << "Failed to add to-main-server socket into IOCP.\n";
 		socketToMainServer->close( );
 		WSACleanup( );
 		return -1;
@@ -143,7 +142,7 @@ int main( )
 		 && ERROR_IO_PENDING != WSAGetLastError() )
 	{
 		// Exception
-		std::cerr << "Sending to main server failed.\n";
+		std::cerr << "Failed to send Salt to main server.\n";
 		++tolerance;
 		if ( 3 == tolerance || -1 == ResetMainServerSocket(socketToMainServer) )
 		{
@@ -163,7 +162,7 @@ int main( )
 		if ( -1 == listener.bind(EndPoint(ipAddress, LISTENER_PORT)) )
 		{
 			// Exception
-			std::cerr << "Binding listener failed.\n";
+			std::cerr << "Failed to bind listener.\n";
 			socketToMainServer->close( );
 			IOCPEvent event;
 			iocp.wait( event, INFINITE );
@@ -172,11 +171,11 @@ int main( )
 		}
 	}
 	listener.listen( );
-	const index LISTENER_IDX = CAPACITY + 1u;
+	const Index LISTENER_IDX = CAPACITY + 1u;
 	if ( -1 == iocp.add(listener, LISTENER_IDX) )
 	{
 		// Exception
-		std::cerr << "Adding listener into ICOP failed.\n";
+		std::cerr << "Failed to add listener into ICOP.\n";
 		socketToMainServer->close( );
 		listener.close( );
 		IOCPEvent event;
@@ -186,45 +185,58 @@ int main( )
 	}
 	std::vector< Socket > clientS;
 	clientS.reserve( CAPACITY );
-	container::IteratoredQueue< index > candidateS;
+	container::IteratoredQueue< Index > candidateS;
 	for ( uint32_t i = 0u; i != CAPACITY; ++i )
 	{
 		clientS.emplace_back( Socket::Type::TCP );
 		if ( -1 == iocp.add(clientS.at(i), i) )
 		{
 			// Exception
-			std::cerr << "Adding a client into ICOP failed.\n";
+			std::cerr << "Failed to add a client into ICOP.\n";
 			socketToMainServer->close( );
 			listener.close( );
 			IOCPEvent event;
 			iocp.wait( event, INFINITE );
 			WSACleanup( );
 			clientS.clear( );
-			break;
+			return -1;
 		}
 		candidateS.emplace_back( i );
 	}
+	auto forceDisconnection = [ &clientS, &iocp, &candidateS ]( const Index clientIndex ) -> int
+	{
+		Socket& clientSocket = clientS[ clientIndex ];
+		clientSocket.close( );
+		clientSocket = Socket( Socket::Type::TCP, Socket::CompletedWork::DISCONNECT );
+		if ( -1 == iocp.add(clientSocket, clientIndex) )
+		{
+			// Exception
+			return -1;
+		}
+		candidateS.emplace_back( clientIndex );
+		return 0;
+	};
 	{
 		const int result = listener.acceptOverlapped( clientS.at(candidateS.front()) );
 		if ( 0 == result && ERROR_IO_PENDING != WSAGetLastError( ) )
 		{
 			// Exception
-			std::cerr << "Overlapped acceptEx failed.\n";
+			std::cerr << "Failed to pend acception.\n";
 			IsWorking = false;
 		}
 		else if ( -1 == result )
-	{
-		// Exception
-		std::cerr << "Getting AcceptEx failed.\n";
-		IsWorking = false;
-	}
+		{
+			// Exception
+			std::cerr << "Getting AcceptEx failed.\n";
+			IsWorking = false;
+		}
 	}
 	listener.pend( );
 	std::cout << "Ready and verifying the today's salt.\n";
 
 	bool wasBoatful = false;
 	int roomInMainServer = 0;
-	std::list< index > queue;
+	std::list< Index > queue;
 	IOCPEvent event;
 	std::chrono::high_resolution_clock::time_point old0, old1;
 	while ( true == IsWorking )
@@ -237,10 +249,10 @@ int main( )
 			////
 			// When event comes from listener,
 			////
-			if ( LISTENER_IDX == (index)ev.lpCompletionKey && 0 < candidateS.size() )
+			if ( LISTENER_IDX == (Index)ev.lpCompletionKey && 0 < candidateS.size() )
 			{
 				listener.pend( false );
-				const index candidateClientIdx = candidateS.front( );
+				const Index candidateClientIdx = candidateS.front( );
 				Socket& candidateSocket = clientS[ candidateClientIdx ];
 				if ( -1 == candidateSocket.updateAcceptContext(listener) )
 				{
@@ -251,7 +263,7 @@ int main( )
 				// When acception is successful,
 				candidateS.pop_front( );
 				Socket& clientSocket = candidateSocket;
-				const index clientIdx = candidateClientIdx;
+				const Index clientIdx = candidateClientIdx;
 #ifdef _DEBUG
 				std::cout << "A new client " << clientIdx << " wants to join the main server. (Now " << CAPACITY-candidateS.size() << "/" << CAPACITY << " connections.)\n";
 #endif
@@ -259,17 +271,13 @@ int main( )
 					 && ERROR_IO_PENDING != WSAGetLastError() )
 				{
 					// Exception
-					std::cerr << "Pending reception of a new client failed.\n";
-					clientSocket.close( );
-					clientS[ clientIdx ] = Socket( Socket::Type::TCP, Socket::CompletedWork::DISCONNECT );
-					if ( -1 == iocp.add(clientS[clientIdx], clientIdx) )
+					std::cerr << "Failed to pend reception of a new client.\n";
+					PrintLeavingE( candidateS.size() );
+					if ( -1 == forceDisconnection(clientIdx) )
 					{
-						// Exception
 						// Break twice.
 						goto cleanUp;
 					}
-					candidateS.emplace_back( clientIdx );
-					PrintLeavingE( candidateS.size() );
 				}
 				else
 				{
@@ -280,7 +288,7 @@ int main( )
 				// When room for the next client in THIS queue server, not the main server, remains yet,
 				if ( 0 < candidateS.size() )
 				{
-					const index nextCandidateClientIdx = candidateS.front( );
+					const Index nextCandidateClientIdx = candidateS.front( );
 					if ( 0 == listener.acceptOverlapped(clientS[nextCandidateClientIdx])
 						 && ERROR_IO_PENDING != WSAGetLastError() )
 					{
@@ -301,7 +309,7 @@ int main( )
 			////
 			// When event comes from the main server,
 			////
-			else if ( MAIN_SERV_IDX == (index)ev.lpCompletionKey )
+			else if ( MAIN_SERV_IDX == (Index)ev.lpCompletionKey )
 			{
 				socketToMainServer->pend( false );
 				if ( 0 >= ev.dwNumberOfBytesTransferred )
@@ -315,50 +323,52 @@ int main( )
 					{
 						std::cerr << "Main server closed or died.\n";
 						if ( -1 == ResetMainServerSocket(socketToMainServer) )
-					{
-						// Exception
-						// NOTE: Brake twice.
-						goto cleanUp;
-					}
+						{
+							// Exception
+							// NOTE: Brake twice.
+							goto cleanUp;
+						}
 					}
 				}
 				else
 				{
-					switch( socketToMainServer->completedWork() )
+					const Socket::CompletedWork cmpl = socketToMainServer->completedWork( );
+					if ( Socket::CompletedWork::RECEIVE == cmpl )
 					{
-						case Socket::CompletedWork::RECEIVE:
-							if ( true == status[Status::VERIFYING_SALT] )
+						if ( true == status[Status::VERIFYING_SALT] )
+						{
+							status.set(Status::VERIFYING_SALT, false );
+						}
+						// When having received population in the main server,
+						if ( 1 == status[Status::AWAITING_POPULATION] )
+						{
+							// NOTE: Assuming that there's a message about nothing but population in and from the main server.
+							status.set( Status::AWAITING_POPULATION, 0 );
+							// NOTE: Assuming that no tag is attached.
+							const int pop = std::atoi( socketToMainServer->receivingBuffer() );
+							// When population is out of range,
+							if ( pop<0 || MAIN_SERVER_CAPACITY<pop )
 							{
-								status.set(Status::VERIFYING_SALT, false );
+								// Asking again the main server how many clients are there.
+								postmanToMainServer.pack( encryptedSalt );
+								status.set( Status::AWAITING_POPULATION, 1 );
+								std::cout << "Asking again the main server how many clients are there.\n";
+								continue;
 							}
-							// When having received population in the main server,
-							if ( 1 == status[Status::AWAITING_POPULATION] )
-							{
-								// NOTE: Assuming that there's a message about nothing but population in and from the main server.
-								status.set( Status::AWAITING_POPULATION, 0 );
-								// NOTE: Assuming that no tag is attached.
-								const int pop = std::atoi( socketToMainServer->receivingBuffer() );
-								// When population is out of range,
-								if ( pop<0 || MAIN_SERVER_CAPACITY<pop )
-								{
-									// Asking again the main server how many clients are there.
-									postmanToMainServer.pack( encryptedSalt );
-									status.set( Status::AWAITING_POPULATION, 1 );
-									std::cout << "Asking again the main server how many clients are there.\n";
-									break;
-								}
-								// Otherwise, when population is in range,
-								roomInMainServer = static_cast< int >( MAIN_SERVER_CAPACITY ) - pop;
+							// Otherwise, when population is in range,
+							roomInMainServer = static_cast< int >( MAIN_SERVER_CAPACITY ) - pop;
 #ifdef _DEBUG
-								std::cout << "Room in the main server: " << roomInMainServer << std::endl;
+							std::cout << "Room in the main server: " << roomInMainServer << std::endl;
 #endif
-							}
-							break;
-						case Socket::CompletedWork::SEND:
-							// When having asked population in the main server or having sent a ticket,
-							// Pending reception later, not here now.
-							break;
-						default:
+						}
+					}
+					else if ( Socket::CompletedWork::SEND == cmpl )
+					{
+						// When having asked population in the main server or having sent a ticket,
+						// Pending reception later, not here now.
+					}
+					else
+					{
 #ifdef _DEBUG
 							__debugbreak( );
 #else
@@ -372,10 +382,11 @@ int main( )
 			////
 			else
 			{
-				const index clientIdx = (index)ev.lpCompletionKey;
+				const Index clientIdx = (Index)ev.lpCompletionKey;
 				Socket& clientSocket = clientS[ clientIdx ];
 				clientSocket.pend( false );
-				if ( Socket::CompletedWork::DISCONNECT == clientSocket.completedWork( ) )
+				const Socket::CompletedWork cmpl = clientSocket.completedWork( );
+				if ( Socket::CompletedWork::DISCONNECT == cmpl )
 				{
 					const int res = candidateS.contains( clientIdx );
 					if ( -1 == res )
@@ -405,99 +416,85 @@ int main( )
 						 && ERROR_IO_PENDING != WSAGetLastError() )
 					{
 						// Exception
-						std::cerr << "Forced to disconnect a client failed.\n";
-						clientSocket.close( );
-						clientS[ clientIdx ] = Socket( Socket::Type::TCP );
-						if ( -1 == iocp.add(clientS[clientIdx], clientIdx) )
+						std::cerr << "Failed to disconnect Client " << clientIdx << ".\n";
+						PrintLeavingE( candidateS.size() );
+						if ( -1 == forceDisconnection(clientIdx) )
 						{
 							// Exception
 							// Break twice
 							goto cleanUp;
 						}
-						candidateS.emplace_back( clientIdx );
-						PrintLeavingE( candidateS.size() );
+						continue;
 					}
-					else
-					{
-						clientSocket.pend( );
-					}
+					clientSocket.pend( );
 				}
 				else
 				{
-					switch ( clientSocket.completedWork( ) )
+					if ( Socket::CompletedWork::SEND == cmpl )
 					{
-						case Socket::CompletedWork::SEND:
-							// When a ticket has been
-							if ( true == clientSocket.hasTicket( ) )
+						if ( true == clientSocket.hasTicket() )
+						{
+							if ( 0 == clientSocket.disconnectOverlapped( )
+									&& ERROR_IO_PENDING != WSAGetLastError( ) )
 							{
-								if ( 0 == clientSocket.disconnectOverlapped( )
-									 && ERROR_IO_PENDING != WSAGetLastError( ) )
+								// Exception
+								std::cerr << "Failed to disconnect Client " << clientIdx << ".\n";
+								if ( -1 == forceDisconnection(clientIdx) )
 								{
 									// Exception
-									std::cerr << "Forced to disconnect a client.\n";
-									clientSocket.close( );
-									clientS[ clientIdx ] = Socket( Socket::Type::TCP, Socket::CompletedWork::DISCONNECT );
-									if ( -1 == iocp.add(clientS[clientIdx], clientIdx) )
-									{
-										// Exception
-										// Break twice
-										goto cleanUp;
-									}
-									clientSocket.earnTicket( false );
-									candidateS.emplace_back( clientIdx );
-									std::cout << "A client left with a ticket. (Now " << CAPACITY-clientS.size( ) << '/' << CAPACITY << " connections.)\n";
+									// Break twice
+									goto cleanUp;
 								}
-								else
-								{
-									clientSocket.pend( );
-								}
+								clientSocket.earnTicket( false );
+								std::cout << "A client left with a ticket. (Now " << CAPACITY-clientS.size( ) << '/' << CAPACITY << " connections.)\n";
+								continue;
 							}
-							// When a queue number has been sended to a client in the queue line,
-							///else
-							///{
-								// Doing nothing.
-							///}
-							break;
-						case Socket::CompletedWork::RECEIVE:
-							// When having received the genuine invitation,
-							// NOTE: Assuming that the message only comes from a new connection.
-							// NOTE: Assuming that there're no impurities but an invitation in the message.
-							if ( char* const rcvBuf = clientSocket.receivingBuffer( );
-								///ENCRYPTED_INVITATION == static_cast<HashedKey>(std::atoll(&rcvBuf[TAG_INVITATION_LEN])) )
-								ENCRYPTED_INVITATION == static_cast<HashedKey>(std::atoll(rcvBuf)) )
-							{
-								queue.emplace_back( clientIdx );
+							clientSocket.pend( );
+						}
+						// When a queue number has been sended to a client in the queue line,
+						///else
+						///{
+						// Done later.
+						///}
+					}
+					else if ( Socket::CompletedWork::RECEIVE == cmpl )
+					{
+						// When having received the genuine invitation,
+						// NOTE: Assuming that the message only comes from a new connection.
+						// NOTE: Assuming that there're no impurities but an invitation in the message.
+						if ( char* const rcvBuf = clientSocket.receivingBuffer( );
+							///ENCRYPTED_INVITATION == static_cast<HashedKey>(std::atoll(&rcvBuf[TAG_INVITATION_LEN])) )
+							ENCRYPTED_INVITATION == static_cast<HashedKey>(std::atoll(rcvBuf)) )
+						{
+							queue.emplace_back( clientIdx );
 #ifdef _DEBUG
-								std::cout << "Client " << clientIdx <<
-									" with the genuine invitation has been added into the queue line.\n";
+							std::cout << "Client " << clientIdx <<
+								" with the genuine invitation has been added into the queue line.\n";
 #endif
-							}
-							// Otherwise, when a client connected without any genuine invitation,
-							else
+						}
+						// Otherwise, when a client connected without any genuine invitation,
+						else
+						{
+							std::cout << "A client connected without any genuine invitation.\n";
+							if ( 0 == clientSocket.disconnectOverlapped()
+									&& ERROR_IO_PENDING != WSAGetLastError() )
 							{
-								std::cout << "A client connected without any genuine invitation.\n";
-								if ( 0 == clientSocket.disconnectOverlapped()
-									 && ERROR_IO_PENDING != WSAGetLastError() )
+								// Exception
+								std::cerr << "Failed to disconnect Client " << clientIdx << ".\n";
+								PrintLeavingE( candidateS.size() );
+								if ( -1 == forceDisconnection(clientIdx) )
 								{
 									// Exception
-									clientSocket.close( );
-									clientS[ clientIdx ] = Socket( Socket::Type::TCP, Socket::CompletedWork::DISCONNECT );
-									if ( -1 == iocp.add(clientS[clientIdx], clientIdx) )
-									{
-										// Exception
-										// Break twice
-										goto cleanUp;
-									}
-									candidateS.emplace_back( clientIdx );
-									PrintLeavingE( candidateS.size() );
+									// Break twice
+									goto cleanUp;
 								}
-								else
-								{
-									clientSocket.pend( );
-								}
+								continue;
 							}
-							break;
-						default:
+							clientSocket.pend( );
+						}
+					}
+					else
+					{
 #ifdef _DEBUG
 							__debugbreak( );
 #else
@@ -528,17 +525,15 @@ int main( )
 					&& ERROR_IO_PENDING != WSAGetLastError() )
 			{
 				// Exception
-				std::cerr << "Sending a ticket to a client waiting in the queue line failed.\n";
-				clientSocket.close( );
-				clientS[ *it ] = Socket( Socket::Type::TCP, Socket::CompletedWork::DISCONNECT );
-				if ( -1 == iocp.add( clientS[ *it ], *it ) )
+				std::cerr << "Failed to send a ticket to Client " << *it
+					<< " waiting in the queue line.\n";
+				if ( -1 == forceDisconnection(*it) )
+				PrintLeavingE( candidateS.size( ) );
 				{
 					// Exception
 					// Break twice
 					goto cleanUp;
 				}
-				candidateS.emplace_back( *it );
-				PrintLeavingE( candidateS.size( ) );
 			}
 			else
 			{
@@ -576,27 +571,23 @@ int main( )
 					&& ERROR_IO_PENDING != WSAGetLastError( ) )
 			{
 				// Exception
-				std::cerr << "Sending its order to the client waiting in the queue line failed.\n";
-				clientSocket.close( );
-				clientS[ *it ] = Socket( Socket::Type::TCP, Socket::CompletedWork::DISCONNECT );
-				if ( -1 == iocp.add( clientS[ *it ], *it ) )
+				std::cerr << "Failed to send its order to Client " << *it
+					<< " waiting in the queue line.\n";
+				PrintLeavingE( candidateS.size( ) );
+				if ( -1 == forceDisconnection(*it) )
 				{
 					// Exception
 					// Break twice
 					goto cleanUp;
 				}
-				candidateS.emplace_back( *it );
 				it = queue.erase( it );
-				PrintLeavingE( candidateS.size( ) );
+				continue;
 			}
-			else
-			{
 #ifdef _DEBUG
-				std::cout << "Sending its order to the client " << *it << " waiting in the queue line succeeded.\n";
+			std::cout << "Sending its order to the client " << *it << " waiting in the queue line succeeded.\n";
 #endif
-				clientSocket.pend( );
-				++it;
-			}
+			clientSocket.pend( );
+			++it;
 		}
 
 		// When there's no more room in the main server,
@@ -626,7 +617,7 @@ int main( )
 					&& ERROR_IO_PENDING != WSAGetLastError( ) )
 			{
 				// Exception
-				std::cerr << "Sending the issued ticket to main server failed.\n";
+				std::cerr << "Failed to send a copy of the issued ticket to main server.\n";
 				++tolerance;
 				if ( 3 == tolerance || -1 == ResetMainServerSocket( socketToMainServer )
 					 || -1 == iocp.add( *socketToMainServer, MAIN_SERV_IDX ) )
@@ -653,7 +644,7 @@ int main( )
 						&& ERROR_IO_PENDING != WSAGetLastError( ) )
 				{
 					// Exception
-					std::cerr << "Receiving from the main server failed.\n";
+					std::cerr << "Failed to pend reception from the main server.\n";
 					++tolerance;
 					if ( 3 == tolerance || -1 == ResetMainServerSocket( socketToMainServer )
 						 || -1 == iocp.add( *socketToMainServer, MAIN_SERV_IDX ) )
@@ -670,7 +661,7 @@ int main( )
 		if ( true == wasBoatful && 0 < candidateS.size( ) )
 		{
 			wasBoatful = false;
-			const index nextCandidateClientIdx = candidateS.front( );
+			const Index nextCandidateClientIdx = candidateS.front( );
 			if ( 0 == listener.acceptOverlapped( clientS[ nextCandidateClientIdx ] )
 				 && ERROR_IO_PENDING != WSAGetLastError( ) )
 			{
@@ -702,7 +693,7 @@ cleanUp:
 		iocp.wait( event, 100 );
 		for ( uint32_t i = 0; i != event.eventCount; ++i )
 		{
-			const index evIdx = (index)event.events[ i ].lpCompletionKey;
+			const Index evIdx = (Index)event.events[ i ].lpCompletionKey;
 			// When event comes from the main server,
 			if ( MAIN_SERV_IDX == evIdx )
 			{
