@@ -65,18 +65,34 @@ void model::Tetrimino::tryRotate( const std::array<std::array<::model::Cell,::mo
 	}
 }
 
+void model::Tetrimino::land( std::array<std::array<::model::Cell, ::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT>& grid )
+{
+	const ::model::tetrimino::LocalSpace blocks = mPossibleRotations[(int)mRotationID ];
+	for ( uint8_t i = 0u; i != ::model::tetrimino::LOCAL_SPACE_SIZE; ++i )
+	{
+		if ( blocks & (0x1u<<(::model::tetrimino::LOCAL_SPACE_SIZE-i-1u)) )
+		{
+			const uint8_t x = mPosition.x + i%model::tetrimino::BLOCKS_A_TETRIMINO;
+			const uint8_t y = mPosition.y + i/model::tetrimino::BLOCKS_A_TETRIMINO - 1;
+			ASSERT_TRUE( (x<::model::stage::GRID_WIDTH) && (y<::model::stage::GRID_HEIGHT) );
+			grid[ y ][ x ].blocked = true;
+			grid[ y ][ x ].color = mBlockShape.getFillColor( );
+		}
+	}
+}
+
 bool model::Tetrimino::hasCollidedWith( const std::array<std::array<Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT>& grid ) const
 {
 	bool retVal = false;
-	const uint8_t area = ::model::tetrimino::BLOCKS_A_TETRIMINO*::model::tetrimino::BLOCKS_A_TETRIMINO;
-	for ( int8_t i = area-1; i != -1; --i )
+	for ( int8_t i = ::model::tetrimino::LOCAL_SPACE_SIZE-1; i != -1; --i )
 	{
-		if ( mPossibleRotations[static_cast<int>(mRotationID)] & (0x1u<<(area-i-1u)) )
+		if ( mPossibleRotations[static_cast<int>(mRotationID)]
+			& (0x1u<<(::model::tetrimino::LOCAL_SPACE_SIZE-i-1u)) )
 		{
 			// Coordinate transformation
 			const int8_t x = mPosition.x + i%model::tetrimino::BLOCKS_A_TETRIMINO;
 			const int8_t y = mPosition.y + i/model::tetrimino::BLOCKS_A_TETRIMINO;
-			if ( ::model::stage::GRID_HEIGHT == y )
+			if ( ::model::stage::GRID_HEIGHT <= y )
 			{
 				retVal = true;
 				break;

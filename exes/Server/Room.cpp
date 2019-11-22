@@ -2,40 +2,41 @@
 #include "Room.h"
 #include "Client.h"
 
-//Room::Room( )
-//	: mHostIndex( -1 ), mState( State::DOING_NOTHING )
-//{
-//}
+Room::Room( )
+	: mHostIndex( -1 ), mState( State::WAITING )
+{
+}
 
-Room::Room( const Index hostIndex )
-	: mHostIndex( hostIndex ), mState( State::DOING_NOTHING )
+Room::Room( const ClientIndex hostIndex )
+	: mHostIndex( hostIndex ), mState( State::WAITING )
 {
 	mParticipantS.emplace( hostIndex );
 }
 
-std::forward_list<Index> Room::update( std::vector<Client>& clientS )
+std::forward_list<ClientIndex> Room::update( std::vector<Client>& clientS )
 {
-	std::forward_list<Index> retVal;
+	std::forward_list<ClientIndex> retVal;
 	switch ( mState )
 	{
-		case Room::State::DOING_NOTHING:
+		case Room::State::WAITING:
 			break;
 		case Room::State::STARTED:
-			for ( const auto idx : mParticipantS )
+			for ( auto& it : mParticipantS )
 			{
-				Socket& participantSocket = clientS[ idx ].socket( );
+				const ClientIndex participantIdx = it.first;
+				Socket& participantSocket = clientS[ participantIdx ].socket( );
 				std::string req( TAG_GET_READY );
 				if ( -1 == participantSocket.sendOverlapped(req.data(), req.size()) )
 				{
 					// Exception
-					std::cerr << "Failed to notify Client " << idx
+					std::cerr << "Failed to notify Client " << participantIdx
 						<< " that the game get started.\n";
-					retVal.emplace_front( idx );
+					retVal.emplace_front( participantIdx );
 				}
 				participantSocket.pend( );
-				restartTimer( );
-				clientS[ idx ].setState( Client::State::READY );
+				it.second.spawnTetrimino( );
 			}
+			restartTimer( );
 			mState = Room::State::READY;
 			break;
 		case Room::State::READY:
@@ -44,31 +45,63 @@ std::forward_list<Index> Room::update( std::vector<Client>& clientS )
 #ifdef _DEBUG
 				std::cout << "Room hosted by " << mHostIndex << " gets started now.\n";
 #endif
-				for ( const auto idx : mParticipantS )
+				for ( auto& it : mParticipantS )
 				{
-					Client& participant = clientS[ idx ];
-					Socket& participantSocket = participant.socket( );
-					Playing& playing = participant.playing( );
-					std::string data( playing.currentTetriminoInfo() );
+					const ClientIndex participantIdx = it.first;
+					Socket& participantSocket = clientS[ participantIdx ].socket( );
+					Playing& participantPlay = it.second;
+					std::string data( participantPlay.currentTetriminoInfo() );
 					std::string curTet( TAG_CURRENT_TETRIMINO + std::to_string(data.size())
 									   + TOKEN_SEPARATOR_2
 									   + data );
-					if ( -1 ==	participantSocket.sendOverlapped(curTet.data(), curTet.size()) )
+					if ( -1 == participantSocket.sendOverlapped(curTet.data(), curTet.size()) )
 					{
 						// Exception
-						std::cerr << "Failed to notify Client " << idx
-							<< " that the starting countdown ended.\n";
-						retVal.emplace_front( idx );
+						std::cerr << "Failed to send the current tetrimino to Client "
+							<< participantIdx << ".\n";
+						retVal.emplace_front( participantIdx );
+						continue;
 					}
 					participantSocket.pend( );
-					participant.setState( Client::State::PLAYING );
 				}
 				restartTimer( );
 				mState = Room::State::PLAYING;
 			}
 			break;
 		case Room::State::PLAYING:
+			for ( auto& it : mParticipantS )
+			{
+				if ( const Playing::Change res = it.second.update(); true == res )
+				{
+					std::stringstream package;
+					Playing& participantPlay = it.second;
+					if ( true == (res & Playing::Change::CURRENT_TETRIMINO_MOVED) )
+					{
+						std::string data( participantPlay.currentTetriminoInfo() );
+						package << TAG_CURRENT_TETRIMINO
+							+ std::to_string( data.size() )
+							+ TOKEN_SEPARATOR_2
+							+ data
+							+ TOKEN_SEPARATOR;
+					}
+					if ( true == (res & Playing::Change::CURRENT_TETRIMINO_LANDED) )
+					{
+						std::string data( participantPlay.gridInfo() );
+					}
 
+						const ClientIndex participantIdx = it.first;
+						Socket& participantSocket = clientS[ participantIdx ].socket( );
+						if ( -1 == participantSocket.sendOverlapped(curTet.data(), curTet.size()) )
+						{
+							// Exception
+							std::cerr << "Failed to send the current tetrimino to Client "
+								<< participantIdx << ".\n";
+							retVal.emplace_front( participantIdx );
+							continue;
+						}
+						participantSocket.pend( );
+				}
+			}
 			break;
 		default:
 			break;
@@ -81,19 +114,14 @@ void Room::start( )
 	mState = State::STARTED;
 }
 
-void Room::kick( const Index index )
+void Room::kick( const ClientIndex index )
 {
 	mParticipantS.erase( index );
 }
 
-Index Room::hostIndex( ) const
+ClientIndex Room::hostIndex( ) const
 {
 	return mHostIndex;
-}
-
-void Room::restartTimer()
-{
-	mStartTime = Clock::now( );
 }
 
 bool Room::hasElapsedMs( const uint32_t milliseconds ) const

@@ -9,7 +9,6 @@ namespace model
 	//		1110
 	//		0000
 	//		0000
-	using LocalSpace = uint16_t;
 	class Tetrimino
 	{
 	public:
@@ -49,12 +48,12 @@ namespace model
 
 		inline void draw( sf::RenderWindow& window )
 		{
-			const uint8_t area = ::model::tetrimino::BLOCKS_A_TETRIMINO*::model::tetrimino::BLOCKS_A_TETRIMINO;
 			// NOTE: The OpenGL failure occurs.
 			///#pragma omp parallel
-			for ( uint8_t i = 0; i != area; ++i )
+			for ( uint8_t i = 0; i != ::model::tetrimino::LOCAL_SPACE_SIZE; ++i )
 			{
-				if ( mPossibleRotations[(int)mRotationID] & (0x1u<<(area-i-1u)) )
+				if ( mPossibleRotations[(int)mRotationID] &
+					(0x1u<<(::model::tetrimino::LOCAL_SPACE_SIZE-i-1u)) )
 				{
 					// Coordinate transformation
 					const sf::Vector2< int8_t > localPos( i%model::tetrimino::BLOCKS_A_TETRIMINO, i/model::tetrimino::BLOCKS_A_TETRIMINO );
@@ -76,7 +75,7 @@ namespace model
 			return mBlockShape.getFillColor( );
 		}
 		// Current blocks within their own local space.
-		inline LocalSpace blocks( ) const
+		inline ::model::tetrimino::LocalSpace blocks( ) const
 		{
 			return mPossibleRotations[ static_cast<int>(mRotationID) ];
 		}
@@ -85,7 +84,7 @@ namespace model
 			return mType;
 		}
 		// Returns true when colliding with the floor or another tetrimino.
-		inline bool down( const std::array< std::array<::model::Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid, const uint8_t diff = 1u )
+		inline bool moveDown( const std::array< std::array<::model::Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid, const uint8_t diff = 1u )
 		{
 			ASSERT_TRUE( diff < ::model::stage::GRID_HEIGHT );
 			mPosition.y += diff;
@@ -113,6 +112,7 @@ namespace model
 		}
 		// Rotates counter-clockwise.
 		void tryRotate( const std::array< std::array<::model::Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid );
+		void land( std::array< std::array<::model::Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid );
 		inline void fallDown( const bool isFallingDown = true )
 		{
 			mIsFallingDown = isFallingDown;
@@ -150,7 +150,7 @@ namespace model
 		float mBlockSize_;
 		sf::Vector2f mOrigin_;
 		sf::RectangleShape mBlockShape;
-		LocalSpace mPossibleRotations[ (int)::model::tetrimino::Rotation::NULL_MAX ];
+		::model::tetrimino::LocalSpace mPossibleRotations[ (int)::model::tetrimino::Rotation::NULL_MAX ];
 		static sf::Vector2<int8_t> Test[ (int)::model::tetrimino::Rotation::NULL_MAX ][ 4 ];
 	};
 }

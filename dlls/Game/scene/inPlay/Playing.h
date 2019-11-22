@@ -17,6 +17,7 @@ namespace scene::inPlay
 		::scene::inPlay::ID update( std::list< sf::Event >& eventQueue ) override;
 		void draw( ) override;
 	private:
+		void reloadTetrimino( );
 		uint8_t mRowCleared;
 		uint32_t mFrameCount_fallDown, mFrameCount_clearingInterval_, mFrameCount_clearingVfx_, mFrameCount_gameOver;
 		float mTempo;

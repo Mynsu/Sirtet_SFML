@@ -513,7 +513,7 @@ int main()
 					}
 					else
 					{
-						if ( false == client.update(roomS) )
+						if ( false == client.complete(roomS) )
 						{
 							if ( -1 == forceDisconnection(clientIdx) )
 							{

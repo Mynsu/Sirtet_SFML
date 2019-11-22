@@ -22,13 +22,13 @@ namespace scene::online
 		void receive( );
 		bool hasSent( );
 		bool hasReceived( );
-		enum Option
+		enum class Option
 		{
 			FIND_END_TO_BEGIN = 1 << 0,
 			SERIALIZED = 1 << 1,
 			RETURN_TAG_ATTACHED = 1 << 2,
 		};
-		std::optional< std::string > getByTag( const Tag tag, const uint8_t option );
+		std::optional< std::string > getByTag( const Tag tag, const Online::Option option );
 		///char* const receivingBuffer( );
 		void stopReceivingFromQueueServer( );
 		void setNickname( std::string& nickname )
@@ -55,4 +55,21 @@ namespace scene::online
 		sf::Texture mTexture;
 		sf::Sprite mSprite;
 	};
+	
+	inline Online::Option operator|( const Online::Option lh, const Online::Option rh )
+	{
+		return (Online::Option)((uint32_t)lh | (uint32_t)rh);
+	}
+	inline Online::Option& operator|=( Online::Option& lh, const Online::Option rh )
+	{
+		return lh = lh | rh;
+	}
+	inline Online::Option operator&( const Online::Option lh, const Online::Option rh )
+	{
+		return (Online::Option)((uint32_t)lh & (uint32_t)rh);
+	}
+	inline bool operator==( const bool lh, const Online::Option rh )
+	{
+		return (0u == (uint32_t)rh)? false: true;
+	}
 }

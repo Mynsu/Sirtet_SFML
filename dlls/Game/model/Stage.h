@@ -49,12 +49,6 @@ namespace model
 		{
 			return mPosition_;
 		}
-		inline void lock( const uint8_t x, const uint8_t y, const sf::Color color )
-		{
-			ASSERT_TRUE( (x<::model::stage::GRID_WIDTH) && (y<::model::stage::GRID_HEIGHT) );
-			mGrid[ y ][ x ].blocked = true;
-			mGrid[ y ][ x ].color = color;
-		}
 		inline bool isOver( ) const
 		{
 			bool retVal = false;
@@ -81,7 +75,7 @@ namespace model
 				}
 			}
 		}
-		inline const std::array< std::array<Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid( ) const
+		inline std::array< std::array<Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid( )
 		{
 			return mGrid;
 		}

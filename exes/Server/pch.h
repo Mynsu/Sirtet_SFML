@@ -26,10 +26,7 @@
 #include <Lib/Hash.h>
 #include <Lib/Common.h>
 
-using Index = uint32_t;
 using Clock = std::chrono::high_resolution_clock;
-using Ticket = HashedKey;
-using RoomID = int32_t;
 
 #ifdef _DEBUG
 #define ASSERT_TRUE( x ) if ( false == (x) ) __debugbreak( );

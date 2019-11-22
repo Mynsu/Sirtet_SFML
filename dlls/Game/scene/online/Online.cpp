@@ -356,13 +356,13 @@ bool scene::online::Online::hasReceived( )
 	}
 }
 
-std::optional<std::string> scene::online::Online::getByTag( const Tag tag, const uint8_t option )
+std::optional<std::string> scene::online::Online::getByTag( const Tag tag, const Online::Option option )
 {
 	const char* const rcvBuf = SocketToServer->receivingBuffer( );
 	std::string_view strView( rcvBuf );
 	uint32_t begin = -1;
 	const uint32_t tagLen = (uint32_t)std::strlen( tag );
-	if ( 0u == (option & Option::FIND_END_TO_BEGIN) )
+	if ( false == (option & Option::FIND_END_TO_BEGIN) )
 	{
 		if ( const size_t pos = strView.find(tag);
 			 std::string_view::npos != pos )
@@ -389,7 +389,7 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag, const
 
 	uint32_t end = -1;
 	uint32_t begin2 = 0;
-	if ( 0u != (option & Option::SERIALIZED) )
+	if ( true == (option & Option::SERIALIZED) )
 	{
 		const uint32_t pos = begin + tagLen;
 		const int size = std::atoi( &rcvBuf[pos] );
@@ -411,7 +411,7 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag, const
 
 	ASSERT_TRUE( -1 != end );
 
-	if ( 0u == (option & Option::RETURN_TAG_ATTACHED) )
+	if ( false == (option & Option::RETURN_TAG_ATTACHED) )
 	{
 		begin = begin2;
 	}

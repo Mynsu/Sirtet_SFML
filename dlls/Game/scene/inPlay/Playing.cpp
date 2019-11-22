@@ -275,7 +275,7 @@ void ::scene::inPlay::Playing::loadResources( )
 	{
 		for ( uint8_t i = 0u; i != FALLING_DIFF; ++i )
 		{
-			if ( hasCollidedAtThisFrame = mCurrentTetrimino.down(mPlayerStage.grid()); true == hasCollidedAtThisFrame )
+			if ( hasCollidedAtThisFrame = mCurrentTetrimino.moveDown(mPlayerStage.grid()); true == hasCollidedAtThisFrame )
 			{
 				mCurrentTetrimino.fallDown( false );
 				// NOTE: Break the loop and stop stuff in the 1st if-scope immediately.
@@ -298,7 +298,7 @@ void ::scene::inPlay::Playing::loadResources( )
 						///return;
 						[[ fallthrough ]];
 					case sf::Keyboard::Down:
-						hasCollidedAtThisFrame = mCurrentTetrimino.down( mPlayerStage.grid( ) );
+						hasCollidedAtThisFrame = mCurrentTetrimino.moveDown( mPlayerStage.grid( ) );
 						mFrameCount_fallDown = 0u;
 						it = eventQueue.erase( it );
 						break;
@@ -342,32 +342,15 @@ void ::scene::inPlay::Playing::loadResources( )
 	
 	if ( static_cast<uint32_t>(fps*mTempo) < mFrameCount_fallDown )
 	{
-		hasCollidedAtThisFrame = mCurrentTetrimino.down( mPlayerStage.grid( ) );
+		hasCollidedAtThisFrame = mCurrentTetrimino.moveDown( mPlayerStage.grid( ) );
 		mFrameCount_fallDown = 0u;
 	}
 
 	last:
 	if ( true == hasCollidedAtThisFrame )
 	{
-		const ::model::LocalSpace blocks = mCurrentTetrimino.blocks( );
-		const uint8_t area = ::model::tetrimino::BLOCKS_A_TETRIMINO*::model::tetrimino::BLOCKS_A_TETRIMINO;
-		for ( uint8_t i = 0u; i != area; ++i )
-		{
-			if ( blocks & (0x1u<<(area-i-1u)) )
-			{
-				const sf::Vector2<int8_t> pos = mCurrentTetrimino.position( );
-				mPlayerStage.lock( pos.x + i%model::tetrimino::BLOCKS_A_TETRIMINO,
-								   pos.y + i/model::tetrimino::BLOCKS_A_TETRIMINO - 1,
-								   mCurrentTetrimino.color( ) );
-			}
-		}
-		mCurrentTetrimino = mNextTetriminos.front( );
-		mCurrentTetrimino.setOrigin( mPlayerStage.position( ) );
-		mCurrentTetrimino.setSize( mCellSize_ );
-		mNextTetriminos.pop( );
-		mNextTetriminos.emplace( ::model::Tetrimino::Spawn( ) );
-		mNextTetriminoBlock_.setFillColor( mNextTetriminos.front( ).color( ) );
-		mFrameCount_fallDown = 0u;
+		mCurrentTetrimino.land( mPlayerStage.grid() );
+		reloadTetrimino( );
 	}
 
 	// Check if a row or more have to be cleared,
@@ -410,7 +393,7 @@ void ::scene::inPlay::Playing::draw( )
 	}
 	mWindow_.draw( mNextTetriminoPanel );
 	const ::model::Tetrimino& nextTet = mNextTetriminos.front( );
-	const ::model::LocalSpace nextTetBlocks = nextTet.blocks( );
+	const ::model::tetrimino::LocalSpace nextTetBlocks = nextTet.blocks( );
 	for ( uint8_t i = 0u; i != ::model::tetrimino::BLOCKS_A_TETRIMINO*::model::tetrimino::BLOCKS_A_TETRIMINO; ++i )
 	{
 		if ( nextTetBlocks & (0x1u<<(::model::tetrimino::BLOCKS_A_TETRIMINO*::model::tetrimino::BLOCKS_A_TETRIMINO-i-1u)) )
@@ -446,4 +429,15 @@ void ::scene::inPlay::Playing::draw( )
 	{
 		++mFrameCount_gameOver;
 	}
+}
+
+void scene::inPlay::Playing::reloadTetrimino()
+{
+	mCurrentTetrimino = mNextTetriminos.front( );
+	mCurrentTetrimino.setOrigin( mPlayerStage.position() );
+	mCurrentTetrimino.setSize( mCellSize_ );
+	mNextTetriminos.pop( );
+	mNextTetriminos.emplace( ::model::Tetrimino::Spawn() );
+	mNextTetriminoBlock_.setFillColor( mNextTetriminos.front().color() );
+	mFrameCount_fallDown = 0u;
 }
