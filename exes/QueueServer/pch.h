@@ -21,5 +21,6 @@
 #include <Lib/IOCP.h>
 #include <Lib/EndPoint.h>
 #include <Lib/Hash.h>
+#include <Lib/Packet.h>
 
 #endif //PCH_H

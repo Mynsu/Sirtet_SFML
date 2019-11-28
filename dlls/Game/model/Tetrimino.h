@@ -117,11 +117,12 @@ namespace model
 		{
 			mIsFallingDown = isFallingDown;
 		}
-		inline void setInfo( const ::model::tetrimino::Info& info )
+		inline void updateOnNet( const std::string& data )
 		{
-			mPosition = info.position;
-			setType( info.type );
-			///mRotationID = info.rotationID;
+			::model::tetrimino::Info* const info = (::model::tetrimino::Info*)data.data( );
+			info->type = (decltype(info->type))::ntohl( (u_long)info->type );
+			mPosition = info->position;
+			setType( info->type );
 		}
 		inline void setOrigin( const sf::Vector2f& origin )
 		{

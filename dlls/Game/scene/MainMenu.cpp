@@ -38,7 +38,7 @@ void scene::MainMenu::loadResources( )
 	if ( true == luaL_dofile(lua, scriptPathNName) )
 	{
 		// File Not Found Exception
-		(*glpService).console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
+		gService( )->console( ).printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
 		lua_close( lua );
 	}
 	else
@@ -50,7 +50,7 @@ void scene::MainMenu::loadResources( )
 		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName0.data( ), scriptPathNName );
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName0.data( ), scriptPathNName );
 		}
 		else
 		{
@@ -64,7 +64,7 @@ void scene::MainMenu::loadResources( )
 				if ( false == mTexture.loadFromFile(lua_tostring(lua, TOP_IDX)) )
 				{
 					// File Not Found Exception
-					(*glpService).console( )->printScriptError( ExceptionType::FILE_NOT_FOUND,
+					gService( )->console( ).printScriptError( ExceptionType::FILE_NOT_FOUND,
 																		(tableName0+":"+field0).data( ), scriptPathNName );
 				}
 				else
@@ -75,7 +75,7 @@ void scene::MainMenu::loadResources( )
 			// Type Check Exception
 			else
 			{
-				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName0+":"+field0).data( ), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -91,7 +91,7 @@ void scene::MainMenu::loadResources( )
 				// Range Check Exception
 				if ( 0 > temp )
 				{
-					(*glpService).console( )->printScriptError( ExceptionType::RANGE_CHECK,
+					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
 																		(tableName0+":"+field1).data( ), scriptPathNName );
 				}
 				// When the value looks OK,
@@ -104,7 +104,7 @@ void scene::MainMenu::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName0+":"+field1).data( ), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -120,7 +120,7 @@ void scene::MainMenu::loadResources( )
 				// Range Check Exception
 				if ( 0 > temp )
 				{
-					(*glpService).console( )->printScriptError( ExceptionType::RANGE_CHECK,
+					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
 																		(tableName0+":"+field2).data( ), scriptPathNName );
 				}
 				// When the value looks OK,
@@ -133,7 +133,7 @@ void scene::MainMenu::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName0+":"+field2).data( ), scriptPathNName );
 			}
 			lua_pop( lua, 2 );
@@ -144,7 +144,7 @@ void scene::MainMenu::loadResources( )
 		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName1.data( ), scriptPathNName );
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName1.data( ), scriptPathNName );
 		}
 		else
 		{
@@ -159,7 +159,7 @@ void scene::MainMenu::loadResources( )
 				// Range Check Exception
 				if ( 0 > temp )
 				{
-					(*glpService).console( )->printScriptError( ExceptionType::RANGE_CHECK,
+					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
 																		(tableName1+":"+field0).data( ), scriptPathNName );
 				}
 				// When the value looks OK,
@@ -172,7 +172,7 @@ void scene::MainMenu::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName1+":"+field0).data( ), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -188,7 +188,7 @@ void scene::MainMenu::loadResources( )
 				// Range Check Exception
 				if ( 0 > temp )
 				{
-					(*glpService).console( )->printScriptError( ExceptionType::RANGE_CHECK,
+					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
 																		(tableName1+":"+field1).data( ), scriptPathNName );
 				}
 				// When the value looks OK,
@@ -201,7 +201,7 @@ void scene::MainMenu::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName1+":"+field1).data( ), scriptPathNName );
 			}
 			lua_pop( lua, 2 );
@@ -212,7 +212,7 @@ void scene::MainMenu::loadResources( )
 		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName2.data( ), scriptPathNName );
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName2.data( ), scriptPathNName );
 		}
 		else
 		{
@@ -227,7 +227,7 @@ void scene::MainMenu::loadResources( )
 				// Range Check Exception
 				if ( 0 > temp )
 				{
-					(*glpService).console( )->printScriptError( ExceptionType::RANGE_CHECK,
+					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
 																		(tableName2+":"+field0).data( ), scriptPathNName );
 				}
 				// When the value looks OK,
@@ -240,7 +240,7 @@ void scene::MainMenu::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName2+":"+field0).data( ), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -256,7 +256,7 @@ void scene::MainMenu::loadResources( )
 				// Range Check Exception
 				if ( 0 > temp )
 				{
-					(*glpService).console( )->printScriptError( ExceptionType::RANGE_CHECK,
+					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
 																		(tableName2+":"+field1).data( ), scriptPathNName );
 				}
 				// When the value looks OK,
@@ -269,7 +269,7 @@ void scene::MainMenu::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName2+":"+field1).data( ), scriptPathNName );
 			}
 			lua_pop( lua, 2 );
@@ -280,7 +280,7 @@ void scene::MainMenu::loadResources( )
 		// Type Check Exception
 		if ( false == lua_istable( lua, TOP_IDX ) )
 		{
-			(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName3.data( ), scriptPathNName );
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName3.data( ), scriptPathNName );
 		}
 		else
 		{
@@ -295,7 +295,7 @@ void scene::MainMenu::loadResources( )
 				// Range Check Exception
 				if ( 0 > temp )
 				{
-					(*glpService).console( )->printScriptError( ExceptionType::RANGE_CHECK,
+					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
 						(tableName3+":"+field0).data( ), scriptPathNName );
 				}
 				// When the value looks OK,
@@ -308,7 +308,7 @@ void scene::MainMenu::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 					(tableName3+":"+field0).data( ), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -324,7 +324,7 @@ void scene::MainMenu::loadResources( )
 				// Range Check Exception
 				if ( 0 > temp )
 				{
-					(*glpService).console( )->printScriptError( ExceptionType::RANGE_CHECK,
+					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
 						(tableName3+":"+field1).data( ), scriptPathNName );
 				}
 				// When the value looks OK,
@@ -337,7 +337,7 @@ void scene::MainMenu::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 					(tableName3+":"+field1).data( ), scriptPathNName );
 			}
 			lua_pop( lua, 2 );
@@ -351,7 +351,7 @@ void scene::MainMenu::loadResources( )
 		if ( false == mTexture.loadFromFile(defaultFilePathNName) )
 		{
 			// Exception: When there's not even the default file,
-			(*glpService).console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+defaultFilePathNName );
+			gService( )->console( ).printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+defaultFilePathNName );
 #ifdef _DEBUG
 			__debugbreak( );
 #endif
@@ -360,15 +360,15 @@ void scene::MainMenu::loadResources( )
 
 	if ( true == isSprWDefault || true == isSprHDefault )
 	{
-		(*glpService).console( )->print( "Default: clip width 256, clip height 128" );
+		gService( )->console( ).print( "Default: clip width 256, clip height 128" );
 	}
 	if ( true == isMargXDefault || true == isMargYDefault )
 	{
-		(*glpService).console( )->print( "Default: margin x 70, margin y 70" );
+		gService( )->console( ).print( "Default: margin x 70, margin y 70" );
 	}
 	if ( true == isButtXDefault || true == isButtYDefault )
 	{
-		(*glpService).console( )->print( "Default: button x 150, button y 150" );
+		gService( )->console( ).print( "Default: button x 150, button y 150" );
 	}
 
 	mSprite.setTexture( mTexture );
@@ -380,7 +380,7 @@ void scene::MainMenu::loadResources( )
 	{
 		if ( sf::Event::KeyPressed == it.type && sf::Keyboard::Escape == it.key.code )
 		{
-			(*glpService).vault()[ HK_IS_RUNNING ] = 0;
+			gService( )->vault( )[ HK_IS_RUNNING ] = 0;
 		}
 	}
 
@@ -412,7 +412,7 @@ void scene::MainMenu::touchButton( )
 	const sf::Vector2i cast( mSpriteClipSize_ );
 	const sf::Vector2f titlebarHeight( 0.f, 20.f );
 		 
-	if ( 1 == (*glpService).vault()[HK_HAS_GAINED_FOCUS] && false == (*glpService).console( )->isVisible() )
+	if ( 1 == gService()->vault()[HK_HAS_GAINED_FOCUS] && false == gService()->console( ).isVisible() )
 	{
 		if ( const sf::Vector2f btSingleGlobalPos( sf::Vector2f(mWindow_.getPosition())+titlebarHeight+mButtonSinglePosition_ ); 
 			 btSingleGlobalPos.x < mouseGlobalPos.x && mouseGlobalPos.x < btSingleGlobalPos.x+mSpriteClipSize_.x

@@ -5,41 +5,48 @@
 #include "../CommandList.h"
 #include "../VaultKeyList.h"
 
+bool scene::online::InRoom::IsInstantiated = false;
+
 scene::online::InRoom::InRoom( sf::RenderWindow& window, Online& net, const bool asHost )
 	: mAsHost( asHost ), mIsReceiving( false ), mFrameCount( 0 ),
 	mWindow_( window ), mNet( net )
 {
-	mFPS_ = (*glpService).vault( )[ HK_FORE_FPS ];
+	mFPS_ = (int32_t)gService( )->vault( )[ HK_FORE_FPS ];
 	const std::string& nickname = mNet.nickname( );
 	mDigestedNickname_ = ::util::hash::Digest( nickname.data(), (uint8_t)nickname.size() );
-	mParticipants.emplace( mDigestedNickname_, ::ui::StageView() );
+	mParticipants.emplace( mDigestedNickname_, ::ui::PlayView(mWindow_) );
 	loadResources( );
 #ifdef _DEBUG
-	( *glpService ).console( )->print( "Now in a room.", sf::Color::Green );
+	gService( )->console( ).print( "Now in a room.", sf::Color::Green );
 #endif
 #ifdef _DEV
-	//(*glpService).console( )->addCommand( CMD_INVITE, std::bind(&scene::online::InRoom::invite,
+	//(*gService).console( )->addCommand( CMD_INVITE, std::bind(&scene::online::InRoom::invite,
 	//															 this, std::placeholders::_1) );
-	(*glpService).console( )->addCommand( CMD_LEAVE_ROOM, std::bind( &scene::online::InRoom::leaveRoom,
+	gService( )->console( ).addCommand( CMD_LEAVE_ROOM, std::bind( &scene::online::InRoom::leaveRoom,
 																 this, std::placeholders::_1 ) );
 	if ( true == asHost )
 	{
-		(*glpService).console( )->addCommand( CMD_START_GAME, std::bind( &scene::online::InRoom::startGame,
+		gService( )->console( ).addCommand( CMD_START_GAME, std::bind( &scene::online::InRoom::startGame,
 																	 this, std::placeholders::_1 ) );
 	}
 #endif
+	IsInstantiated = true;
 }
 
 scene::online::InRoom::~InRoom( )
 {
 #ifdef _DEV
-	//(*glpService).console( )->removeCommand( CMD_INVITE );
-	(*glpService).console( )->removeCommand( CMD_LEAVE_ROOM );
-	if ( true == mAsHost )
+	if ( nullptr != gService() )
 	{
-		(*glpService).console( )->removeCommand( CMD_START_GAME );
+		//(*gService).console( )->removeCommand( CMD_INVITE );
+		gService( )->console( ).removeCommand( CMD_LEAVE_ROOM );
+		if ( true == mAsHost )
+		{
+			gService( )->console( ).removeCommand( CMD_START_GAME );
+		}
 	}
 #endif
+	IsInstantiated = false;
 }
 
 void scene::online::InRoom::loadResources( )
@@ -63,15 +70,19 @@ void scene::online::InRoom::loadResources( )
 	::scene::online::ID retVal = ::scene::online::ID::AS_IS;
 	if ( true == mNet.hasReceived() )
 	{
-		if ( std::optional<std::string> curTet(mNet.getByTag(TAG_CURRENT_TETRIMINO, Online::Option::SERIALIZED));
+		if ( std::optional<std::string> stage(mNet.getByTag(TAG_MY_STAGE, Online::Option::SERIALIZED));
+			std::nullopt != stage )
+		{
+			mParticipants[ mDigestedNickname_ ].updateStage( stage.value() );
+		}
+		
+		if ( std::optional<std::string> curTet(mNet.getByTag(TAG_MY_CURRENT_TETRIMINO, Online::Option::SERIALIZED));
 				  std::nullopt != curTet )
 		{
-			::model::tetrimino::Info* info = (::model::tetrimino::Info*)curTet.value( ).data( );
-			///info->rotationID = (decltype(info->rotationID))::ntohl( (u_long)info->rotationID );
-			info->type = (decltype(info->type))::ntohl( (u_long)info->type );
-			mParticipants[ mDigestedNickname_ ].setCurrentTetrimino( *info );
+			mParticipants[ mDigestedNickname_ ].updateCurrentTetrimino( curTet.value() );
 		}
-		else if ( std::optional<std::string> reqToGetReady(mNet.getByTag(TAG_GET_READY, Online::Option::RETURN_TAG_ATTACHED));
+		
+		if ( std::optional<std::string> reqToGetReady(mNet.getByTag(TAG_REQ_GET_READY, Online::Option::RETURN_TAG_ATTACHED));
 			 std::nullopt != reqToGetReady )
 		{
 			mFrameCount = mFPS_*-3;
@@ -120,7 +131,7 @@ void scene::online::InRoom::loadResources( )
 //				if ( RESPONSE_NEGATION == rcvBuf[0] )
 //				{
 ////TODO					
-//					(*glpService).console( )->print( "There's no such ID", sf::Color::Green );
+//					(*gService).console( )->print( "There's no such ID", sf::Color::Green );
 //				}
 //				mState = State::DOING_NOTHING;
 //			}
@@ -140,7 +151,7 @@ void scene::online::InRoom::draw( )
 	mWindow_.draw( mBackgroundRect );
 	for ( auto& it : mParticipants )
 	{
-		it.second.draw( mWindow_, mFrameCount/mFPS_ );
+		it.second.draw( mFrameCount/mFPS_ );
 	}
 	if ( 0 != mFrameCount )
 	{
@@ -154,7 +165,7 @@ void scene::online::InRoom::draw( )
 //	if ( arg[0] < '0' || '9' < arg[0] )
 //	{
 //		// Exception
-//		(*glpService).console( )->printFailure( FailureLevel::WARNING, "Unknown arguments." );
+//		(*gService).console( )->printFailure( FailureLevel::WARNING, "Unknown arguments." );
 //		return;
 //	}
 //	std::string data( TAG_INVITE+std::to_string(std::atoi(arg.data())) );
@@ -163,11 +174,11 @@ void scene::online::InRoom::draw( )
 
 void scene::online::InRoom::startGame( const std::string_view& arg )
 {
-	char req = TAG_START_GAME[ 0 ];
+	char req = TAG_REQ_START_GAME[ 0 ];
 	mNet.send( &req, 1 );
 }
 
-void scene::online::InRoom::leaveRoom( const std::string_view & arg )
+void scene::online::InRoom::leaveRoom( const std::string_view& arg )
 {
 	mNet.disconnect( );
 }

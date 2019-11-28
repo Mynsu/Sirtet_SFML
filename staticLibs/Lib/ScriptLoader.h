@@ -27,7 +27,7 @@ namespace util::script
 			lua_close( lua );
 			
 #ifdef GAME_EXPORTS
-			(*glpService).console()->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
+			gService( )->console( ).printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
 #else
 			gService._console( ).printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
 #endif
@@ -68,7 +68,7 @@ namespace util::script
 						{
 							const std::string msg( "Overflow or underflow occurs." );
 #ifdef GAME_EXPORTS
-							(*glpService).console( )->printFailure( FailureLevel::FATAL,
+							gService( )->console( ).printFailure( FailureLevel::FATAL,
 																			msg + it + scriptPathNName );
 #else
 							gService._console( ).printFailure( FailureLevel::FATAL,
@@ -92,7 +92,7 @@ namespace util::script
 						{
 							const std::string msg( "Overflow or underflow occurs." );
 #ifdef GAME_EXPORTS
-							(*glpService).console( )->printFailure( FailureLevel::FATAL,
+							gService( )->console( ).printFailure( FailureLevel::FATAL,
 																			msg + it + scriptPathNName );
 #else
 							gService._console( ).printFailure( FailureLevel::FATAL,

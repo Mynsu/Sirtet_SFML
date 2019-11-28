@@ -14,7 +14,7 @@ namespace
 {
 	void Exit( const std::string_view& )
 	{
-		(*glpService).vault( )[ HK_IS_RUNNING ] = 0;
+		gService( )->vault( )[ HK_IS_RUNNING ] = 0;
 	}
 }
 
@@ -25,10 +25,10 @@ void ::scene::SceneManager::lastInit( sf::RenderWindow* const window )
 	//
 	// Registering commands
 	///
-	(*glpService).console( )->addCommand( CMD_EXIT, &::Exit );
+	gService( )->console( ).addCommand( CMD_EXIT, &::Exit );
 #ifdef _DEV
-	(*glpService).console( )->addCommand( CMD_CHANGE_SCENE, std::bind(&SceneManager::chscnto, this, std::placeholders::_1) );
-	(*glpService).console( )->addCommand( CMD_RELOAD, std::bind(&SceneManager::refresh, this, std::placeholders::_1) );
+	gService( )->console( ).addCommand( CMD_CHANGE_SCENE, std::bind(&SceneManager::chscnto, this, std::placeholders::_1) );
+	gService( )->console( ).addCommand( CMD_RELOAD, std::bind(&SceneManager::refresh, this, std::placeholders::_1) );
 
 	//
 	// Starting scene
@@ -48,7 +48,7 @@ void ::scene::SceneManager::lastInit( sf::RenderWindow* const window )
 		// Type Check Exception
 		else
 		{
-			(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK, varName, scriptPathNName );
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, varName, scriptPathNName );
 		}
 	}
 	/// Variable Not Found Exception
@@ -64,6 +64,7 @@ void ::scene::SceneManager::setScene( const ::scene::ID nextScene )
 {
 	ASSERT_NOT_NULL( mWindow );
 
+	mCurrentScene.reset( nullptr );
 	switch ( nextScene )
 	{
 		case ::scene::ID::INTRO:
@@ -94,14 +95,14 @@ void ::scene::SceneManager::chscnto( const std::string_view& args )
 	if ( args[0] < '0' || '9' < args[0] )
 	{
 		// Exception
-		(*glpService).console( )->printFailure( FailureLevel::WARNING, "Invalid Scene ID" );
+		gService( )->console( ).printFailure( FailureLevel::WARNING, "Invalid Scene ID" );
 		return;
 	}
 	const ::scene::ID nextScene = (::scene::ID)std::atoi( args.data() );
 	// Exception: When the current scene id equals with the next scene id,
 	if ( nextScene == mCurrentScene->currentScene() )
 	{
-		(*glpService).console( )->print( "We are already where you want to go." );
+		gService( )->console( ).print( "We are already where you want to go." );
 		return;
 	}
 	setScene( nextScene );

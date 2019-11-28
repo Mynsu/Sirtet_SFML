@@ -36,21 +36,21 @@
 if ( false != ( x ) ) \
 { \
 	std::string msg( "ASSERT_FALSE disproved. (" ); \
-	(*glpService).console()->printFailure( FailureLevel::FATAL, \
+	(*gService).console()->printFailure( FailureLevel::FATAL, \
 											msg + __FILE__ + ":" + std::to_string( __LINE__ ) + ")" ); \
 }
 #define ASSERT_TRUE( x ) \
 if ( true != ( x ) ) \
 { \
 	std::string msg( "ASSERT_TRUE disproved. (" ); \
-	(*glpService).console()->printFailure( FailureLevel::FATAL, \
+	(*gService).console()->printFailure( FailureLevel::FATAL, \
 											msg + __FILE__ + ":" + std::to_string( __LINE__ ) + ")" ); \
 }
 #define ASSERT_NOT_NULL( x ) \
 if ( nullptr == (x) || NULL == (x) ) \
 { \
 	std::string msg( "ASSERT_NOT_NULL disproved. (" ); \
-	(*glpService).console()->printFailure( FailureLevel::FATAL, \
+	(*gService).console()->printFailure( FailureLevel::FATAL, \
 											msg + __FILE__ + ":" + std::to_string( __LINE__ ) + ")" ); \
 }
 #endif

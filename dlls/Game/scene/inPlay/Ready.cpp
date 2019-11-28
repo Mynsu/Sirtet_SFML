@@ -10,7 +10,7 @@
 	mWindow_( window ), mBackgroundRect_( static_cast< sf::RectangleShape& >( shapeOrSprite ) ),
 	mSpriteClipSize_( 256.f, 256.f )
 {
-	if ( const auto it = (*glpService).vault().find(HK_FORE_FPS); (*glpService).vault().cend() != it )
+	if ( const auto it = gService()->vault().find(HK_FORE_FPS); gService()->vault().cend() != it )
 	{
 		mFPS_ = it->second;
 		mFrameCount = mFPS_ * 3;
@@ -35,7 +35,7 @@ void ::scene::inPlay::Ready::loadResources( )
 	if ( true == luaL_dofile(lua, scriptPathNName) )
 	{
 		// File Not Found Exception
-		(*glpService).console()->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
+		gService( )->console( ).printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
 		lua_close( lua );
 	}
 	else
@@ -47,7 +47,7 @@ void ::scene::inPlay::Ready::loadResources( )
 		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName0.data( ), scriptPathNName );
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName0.data( ), scriptPathNName );
 		}
 		else
 		{
@@ -61,7 +61,7 @@ void ::scene::inPlay::Ready::loadResources( )
 				if ( false == mTexture.loadFromFile(lua_tostring(lua, TOP_IDX)) )
 				{
 					// File Not Found Exception
-					(*glpService).console( )->printScriptError( ExceptionType::FILE_NOT_FOUND,
+					gService( )->console( ).printScriptError( ExceptionType::FILE_NOT_FOUND,
 																		(tableName0+":"+field0).data( ), scriptPathNName );
 				}
 				else
@@ -72,7 +72,7 @@ void ::scene::inPlay::Ready::loadResources( )
 			// Type Check Exception
 			else
 			{
-				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName0+":"+field0).data( ), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -88,7 +88,7 @@ void ::scene::inPlay::Ready::loadResources( )
 				// Range Check Exception
 				if ( 0 > temp )
 				{
-					(*glpService).console( )->printScriptError( ExceptionType::RANGE_CHECK,
+					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
 																		(tableName0+":"+field1).data( ), scriptPathNName );
 				}
 				// When the value looks OK,
@@ -101,7 +101,7 @@ void ::scene::inPlay::Ready::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName0+":"+field1).data( ), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -117,7 +117,7 @@ void ::scene::inPlay::Ready::loadResources( )
 				// Range Check Exception
 				if ( 0 > temp )
 				{
-					(*glpService).console( )->printScriptError( ExceptionType::RANGE_CHECK,
+					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
 																		(tableName0+":"+field2).data( ), scriptPathNName );
 				}
 				// When the value looks OK,
@@ -130,7 +130,7 @@ void ::scene::inPlay::Ready::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 																	(tableName0+":"+field2).data( ), scriptPathNName );
 			}
 			lua_pop( lua, 2 );
@@ -144,7 +144,7 @@ void ::scene::inPlay::Ready::loadResources( )
 		if ( false == mTexture.loadFromFile(defaultFilePathNName) )
 		{
 			// Exception: When there's not even the default file,
-			(*glpService).console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+defaultFilePathNName );
+			gService( )->console( ).printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+defaultFilePathNName );
 #ifdef _DEBUG
 			__debugbreak( );
 #endif
@@ -153,7 +153,7 @@ void ::scene::inPlay::Ready::loadResources( )
 
 	if ( true == isWDefault || true == isHDefault )
 	{
-		(*glpService).console( )->print( "Default: width 256, height 256" );
+		gService( )->console( ).print( "Default: width 256, height 256" );
 	}
 
 	mSprite.setTexture( mTexture );

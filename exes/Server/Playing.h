@@ -20,7 +20,7 @@ public:
 	void spawnTetrimino( );
 	Playing::Change update( );
 	std::string currentTetriminoInfo( );
-	std::string gridInfo( );
+	std::string stageInfo( );
 private:
 	inline void reloadTetrimino( )
 	{

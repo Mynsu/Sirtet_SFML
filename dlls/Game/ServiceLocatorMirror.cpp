@@ -2,4 +2,4 @@
 #include "ServiceLocatorMirror.h"
 
 bool ::ServiceLocatorMirror::IsInstantiated = false;
-::ServiceLocatorMirror glpService;
+::ServiceLocatorMirror gService;

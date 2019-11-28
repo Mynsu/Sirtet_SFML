@@ -16,13 +16,13 @@ public:
 		IsInstantiated = false;
 	}
 
-	IServiceLocator& operator*( )
+	IServiceLocator* operator()( )
 	{
-		return *mPtr;
+		return mPtr;
 	}
 private:
 	static bool IsInstantiated;
 	IServiceLocator* mPtr;
 };
 
-extern ::ServiceLocatorMirror glpService;
+extern ::ServiceLocatorMirror gService;

@@ -24,9 +24,9 @@ public:
 	}
 
 	// Access the console.  For API.
-	IConsole* console( ) override
+	IConsole& console( ) override
 	{
-		return &mConsole;
+		return mConsole;
 	}
 	// Access the console.  For internal use.
 	inline Console& _console( )

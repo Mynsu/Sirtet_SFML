@@ -14,7 +14,7 @@ bool ::scene::inPlay::InPlay::IsInstantiated = false;
 {
 	ASSERT_FALSE( IsInstantiated );
 
-	mFPS_ = static_cast< uint32_t >( (*glpService).vault()[HK_FORE_FPS] );
+	mFPS_ = (uint32_t)gService( )->vault( )[HK_FORE_FPS];
 	setScene( ::scene::inPlay::ID::READY );
 	loadResources( );
 

@@ -27,7 +27,7 @@ Playing::Change Playing::update( )
 		{
 			if ( true == mCurrentTetrimino.moveDown(mStage.grid()) )
 			{
-				mCurrentTetrimino.land( mStage.floor() );
+				mCurrentTetrimino.land( mStage.grid() );
 				reloadTetrimino( );
 				mTick -= std::chrono::milliseconds(20);
 				retVal |= Playing::Change::CURRENT_TETRIMINO_LANDED;
@@ -47,14 +47,14 @@ Playing::Change Playing::update( )
 
 std::string Playing::currentTetriminoInfo( )
 {
-	///mOld = Clock::now( );
 	::model::tetrimino::Info info;
 	info.position = mCurrentTetrimino.position( );
 	info.type = (decltype(info.type))::htonl( (u_long)mCurrentTetrimino.type() );
 	return std::string( (char*)&info, sizeof(::model::tetrimino::Info) );
 }
 
-std::string Playing::gridInfo()
+std::string Playing::stageInfo()
 {
-
+	const uint32_t GRID_SIZE = ::model::stage::GRID_HEIGHT * ::model::stage::GRID_WIDTH;
+	return std::string( (char*)mStage.pGrid(), sizeof(::model::Cell)*GRID_SIZE );
 }

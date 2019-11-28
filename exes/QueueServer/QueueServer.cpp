@@ -633,10 +633,9 @@ int main( )
 		else
 		{
 			// When having asked population in the previous while loop, not this loop,
-			if ( 1 == status[Status::AWAITING_POPULATION] )
+			if ( 1 == status[Status::AWAITING_POPULATION] && false == socketToMainServer->isPending() )
 			{
 #ifdef _DEBUG
-				if ( false != socketToMainServer->isPending( ) ) __debugbreak( );
 				std::cout << "Waiting for the main server's answer how many clients are there.\n";
 #endif
 				tolerance = 0;

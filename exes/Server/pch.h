@@ -25,8 +25,12 @@
 #include <Lib/EndPoint.h>
 #include <Lib/Hash.h>
 #include <Lib/Common.h>
+#include <Lib/Packet.h>
 
 using Clock = std::chrono::high_resolution_clock;
+using ClientIndex = uint32_t;
+using Ticket = HashedKey;
+using RoomID = uint32_t;
 
 #ifdef _DEBUG
 #define ASSERT_TRUE( x ) if ( false == (x) ) __debugbreak( );

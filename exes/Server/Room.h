@@ -3,8 +3,6 @@
 
 class Client;
 
-using RoomID = int32_t;
-
 class Room
 {
 public:
@@ -16,7 +14,7 @@ public:
 		PLAYING,
 	};
 
-	// Needs initialization.
+	// NOTE: DO NOT USE!  Declared to use std::unordered_map.
 	Room( );
 	explicit Room( const ClientIndex hostIndex );
 	Room( const Room& ) = delete;

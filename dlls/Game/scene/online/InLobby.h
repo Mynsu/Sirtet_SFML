@@ -22,8 +22,9 @@ namespace scene::online
 		void cancelConnection( const std::string_view& );
 		//TODO: 방제, 비번 등
 		void createRoom( const std::string_view& );
-		void respondYes( const std::string_view& );
-		void respondNo( const std::string_view& );
+		//void respondYes( const std::string_view& );
+		//void respondNo( const std::string_view& );
+		static bool IsInstantiated;
 		bool mIsReceiving, mHasCanceled, mHasJoined;
 		::scene::online::Online& mNet;
 		sf::RenderWindow& mWindow_;

@@ -1,6 +1,6 @@
 #pragma once
 #include "IScene.h"
-#include "../../ui/StageView.h"
+#include "../../ui/PlayView.h"
 #include "../../model/Tetrimino.h"
 
 namespace scene::online
@@ -21,13 +21,14 @@ namespace scene::online
 		//void invite( const std::string_view& arg );
 		void startGame( const std::string_view& arg );
 		void leaveRoom( const std::string_view& arg );
+		static bool IsInstantiated;
 		bool mAsHost, mIsReceiving;
 		HashedKey mDigestedNickname_;
 		int32_t mFrameCount, mFPS_;
 		sf::RenderWindow& mWindow_;
 		Online& mNet;
 //TODO
-		std::unordered_map< HashedKey, ::ui::StageView > mParticipants;
+		std::unordered_map< HashedKey, ::ui::PlayView > mParticipants;
 		sf::RectangleShape mBackgroundRect;
 	};
 }

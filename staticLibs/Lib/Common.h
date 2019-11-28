@@ -41,7 +41,6 @@ namespace model
 		{
 			sf::Vector2<int8_t> position;
 			::model::tetrimino::Type type;
-			///::model::tetrimino::Rotation rotationID;
 		};
 
 		const uint8_t BLOCKS_A_TETRIMINO = 4u;
@@ -51,54 +50,69 @@ namespace model
 	}
 }
 
+constexpr char TOKEN_SEPARATOR = ' ';
+constexpr char TOKEN_SEPARATOR_2 = '_';
+
+enum class _Tag
+{
+	////
+	// Connection
+	////
+	TICKET,
+	ORDER_IN_QUEUE,
+	MY_NICKNAME,
+
+	////
+	// Request
+	////
+	REQ_NULL,
+	REQ_CREATE_ROOM,
+	REQ_START_GAME,
+	REQ_GET_READY,
+
+	////
+	// Inplay
+	////
+	MY_CURRENT_TETRIMINO,
+	MY_STAGE,
+};
+
 using Tag = char[];
+using Request = _Tag;
+
+////
+// Connection
+////
 
 // The queue server sends encrypted data attached by this tag to the both of them,
 // the main server and ...
 // ... the client having submitted the valid invitation.
 // The client receives and sends to the main server as it is.
 // With that the main server can see the connecting client is genuine or not.
-constexpr Tag TAG_TICKET = "t:";
-constexpr uint8_t TAG_TICKET_LEN = ::util::hash::Measure( TAG_TICKET );
+constexpr Tag TAG_TICKET = { '0'+(int)_Tag::TICKET, ':', '\0' };
 
 // The queue server sends the client's order attached by this tag.
-constexpr Tag TAG_ORDER_IN_QUEUE = "qL:";
-constexpr uint8_t TAG_ORDER_IN_QUEUE_LEN = ::util::hash::Measure( TAG_ORDER_IN_QUEUE );
+constexpr Tag TAG_ORDER_IN_QUEUE = { '0'+(int)_Tag::ORDER_IN_QUEUE, ':', '\0' };
 
-constexpr Tag TAG_NICKNAME = "nck:";
-constexpr uint8_t TAG_NICKNAME_LEN = ::util::hash::Measure( TAG_NICKNAME );
+constexpr Tag TAG_MY_NICKNAME = { '0'+(int)_Tag::MY_NICKNAME, ':', '\0' };
 
-//constexpr Tag TAG_NOTIFY_JOINING = "nJ:";
-//constexpr uint8_t TAG_NOTIFY_JOINING_LEN = ::util::hash::Measure( TAG_NOTIFY_JOINING );
-//
-//constexpr Tag TAG_OLDERS = "old:";
-//constexpr uint8_t TAG_OLDERS_LEN = ::util::hash::Measure( TAG_OLDERS );
-
-enum class Request
-{
-	CREATE_ROOM,
-	START_GAME,
-	GET_READY,
-	INVITE,
-};
+////
+// Request
+////
 
 constexpr char RESPONSE_AFFIRMATION = '1';
 constexpr char RESPONSE_NEGATION = '0';
 
-constexpr char _TAG_CREATE_ROOM = '0' + (int)Request::CREATE_ROOM;
-constexpr char TAG_CREATE_ROOM[] = { _TAG_CREATE_ROOM, ':', '\0' };
+constexpr char TAG_REQ_CREATE_ROOM[ ] = { '0'+(int)_Tag::REQ_CREATE_ROOM, ':', '\0' };
 
-constexpr char _TAG_START_GAME = '0' + (int)Request::START_GAME;
-constexpr char TAG_START_GAME[ ] = { _TAG_START_GAME, ':', '\0' };
+constexpr char TAG_REQ_START_GAME[ ] = { '0'+(int)_Tag::REQ_START_GAME, ':', '\0' };
 
-constexpr char _TAG_GET_READY = '0' + (int)Request::GET_READY;
-constexpr char TAG_GET_READY[ ] = { _TAG_GET_READY, ':', '\0' };
-
-//constexpr char _TAG_INVITE = '0' + (int)Request::INVITE;
-//constexpr char TAG_INVITE[] = { _TAG_INVITE, ':', '\0' };
+constexpr char TAG_REQ_GET_READY[ ] = { '0'+(int)_Tag::REQ_GET_READY, ':', '\0' };
 
 ////
-// inPlay
+// Inplay
 ////
 
-constexpr char TAG_CURRENT_TETRIMINO[ ] = "curT:";
+constexpr char TAG_MY_CURRENT_TETRIMINO[ ] = { '0'+(int)_Tag::MY_CURRENT_TETRIMINO, ':', '\0' };
+
+constexpr char TAG_MY_STAGE[ ] = { '0'+(int)_Tag::MY_STAGE, ':', '\0' };

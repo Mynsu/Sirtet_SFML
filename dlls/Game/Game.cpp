@@ -52,7 +52,7 @@ std::unique_ptr< IGame > _Game( std::make_unique< GameLocal >( ) );
 // Pseudo-unnamed function
 inline void _2943305454( const EngineComponents engine )
 {
-	glpService.mPtr = engine.service;
+	gService.mPtr = engine.service;
 	// !IMPORTANT: Call this only after all the engine components has been linked, or assigned like above.
 	_Game->setWindow( engine.window );
 }

@@ -20,11 +20,6 @@ namespace model
 		~Stage( ) = default;
 
 		uint8_t tryClearRow( );
-		inline void lock( const uint8_t x, const uint8_t y )
-		{
-			ASSERT_TRUE( (x<::model::stage::GRID_WIDTH) && (y<::model::stage::GRID_HEIGHT) );
-			mGrid[ y ][ x ].blocked = true;
-		}
 		inline bool isOver( ) const
 		{
 			bool retVal = false;
@@ -38,13 +33,13 @@ namespace model
 			}
 			return retVal;
 		}
-		inline const std::array< std::array<Cell, ::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid( ) const
+		inline auto grid( ) -> std::array< std::array<Cell, ::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >&
 		{
 			return mGrid;
 		}
-		inline std::array< std::array<Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& floor( )
+		inline auto pGrid( ) -> std::array< std::array<Cell, ::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >*
 		{
-			return mGrid;
+			return &mGrid;
 		}
 	private:
 		//0

@@ -2,9 +2,6 @@
 
 class Room;
 
-using ClientIndex = uint32_t;
-using Ticket = HashedKey;
-
 class Client
 {
 public:
@@ -29,7 +26,8 @@ public:
 	RoomID roomID( ) const;
 	void setRoomID( const RoomID roomID );
 	Socket& socket( );
-	void setSocket( const Socket& socket );
+	void setSocket( const Socket::Type type, const Socket::CompletedWork completedWork );
+	void reset( );
 private:
 	ClientIndex mIndex;
 	Client::State mState;

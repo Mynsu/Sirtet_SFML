@@ -16,9 +16,13 @@ namespace model
 	class Stage
 	{
 	public:
-		Stage( ) = delete;
-		explicit Stage( sf::RenderWindow& window )
-			: mCellSize_( 30.f ), mWindow_( window )
+		// NOTE: DO NOT USE.  Declared to use std::unordered_map.
+		Stage( )
+			: mCellSize_( 0.f ), mWindow_( nullptr )
+		{
+		}
+		Stage( sf::RenderWindow& window )
+			: mCellSize_( 30.f ), mWindow_( &window )
 		{
 			mPanel.setFillColor( sf::Color::Black );
 			mCellShape.setOutlineThickness( 1.f );
@@ -28,7 +32,7 @@ namespace model
 
 		inline void draw( )
 		{
-			mWindow_.draw( mPanel );
+			mWindow_->draw( mPanel );
 			// NOTE: The failure regarding OpenGL occurs.
 			///#pragma omp parallel
 			for ( uint8_t i = 0u; i != ::model::stage::GRID_HEIGHT; ++i )
@@ -39,7 +43,7 @@ namespace model
 					{
 						mCellShape.setFillColor( mGrid[ i ][ k ].color );
 						mCellShape.setPosition( mPosition_ + sf::Vector2f(static_cast<float>(k), static_cast<float>(i))*mCellSize_ );
-						mWindow_.draw( mCellShape );
+						mWindow_->draw( mCellShape );
 					}
 				}
 			}
@@ -85,9 +89,15 @@ namespace model
 			mPosition_ = position;
 		}
 		void setSize( const float cellSize );
+		inline void updateOnNet( const std::string& data )
+		{
+			using Grid = std::array< std::array<Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >;
+			Grid* const ptr = (Grid*)data.data();
+			mGrid = *ptr;
+		}
 	private:
 		float mCellSize_;
-		sf::RenderWindow& mWindow_;
+		sf::RenderWindow* mWindow_;
 		sf::Vector2f mPosition_;
 		sf::RectangleShape mPanel, mCellShape;
 		//0

@@ -22,6 +22,7 @@ namespace scene::online
 		};
 
 		void cancelConnection( const std::string_view& );
+		static bool IsInstantiated;
 		bool mHasCanceled;
 		uint32_t mOrder;
 		::scene::online::Waiting::State mState;

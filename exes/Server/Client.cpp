@@ -4,7 +4,7 @@
 
 Client::Client( const Socket::Type type, const ClientIndex index )
 	: mIndex( index ), mState( State::UNVERIFIED ),
-	mTicket( 0u ), mRoomID( 0u ),
+	mTicket( 0u ), mRoomID( -1 ),
 	mRecentRequest( (Request)-1 ),
 	mSocket( type )
 {
@@ -22,7 +22,7 @@ bool Client::complete( std::unordered_map<HashedKey, Room>& roomS )
 				const Request req = (Request)std::atoi( rcvBuf );
 				switch ( req )
 				{
-					case Request::CREATE_ROOM:
+					case Request::REQ_CREATE_ROOM:
 					{
 						////
 						// Generating random room ID
@@ -33,7 +33,7 @@ bool Client::complete( std::unordered_map<HashedKey, Room>& roomS )
 						mRoomID = roomID;
 						////
 						roomS.emplace( roomID, mIndex );
-						std::string response( TAG_CREATE_ROOM );
+						std::string response( TAG_REQ_CREATE_ROOM );
 						if ( -1 == mSocket.sendOverlapped(response.data(), response.size()) )
 						{
 							// Exception
@@ -45,7 +45,6 @@ bool Client::complete( std::unordered_map<HashedKey, Room>& roomS )
 						break;
 					}
 					default:
-					{
 						std::cerr << "WARNING: Client " << mIndex << " sent an undefined request.\n";
 						if ( -1 == mSocket.receiveOverlapped() )
 						{
@@ -55,14 +54,13 @@ bool Client::complete( std::unordered_map<HashedKey, Room>& roomS )
 						}
 						mSocket.pend( );
 						break;
-					}
 				}
 			}
 			else if ( Socket::CompletedWork::SEND == cmpl )
 			{
 				switch( mRecentRequest )
 				{
-					case Request::CREATE_ROOM:
+					case Request::REQ_CREATE_ROOM:
 						mState = Client::State::IN_ROOM;
 						if ( -1 == mSocket.receiveOverlapped() )
 						{
@@ -93,7 +91,7 @@ bool Client::complete( std::unordered_map<HashedKey, Room>& roomS )
 				const Request req = (Request)std::atoi(rcvBuf);
 				switch ( req )
 				{
-					case Request::START_GAME:
+					case Request::REQ_START_GAME:
 						if ( Room& room = roomS[mRoomID];
 							room.hostIndex() == mIndex )
 						{
@@ -308,10 +306,18 @@ Socket& Client::socket( )
 	return mSocket;
 }
 
-void Client::setSocket( const Socket& socket )
+void Client::setSocket( const Socket::Type type, const Socket::CompletedWork completedWork )
 {
 	mSocket.close( );
-	mSocket = socket;
+	mSocket = Socket( type, completedWork );
+}
+
+void Client::reset()
+{
+	mState = Client::State::UNVERIFIED;
+	mTicket = 0u;
+	mRoomID = -1;
+	mRecentRequest = Request::REQ_NULL;
 }
 
 Client::State Client::state() const

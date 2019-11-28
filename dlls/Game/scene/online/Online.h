@@ -24,6 +24,7 @@ namespace scene::online
 		bool hasReceived( );
 		enum class Option
 		{
+			NONE = 0,
 			FIND_END_TO_BEGIN = 1 << 0,
 			SERIALIZED = 1 << 1,
 			RETURN_TAG_ATTACHED = 1 << 2,
@@ -64,12 +65,8 @@ namespace scene::online
 	{
 		return lh = lh | rh;
 	}
-	inline Online::Option operator&( const Online::Option lh, const Online::Option rh )
+	inline bool operator&( const Online::Option lh, const Online::Option rh )
 	{
-		return (Online::Option)((uint32_t)lh & (uint32_t)rh);
-	}
-	inline bool operator==( const bool lh, const Online::Option rh )
-	{
-		return (0u == (uint32_t)rh)? false: true;
+		return (bool)((uint32_t)lh & (uint32_t)rh);
 	}
 }

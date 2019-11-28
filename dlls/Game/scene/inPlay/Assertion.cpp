@@ -6,7 +6,7 @@
 scene::inPlay::Assertion::Assertion( sf::RenderWindow& window )
 	: mFrameCount( 0u ), mWindow_( window )
 {
-	mFPS_ = static_cast< uint32_t >( (*glpService).vault()[HK_FORE_FPS] );
+	mFPS_ = static_cast< uint32_t >( gService()->vault()[HK_FORE_FPS] );
 
 	mRect.setSize( sf::Vector2f( window.getSize( ) ) );
 	const uint8_t alpha = 0x7f;

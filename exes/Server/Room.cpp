@@ -10,7 +10,7 @@ Room::Room( )
 Room::Room( const ClientIndex hostIndex )
 	: mHostIndex( hostIndex ), mState( State::WAITING )
 {
-	mParticipantS.emplace( hostIndex );
+	mParticipantS.emplace( hostIndex, Playing() );
 }
 
 std::forward_list<ClientIndex> Room::update( std::vector<Client>& clientS )
@@ -25,7 +25,7 @@ std::forward_list<ClientIndex> Room::update( std::vector<Client>& clientS )
 			{
 				const ClientIndex participantIdx = it.first;
 				Socket& participantSocket = clientS[ participantIdx ].socket( );
-				std::string req( TAG_GET_READY );
+				std::string req( TAG_REQ_GET_READY );
 				if ( -1 == participantSocket.sendOverlapped(req.data(), req.size()) )
 				{
 					// Exception
@@ -51,7 +51,7 @@ std::forward_list<ClientIndex> Room::update( std::vector<Client>& clientS )
 					Socket& participantSocket = clientS[ participantIdx ].socket( );
 					Playing& participantPlay = it.second;
 					std::string data( participantPlay.currentTetriminoInfo() );
-					std::string curTet( TAG_CURRENT_TETRIMINO + std::to_string(data.size())
+					std::string curTet( TAG_MY_CURRENT_TETRIMINO + std::to_string(data.size())
 									   + TOKEN_SEPARATOR_2
 									   + data );
 					if ( -1 == participantSocket.sendOverlapped(curTet.data(), curTet.size()) )
@@ -73,33 +73,30 @@ std::forward_list<ClientIndex> Room::update( std::vector<Client>& clientS )
 			{
 				if ( const Playing::Change res = it.second.update(); true == res )
 				{
-					std::stringstream package;
+					Packet packet;
 					Playing& participantPlay = it.second;
 					if ( true == (res & Playing::Change::CURRENT_TETRIMINO_MOVED) )
 					{
-						std::string data( participantPlay.currentTetriminoInfo() );
-						package << TAG_CURRENT_TETRIMINO
-							+ std::to_string( data.size() )
-							+ TOKEN_SEPARATOR_2
-							+ data
-							+ TOKEN_SEPARATOR;
+						std::string curTet( participantPlay.currentTetriminoInfo() );
+						packet.pack( TAG_MY_CURRENT_TETRIMINO, curTet );
 					}
 					if ( true == (res & Playing::Change::CURRENT_TETRIMINO_LANDED) )
 					{
-						std::string data( participantPlay.gridInfo() );
+						std::string stage( participantPlay.stageInfo() );
+						packet.pack( TAG_MY_STAGE, stage );
 					}
 
-						const ClientIndex participantIdx = it.first;
-						Socket& participantSocket = clientS[ participantIdx ].socket( );
-						if ( -1 == participantSocket.sendOverlapped(curTet.data(), curTet.size()) )
-						{
-							// Exception
-							std::cerr << "Failed to send the current tetrimino to Client "
-								<< participantIdx << ".\n";
-							retVal.emplace_front( participantIdx );
-							continue;
-						}
-						participantSocket.pend( );
+					const ClientIndex participantIdx = it.first;
+					Socket& participantSocket = clientS[ participantIdx ].socket( );
+					if ( -1 == participantSocket.sendOverlapped(packet) )
+					{
+						// Exception
+						std::cerr << "Failed to send the current info to Client "
+							<< participantIdx << ".\n";
+						retVal.emplace_front( participantIdx );
+						continue;
+					}
+					participantSocket.pend( );
 				}
 			}
 			break;

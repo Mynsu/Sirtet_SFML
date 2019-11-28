@@ -14,7 +14,7 @@ namespace
 	const uint8_t SECONDS_TO_MAIN_MENU = 3u;
 	std::unique_ptr< Socket > SocketToServer;
 //TODO: 개명
-	std::unique_ptr< std::thread > Thread0, Thread1;
+	std::unique_ptr< std::thread > ThreadToReceive, ThreadToSend;
 	bool IsSending, IsReceiving;
 	int8_t SendingResult, ReceivingResult;
 	std::condition_variable CvForResumingSnd, CvForResumingRcv;
@@ -81,29 +81,29 @@ scene::online::Online::Online( sf::RenderWindow& window )
 {
 	ASSERT_FALSE( IsInstantiated );
 
-	SocketToServer = std::make_unique< Socket >( Socket::Type::TCP );
-	mFPS_ = (uint32_t)(*glpService).vault( )[ HK_FORE_FPS ];
+	mFPS_ = (uint32_t)gService( )->vault( )[ HK_FORE_FPS ];
 	FrameCount_interval = mFPS_;
+	SocketToServer = std::make_unique< Socket >( Socket::Type::TCP );
 	ASSERT_TRUE( -1 != SocketToServer->bind(EndPoint::Any) );
 	// NOTE: Setting socket option should be done following binding it.
-	DWORD timeout = 1000ul;
+	DWORD timeout = 100ul;
 	if ( 0 != setsockopt(SocketToServer->handle(), SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, (int)sizeof(DWORD)) )
 	{
 		std::string msg( "setsockopt error: " );
-		(*glpService).console( )->printFailure( FailureLevel::WARNING, msg+std::to_string(WSAGetLastError()) );
+		gService( )->console( ).printFailure( FailureLevel::WARNING, msg+std::to_string(WSAGetLastError()) );
 	}
 	if ( char queueServerIPAddress[ ] = "192.168.219.102";
 		 -1 == SocketToServer->connect(EndPoint(queueServerIPAddress, QUEUE_SERVER_PORT)) )
 	{
 		// Exception
-		(*glpService).console( )->printFailure( FailureLevel::WARNING, "Failed to connect to the queue server.\n" );
+		gService( )->console( ).printFailure( FailureLevel::WARNING, "Failed to connect to the queue server.\n" );
 		// Triggering
 		++mFrameCount_disconnection;
 	}
 	else
 	{
-		(*glpService).console( )->print( "Succeeded to connect to the queue server.", sf::Color::Green );
-		const Dword version = (*glpService).vault( ).at( HK_VERSION );
+		gService( )->console( ).print( "Succeeded to connect to the queue server.", sf::Color::Green );
+		const Dword version = gService( )->vault( ).at( HK_VERSION );
 //TODO: OTP로 신원 확인
 		// Make it possible to prevent a fake client (as hacking probably).
 		std::string encryptedInvitation( std::to_string(util::hash::Digest(version+ADDITIVE)) );
@@ -112,14 +112,14 @@ scene::online::Online::Online( sf::RenderWindow& window )
 		{
 #ifdef _DEBUG
 			// Exception
-			(*glpService).console( )->printFailure( FailureLevel::WARNING, "Failed to send the invitation to the queue server.\n" );
+			gService( )->console( ).printFailure( FailureLevel::WARNING, "Failed to send the invitation to the queue server.\n" );
 #endif
 			// Triggering
 			++mFrameCount_disconnection;
 		}
 		else
 		{
-			Thread0 = std::make_unique< std::thread >( &Receive, std::ref(*SocketToServer) );
+			ThreadToReceive = std::make_unique< std::thread >( &Receive, std::ref(*SocketToServer) );
 		}
 	}
 	setScene( ::scene::online::ID::WAITING );
@@ -132,25 +132,26 @@ scene::online::Online::Online( sf::RenderWindow& window )
 {
 	IsReceiving = false;
 	IsSending = false;
-	CvForResumingRcv.notify_one( );
-	CvForResumingSnd.notify_one( );
-	if ( nullptr != Thread0 && true == Thread0->joinable() )
+	std::this_thread::sleep_for( std::chrono::milliseconds(150) );
+	CvForResumingRcv.notify_all( );
+	CvForResumingSnd.notify_all( );
+	if ( nullptr != ThreadToReceive && true == ThreadToReceive->joinable() )
 	{
-		Thread0->join( );
+		ThreadToReceive->join( );
 	}
-	if ( nullptr != Thread1 && true == Thread1->joinable() )
+	if ( nullptr != ThreadToSend && true == ThreadToSend->joinable() )
 	{
-		Thread1->join( );
+		ThreadToSend->join( );
 	}
-	Thread0.reset( );
-	Thread1.reset( );
+	ThreadToReceive.reset( );
+	ThreadToSend.reset( );
 	ZeroMemory( SendingBuffer, SND_BUF_SIZ );
 	DataToSend = nullptr;
 	DataSizeToSend = -1;
 	FrameCount_interval = 0;
 	SocketToServer->close( );
 	SocketToServer.reset( );
-	
+
 	IsInstantiated = false;
 }
 
@@ -166,7 +167,7 @@ void ::scene::online::Online::loadResources( )
 	if ( true == luaL_dofile(lua, scriptPathNName) )
 	{
 		// File Not Found Exception
-		(*glpService).console( )->printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
+		gService( )->console( ).printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
 		lua_close( lua );
 	}
 	else
@@ -178,7 +179,7 @@ void ::scene::online::Online::loadResources( )
 		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK, tableName0.data(), scriptPathNName );
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName0.data(), scriptPathNName );
 		}
 		else
 		{
@@ -192,7 +193,7 @@ void ::scene::online::Online::loadResources( )
 				if ( false == mTexture.loadFromFile(lua_tostring(lua, TOP_IDX)) )
 				{
 					// File Not Found Exception
-					(*glpService).console( )->printScriptError( ExceptionType::FILE_NOT_FOUND,
+					gService( )->console( ).printScriptError( ExceptionType::FILE_NOT_FOUND,
 						(tableName0+":"+field0).data(), scriptPathNName );
 				}
 				else
@@ -203,7 +204,7 @@ void ::scene::online::Online::loadResources( )
 			// Type Check Exception
 			else
 			{
-				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 					(tableName0+":"+field0).data(), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -219,7 +220,7 @@ void ::scene::online::Online::loadResources( )
 				// Range Check Exception
 				if ( 0 > temp )
 				{
-					(*glpService).console( )->printScriptError( ExceptionType::RANGE_CHECK,
+					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
 						(tableName0+":"+field1).data(), scriptPathNName );
 				}
 				// When the value looks OK,
@@ -232,7 +233,7 @@ void ::scene::online::Online::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 					(tableName0+":"+field1).data(), scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -248,7 +249,7 @@ void ::scene::online::Online::loadResources( )
 				// Range Check Exception
 				if ( 0 > temp )
 				{
-					(*glpService).console( )->printScriptError( ExceptionType::RANGE_CHECK,
+					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
 						(tableName0+":"+field2).data(), scriptPathNName );
 				}
 				// When the value looks OK,
@@ -261,7 +262,7 @@ void ::scene::online::Online::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				(*glpService).console( )->printScriptError( ExceptionType::TYPE_CHECK,
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 					(tableName0+":"+field2).data(), scriptPathNName );
 			}
 			lua_pop( lua, 2 );
@@ -275,7 +276,7 @@ void ::scene::online::Online::loadResources( )
 		if ( false == mTexture.loadFromFile(defaultFilePathNName) )
 		{
 			// Exception: When there's not even the default file,
-			(*glpService).console( )->printFailure( FailureLevel::FATAL, std::string( "File Not Found: " )+defaultFilePathNName );
+			gService( )->console( ).printFailure( FailureLevel::FATAL, std::string( "File Not Found: " )+defaultFilePathNName );
 #ifdef _DEBUG
 			__debugbreak( );
 #endif
@@ -284,7 +285,7 @@ void ::scene::online::Online::loadResources( )
 
 	if ( true == isWDefault || true == isHDefault )
 	{
-		(*glpService).console( )->print( "Default: width 256, height 128" );
+		gService( )->console( ).print( "Default: width 256, height 128" );
 	}
 
 	mSprite.setTexture( mTexture );
@@ -348,7 +349,7 @@ bool scene::online::Online::hasReceived( )
 	{
 		if ( 0 == ReceivingResult || -1 == ReceivingResult )
 		{
-			(*glpService).console( )->printFailure( FailureLevel::FATAL, "Failed to receive." );
+			gService( )->console( ).printFailure( FailureLevel::FATAL, "Failed to receive." );
 			// Triggering
 			++mFrameCount_disconnection;
 		}
@@ -360,63 +361,67 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag, const
 {
 	const char* const rcvBuf = SocketToServer->receivingBuffer( );
 	std::string_view strView( rcvBuf );
-	uint32_t begin = -1;
-	const uint32_t tagLen = (uint32_t)std::strlen( tag );
-	if ( false == (option & Option::FIND_END_TO_BEGIN) )
+	uint32_t beginPos = -1;
+	if ( option & Option::FIND_END_TO_BEGIN )
 	{
-		if ( const size_t pos = strView.find(tag);
-			 std::string_view::npos != pos )
+		uint32_t off = 0;
+		while ( true )
 		{
-			begin = (uint32_t)pos;
+			size_t pos = strView.find( tag, off );
+			if ( std::string_view::npos != pos )
+			{
+				beginPos = (uint32_t)pos;
+				off = (uint32_t)++pos;
+			}
+			else
+			{
+				break;
+			}
 		}
 	}
 	else
 	{
-		if ( const size_t pos = strView.find_last_of(tag[0]);
-			 std::string_view::npos != pos )
+		if ( const size_t pos = strView.find(tag);
+			std::string_view::npos != pos )
 		{
-			if ( 0 == strView.compare(pos, tagLen, tag) )
-			{
-				begin = (uint32_t)pos;
-			}
+			beginPos = (uint32_t)pos;
 		}
 	}
 
-	if ( -1 == begin )
+	if ( -1 == beginPos )
 	{
 		return std::nullopt;
 	}
 
-	uint32_t end = -1;
-	uint32_t begin2 = 0;
-	if ( true == (option & Option::SERIALIZED) )
+	uint32_t endPos = -1;
+	uint32_t dataPos = beginPos + (uint32_t)std::strlen( tag );
+	if ( option & Option::SERIALIZED )
 	{
-		const uint32_t pos = begin + tagLen;
-		const int size = std::atoi( &rcvBuf[pos] );
-		if ( size_t pos2 = strView.find(TOKEN_SEPARATOR_2, pos);
-			 std::string_view::npos != pos2 )
+		if ( size_t pos = strView.find(TOKEN_SEPARATOR_2, dataPos);
+			 std::string_view::npos != pos )
 		{
-			begin2 = (uint32_t)++pos2;
-			end = (uint32_t)pos2 + size;
+			const int size = std::atoi( &rcvBuf[dataPos] );
+			dataPos = (uint32_t)++pos;
+			endPos = (uint32_t)pos + size;
 		}
 	}
 	else
 	{
-		if ( const size_t pos = strView.find(TOKEN_SEPARATOR, begin);
+		if ( const size_t pos = strView.find(TOKEN_SEPARATOR, beginPos);
 			 std::string_view::npos != pos )
 		{
-			end = (uint32_t)pos;
+			endPos = (uint32_t)pos;
 		}
 	}
 
-	ASSERT_TRUE( -1 != end );
+	ASSERT_TRUE( -1 != endPos );
 
-	if ( false == (option & Option::RETURN_TAG_ATTACHED) )
+	if ( !(option & Option::RETURN_TAG_ATTACHED) )
 	{
-		begin = begin2;
+		beginPos = dataPos;
 	}
 
-	return std::string( &strView[begin], end-begin );
+	return std::string( &strView[beginPos], endPos-beginPos );
 }
 
 #ifdef _DEV
@@ -424,9 +429,11 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag, const
 {
 	return ::scene::ID::ONLINE_BATTLE;
 }
+#endif
 
 void scene::online::Online::setScene( const::scene::online::ID nextSceneID )
 {
+	mCurrentScene.reset( );
 	switch ( nextSceneID )
 	{
 		case ::scene::online::ID::WAITING:
@@ -449,17 +456,16 @@ void scene::online::Online::setScene( const::scene::online::ID nextSceneID )
 #endif
 	}
 }
-#endif
 
 void scene::online::Online::stopReceivingFromQueueServer( )
 {
 	IsReceiving = false;
 	CvForResumingRcv.notify_one( );
-	if ( true == Thread0->joinable() )
+	if ( true == ThreadToReceive->joinable() )
 	{
-		Thread0->join( );
+		ThreadToReceive->join( );
 	}
-	Thread0.reset( );
+	ThreadToReceive.reset( );
 }
 
 bool scene::online::Online::connectToMainServer( )
@@ -467,33 +473,33 @@ bool scene::online::Online::connectToMainServer( )
 	SocketToServer = std::make_unique< Socket >( Socket::Type::TCP );
 	ASSERT_TRUE( -1 != SocketToServer->bind(EndPoint::Any) );
 	// NOTE: Socket option should be set following binding it.
-	DWORD timeout = 1000ul;
+	DWORD timeout = 100ul;
 	if ( 0 != setsockopt(SocketToServer->handle(), SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, (int)sizeof(DWORD)) )
 	{
 		std::string msg( "setsockopt error: " );
-		(*glpService).console( )->printFailure( FailureLevel::WARNING, msg+std::to_string(WSAGetLastError()) );
+		gService( )->console( ).printFailure( FailureLevel::WARNING, msg+std::to_string(WSAGetLastError()) );
 		return false;
 	}
 	if ( char mainServerIPAddress[ ] = "192.168.219.102";
 		 -1 == SocketToServer->connect(EndPoint(mainServerIPAddress, MAIN_SERVER_PORT)) )
 	{
 		// Exception
-		(*glpService).console( )->printFailure( FailureLevel::WARNING, "Failed to connect to the main server.\n" );
+		gService( )->console( ).printFailure( FailureLevel::WARNING, "Failed to connect to the main server.\n" );
 		// Triggering
 		++mFrameCount_disconnection;
 		return false;
 	}
-	(*glpService).console( )->print( "Succeeded to connect to the main server.", sf::Color::Green );
+	gService( )->console( ).print( "Succeeded to connect to the main server.", sf::Color::Green );
 	return true;
 }
 
 void scene::online::Online::send( char* const data, const int size )
 {
-	if ( nullptr == Thread0 )
+	if ( nullptr == ThreadToSend )
 	{
 		strncpy_s( SendingBuffer, SND_BUF_SIZ, data, size );
 		DataSizeToSend = size;
-		Thread0 = std::make_unique< std::thread >( &Send, std::ref(*SocketToServer), 1000 );
+		ThreadToSend = std::make_unique< std::thread >( &Send, std::ref(*SocketToServer), 1000 );
 	}
 	else
 	{
@@ -526,7 +532,7 @@ bool scene::online::Online::hasSent( )
 	{
 		if ( -1 == SendingResult )
 		{
-			(*glpService).console( )->printFailure( FailureLevel::FATAL, "Failed to send." );
+			gService( )->console( ).printFailure( FailureLevel::FATAL, "Failed to send." );
 			// Triggering
 			++mFrameCount_disconnection;
 		}
@@ -536,9 +542,9 @@ bool scene::online::Online::hasSent( )
 
 void scene::online::Online::receive( )
 {
-	if ( nullptr == Thread1 )
+	if ( nullptr == ThreadToReceive )
 	{
-		Thread1 = std::make_unique< std::thread >( &Receive, std::ref(*SocketToServer) );
+		ThreadToReceive = std::make_unique< std::thread >( &Receive, std::ref(*SocketToServer) );
 	}
 	else
 	{

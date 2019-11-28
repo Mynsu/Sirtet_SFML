@@ -43,7 +43,7 @@ int main()
 		}
 	}
 	listener.listen( );
-	const Index LISTENER_IDX = CAPACITY;
+	const ClientIndex LISTENER_IDX = CAPACITY;
 	if ( -1 == iocp.add(listener, LISTENER_IDX) )
 	{
 		// Exception
@@ -55,8 +55,8 @@ int main()
 	std::vector< Client > clientS;
 	clientS.reserve( CAPACITY );
 	// Must use push_back(or emplace_back), front and pop_front only, like std::queue.
-	container::IteratoredQueue< Index > candidateS;
-	candidateS.reserve( CAPACITY );
+	container::IteratoredQueue< ClientIndex > candidatesIndices;
+	candidatesIndices.reserve( CAPACITY );
 	for ( uint32_t i = 0; i != CAPACITY; ++i )
 	{
 		clientS.emplace_back( Socket::Type::TCP, i );
@@ -68,9 +68,9 @@ int main()
 			clientS.clear( );
 			return -1;
 		}
-		candidateS.emplace_back( i );
+		candidatesIndices.emplace_back( i );
 	}
-	const int result = listener.acceptOverlapped( clientS.at(candidateS.front()).socket() );
+	const int result = listener.acceptOverlapped( clientS.at(candidatesIndices.front()).socket() );
 	if ( 0 == result && ERROR_IO_PENDING != WSAGetLastError() )
 	{
 		// Exception
@@ -91,25 +91,24 @@ int main()
 	}
 	listener.pend( );
 	std::unordered_map< HashedKey, Room > roomS;
-	auto forceDisconnection = [ &clientS, &iocp, &candidateS, &roomS ]( const Index idx )->int
+	auto forceDisconnection = [ &clientS, &iocp, &candidatesIndices, &roomS ]( const ClientIndex idx )->int
 	{
 		Client& client = clientS[ idx ];
-		const RoomID roomID = client.roomID( );
-		if ( 0 <= roomID )
-		{
-			roomS[ roomID ].kick( idx );
-			client.setRoomID( -1 );
-		}
-		client.setSocket( Socket(Socket::Type::TCP, Socket::CompletedWork::DISCONNECT) );
-		candidateS.emplace_back( idx );
+		client.setSocket( Socket::Type::TCP, Socket::CompletedWork::DISCONNECT );
 		std::cout << "Forced to disconnect Client " << idx << ". (Now "
-			<< CAPACITY-candidateS.size() << "/" << CAPACITY << " connections.)\n";
+			<< CAPACITY-candidatesIndices.size() << "/" << CAPACITY << " connections.)\n";
 		if ( -1 == iocp.add(client.socket(), idx) )
 		{
 			// Exception
 			std::cerr << "FATAL: Failed to add Client " << idx << " into IOCP.\n";
 			return -1;
 		}
+		if ( const auto it = roomS.find(client.roomID()); roomS.end() != it )
+		{
+			it->second.kick( idx );
+		}
+		client.reset( );
+		candidatesIndices.emplace_back( idx );
 		return 0;
 	};
 
@@ -120,7 +119,7 @@ int main()
 	const HashedKey refinedSalt = ::util::hash::Digest( todaysSalt.data(), (uint8_t)todaysSalt.size() );
 	const std::string encryptedSalt( std::to_string(refinedSalt) );
 	bool wasBoatful = false;
-	Index queueServerIdx = -1;
+	ClientIndex queueServerIdx = -1;
 	std::unordered_set< Ticket > ticketS;
 	IOCPEvent event;
 	while ( true == IsWorking )
@@ -132,10 +131,10 @@ int main()
 			////
 			// When event comes from listener,
 			////
-			if ( LISTENER_IDX == (Index)ev.lpCompletionKey && 0 < candidateS.size() )
+			if ( LISTENER_IDX == (ClientIndex)ev.lpCompletionKey && 0 < candidatesIndices.size() )
 			{
 				listener.pend( false );
-				const Index candidateClientIdx = candidateS.front( );
+				const ClientIndex candidateClientIdx = candidatesIndices.front( );
 				Socket& candidateClientSocket = clientS[ candidateClientIdx ].socket( );
 				if ( -1 == candidateClientSocket.updateAcceptContext(listener) )
 				{
@@ -145,7 +144,7 @@ int main()
 				}
 				// When acception is successful,
 				Socket& clientSocket = candidateClientSocket;
-				const Index clientIdx = candidateClientIdx;
+				const ClientIndex clientIdx = candidateClientIdx;
 				if ( -1 == clientSocket.receiveOverlapped() )
 				{
 					// Exception
@@ -158,18 +157,18 @@ int main()
 				}
 				else
 				{
-					candidateS.pop_front( );
+					candidatesIndices.pop_front( );
 					clientSocket.pend( );
 #ifdef _DEBUG
 					std::cout << "A new client " << clientIdx << " joined. (Now "
-						<< CAPACITY-candidateS.size() << "/" << CAPACITY << " connections.)\n";
+						<< CAPACITY-candidatesIndices.size() << "/" << CAPACITY << " connections.)\n";
 #endif
 				}
 
 				// Reloading the next candidate.
-				if ( 0 < candidateS.size() )
+				if ( 0 < candidatesIndices.size() )
 				{
-					const Index nextCandidateIdx = candidateS.front( );
+					const ClientIndex nextCandidateIdx = candidatesIndices.front( );
 					if ( 0 == listener.acceptOverlapped(clientS[nextCandidateIdx].socket())
 						 && ERROR_IO_PENDING != WSAGetLastError() )
 					{
@@ -190,25 +189,25 @@ int main()
 			////
 			// When event comes from the queue server,
 			////
-			else if ( queueServerIdx == (Index)ev.lpCompletionKey )
+			else if ( queueServerIdx == (ClientIndex)ev.lpCompletionKey )
 			{
 				Socket& socketToQueueServer = clientS[ queueServerIdx ].socket( );
 				socketToQueueServer.pend( false );
 				if ( Socket::CompletedWork::DISCONNECT == socketToQueueServer.completedWork() )
 				{
-					const int res = candidateS.contains( queueServerIdx );
+					const int res = candidatesIndices.contains( queueServerIdx );
 					if ( -1 == res )
 					{
 						std::cerr << "WARNING: Client " << queueServerIdx << " is already candidate.\n";
 					}
 					else if ( 0 == res )
 					{
-						candidateS.emplace_back( queueServerIdx );
+						candidatesIndices.emplace_back( queueServerIdx );
 						// Reset
 						queueServerIdx = -1;
 #ifdef _DEBUG
 						std::cerr << "WARNING: The queue server disconnected. (Now "
-							<< CAPACITY-candidateS.size( ) << '/' << CAPACITY << " connections.)\n";
+							<< CAPACITY-candidatesIndices.size( ) << '/' << CAPACITY << " connections.)\n";
 #endif
 					}
 				}
@@ -258,7 +257,7 @@ int main()
 #ifdef _DEBUG
 							std::cout << "Population has been asked by the queue server.\n";
 #endif
-							std::string pop( std::to_string(CAPACITY-candidateS.size()) );
+							std::string pop( std::to_string(CAPACITY-candidatesIndices.size()) );
 							if ( -1 == socketToQueueServer.sendOverlapped(pop.data(),pop.size()) )
 							{
 								// Exception
@@ -279,6 +278,25 @@ int main()
 #endif
 							}
 						}
+						else
+						{
+							if ( -1 == socketToQueueServer.receiveOverlapped() )
+							{
+								// Exception
+								std::cerr << "Failed to pend reception from the queue server\n";
+								if ( -1 == forceDisconnection(queueServerIdx) )
+								{
+									// Break twice
+									goto cleanUp;
+								}
+								// Reset
+								queueServerIdx = -1;
+							}
+							else
+							{
+								socketToQueueServer.pend( );
+							}
+						}
 						size_t off = 0u;
 						// When having received copies of the issued ticket,
 						while ( true )
@@ -288,6 +306,7 @@ int main()
 							{
 								break;
 							}
+							constexpr uint8_t TAG_TICKET_LEN = ::util::hash::Measure( TAG_TICKET );
  							const uint32_t beginPos = static_cast< uint32_t >( tagPos ) + TAG_TICKET_LEN;
 							off = strView.find( TOKEN_SEPARATOR, tagPos );
 #ifdef _DEBUG
@@ -336,24 +355,29 @@ int main()
 			////
 			else
 			{
-				const Index clientIdx = (Index)ev.lpCompletionKey;
+				const ClientIndex clientIdx = (ClientIndex)ev.lpCompletionKey;
 				Client& client = clientS[ clientIdx ];
 				Socket& clientSocket = client.socket( );
 				clientSocket.pend( false );
 				const Socket::CompletedWork cmpl = clientSocket.completedWork( );
 				if ( Socket::CompletedWork::DISCONNECT == cmpl )
 				{
-					const int res = candidateS.contains( clientIdx );
+					const int res = candidatesIndices.contains( clientIdx );
 					if ( -1 == res )
 					{
 						std::cerr << "WARNING: Client " << clientIdx << " is already candidate.\n";
 					}
 					else if ( 0 == res )
 					{
-						candidateS.emplace_back( clientIdx );
+						if ( const auto it = roomS.find(client.roomID()); roomS.end() != it )
+						{
+							it->second.kick( clientIdx );
+						}
+						client.reset( );
+						candidatesIndices.emplace_back( clientIdx );
 #ifdef _DEBUG
 						std::cout << "Client " << clientIdx << " left. (Now "
-							<< CAPACITY-candidateS.size( ) << "/" << CAPACITY << " connections.)\n";
+							<< CAPACITY-candidatesIndices.size( ) << "/" << CAPACITY << " connections.)\n";
 #endif
 					}
 				}
@@ -365,12 +389,6 @@ int main()
 						std::cerr << "WARNING: Failed to send to/receive from Client " << clientIdx << ".\n";
 					}
 
-					const RoomID roomID = client.roomID( );
-					if ( 0 <= roomID )
-					{
-						roomS[ roomID ].kick( clientIdx );
-						client.setRoomID( -1 );
-					}
 					const int res = clientSocket.disconnectOverlapped( );
 					if ( 0 == res && ERROR_IO_PENDING != WSAGetLastError() )
 					{
@@ -401,13 +419,14 @@ int main()
 						{
 							const char* const rcvBuf = clientSocket.receivingBuffer( );
 							// When having a copy of the ticket received from this client,
+							constexpr uint8_t TAG_TICKET_LEN = ::util::hash::Measure( TAG_TICKET );
 							if ( const Ticket ticket = (Ticket)std::atoll(&rcvBuf[TAG_TICKET_LEN]);
 								ticketS.cend() != ticketS.find(ticket) )
 							{
 								client.holdTicket( ticket );
 								ticketS.erase( ticket );
 //TODO: 닉네임
-								std::string nickname( TAG_NICKNAME );
+								std::string nickname( TAG_MY_NICKNAME );
 								nickname += "nickname01";
 								if ( -1 == clientSocket.sendOverlapped(nickname.data(), nickname.size()) )
 								{
@@ -431,7 +450,7 @@ int main()
 								// Letting the queue server know the population here
 								// makes the queue server possible
 								// to scale up/down the virtual capacity of the main server elastically and independently.
-								std::string pop( std::to_string(CAPACITY-candidateS.size()) );
+								std::string pop( std::to_string(CAPACITY-candidatesIndices.size()) );
 								Socket& queueServerSocket = clientSocket;
 								if ( -1 == queueServerSocket.sendOverlapped(pop.data(), pop.size()) )
 								{
@@ -528,8 +547,8 @@ int main()
 
 		for ( auto it = roomS.begin(); roomS.end() != it; ++it )
 		{
-			std::forward_list< Index > failedIndices( it->second.update(clientS) );
-			for ( const Index index : failedIndices )
+			std::forward_list< ClientIndex > failedIndices( it->second.update(clientS) );
+			for ( const ClientIndex index : failedIndices )
 			{
 				if ( -1 == forceDisconnection(index) )
 				{
@@ -539,10 +558,10 @@ int main()
 			}
 		}
 
-		if ( true == wasBoatful && 0 < candidateS.size() )
+		if ( true == wasBoatful && 0 < candidatesIndices.size() )
 		{
 			wasBoatful = false;
-			const Index nextCandidateClientIdx = candidateS.front( );
+			const ClientIndex nextCandidateClientIdx = candidatesIndices.front( );
 			if ( 0 == listener.acceptOverlapped(clientS[nextCandidateClientIdx].socket())
 				 && ERROR_IO_PENDING != WSAGetLastError() )
 			{
@@ -574,7 +593,7 @@ cleanUp:
 		iocp.wait( event, 100 );
 		for ( uint32_t i = 0; i != event.eventCount; ++i )
 		{
-			const Index evIdx = (Index)event.events[ i ].lpCompletionKey;
+			const ClientIndex evIdx = (ClientIndex)event.events[ i ].lpCompletionKey;
 			// When event comes from listener,
 			if ( LISTENER_IDX == evIdx )
 			{

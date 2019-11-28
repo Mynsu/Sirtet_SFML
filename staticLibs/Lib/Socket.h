@@ -5,10 +5,9 @@
 #include <string>
 #include "EndPoint.h"
 #include "Hash.h"
+#include "Packet.h"
 
 using SOCKET_HANDLE = SOCKET;
-constexpr char TOKEN_SEPARATOR = ' ';
-constexpr char TOKEN_SEPARATOR_2 = '_';
 
 class Socket
 {
@@ -130,7 +129,18 @@ public:
 			res = ::WSASend( mhSocket, &b, 1, NULL, 0, &mOverlappedStruct, NULL );
 		}
 		mCompletedWork = CompletedWork::SEND;
-		return (-1==res&&ERROR_IO_PENDING==WSAGetLastError())? -2: res;
+		return (-1==res && ERROR_IO_PENDING==WSAGetLastError())? -2: res;
+	}
+	int sendOverlapped( Packet& packet,
+					   const char separator = TOKEN_SEPARATOR )
+	{
+		WSABUF b;
+		std::string& data = packet.data( );
+		b.buf = data.data( );
+		b.len = (ULONG)data.size( );
+		int res = ::WSASend( mhSocket, &b, 1, NULL, 0, &mOverlappedStruct, NULL );
+		mCompletedWork = CompletedWork::SEND;
+		return (-1==res && ERROR_IO_PENDING==WSAGetLastError())? -2: res;
 	}
 	int sendBlock( char* const data, const int size,
 				  const char separator = TOKEN_SEPARATOR );

@@ -19,6 +19,7 @@ namespace scene::online
 	public:
 		IScene( const IScene& ) = delete;
 		void operator=( const IScene& ) = delete;
+		virtual ~IScene( ) = default;
 
 		virtual void loadResources( ) = 0;
 		// Returns 0 when doing nothing, -1 when coming back, 1 when going on.
