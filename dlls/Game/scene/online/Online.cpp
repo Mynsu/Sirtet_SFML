@@ -14,36 +14,12 @@ namespace
 	const uint8_t SECONDS_TO_MAIN_MENU = 3u;
 	std::unique_ptr< Socket > SocketToServer;
 //TODO: 개명
-	std::unique_ptr< std::thread > ThreadToReceive, ThreadToSend;
-	bool IsSending, IsReceiving;
-	int8_t SendingResult, ReceivingResult;
-	std::condition_variable CvForResumingSnd, CvForResumingRcv;
-	std::mutex MutexSnd, MutexRcvBuf;
-	char* DataToSend = nullptr;
-	// Unit: Byte
-	int DataSizeToSend = -1;
-	const uint8_t SND_BUF_SIZ = 16;
-	char SendingBuffer[ SND_BUF_SIZ ] = {0,};
-	
+	std::unique_ptr< std::thread > ThreadToReceive;
+	bool IsReceiving;
+	int8_t ReceivingResult;
+	std::condition_variable CvForResumingRcv;
+	std::mutex MutexRcvBuf;
 	uint32_t FrameCount_interval = 0;
-
-	void Send( Socket& socket, const uint32_t initialDelayMs = 1000u )
-	{
-		// Reset
-		SendingResult = -2;
-		DataToSend = SendingBuffer;
-		std::this_thread::sleep_for( std::chrono::milliseconds(initialDelayMs) );
-		IsSending = true;
-		while ( true == IsSending )
-		{
-			SendingResult = socket.sendBlock( DataToSend, DataSizeToSend );
-			{
-				std::unique_lock uLock( MutexSnd );
-				CvForResumingSnd.wait( uLock );
-			}
-			SendingResult = -2;
-		}
-	}
 
 	void Receive( Socket& socket )
 	{
@@ -105,22 +81,7 @@ scene::online::Online::Online( sf::RenderWindow& window )
 		gService( )->console( ).print( "Succeeded to connect to the queue server.", sf::Color::Green );
 		const Dword version = gService( )->vault( ).at( HK_VERSION );
 //TODO: OTP로 신원 확인
-		// Make it possible to prevent a fake client (as hacking probably).
-		std::string encryptedInvitation( std::to_string(util::hash::Digest(version+ADDITIVE)) );
-		// Sending the digested, or encrypted version info for a client to be verified.
-		if ( -1 == SocketToServer->sendBlock(encryptedInvitation.data(),(int)encryptedInvitation.size()) )
-		{
-#ifdef _DEBUG
-			// Exception
-			gService( )->console( ).printFailure( FailureLevel::WARNING, "Failed to send the invitation to the queue server.\n" );
-#endif
-			// Triggering
-			++mFrameCount_disconnection;
-		}
-		else
-		{
-			ThreadToReceive = std::make_unique< std::thread >( &Receive, std::ref(*SocketToServer) );
-		}
+		ThreadToReceive = std::make_unique< std::thread >( &Receive, std::ref(*SocketToServer) );
 	}
 	setScene( ::scene::online::ID::WAITING );
 	loadResources( );
@@ -131,23 +92,13 @@ scene::online::Online::Online( sf::RenderWindow& window )
 ::scene::online::Online::~Online( )
 {
 	IsReceiving = false;
-	IsSending = false;
 	std::this_thread::sleep_for( std::chrono::milliseconds(150) );
 	CvForResumingRcv.notify_all( );
-	CvForResumingSnd.notify_all( );
 	if ( nullptr != ThreadToReceive && true == ThreadToReceive->joinable() )
 	{
 		ThreadToReceive->join( );
 	}
-	if ( nullptr != ThreadToSend && true == ThreadToSend->joinable() )
-	{
-		ThreadToSend->join( );
-	}
 	ThreadToReceive.reset( );
-	ThreadToSend.reset( );
-	ZeroMemory( SendingBuffer, SND_BUF_SIZ );
-	DataToSend = nullptr;
-	DataSizeToSend = -1;
 	FrameCount_interval = 0;
 	SocketToServer->close( );
 	SocketToServer.reset( );
@@ -299,12 +250,6 @@ void ::scene::online::Online::loadResources( )
 	::scene::ID retVal = ::scene::ID::AS_IS;
 	if ( 0u == mFrameCount_disconnection )
 	{
-		if ( -1 == SendingResult )
-		{
-			// Exception
-			++mFrameCount_disconnection;
-			return ::scene::ID::AS_IS;
-		}
 		const ::scene::online::ID nextSceneID = mCurrentScene->update( eventQueue );
 		if ( ::scene::online::ID::AS_IS < nextSceneID )
 		{
@@ -334,6 +279,62 @@ void ::scene::online::Online::draw( )
 		++mFrameCount_disconnection;
 	}
 	++FrameCount_interval;
+}
+
+bool scene::online::Online::connectToMainServer( )
+{
+	SocketToServer = std::make_unique< Socket >( Socket::Type::TCP );
+	ASSERT_TRUE( -1 != SocketToServer->bind(EndPoint::Any) );
+	// NOTE: Socket option should be set following binding it.
+	DWORD timeout = 100ul;
+	if ( 0 != setsockopt(SocketToServer->handle(), SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, (int)sizeof(DWORD)) )
+	{
+		std::string msg( "setsockopt error: " );
+		gService( )->console( ).printFailure( FailureLevel::WARNING, msg+std::to_string(WSAGetLastError()) );
+		return false;
+	}
+	if ( char mainServerIPAddress[ ] = "192.168.219.102";
+		-1 == SocketToServer->connect(EndPoint(mainServerIPAddress, MAIN_SERVER_PORT)) )
+	{
+		// Exception
+		gService( )->console( ).printFailure( FailureLevel::WARNING, "Failed to connect to the main server.\n" );
+		// Triggering
+		++mFrameCount_disconnection;
+		return false;
+	}
+	gService( )->console( ).print( "Succeeded to connect to the main server.", sf::Color::Green );
+	return true;
+}
+
+void scene::online::Online::disconnect( )
+{
+	// Triggering
+	++mFrameCount_disconnection;
+}
+
+void scene::online::Online::send( char* const data, const int size )
+{
+	if( -1 == SocketToServer->sendOverlapped(data, size) )
+	{
+		disconnect( );
+	}
+}
+
+void scene::online::Online::send( std::string& data )
+{
+	send( data.data(), (int)data.size() );
+}
+
+void scene::online::Online::receive( )
+{
+	if ( nullptr == ThreadToReceive )
+	{
+		ThreadToReceive = std::make_unique< std::thread >( &Receive, std::ref(*SocketToServer) );
+	}
+	else
+	{
+		CvForResumingRcv.notify_one( );
+	}
 }
 
 bool scene::online::Online::hasReceived( )
@@ -424,6 +425,17 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag, const
 	return std::string( &strView[beginPos], endPos-beginPos );
 }
 
+void scene::online::Online::stopReceivingFromQueueServer( )
+{
+	IsReceiving = false;
+	CvForResumingRcv.notify_one( );
+	if ( true == ThreadToReceive->joinable() )
+	{
+		ThreadToReceive->join( );
+	}
+	ThreadToReceive.reset( );
+}
+
 #ifdef _DEV
 ::scene::ID scene::online::Online::currentScene( ) const
 {
@@ -456,103 +468,3 @@ void scene::online::Online::setScene( const::scene::online::ID nextSceneID )
 #endif
 	}
 }
-
-void scene::online::Online::stopReceivingFromQueueServer( )
-{
-	IsReceiving = false;
-	CvForResumingRcv.notify_one( );
-	if ( true == ThreadToReceive->joinable() )
-	{
-		ThreadToReceive->join( );
-	}
-	ThreadToReceive.reset( );
-}
-
-bool scene::online::Online::connectToMainServer( )
-{
-	SocketToServer = std::make_unique< Socket >( Socket::Type::TCP );
-	ASSERT_TRUE( -1 != SocketToServer->bind(EndPoint::Any) );
-	// NOTE: Socket option should be set following binding it.
-	DWORD timeout = 100ul;
-	if ( 0 != setsockopt(SocketToServer->handle(), SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, (int)sizeof(DWORD)) )
-	{
-		std::string msg( "setsockopt error: " );
-		gService( )->console( ).printFailure( FailureLevel::WARNING, msg+std::to_string(WSAGetLastError()) );
-		return false;
-	}
-	if ( char mainServerIPAddress[ ] = "192.168.219.102";
-		 -1 == SocketToServer->connect(EndPoint(mainServerIPAddress, MAIN_SERVER_PORT)) )
-	{
-		// Exception
-		gService( )->console( ).printFailure( FailureLevel::WARNING, "Failed to connect to the main server.\n" );
-		// Triggering
-		++mFrameCount_disconnection;
-		return false;
-	}
-	gService( )->console( ).print( "Succeeded to connect to the main server.", sf::Color::Green );
-	return true;
-}
-
-void scene::online::Online::send( char* const data, const int size )
-{
-	if ( nullptr == ThreadToSend )
-	{
-		strncpy_s( SendingBuffer, SND_BUF_SIZ, data, size );
-		DataSizeToSend = size;
-		ThreadToSend = std::make_unique< std::thread >( &Send, std::ref(*SocketToServer), 1000 );
-	}
-	else
-	{
-		DataToSend = data;
-		DataSizeToSend = size;
-		CvForResumingSnd.notify_one( );
-	}
-}
-
-void scene::online::Online::send( std::string& data )
-{
-	send( data.data(), (int)data.size() );
-}
-
-void scene::online::Online::disconnect( )
-{
-	// Triggering
-	++mFrameCount_disconnection;
-}
-
-bool scene::online::Online::hasSent( )
-{
-	if ( 0 <= SendingResult )
-	{
-		//TODO
-		SendingResult = -2;
-		return true;
-	}
-	else
-	{
-		if ( -1 == SendingResult )
-		{
-			gService( )->console( ).printFailure( FailureLevel::FATAL, "Failed to send." );
-			// Triggering
-			++mFrameCount_disconnection;
-		}
-		return false;
-	}
-}
-
-void scene::online::Online::receive( )
-{
-	if ( nullptr == ThreadToReceive )
-	{
-		ThreadToReceive = std::make_unique< std::thread >( &Receive, std::ref(*SocketToServer) );
-	}
-	else
-	{
-		CvForResumingRcv.notify_one( );
-	}
-}
-
-//char* const scene::online::Online::receivingBuffer( )
-//{
-//	return SocketToServer->receivingBuffer( );
-//}

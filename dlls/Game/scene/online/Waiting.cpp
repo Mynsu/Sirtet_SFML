@@ -10,7 +10,7 @@
 bool scene::online::Waiting::IsInstantiated = false;
 
 scene::online::Waiting::Waiting( sf::RenderWindow& window, Online& net )
-	: mHasCanceled( false ), mOrder( 0u ),
+	: mHasCanceled( false ), mIsReceiving( false ), mOrder( 0u ),
 	mState( ::scene::online::Waiting::State::TICKETING ),
 	mWindow_( window ), mNet( net )
 {
@@ -82,9 +82,10 @@ void scene::online::Waiting::loadResources( )
 			}
 			break;
 		case State::SUBMITTING_TICKET:
-			if ( true == mNet.hasSent() )
+			if ( false == mIsReceiving )
 			{
 				mNet.receive( );
+				mIsReceiving = true;
 			}
 			else if ( true == mNet.hasReceived() )
 			{
@@ -101,6 +102,7 @@ void scene::online::Waiting::loadResources( )
 				{
 					mNet.disconnect( );
 				}
+				mIsReceiving = false;
 			}
 			break;
 		default:

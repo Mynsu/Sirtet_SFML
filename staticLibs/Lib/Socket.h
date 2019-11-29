@@ -142,8 +142,6 @@ public:
 		mCompletedWork = CompletedWork::SEND;
 		return (-1==res && ERROR_IO_PENDING==WSAGetLastError())? -2: res;
 	}
-	int sendBlock( char* const data, const int size,
-				  const char separator = TOKEN_SEPARATOR );
 
 	void close( )
 	{

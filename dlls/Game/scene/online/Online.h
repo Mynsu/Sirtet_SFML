@@ -20,7 +20,6 @@ namespace scene::online
 		void send( char* data, const int size );
 		void send( std::string& data );
 		void receive( );
-		bool hasSent( );
 		bool hasReceived( );
 		enum class Option
 		{
@@ -30,7 +29,6 @@ namespace scene::online
 			RETURN_TAG_ATTACHED = 1 << 2,
 		};
 		std::optional< std::string > getByTag( const Tag tag, const Online::Option option );
-		///char* const receivingBuffer( );
 		void stopReceivingFromQueueServer( );
 		void setNickname( std::string& nickname )
 		{

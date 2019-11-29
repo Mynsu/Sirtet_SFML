@@ -62,19 +62,3 @@ int Socket::receiveBlock( )
 {
 	return ::recv(mhSocket, mRcvBuffer, (int)RCV_BUF_SIZ, 0 );
 }
-
-int Socket::sendBlock( char* const data, const int size, const char separator )
-{
-	int res = -2;
-	if ( separator != data[size-1u] )
-	{
-		std::string _data( data );
-		_data += separator;
-		res = ::send( mhSocket, _data.data(), size+1u, 0 );
-	}
-	else
-	{
-		res = ::send( mhSocket, data, size, 0 );
-	}
-	return res;
-}

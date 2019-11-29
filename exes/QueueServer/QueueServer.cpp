@@ -267,22 +267,11 @@ int main( )
 #ifdef _DEBUG
 				std::cout << "A new client " << clientIdx << " wants to join the main server. (Now " << CAPACITY-candidateS.size() << "/" << CAPACITY << " connections.)\n";
 #endif
-				if ( -1 == clientSocket.receiveOverlapped()
-					 && ERROR_IO_PENDING != WSAGetLastError() )
-				{
-					// Exception
-					std::cerr << "Failed to pend reception of a new client.\n";
-					PrintLeavingE( candidateS.size() );
-					if ( -1 == forceDisconnection(clientIdx) )
-					{
-						// Break twice.
-						goto cleanUp;
-					}
-				}
-				else
-				{
-					clientSocket.pend( );
-				}
+				queue.emplace_back( clientIdx );
+#ifdef _DEBUG
+				std::cout << "Client " << clientIdx <<
+					" has been added into the queue line.\n";
+#endif
 
 				// Reloading the next candidate.
 				// When room for the next client in THIS queue server, not the main server, remains yet,
@@ -459,39 +448,7 @@ int main( )
 					}
 					else if ( Socket::CompletedWork::RECEIVE == cmpl )
 					{
-						// When having received the genuine invitation,
-						// NOTE: Assuming that the message only comes from a new connection.
-						// NOTE: Assuming that there're no impurities but an invitation in the message.
-						if ( char* const rcvBuf = clientSocket.receivingBuffer( );
-							///ENCRYPTED_INVITATION == static_cast<HashedKey>(std::atoll(&rcvBuf[TAG_INVITATION_LEN])) )
-							ENCRYPTED_INVITATION == static_cast<HashedKey>(std::atoll(rcvBuf)) )
-						{
-							queue.emplace_back( clientIdx );
-#ifdef _DEBUG
-							std::cout << "Client " << clientIdx <<
-								" with the genuine invitation has been added into the queue line.\n";
-#endif
-						}
-						// Otherwise, when a client connected without any genuine invitation,
-						else
-						{
-							std::cout << "A client connected without any genuine invitation.\n";
-							if ( 0 == clientSocket.disconnectOverlapped()
-									&& ERROR_IO_PENDING != WSAGetLastError() )
-							{
-								// Exception
-								std::cerr << "Failed to disconnect Client " << clientIdx << ".\n";
-								PrintLeavingE( candidateS.size() );
-								if ( -1 == forceDisconnection(clientIdx) )
-								{
-									// Exception
-									// Break twice
-									goto cleanUp;
-								}
-								continue;
-							}
-							clientSocket.pend( );
-						}
+						//TODO: OTP로 신원 확인
 					}
 					else
 					{
