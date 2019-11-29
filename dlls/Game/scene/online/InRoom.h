@@ -22,7 +22,7 @@ namespace scene::online
 		void startGame( const std::string_view& arg );
 		void leaveRoom( const std::string_view& arg );
 		static bool IsInstantiated;
-		bool mAsHost, mIsReceiving;
+		bool mAsHost, mIsReceiving, mHasCanceled;
 		HashedKey mDigestedNickname_;
 		int32_t mFrameCount, mFPS_;
 		sf::RenderWindow& mWindow_;

@@ -24,7 +24,8 @@ public:
 	// NOTE: Called only in Server.cpp.  Not called in Client.cpp.
 	std::forward_list<ClientIndex> update( std::vector<Client>& clientS );
 	void start( );
-	void kick( const ClientIndex index );
+	// MUST destruct this room when returning false, which means having kicked out the last one.
+	bool kick( const ClientIndex index );
 	ClientIndex hostIndex( ) const;
 private:
 	inline void restartTimer( )

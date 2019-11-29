@@ -111,9 +111,19 @@ void Room::start( )
 	mState = State::STARTED;
 }
 
-void Room::kick( const ClientIndex index )
+bool Room::kick( const ClientIndex index )
 {
+	bool retVal = true;
 	mParticipantS.erase( index );
+	if ( true == mParticipantS.empty() )
+	{
+		retVal = false;
+	}
+	else if ( index == mHostIndex )
+	{
+		mHostIndex = mParticipantS.cbegin( )->first;
+	}
+	return retVal;
 }
 
 ClientIndex Room::hostIndex( ) const

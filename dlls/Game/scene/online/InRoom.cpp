@@ -8,13 +8,13 @@
 bool scene::online::InRoom::IsInstantiated = false;
 
 scene::online::InRoom::InRoom( sf::RenderWindow& window, Online& net, const bool asHost )
-	: mAsHost( asHost ), mIsReceiving( false ), mFrameCount( 0 ),
+	: mAsHost( asHost ), mIsReceiving( false ), mHasCanceled( false ), mFrameCount( 0 ),
 	mWindow_( window ), mNet( net )
 {
 	mFPS_ = (int32_t)gService( )->vault( )[ HK_FORE_FPS ];
 	const std::string& nickname = mNet.nickname( );
 	mDigestedNickname_ = ::util::hash::Digest( nickname.data(), (uint8_t)nickname.size() );
-	mParticipants.emplace( mDigestedNickname_, ::ui::PlayView(mWindow_) );
+	mParticipants.emplace( mDigestedNickname_, ::ui::PlayView(mWindow_, mNet) );
 	loadResources( );
 #ifdef _DEBUG
 	gService( )->console( ).print( "Now in a room.", sf::Color::Green );
@@ -70,24 +70,22 @@ void scene::online::InRoom::loadResources( )
 	::scene::online::ID retVal = ::scene::online::ID::AS_IS;
 	if ( true == mNet.hasReceived() )
 	{
-		if ( std::optional<std::string> stage(mNet.getByTag(TAG_MY_STAGE, Online::Option::SERIALIZED));
-			std::nullopt != stage )
-		{
-			mParticipants[ mDigestedNickname_ ].updateStage( stage.value() );
-		}
-		
-		if ( std::optional<std::string> curTet(mNet.getByTag(TAG_MY_CURRENT_TETRIMINO, Online::Option::SERIALIZED));
-				  std::nullopt != curTet )
-		{
-			mParticipants[ mDigestedNickname_ ].updateCurrentTetrimino( curTet.value() );
-		}
-		
-		if ( std::optional<std::string> reqToGetReady(mNet.getByTag(TAG_REQ_GET_READY, Online::Option::RETURN_TAG_ATTACHED));
+		if ( std::optional<std::string> reqToGetReady(mNet.getByTag(TAG_REQ_GET_READY,
+																	Online::Option::RETURN_TAG_ATTACHED));
 			 std::nullopt != reqToGetReady )
 		{
 			mFrameCount = mFPS_*-3;
 		}
+		for ( auto& it : mParticipants )
+		{
+			it.second.update( );
+		}
 		mIsReceiving = false;
+	}
+
+	if ( true == mHasCanceled )
+	{
+		retVal = ::scene::online::ID::IN_LOBBY;
 	}
 
 	return retVal;
@@ -180,6 +178,8 @@ void scene::online::InRoom::startGame( const std::string_view& arg )
 
 void scene::online::InRoom::leaveRoom( const std::string_view& arg )
 {
-	mNet.disconnect( );
+	char req = TAG_REQ_LEAVE_ROOM[ 0 ];
+	mNet.send( &req, 1 );
+	mHasCanceled = true;
 }
 

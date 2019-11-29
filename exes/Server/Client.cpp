@@ -121,6 +121,16 @@ bool Client::complete( std::unordered_map<HashedKey, Room>& roomS )
 							}
 						}
 						break;
+					case Request::REQ_LEAVE_ROOM:
+						if ( auto it = roomS.find(mRoomID); it != roomS.end() )
+						{
+							if ( false == it->second.kick(mIndex) )
+							{
+								it = roomS.erase( it );
+							}
+							mState = State::IN_LOBBY;
+						}
+						break;
 //										case Request::INVITE:
 //										{
 //											const ClientIndex guestIdx = (ClientIndex)std::atoi(&rcvBuf[TAG_INVITE_LEN]);

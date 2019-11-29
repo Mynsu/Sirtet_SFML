@@ -69,6 +69,7 @@ enum class _Tag
 	REQ_CREATE_ROOM,
 	REQ_START_GAME,
 	REQ_GET_READY,
+	REQ_LEAVE_ROOM,
 
 	////
 	// Inplay
@@ -108,6 +109,8 @@ constexpr char TAG_REQ_CREATE_ROOM[ ] = { '0'+(int)_Tag::REQ_CREATE_ROOM, ':', '
 constexpr char TAG_REQ_START_GAME[ ] = { '0'+(int)_Tag::REQ_START_GAME, ':', '\0' };
 
 constexpr char TAG_REQ_GET_READY[ ] = { '0'+(int)_Tag::REQ_GET_READY, ':', '\0' };
+
+constexpr char TAG_REQ_LEAVE_ROOM[ ] = { '0'+(int)_Tag::REQ_LEAVE_ROOM, ':', '\0' };
 
 ////
 // Inplay
