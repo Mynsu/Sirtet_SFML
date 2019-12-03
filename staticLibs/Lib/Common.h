@@ -1,9 +1,7 @@
 #pragma once
-
-#include <WinSock2.h>
-#pragma comment (lib, "Ws2_32")
-#include <stdint.h>
+#include <array>
 #include <SFML/System.hpp>
+#include <SFML/Graphics/Color.hpp>
 #include "Hash.h"
 
 namespace model
@@ -12,6 +10,20 @@ namespace model
 	{
 		const uint8_t GRID_WIDTH = 10u;
 		const uint8_t GRID_HEIGHT = 20u;
+
+		// A stage consists of cells as a tetrimino consists of blocks.
+		// Strictly, cell isn't block and vice versa, but they match up each other.
+		struct Cell
+		{
+			inline Cell( )
+				: blocked( false ), color( sf::Color::Transparent )
+			{
+			}
+			bool blocked;
+			sf::Color color;
+		};
+
+		using Grid = std::array< std::array<Cell, ::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >;
 	}
 
 	namespace tetrimino

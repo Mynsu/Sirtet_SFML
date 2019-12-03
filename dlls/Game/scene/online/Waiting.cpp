@@ -49,8 +49,9 @@ void scene::online::Waiting::loadResources( )
 																	   Online::Option::RETURN_TAG_ATTACHED);
 					 std::nullopt != ticket )
 				{
+					std::string& _ticket = ticket.value( );
 #ifdef _DEBUG
-					gService( )->console( ).print( ticket.value(), sf::Color::Green );
+					gService( )->console( ).print( _ticket, sf::Color::Green );
 #endif
 					// Reset
 					mNet.stopReceivingFromQueueServer( );
@@ -58,7 +59,7 @@ void scene::online::Waiting::loadResources( )
 					if ( true == mNet.connectToMainServer() )
 					{
 						// Sending to the main server the ticket, which the main server will verify.
-						mNet.send( ticket.value() );
+						mNet.send( _ticket.data(), (int)_ticket.size() );
 						mState = State::SUBMITTING_TICKET;
 					}
 				}

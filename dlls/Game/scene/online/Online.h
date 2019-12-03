@@ -18,7 +18,7 @@ namespace scene::online
 		bool connectToMainServer( );
 		void disconnect( );
 		void send( char* data, const int size );
-		void send( std::string& data );
+		void sendZeroByte( );
 		void receive( );
 		bool hasReceived( );
 		enum class Option

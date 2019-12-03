@@ -2,17 +2,6 @@
 
 namespace model
 {
-	// A stage consists of cells as a tetrimino consists of blocks.
-	// Strictly, cell isn't block and vice versa, but they match up each other.
-	struct Cell
-	{
-		inline Cell( )
-			: blocked( false ), color( sf::Color::Transparent )
-		{ }
-		bool blocked;
-		sf::Color color;
-	};
-
 	class Stage
 	{
 	public:
@@ -42,7 +31,7 @@ namespace model
 					if ( true == mGrid[ i ][ k ].blocked )
 					{
 						mCellShape.setFillColor( mGrid[ i ][ k ].color );
-						mCellShape.setPosition( mPosition_ + sf::Vector2f(static_cast<float>(k), static_cast<float>(i))*mCellSize_ );
+						mCellShape.setPosition( mPosition_ + sf::Vector2f(k, i)*mCellSize_ );
 						mWindow_->draw( mCellShape );
 					}
 				}
@@ -79,7 +68,11 @@ namespace model
 				}
 			}
 		}
-		inline std::array< std::array<Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid( )
+		inline ::model::stage::Grid& grid( )
+		{
+			return mGrid;
+		}
+		inline const ::model::stage::Grid& cgrid( ) const
 		{
 			return mGrid;
 		}
@@ -91,8 +84,7 @@ namespace model
 		void setSize( const float cellSize );
 		inline void updateOnNet( const std::string& data )
 		{
-			using Grid = std::array< std::array<Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >;
-			Grid* const ptr = (Grid*)data.data();
+			::model::stage::Grid* const ptr = (::model::stage::Grid*)data.data();
 			mGrid = *ptr;
 		}
 	private:
@@ -106,6 +98,6 @@ namespace model
 		//o
 		//o
 		//19 == ::model::stage::GRID_HEIGHT
-		std::array< std::array<Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT > mGrid;
+		::model::stage::Grid mGrid;
 	};
 }

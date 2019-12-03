@@ -19,8 +19,9 @@ namespace model
 		{
 		}
 		inline Tetrimino( const Tetrimino& arg )
-			: mIsFallingDown( false ), mType( arg.mType ),
-			mRotationID( arg.mRotationID ), mPosition( arg.mPosition )
+			: mIsFallingDown( false ),
+			mPosition( arg.mPosition ), mColor( arg.mColor ),
+			mType( arg.mType ), mRotationID( arg.mRotationID )
 		{
 			for ( uint8_t i = 0u; i != (uint8_t)::model::tetrimino::Rotation::NULL_MAX; ++i )
 			{
@@ -29,9 +30,10 @@ namespace model
 		}
 		inline void operator=( const Tetrimino& arg )
 		{
+			mPosition = arg.mPosition;
+			mColor = arg.mColor;
 			mType = arg.mType;
 			mRotationID = arg.mRotationID;
-			mPosition = arg.mPosition;
 			for ( uint8_t i = 0u; i != (uint8_t)::model::tetrimino::Rotation::NULL_MAX; ++i )
 			{
 				mPossibleRotations[ i ] = arg.mPossibleRotations[ i ];
@@ -63,13 +65,13 @@ namespace model
 			return mRotationID;
 		}
 		// Returns true when colliding with the floor or another tetrimino.
-		inline bool moveDown( const std::array< std::array<::model::Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid, const uint8_t diff = 1u )
+		inline bool moveDown( const ::model::stage::Grid& grid, const uint8_t diff = 1u )
 		{
 			ASSERT_TRUE( diff < ::model::stage::GRID_HEIGHT );
 			mPosition.y += diff;
 			return hasCollidedWith( grid );
 		}
-		inline void tryMoveLeft( const std::array< std::array<::model::Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid, const uint8_t diff = 1u )
+		inline void tryMoveLeft( const ::model::stage::Grid& grid, const uint8_t diff = 1u )
 		{
 			ASSERT_TRUE( diff < ::model::stage::GRID_WIDTH );
 			Tetrimino afterMove( *this );
@@ -79,7 +81,7 @@ namespace model
 				*this = afterMove;
 			}
 		}
-		inline void tryMoveRight( const std::array< std::array<::model::Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid, const uint8_t diff = 1u )
+		inline void tryMoveRight( const ::model::stage::Grid& grid, const uint8_t diff = 1u )
 		{
 			ASSERT_TRUE( diff < ::model::stage::GRID_WIDTH );
 			Tetrimino afterMove( *this );
@@ -90,18 +92,19 @@ namespace model
 			}
 		}
 		// Rotates counter-clockwise.
-		void tryRotate( const std::array< std::array<::model::Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid );
-		void land( std::array< std::array<::model::Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& floor );
+		void tryRotate( const ::model::stage::Grid& grid );
+		void land( ::model::stage::Grid& grid );
 		inline void fallDown( const bool isFallingDown = true )
 		{
 			mIsFallingDown = isFallingDown;
 		}
 	private:
-		bool hasCollidedWith( const std::array< std::array<Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid ) const;
+		bool hasCollidedWith( const ::model::stage::Grid& grid ) const;
 		bool mIsFallingDown;
 		// X and y on global coordinate.
 		// Unit: Grid.
 		sf::Vector2< int8_t > mPosition;
+		sf::Color mColor;
 		::model::tetrimino::Type mType;
 		::model::tetrimino::Rotation mRotationID;
 		LocalSpace mPossibleRotations[ (int)::model::tetrimino::Rotation::NULL_MAX ];

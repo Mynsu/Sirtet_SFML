@@ -1,5 +1,7 @@
 #pragma once
-#include "Common.h"
+#include <WinSock2.h>
+#pragma comment (lib, "Ws2_32")
+#include <stdint.h>
 
 class EndPoint
 {

@@ -2,17 +2,6 @@
 
 namespace model
 {
-	// A stage consists of cells as a tetrimino consists of blocks.
-	// Strictly, cell isn't block and vice versa, but they match up each other.
-	struct Cell
-	{
-		inline Cell( )
-			: blocked( false )
-		{
-		}
-		bool blocked;
-	};
-
 	class Stage
 	{
 	public:
@@ -33,13 +22,13 @@ namespace model
 			}
 			return retVal;
 		}
-		inline auto grid( ) -> std::array< std::array<Cell, ::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >&
+		inline ::model::stage::Grid& grid( )
 		{
 			return mGrid;
 		}
-		inline auto pGrid( ) -> std::array< std::array<Cell, ::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >*
+		inline const ::model::stage::Grid& cgrid( ) const
 		{
-			return &mGrid;
+			return mGrid;
 		}
 	private:
 		//0
@@ -48,6 +37,6 @@ namespace model
 		//o
 		//o
 		//19 == ::model::stage::GRID_HEIGHT
-		std::array< std::array<Cell, ::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT > mGrid;
+		::model::stage::Grid mGrid;
 	};
 }

@@ -1,8 +1,10 @@
 #pragma once
-#include "Common.h"
+#include <WinSock2.h>
+#pragma comment (lib, "Ws2_32")
 #include <MSWSock.h>
 #pragma comment (lib, "mswsock")
 #include <string>
+#include <stdint.h>
 #include "EndPoint.h"
 #include "Hash.h"
 #include "Packet.h"
@@ -114,7 +116,7 @@ public:
 	{
 		WSABUF b;
 		int res = -2;
-		if ( separator != data[size-1u] )
+		if ( 0 < size && separator != data[size-1u] )
 		{
 			std::string _data( data, size+1u );
 			_data[size] = separator;

@@ -24,7 +24,7 @@ sf::Vector2<int8_t> model::Tetrimino::Test[ (int)::model::tetrimino::Rotation::N
 	return retVal;
 }
 
-void model::Tetrimino::tryRotate( const std::array<std::array<::model::Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT>& grid )
+void model::Tetrimino::tryRotate( const ::model::stage::Grid& grid )
 {
 	// Copying prototype
 	Tetrimino afterRot( *this );
@@ -65,7 +65,7 @@ void model::Tetrimino::tryRotate( const std::array<std::array<::model::Cell,::mo
 	}
 }
 
-void model::Tetrimino::land( std::array<std::array<::model::Cell, ::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT>& grid )
+void model::Tetrimino::land( ::model::stage::Grid& grid )
 {
 	const ::model::tetrimino::LocalSpace blocks = mPossibleRotations[(int)mRotationID ];
 	for ( uint8_t i = 0u; i != ::model::tetrimino::LOCAL_SPACE_SIZE; ++i )
@@ -81,7 +81,7 @@ void model::Tetrimino::land( std::array<std::array<::model::Cell, ::model::stage
 	}
 }
 
-bool model::Tetrimino::hasCollidedWith( const std::array<std::array<Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT>& grid ) const
+bool model::Tetrimino::hasCollidedWith( const ::model::stage::Grid& grid ) const
 {
 	bool retVal = false;
 	for ( int8_t i = ::model::tetrimino::LOCAL_SPACE_SIZE-1; i != -1; --i )

@@ -26,7 +26,6 @@ namespace ui
 		::scene::online::Online* mNet;
 		sf::Texture mTexture;
 		sf::Sprite mSprite;
-		sf::RectangleShape mPanel;
 		::model::Tetrimino mCurrentTetrimino;
 		::model::Stage mStage;
 	};

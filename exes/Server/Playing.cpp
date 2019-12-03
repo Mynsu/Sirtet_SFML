@@ -4,7 +4,7 @@
 const uint8_t FALLING_DIFF = 3u;
 
 Playing::Playing()
-	: mTick( std::chrono::milliseconds(1000) )
+	: mTempo( std::chrono::milliseconds(1000) )
 {
 }
 
@@ -20,22 +20,22 @@ Playing::Change Playing::update( )
 {
 	Playing::Change retVal = Playing::Change::NONE;
 	const Clock::time_point now = Clock::now( );
-	if ( mTick < now-mOld )
+	if ( mTempo < now-mOldTime )
 	{
-		mOld = now;
+		mOldTime = now;
 		for ( uint8_t i = 0u; FALLING_DIFF != i; ++i )
 		{
-			if ( true == mCurrentTetrimino.moveDown(mStage.grid()) )
+			if ( true == mCurrentTetrimino.moveDown(mStage.cgrid()) )
 			{
 				mCurrentTetrimino.land( mStage.grid() );
 				reloadTetrimino( );
-				mTick -= std::chrono::milliseconds(20);
+				mTempo -= std::chrono::milliseconds(20);
 				retVal |= Playing::Change::CURRENT_TETRIMINO_LANDED;
 				break;
 			}
 			else
 			{
-				if ( false == (retVal & Playing::Change::CURRENT_TETRIMINO_MOVED) )
+				if ( !(retVal & Playing::Change::CURRENT_TETRIMINO_MOVED) )
 				{
 					retVal |= Playing::Change::CURRENT_TETRIMINO_MOVED;
 				}
@@ -55,6 +55,6 @@ std::string Playing::currentTetriminoInfo( )
 
 std::string Playing::stageInfo()
 {
-	const uint32_t GRID_SIZE = ::model::stage::GRID_HEIGHT * ::model::stage::GRID_WIDTH;
-	return std::string( (char*)mStage.pGrid(), sizeof(::model::Cell)*GRID_SIZE );
+	::model::stage::Grid& grid = mStage.grid( );
+	return std::string( (char*)&grid, sizeof(::model::stage::Grid) );
 }

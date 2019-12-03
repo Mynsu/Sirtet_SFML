@@ -275,7 +275,7 @@ void ::scene::inPlay::Playing::loadResources( )
 	{
 		for ( uint8_t i = 0u; i != FALLING_DIFF; ++i )
 		{
-			if ( hasCollidedAtThisFrame = mCurrentTetrimino.moveDown(mPlayerStage.grid()); true == hasCollidedAtThisFrame )
+			if ( hasCollidedAtThisFrame = mCurrentTetrimino.moveDown(mPlayerStage.cgrid()); true == hasCollidedAtThisFrame )
 			{
 				mCurrentTetrimino.fallDown( false );
 				// NOTE: Break the loop and stop stuff in the 1st if-scope immediately.
@@ -298,22 +298,22 @@ void ::scene::inPlay::Playing::loadResources( )
 						///return;
 						[[ fallthrough ]];
 					case sf::Keyboard::Down:
-						hasCollidedAtThisFrame = mCurrentTetrimino.moveDown( mPlayerStage.grid( ) );
+						hasCollidedAtThisFrame = mCurrentTetrimino.moveDown( mPlayerStage.cgrid( ) );
 						mFrameCount_fallDown = 0u;
 						it = eventQueue.erase( it );
 						break;
 					case sf::Keyboard::Left:
-						mCurrentTetrimino.tryMoveLeft( mPlayerStage.grid( ) );
+						mCurrentTetrimino.tryMoveLeft( mPlayerStage.cgrid( ) );
 						it = eventQueue.erase( it );
 						break;
 					case sf::Keyboard::Right:
-						mCurrentTetrimino.tryMoveRight( mPlayerStage.grid( ) );
+						mCurrentTetrimino.tryMoveRight( mPlayerStage.cgrid( ) );
 						it = eventQueue.erase( it );
 						break;
 					case sf::Keyboard::LShift:
 						[[ fallthrough ]];
 					case sf::Keyboard::Up:
-						mCurrentTetrimino.tryRotate( mPlayerStage.grid( ) );
+						mCurrentTetrimino.tryRotate( mPlayerStage.cgrid( ) );
 						it = eventQueue.erase( it );
 						break;
 					case sf::Keyboard::Escape:
@@ -342,7 +342,7 @@ void ::scene::inPlay::Playing::loadResources( )
 	
 	if ( static_cast<uint32_t>(fps*mTempo) < mFrameCount_fallDown )
 	{
-		hasCollidedAtThisFrame = mCurrentTetrimino.moveDown( mPlayerStage.grid( ) );
+		hasCollidedAtThisFrame = mCurrentTetrimino.moveDown( mPlayerStage.cgrid( ) );
 		mFrameCount_fallDown = 0u;
 	}
 

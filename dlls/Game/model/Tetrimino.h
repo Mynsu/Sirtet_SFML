@@ -84,13 +84,13 @@ namespace model
 			return mType;
 		}
 		// Returns true when colliding with the floor or another tetrimino.
-		inline bool moveDown( const std::array< std::array<::model::Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid, const uint8_t diff = 1u )
+		inline bool moveDown( const ::model::stage::Grid& grid, const uint8_t diff = 1u )
 		{
 			ASSERT_TRUE( diff < ::model::stage::GRID_HEIGHT );
 			mPosition.y += diff;
 			return hasCollidedWith( grid );
 		}
-		inline void tryMoveLeft( const std::array< std::array<::model::Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid, const uint8_t diff = 1u )
+		inline void tryMoveLeft( const ::model::stage::Grid& grid, const uint8_t diff = 1u )
 		{
 			ASSERT_TRUE( diff < ::model::stage::GRID_WIDTH );
 			Tetrimino afterMove( *this );
@@ -100,7 +100,7 @@ namespace model
 				*this = afterMove;
 			}
 		}
-		inline void tryMoveRight( const std::array< std::array<::model::Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid, const uint8_t diff = 1u )
+		inline void tryMoveRight( const ::model::stage::Grid& grid, const uint8_t diff = 1u )
 		{
 			ASSERT_TRUE( diff < ::model::stage::GRID_WIDTH );
 			Tetrimino afterMove( *this );
@@ -111,8 +111,8 @@ namespace model
 			}
 		}
 		// Rotates counter-clockwise.
-		void tryRotate( const std::array< std::array<::model::Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid );
-		void land( std::array< std::array<::model::Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid );
+		void tryRotate( const ::model::stage::Grid& grid );
+		void land( ::model::stage::Grid& grid );
 		inline void fallDown( const bool isFallingDown = true )
 		{
 			mIsFallingDown = isFallingDown;
@@ -139,7 +139,7 @@ namespace model
 			mBlockShape.setFillColor( color );
 		}
 	private:
-		bool hasCollidedWith( const std::array< std::array<Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >& grid ) const;
+		bool hasCollidedWith( const ::model::stage::Grid& grid ) const;
 		void setType( const ::model::tetrimino::Type type );
 		
 		bool mIsFallingDown;

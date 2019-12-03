@@ -87,7 +87,7 @@ void scene::online::InLobby::createRoom( const std::string_view& )
 {
 	//TODO
 	std::string data( TAG_REQ_CREATE_ROOM );
-	mNet.send( data );
+	mNet.send( data.data(), (int)data.size() );
 }
 
 //void scene::online::InLobby::respondYes( const std::string_view& )

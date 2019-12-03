@@ -124,12 +124,26 @@ bool Client::complete( std::unordered_map<HashedKey, Room>& roomS )
 					case Request::REQ_LEAVE_ROOM:
 						if ( auto it = roomS.find(mRoomID); it != roomS.end() )
 						{
+							mRoomID = -1;
+							mState = State::IN_LOBBY;
+#ifdef _DEBUG
+							std::cout << "Client " << mIndex << " leaved Room " << it->first << ".\n";
+#endif
 							if ( false == it->second.kick(mIndex) )
 							{
+#ifdef _DEBUG
+								std::cout << "Room " << it->first << " has been destructed.\n";
+#endif
 								it = roomS.erase( it );
 							}
-							mState = State::IN_LOBBY;
 						}
+#ifdef _DEBUG
+						else
+						{
+							std::cerr << "Client " << mIndex << " tried to leave Room "
+								<< mRoomID << " which doesn't exist.\n";
+						}
+#endif
 						break;
 //										case Request::INVITE:
 //										{
@@ -209,7 +223,13 @@ bool Client::complete( std::unordered_map<HashedKey, Room>& roomS )
 			}
 			else if ( ::Socket::CompletedWork::SEND == cmpl )
 			{
-
+				if ( -1 == mSocket.receiveOverlapped() )
+				{
+					// Exception
+					std::cerr << "Failed to pend reception from Client " << mIndex << std::endl;
+					return false;
+				}
+				mSocket.pend( );
 			}
 			// Exception
 			else

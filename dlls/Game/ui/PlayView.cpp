@@ -13,7 +13,6 @@ ui::PlayView::PlayView( sf::RenderWindow& window, ::scene::online::Online& net )
 	: mHasStarted( false ), mCellSize( 30.f ),
 	mWindow_( &window ), mNet( &net ), mStage( window )
 {
-	mPanel.setFillColor( sf::Color::Black );
 	if ( false == mTexture.loadFromFile("Images/Ready.png") )
 	{
 		gService()->console().printFailure( FailureLevel::WARNING, "Can't find the countdown image." );
@@ -24,13 +23,13 @@ ui::PlayView::PlayView( sf::RenderWindow& window, ::scene::online::Online& net )
 
 void ui::PlayView::setDimension( const sf::Vector2f position, const float cellSize )
 {
-	mPanel.setPosition( position );
-	mCurrentTetrimino.setOrigin( position );
-	const sf::Vector2f size( sf::Vector2f(::model::stage::GRID_WIDTH, ::model::stage::GRID_HEIGHT)*cellSize );
-	mPanel.setSize( size );
-	mSprite.setPosition( position + size*.5f );
 	mCellSize = cellSize;
+	const sf::Vector2f size( sf::Vector2f(::model::stage::GRID_WIDTH, ::model::stage::GRID_HEIGHT)*cellSize );
+	mSprite.setPosition( position + size*.5f );
+	mCurrentTetrimino.setOrigin( position );
 	mCurrentTetrimino.setSize( cellSize );
+	mStage.setPosition( position );
+	mStage.setSize( cellSize );
 }
 
 void ui::PlayView::update( )
@@ -49,19 +48,21 @@ void ui::PlayView::update( )
 		mCurrentTetrimino.updateOnNet( curTet.value() );
 		mHasStarted = true;
 	}
+
+	mNet->sendZeroByte( );
 }
 
 void ui::PlayView::draw( const int time )
 {
-	mWindow_->draw( mPanel );
+	mStage.draw( );
 	if ( time < 0 )
 	{
-		mSprite.setTextureRect( sf::IntRect( 0, 256*(-time-1), 256, 256 ) );
+		//mSprite.setTextureRect( sf::IntRect( 0, 256*(-time-1), 256, 256 ) );
+		mSprite.setTextureRect( sf::IntRect( 0, 0, 256, 256 ) );
 		mWindow_->draw( mSprite );
 	}
 	if ( true == mHasStarted )
 	{
-		mStage.draw( );
 		mCurrentTetrimino.draw( *mWindow_ );
 	}
 }

@@ -16,7 +16,7 @@ namespace
 //TODO: °³Έν
 	std::unique_ptr< std::thread > ThreadToReceive;
 	bool IsReceiving;
-	int8_t ReceivingResult;
+	int ReceivingResult;
 	std::condition_variable CvForResumingRcv;
 	std::mutex MutexRcvBuf;
 	uint32_t FrameCount_interval = 0;
@@ -320,13 +320,15 @@ void scene::online::Online::send( char* const data, const int size )
 	}
 }
 
-void scene::online::Online::send( std::string& data )
+void scene::online::Online::sendZeroByte()
 {
-	send( data.data(), (int)data.size() );
+	char ignored = ' ';
+	send( &ignored, 0 );
 }
 
 void scene::online::Online::receive( )
 {
+	ReceivingResult = -2;
 	if ( nullptr == ThreadToReceive )
 	{
 		ThreadToReceive = std::make_unique< std::thread >( &Receive, std::ref(*SocketToServer) );
@@ -342,7 +344,6 @@ bool scene::online::Online::hasReceived( )
 	if ( 1u*mFPS_ <= FrameCount_interval && 0 < ReceivingResult )
 	{
 		//TODO
-		ReceivingResult = -2;
 		FrameCount_interval = 0u;
 		return true;
 	}
@@ -361,7 +362,7 @@ bool scene::online::Online::hasReceived( )
 std::optional<std::string> scene::online::Online::getByTag( const Tag tag, const Online::Option option )
 {
 	const char* const rcvBuf = SocketToServer->receivingBuffer( );
-	std::string_view strView( rcvBuf );
+	std::string_view strView( rcvBuf, ReceivingResult );
 	uint32_t beginPos = -1;
 	if ( option & Option::FIND_END_TO_BEGIN )
 	{

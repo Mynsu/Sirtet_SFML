@@ -26,6 +26,7 @@ sf::Vector2<int8_t> model::Tetrimino::Test[ (int)::model::tetrimino::Rotation::N
 			retVal.mPossibleRotations[ 2 ] = 0b0010'0010'0010'0010;
 			retVal.mPossibleRotations[ 3 ] = 0b0000'1111'0000'0000;
 			retVal.mRotationID = (::model::tetrimino::Rotation)1;
+			retVal.mColor = sf::Color::Cyan;//TODO
 			break;
 		case ::model::tetrimino::Type::J:
 			retVal.mPossibleRotations[ 0 ] = 0b1000'1110'0000'0000;
@@ -33,6 +34,7 @@ sf::Vector2<int8_t> model::Tetrimino::Test[ (int)::model::tetrimino::Rotation::N
 			retVal.mPossibleRotations[ 2 ] = 0b0000'1110'0010'0000;
 			retVal.mPossibleRotations[ 3 ] = 0b0110'0100'0100'0000;
 			retVal.mRotationID = (::model::tetrimino::Rotation)0;
+			retVal.mColor = sf::Color::Blue;//TODO
 			break;
 		case ::model::tetrimino::Type::L:
 			retVal.mPossibleRotations[ 0 ] = 0b0010'1110'0000'0000;
@@ -40,6 +42,8 @@ sf::Vector2<int8_t> model::Tetrimino::Test[ (int)::model::tetrimino::Rotation::N
 			retVal.mPossibleRotations[ 2 ] = 0b0000'1110'1000'0000;
 			retVal.mPossibleRotations[ 3 ] = 0b0100'0100'0110'0000;
 			retVal.mRotationID = (::model::tetrimino::Rotation)0;
+			// Orange
+			retVal.mColor = sf::Color( 0xff7f00ff );//TODO
 			break;
 		case ::model::tetrimino::Type::N:
 			retVal.mPossibleRotations[ 0 ] = 0b1100'0110'0000'0000;
@@ -47,6 +51,7 @@ sf::Vector2<int8_t> model::Tetrimino::Test[ (int)::model::tetrimino::Rotation::N
 			retVal.mPossibleRotations[ 2 ] = 0b0000'1100'0110'0000;
 			retVal.mPossibleRotations[ 3 ] = 0b0010'0110'0100'0000;
 			retVal.mRotationID = (::model::tetrimino::Rotation)0;
+			retVal.mColor = sf::Color::Red;//TODO
 			break;
 		case ::model::tetrimino::Type::S:
 			retVal.mPossibleRotations[ 0 ] = 0b0110'1100'0000'0000;
@@ -54,6 +59,7 @@ sf::Vector2<int8_t> model::Tetrimino::Test[ (int)::model::tetrimino::Rotation::N
 			retVal.mPossibleRotations[ 2 ] = 0b0000'0110'1100'0000;
 			retVal.mPossibleRotations[ 3 ] = 0b1000'1100'0100'0000;
 			retVal.mRotationID = (::model::tetrimino::Rotation)0;
+			retVal.mColor = sf::Color::Green;//TODO
 			break;
 		case ::model::tetrimino::Type::T:
 			retVal.mPossibleRotations[ 0 ] = 0b0100'1110'0000'0000;
@@ -61,6 +67,8 @@ sf::Vector2<int8_t> model::Tetrimino::Test[ (int)::model::tetrimino::Rotation::N
 			retVal.mPossibleRotations[ 2 ] = 0b0000'1110'0100'0000;
 			retVal.mPossibleRotations[ 3 ] = 0b0100'0110'0100'0000;
 			retVal.mRotationID = (::model::tetrimino::Rotation)0;
+			// Purple - Old Citadel
+			retVal.mColor = sf::Color( 0x562f72ff );//TODO
 			break;
 		case ::model::tetrimino::Type::O:
 			retVal.mPossibleRotations[ 0 ] = 0b0000'0110'0110'0000;
@@ -68,6 +76,7 @@ sf::Vector2<int8_t> model::Tetrimino::Test[ (int)::model::tetrimino::Rotation::N
 			retVal.mPossibleRotations[ 2 ] = retVal.mPossibleRotations[ 0 ];//TODO
 			retVal.mPossibleRotations[ 3 ] = retVal.mPossibleRotations[ 0 ];//TODO
 			retVal.mRotationID = (::model::tetrimino::Rotation)0;
+			retVal.mColor = sf::Color::Yellow;//TODO
 			break;
 		default:
 #ifdef _DEBUG
@@ -82,7 +91,7 @@ sf::Vector2<int8_t> model::Tetrimino::Test[ (int)::model::tetrimino::Rotation::N
 	return retVal;
 }
 
-void model::Tetrimino::tryRotate( const std::array<std::array<::model::Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT>& grid )
+void model::Tetrimino::tryRotate( const ::model::stage::Grid& grid )
 {
 	// Copying prototype
 	Tetrimino afterRot( *this );
@@ -123,7 +132,7 @@ void model::Tetrimino::tryRotate( const std::array<std::array<::model::Cell,::mo
 	}
 }
 
-void model::Tetrimino::land( std::array<std::array<::model::Cell, ::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT>& floor )
+void model::Tetrimino::land( ::model::stage::Grid& grid )
 {
 	const ::model::LocalSpace blocks = mPossibleRotations[(int)mRotationID ];
 	for ( uint8_t i = 0u; i != ::model::tetrimino::LOCAL_SPACE_SIZE; ++i )
@@ -133,12 +142,13 @@ void model::Tetrimino::land( std::array<std::array<::model::Cell, ::model::stage
 			const uint8_t x = mPosition.x + i%model::tetrimino::BLOCKS_A_TETRIMINO;
 			const uint8_t y = mPosition.y + i/model::tetrimino::BLOCKS_A_TETRIMINO - 1;
 			ASSERT_TRUE( (x<::model::stage::GRID_WIDTH) && (y<::model::stage::GRID_HEIGHT) );
-			floor[ y ][ x ].blocked = true;
+			grid[ y ][ x ].blocked = true;
+			grid[ y ][ x ].color = mColor;
 		}
 	}
 }
 
-bool model::Tetrimino::hasCollidedWith( const std::array<std::array<Cell,::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT>& grid ) const
+bool model::Tetrimino::hasCollidedWith( const ::model::stage::Grid& grid ) const
 {
 	bool retVal = false;
 	for ( int8_t i = ::model::tetrimino::LOCAL_SPACE_SIZE-1; i != -1; --i )

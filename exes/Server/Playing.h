@@ -28,8 +28,8 @@ private:
 		mNextTetriminoS.pop( );
 		mNextTetriminoS.emplace( ::model::Tetrimino::Spawn() );
 	}
-	Clock::time_point mOld;
-	Clock::duration mTick;
+	Clock::time_point mOldTime;
+	Clock::duration mTempo;
 	::model::Tetrimino mCurrentTetrimino;
 	std::queue< ::model::Tetrimino > mNextTetriminoS;
 	::model::Stage mStage;
@@ -45,12 +45,7 @@ inline Playing::Change& operator|=( Playing::Change& lh, const Playing::Change r
 	return lh = lh | rh;
 }
 
-inline Playing::Change operator&( const Playing::Change lh, const Playing::Change rh )
+inline bool operator&( const Playing::Change lh, const Playing::Change rh )
 {
-	return (Playing::Change)((uint32_t)lh & (uint32_t)rh);
-}
-
-inline bool operator==( const bool lh, const Playing::Change rh )
-{
-	return (0u == (uint32_t)rh)? false: true;
+	return (bool)((uint32_t)lh & (uint32_t)rh);
 }
