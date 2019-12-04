@@ -25,8 +25,8 @@ std::forward_list<ClientIndex> Room::update( std::vector<Client>& clientS )
 			{
 				const ClientIndex participantIdx = it.first;
 				Socket& participantSocket = clientS[ participantIdx ].socket( );
-				std::string req( TAG_REQ_GET_READY );
-				if ( -1 == participantSocket.sendOverlapped(req.data(), req.size()) )
+				std::string response( TAGGED_REQ_GET_READY );
+				if ( -1 == participantSocket.sendOverlapped(response.data(), response.size()) )
 				{
 					// Exception
 					std::cerr << "Failed to notify Client " << participantIdx
@@ -90,7 +90,6 @@ std::forward_list<ClientIndex> Room::update( std::vector<Client>& clientS )
 					{
 						const ClientIndex participantIdx = it.first;
 						Socket& participantSocket = clientS[ participantIdx ].socket( );
-						//TODO: ¹öÆÛ
 						if ( -1 == participantSocket.sendOverlapped(packet) )
 						{
 							// Exception

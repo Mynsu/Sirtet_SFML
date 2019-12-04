@@ -19,10 +19,10 @@ bool Client::complete( std::unordered_map<HashedKey, Room>& roomS )
 			if ( Socket::CompletedWork::RECEIVE == cmpl )
 			{
 				const char* const rcvBuf = mSocket.receivingBuffer( );
-				const Request req = (Request)std::atoi( rcvBuf );
+				const Request req = (Request)std::atoi( &rcvBuf[TAG_REQUEST_LEN] );
 				switch ( req )
 				{
-					case Request::REQ_CREATE_ROOM:
+					case Request::CREATE_ROOM:
 					{
 						////
 						// Generating random room ID
@@ -33,7 +33,7 @@ bool Client::complete( std::unordered_map<HashedKey, Room>& roomS )
 						mRoomID = roomID;
 						////
 						roomS.emplace( roomID, mIndex );
-						std::string response( TAG_REQ_CREATE_ROOM );
+						std::string response( TAGGED_REQ_CREATE_ROOM );
 						if ( -1 == mSocket.sendOverlapped(response.data(), response.size()) )
 						{
 							// Exception
@@ -60,7 +60,7 @@ bool Client::complete( std::unordered_map<HashedKey, Room>& roomS )
 			{
 				switch( mRecentRequest )
 				{
-					case Request::REQ_CREATE_ROOM:
+					case Request::CREATE_ROOM:
 						mState = Client::State::IN_ROOM;
 						if ( -1 == mSocket.receiveOverlapped() )
 						{
@@ -91,7 +91,7 @@ bool Client::complete( std::unordered_map<HashedKey, Room>& roomS )
 				const Request req = (Request)std::atoi(rcvBuf);
 				switch ( req )
 				{
-					case Request::REQ_START_GAME:
+					case Request::START_GAME:
 						if ( Room& room = roomS[mRoomID];
 							room.hostIndex() == mIndex )
 						{
@@ -121,7 +121,7 @@ bool Client::complete( std::unordered_map<HashedKey, Room>& roomS )
 							}
 						}
 						break;
-					case Request::REQ_LEAVE_ROOM:
+					case Request::LEAVE_ROOM:
 						if ( auto it = roomS.find(mRoomID); it != roomS.end() )
 						{
 							mRoomID = -1;
@@ -347,7 +347,7 @@ void Client::reset()
 	mState = Client::State::UNVERIFIED;
 	mTicket = 0u;
 	mRoomID = -1;
-	mRecentRequest = Request::REQ_NULL;
+	mRecentRequest = Request::NONE;
 }
 
 Client::State Client::state() const

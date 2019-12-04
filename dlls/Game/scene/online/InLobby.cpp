@@ -56,8 +56,9 @@ void scene::online::InLobby::loadResources( )
 	::scene::online::ID retVal = ::scene::online::ID::AS_IS;
 	if ( true == mNet.hasReceived() )
 	{
-		if ( std::optional<std::string> resp(mNet.getByTag(TAG_REQ_CREATE_ROOM, Online::Option::RETURN_TAG_ATTACHED));
-			std::nullopt != resp )
+		if ( std::optional<std::string> response(mNet.getByTag(TAGGED_REQ_CREATE_ROOM,
+															   Online::Option::RETURN_TAG_ATTACHED));
+			std::nullopt != response )
 		{
 			retVal = ::scene::online::ID::IN_ROOM_AS_HOST;
 		}
@@ -86,8 +87,8 @@ void scene::online::InLobby::cancelConnection( const std::string_view& )
 void scene::online::InLobby::createRoom( const std::string_view& )
 {
 	//TODO
-	std::string data( TAG_REQ_CREATE_ROOM );
-	mNet.send( data.data(), (int)data.size() );
+	std::string request( TAGGED_REQ_CREATE_ROOM );
+	mNet.send( request.data(), (int)request.size() );
 }
 
 //void scene::online::InLobby::respondYes( const std::string_view& )

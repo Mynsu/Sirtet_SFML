@@ -70,9 +70,9 @@ void scene::online::InRoom::loadResources( )
 	::scene::online::ID retVal = ::scene::online::ID::AS_IS;
 	if ( true == mNet.hasReceived() )
 	{
-		if ( std::optional<std::string> reqToGetReady(mNet.getByTag(TAG_REQ_GET_READY,
-																	Online::Option::RETURN_TAG_ATTACHED));
-			 std::nullopt != reqToGetReady )
+		if ( std::optional<std::string> response(mNet.getByTag(TAGGED_REQ_GET_READY,
+																Online::Option::RETURN_TAG_ATTACHED));
+			 std::nullopt != response )
 		{
 			mFrameCount = mFPS_*-3;
 		}
@@ -172,14 +172,14 @@ void scene::online::InRoom::draw( )
 
 void scene::online::InRoom::startGame( const std::string_view& arg )
 {
-	char req = TAG_REQ_START_GAME[ 0 ];
-	mNet.send( &req, 1 );
+	std::string request( TAGGED_REQ_START_GAME );
+	mNet.send( request.data(), request.size() );
 }
 
 void scene::online::InRoom::leaveRoom( const std::string_view& arg )
 {
-	char req = TAG_REQ_LEAVE_ROOM[ 0 ];
-	mNet.send( &req, 1 );
+	std::string request( TAGGED_REQ_LEAVE_ROOM );
+	mNet.send( request.data(), request.size() );
 	mHasCanceled = true;
 }
 

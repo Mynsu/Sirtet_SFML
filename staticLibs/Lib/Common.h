@@ -49,6 +49,15 @@ namespace model
 			NULL_MAX,
 		};
 
+		enum class Move
+		{
+			FALL_DOWN,
+			DOWN,
+			LEFT,
+			RIGHT,
+			ROTATE,
+		};
+
 		struct Info
 		{
 			sf::Vector2<int8_t> position;
@@ -77,21 +86,17 @@ enum class _Tag
 	////
 	// Request
 	////
-	REQ_NULL,
-	REQ_CREATE_ROOM,
-	REQ_START_GAME,
-	REQ_GET_READY,
-	REQ_LEAVE_ROOM,
+	REQUEST,
 
 	////
 	// Inplay
 	////
 	MY_CURRENT_TETRIMINO,
 	MY_STAGE,
+	TETRIMINO_MOVE,
 };
 
 using Tag = char[];
-using Request = _Tag;
 
 ////
 // Connection
@@ -103,10 +108,8 @@ using Request = _Tag;
 // The client receives and sends to the main server as it is.
 // With that the main server can see the connecting client is genuine or not.
 constexpr Tag TAG_TICKET = { '0'+(int)_Tag::TICKET, ':', '\0' };
-
 // The queue server sends the client's order attached by this tag.
 constexpr Tag TAG_ORDER_IN_QUEUE = { '0'+(int)_Tag::ORDER_IN_QUEUE, ':', '\0' };
-
 constexpr Tag TAG_MY_NICKNAME = { '0'+(int)_Tag::MY_NICKNAME, ':', '\0' };
 
 ////
@@ -116,18 +119,36 @@ constexpr Tag TAG_MY_NICKNAME = { '0'+(int)_Tag::MY_NICKNAME, ':', '\0' };
 constexpr char RESPONSE_AFFIRMATION = '1';
 constexpr char RESPONSE_NEGATION = '0';
 
-constexpr char TAG_REQ_CREATE_ROOM[ ] = { '0'+(int)_Tag::REQ_CREATE_ROOM, ':', '\0' };
+enum class Request
+{
+	NONE,
+	CREATE_ROOM,
+	START_GAME,
+	GET_READY,
+	LEAVE_ROOM,
+};
 
-constexpr char TAG_REQ_START_GAME[ ] = { '0'+(int)_Tag::REQ_START_GAME, ':', '\0' };
-
-constexpr char TAG_REQ_GET_READY[ ] = { '0'+(int)_Tag::REQ_GET_READY, ':', '\0' };
-
-constexpr char TAG_REQ_LEAVE_ROOM[ ] = { '0'+(int)_Tag::REQ_LEAVE_ROOM, ':', '\0' };
+constexpr Tag TAG_REQUEST = { '0'+(int)_Tag::REQUEST, ':', '\0' };
+constexpr uint8_t TAG_REQUEST_LEN = ::util::hash::Measure( TAG_REQUEST );
+constexpr Tag TAGGED_REQ_CREATE_ROOM = { '0'+(int)_Tag::REQUEST, ':', '0'+(int)Request::CREATE_ROOM, '\0' };
+constexpr Tag TAGGED_REQ_START_GAME = { '0'+(int)_Tag::REQUEST, ':', '0'+(int)Request::START_GAME, '\0' };
+constexpr Tag TAGGED_REQ_GET_READY = { '0'+(int)_Tag::REQUEST, ':', '0'+(int)Request::GET_READY, '\0' };
+constexpr Tag TAGGED_REQ_LEAVE_ROOM = { '0'+(int)_Tag::REQUEST, ':', '0'+(int)Request::LEAVE_ROOM, '\0' };
 
 ////
 // Inplay
 ////
 
-constexpr char TAG_MY_CURRENT_TETRIMINO[ ] = { '0'+(int)_Tag::MY_CURRENT_TETRIMINO, ':', '\0' };
-
-constexpr char TAG_MY_STAGE[ ] = { '0'+(int)_Tag::MY_STAGE, ':', '\0' };
+constexpr Tag TAG_MY_CURRENT_TETRIMINO = { '0'+(int)_Tag::MY_CURRENT_TETRIMINO, ':', '\0' };
+constexpr Tag TAG_MY_STAGE = { '0'+(int)_Tag::MY_STAGE, ':', '\0' };
+constexpr Tag TAG_TETRIMINO_MOVE = { '0'+(int)_Tag::TETRIMINO_MOVE, ':', '\0' };
+constexpr Tag TAGGED_TETRIMINO_MOVE_FALLDOWN = { '0'+(int)_Tag::TETRIMINO_MOVE, ':',
+												'0'+(int)::model::tetrimino::Move::FALL_DOWN, '\0' };
+constexpr Tag TAGGED_TETRIMINO_MOVE_DOWN = { '0'+(int)_Tag::TETRIMINO_MOVE, ':',
+											'0'+(int)::model::tetrimino::Move::DOWN, '\0' };
+constexpr Tag TAGGED_TETRIMINO_MOVE_LEFT = { '0'+(int)_Tag::TETRIMINO_MOVE, ':',
+											'0'+(int)::model::tetrimino::Move::LEFT, '\0' };
+constexpr Tag TAGGED_TETRIMINO_MOVE_RIGHT = { '0'+(int)_Tag::TETRIMINO_MOVE, ':',
+											'0'+(int)::model::tetrimino::Move::RIGHT, '\0' };
+constexpr Tag TAGGED_TETRIMINO_MOVE_ROTATE = { '0'+(int)_Tag::TETRIMINO_MOVE, ':',
+											'0'+(int)::model::tetrimino::Move::ROTATE, '\0' };

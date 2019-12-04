@@ -1,8 +1,6 @@
 #include "pch.h"
 #include "Playing.h"
 
-const uint8_t FALLING_DIFF = 3u;
-
 Playing::Playing()
 	: mTempo( std::chrono::milliseconds(1000) )
 {
@@ -23,23 +21,16 @@ Playing::Change Playing::update( )
 	if ( mTempo < now-mOldTime )
 	{
 		mOldTime = now;
-		for ( uint8_t i = 0u; FALLING_DIFF != i; ++i )
+		if ( true == mCurrentTetrimino.moveDown(mStage.cgrid()) )
 		{
-			if ( true == mCurrentTetrimino.moveDown(mStage.cgrid()) )
-			{
-				mCurrentTetrimino.land( mStage.grid() );
-				reloadTetrimino( );
-				mTempo -= std::chrono::milliseconds(20);
-				retVal |= Playing::Change::CURRENT_TETRIMINO_LANDED;
-				break;
-			}
-			else
-			{
-				if ( !(retVal & Playing::Change::CURRENT_TETRIMINO_MOVED) )
-				{
-					retVal |= Playing::Change::CURRENT_TETRIMINO_MOVED;
-				}
-			}
+			mCurrentTetrimino.land( mStage.grid() );
+			reloadTetrimino( );
+			mTempo -= std::chrono::milliseconds(20);
+			retVal |= Playing::Change::CURRENT_TETRIMINO_LANDED;
+		}
+		else
+		{
+			retVal |= Playing::Change::CURRENT_TETRIMINO_MOVED;
 		}
 	}
 	return retVal;

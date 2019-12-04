@@ -17,10 +17,10 @@ namespace ui
 		~PlayView( ) = default;
 		
 		void setDimension( const sf::Vector2f position, const float cellSize );
-		void update( );
+		void update( std::list<sf::Event>& eventQueue );
 		void draw( const int time );
 	private:
-		bool mHasStarted;
+		bool mHasCurrentTetrimino;
 		float mCellSize;
 		sf::RenderWindow* mWindow_;
 		::scene::online::Online* mNet;
