@@ -7,7 +7,8 @@
 
 //DOING: 로직
 
-const uint32_t CAPACITY = 2u;
+const uint32_t CLIENT_CAPACITY = 2u;
+const uint32_t ROOM_CAPACITY = 100u;
 const uint16_t LISTENER_PORT = MAIN_SERVER_PORT;
 
 volatile bool IsWorking = true;
@@ -43,7 +44,7 @@ int main()
 		}
 	}
 	listener.listen( );
-	const ClientIndex LISTENER_IDX = CAPACITY;
+	const ClientIndex LISTENER_IDX = CLIENT_CAPACITY;
 	if ( -1 == iocp.add(listener, LISTENER_IDX) )
 	{
 		// Exception
@@ -53,11 +54,11 @@ int main()
 		return -1;
 	}
 	std::vector< Client > clientS;
-	clientS.reserve( CAPACITY );
+	clientS.reserve( CLIENT_CAPACITY );
 	// Must use push_back(or emplace_back), front and pop_front only, like std::queue.
 	container::IteratoredQueue< ClientIndex > candidatesIndices;
-	candidatesIndices.reserve( CAPACITY );
-	for ( uint32_t i = 0; i != CAPACITY; ++i )
+	candidatesIndices.reserve( CLIENT_CAPACITY );
+	for ( uint32_t i = 0; i != CLIENT_CAPACITY; ++i )
 	{
 		clientS.emplace_back( Socket::Type::TCP, i );
 		if ( -1 == iocp.add(clientS.at(i).socket(), i) )
@@ -91,12 +92,13 @@ int main()
 	}
 	listener.pend( );
 	std::unordered_map< HashedKey, Room > roomS;
+	roomS.reserve( ROOM_CAPACITY );
 	auto forceDisconnection = [ &clientS, &iocp, &candidatesIndices, &roomS ]( const ClientIndex idx )->int
 	{
 		Client& client = clientS[ idx ];
 		client.setSocket( Socket::Type::TCP, Socket::CompletedWork::DISCONNECT );
 		std::cout << "Forced to disconnect Client " << idx << ". (Now "
-			<< CAPACITY-candidatesIndices.size() << "/" << CAPACITY << " connections.)\n";
+			<< CLIENT_CAPACITY-candidatesIndices.size() << "/" << CLIENT_CAPACITY << " connections.)\n";
 		if ( -1 == iocp.add(client.socket(), idx) )
 		{
 			// Exception
@@ -105,7 +107,7 @@ int main()
 		}
 		if ( const auto it = roomS.find(client.roomID()); roomS.end() != it )
 		{
-			it->second.kick( idx );
+			it->second.leave( idx );
 		}
 		client.reset( );
 		candidatesIndices.emplace_back( idx );
@@ -161,7 +163,7 @@ int main()
 					clientSocket.pend( );
 #ifdef _DEBUG
 					std::cout << "A new client " << clientIdx << " joined. (Now "
-						<< CAPACITY-candidatesIndices.size() << "/" << CAPACITY << " connections.)\n";
+						<< CLIENT_CAPACITY-candidatesIndices.size() << "/" << CLIENT_CAPACITY << " connections.)\n";
 #endif
 				}
 
@@ -207,7 +209,7 @@ int main()
 						queueServerIdx = -1;
 #ifdef _DEBUG
 						std::cerr << "WARNING: The queue server disconnected. (Now "
-							<< CAPACITY-candidatesIndices.size( ) << '/' << CAPACITY << " connections.)\n";
+							<< CLIENT_CAPACITY-candidatesIndices.size( ) << '/' << CLIENT_CAPACITY << " connections.)\n";
 #endif
 					}
 				}
@@ -257,7 +259,7 @@ int main()
 #ifdef _DEBUG
 							std::cout << "Population has been asked by the queue server.\n";
 #endif
-							std::string pop( std::to_string(CAPACITY-candidatesIndices.size()) );
+							std::string pop( std::to_string(CLIENT_CAPACITY-candidatesIndices.size()) );
 							if ( -1 == socketToQueueServer.sendOverlapped(pop.data(),pop.size()) )
 							{
 								// Exception
@@ -371,13 +373,13 @@ int main()
 					{
 						if ( const auto it = roomS.find(client.roomID()); roomS.end() != it )
 						{
-							it->second.kick( clientIdx );
+							it->second.leave( clientIdx );
 						}
 						client.reset( );
 						candidatesIndices.emplace_back( clientIdx );
 #ifdef _DEBUG
 						std::cout << "Client " << clientIdx << " left. (Now "
-							<< CAPACITY-candidatesIndices.size( ) << "/" << CAPACITY << " connections.)\n";
+							<< CLIENT_CAPACITY-candidatesIndices.size( ) << "/" << CLIENT_CAPACITY << " connections.)\n";
 #endif
 					}
 				}
@@ -450,7 +452,7 @@ int main()
 								// Letting the queue server know the population here
 								// makes the queue server possible
 								// to scale up/down the virtual capacity of the main server elastically and independently.
-								std::string pop( std::to_string(CAPACITY-candidatesIndices.size()) );
+								std::string pop( std::to_string(CLIENT_CAPACITY-candidatesIndices.size()) );
 								Socket& queueServerSocket = clientSocket;
 								if ( -1 == queueServerSocket.sendOverlapped(pop.data(), pop.size()) )
 								{
@@ -547,7 +549,17 @@ int main()
 
 		for ( auto it = roomS.begin(); roomS.end() != it; ++it )
 		{
-			std::forward_list< ClientIndex > failedIndices( it->second.update(clientS) );
+			std::forward_list< ClientIndex > failedIndices( it->second.update() );
+			for ( const ClientIndex index : failedIndices )
+			{
+				if ( -1 == forceDisconnection(index) )
+				{
+					// Break three times
+					goto cleanUp;
+				}
+			}
+
+			failedIndices = it->second.notify( clientS );
 			for ( const ClientIndex index : failedIndices )
 			{
 				if ( -1 == forceDisconnection(index) )

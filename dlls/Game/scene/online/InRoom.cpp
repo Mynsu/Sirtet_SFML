@@ -20,8 +20,6 @@ scene::online::InRoom::InRoom( sf::RenderWindow& window, Online& net, const bool
 	gService( )->console( ).print( "Now in a room.", sf::Color::Green );
 #endif
 #ifdef _DEV
-	//(*gService).console( )->addCommand( CMD_INVITE, std::bind(&scene::online::InRoom::invite,
-	//															 this, std::placeholders::_1) );
 	gService( )->console( ).addCommand( CMD_LEAVE_ROOM, std::bind( &scene::online::InRoom::leaveRoom,
 																 this, std::placeholders::_1 ) );
 	if ( true == asHost )
@@ -38,7 +36,6 @@ scene::online::InRoom::~InRoom( )
 #ifdef _DEV
 	if ( nullptr != gService() )
 	{
-		//(*gService).console( )->removeCommand( CMD_INVITE );
 		gService( )->console( ).removeCommand( CMD_LEAVE_ROOM );
 		if ( true == mAsHost )
 		{
@@ -67,7 +64,7 @@ void scene::online::InRoom::loadResources( )
 		mIsReceiving = true;
 	}
 	
-	::scene::online::ID retVal = ::scene::online::ID::AS_IS;
+	bool hasToRespond = false;
 	if ( true == mNet.hasReceived() )
 	{
 		if ( std::optional<std::string> response(mNet.getByTag(TAGGED_REQ_GET_READY,
@@ -76,72 +73,27 @@ void scene::online::InRoom::loadResources( )
 		{
 			mFrameCount = mFPS_*-3;
 		}
-		for ( auto& it : mParticipants )
-		{
-			it.second.update( );
-		}
+		hasToRespond = true;
 		mIsReceiving = false;
 	}
 
+	for ( auto& it : mParticipants )
+	{
+		hasToRespond |= it.second.update( eventQueue );
+	}
+
+	if ( true == hasToRespond )
+	{
+		mNet.sendZeroByte( );
+	}
+
+	::scene::online::ID retVal = ::scene::online::ID::AS_IS;
 	if ( true == mHasCanceled )
 	{
 		retVal = ::scene::online::ID::IN_LOBBY;
 	}
 
 	return retVal;
-
-//	switch ( mState )
-//	{
-//		case State::DOING_NOTHING:
-//			if ( true == mNet.hasReceived() )
-//			{
-//				if ( std::optional<std::string> res = mNet.getByTag(TAG_NOTIFY_JOINING);
-//					 std::nullopt != res )
-//				{
-////TODO
-//					mParticipants.emplace( (uint32_t)std::atoi(res.value().data()), ::model::Stage(mWindow_) );
-//				}
-//				else if ( std::optional<std::string> res = mNet.getByTag(TAG_OLDERS);
-//						  std::nullopt != res )
-//				{
-//					std::string_view olders( res.value() );
-//					size_t pos = TAG_OLDERS_LEN + 1u;
-//					size_t nextPos = 0u;
-//					while ( nextPos < olders.size() )
-//					{
-//						nextPos = olders.find_first_of( TOKEN_SEPARATOR_2, pos );
-//						std::string one( olders.substr(pos, nextPos-pos) );
-//						mParticipants.emplace( (uint32_t)std::atoi(one.data()), ::model::Stage(mWindow_) );
-//						pos = ++nextPos;
-//					}
-//				}
-//			}
-//			break;
-//		case State::INVITING:
-//			if ( true == mNet.hasSent() )
-//			{
-//				mNet.receive( );
-//			}
-//			else if ( true == mNet.hasReceived() )
-//			{
-//				const char* const rcvBuf = mNet.receivingBuffer( );
-////±Ã±Ý: Àß µÉ±î?				
-//				if ( RESPONSE_NEGATION == rcvBuf[0] )
-//				{
-////TODO					
-//					(*gService).console( )->print( "There's no such ID", sf::Color::Green );
-//				}
-//				mState = State::DOING_NOTHING;
-//			}
-//			break;
-//		default:
-//#ifdef _DEBUG
-//			__debugbreak( );
-//#else
-//			__assume( 0 );
-//#endif
-//	}
-//	return retVal;
 }
 
 void scene::online::InRoom::draw( )
@@ -157,29 +109,16 @@ void scene::online::InRoom::draw( )
 	}
 }
 
-//void scene::online::InRoom::invite( const std::string_view& arg )
-//{
-//	//TODO
-//	if ( arg[0] < '0' || '9' < arg[0] )
-//	{
-//		// Exception
-//		(*gService).console( )->printFailure( FailureLevel::WARNING, "Unknown arguments." );
-//		return;
-//	}
-//	std::string data( TAG_INVITE+std::to_string(std::atoi(arg.data())) );
-//	mNet.send( data );
-//}
-
 void scene::online::InRoom::startGame( const std::string_view& arg )
 {
 	std::string request( TAGGED_REQ_START_GAME );
-	mNet.send( request.data(), request.size() );
+	mNet.send( request.data(), (int)request.size() );
 }
 
 void scene::online::InRoom::leaveRoom( const std::string_view& arg )
 {
 	std::string request( TAGGED_REQ_LEAVE_ROOM );
-	mNet.send( request.data(), request.size() );
+	mNet.send( request.data(), (int)request.size() );
 	mHasCanceled = true;
 }
 

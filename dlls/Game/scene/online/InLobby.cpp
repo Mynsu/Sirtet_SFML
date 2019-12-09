@@ -18,10 +18,6 @@ scene::online::InLobby::InLobby( sf::RenderWindow& window, ::scene::online::Onli
 																	  this, std::placeholders::_1) );
 	gService( )->console( ).addCommand( CMD_CANCEL_CONNECTION, std::bind(&scene::online::InLobby::cancelConnection,
 																			this, std::placeholders::_1) );
-	//(*gService).console( )->addCommand( CMD_RESPOND_YES, std::bind( &scene::online::InLobby::respondYes,
-	//																  this, std::placeholders::_1 ) );
-	//(*gService).console( )->addCommand( CMD_RESPOND_NO, std::bind( &scene::online::InLobby::respondNo,
-	//																 this, std::placeholders::_1 ) );
 #endif
 	IsInstantiated = true;
 }
@@ -33,8 +29,6 @@ scene::online::InLobby::~InLobby( )
 	{
 		gService( )->console( ).removeCommand( CMD_CREATE_ROOM );
 		gService( )->console( ).removeCommand( CMD_CANCEL_CONNECTION );
-		//(*gService).console( )->removeCommand( CMD_RESPOND_YES );
-		//(*gService).console( )->removeCommand( CMD_RESPOND_NO );
 	}
 #endif
 	IsInstantiated = false;
@@ -54,7 +48,7 @@ void scene::online::InLobby::loadResources( )
 	}
 
 	::scene::online::ID retVal = ::scene::online::ID::AS_IS;
-	if ( true == mNet.hasReceived() )
+	if ( true == mNet.hasReceived(1000u) )
 	{
 		if ( std::optional<std::string> response(mNet.getByTag(TAGGED_REQ_CREATE_ROOM,
 															   Online::Option::RETURN_TAG_ATTACHED));
@@ -90,11 +84,3 @@ void scene::online::InLobby::createRoom( const std::string_view& )
 	std::string request( TAGGED_REQ_CREATE_ROOM );
 	mNet.send( request.data(), (int)request.size() );
 }
-
-//void scene::online::InLobby::respondYes( const std::string_view& )
-//{
-//}
-//
-//void scene::online::InLobby::respondNo( const std::string_view& )
-//{
-//}

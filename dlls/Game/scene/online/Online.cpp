@@ -326,9 +326,10 @@ void scene::online::Online::sendZeroByte()
 	send( &ignored, 0 );
 }
 
-void scene::online::Online::receive( )
+void scene::online::Online::receive( ) const
 {
 	ReceivingResult = -2;
+	FrameCount_interval = 0u;
 	if ( nullptr == ThreadToReceive )
 	{
 		ThreadToReceive = std::make_unique< std::thread >( &Receive, std::ref(*SocketToServer) );
@@ -339,12 +340,16 @@ void scene::online::Online::receive( )
 	}
 }
 
-bool scene::online::Online::hasReceived( )
+bool scene::online::Online::hasReceived( const uint32_t intervalMs )
 {
-	if ( 1u*mFPS_ <= FrameCount_interval && 0 < ReceivingResult )
+	uint32_t converted = 0;
+	if ( 16 < intervalMs )
 	{
-		//TODO
-		FrameCount_interval = 0u;
+		converted = intervalMs*mFPS_/1000u;
+	}
+
+	if ( converted <= FrameCount_interval && 0 < ReceivingResult )
+	{
 		return true;
 	}
 	else
@@ -359,9 +364,10 @@ bool scene::online::Online::hasReceived( )
 	}
 }
 
-std::optional<std::string> scene::online::Online::getByTag( const Tag tag, const Online::Option option )
+std::optional<std::string> scene::online::Online::getByTag( const Tag tag, const Online::Option option ) const
 {
 	const char* const rcvBuf = SocketToServer->receivingBuffer( );
+	ASSERT_TRUE( 0 < ReceivingResult );
 	std::string_view strView( rcvBuf, ReceivingResult );
 	uint32_t beginPos = -1;
 	if ( option & Option::FIND_END_TO_BEGIN )
@@ -426,7 +432,7 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag, const
 	return std::string( &strView[beginPos], endPos-beginPos );
 }
 
-void scene::online::Online::stopReceivingFromQueueServer( )
+void scene::online::Online::stopReceivingFromQueueServer( ) const
 {
 	IsReceiving = false;
 	CvForResumingRcv.notify_one( );

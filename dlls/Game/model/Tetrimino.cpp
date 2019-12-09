@@ -1,7 +1,7 @@
 #include "../pch.h"
 #include "Tetrimino.h"
 
-sf::Vector2<int8_t> model::Tetrimino::Test[ (int)::model::tetrimino::Rotation::NULL_MAX ][ 4 ] =
+sf::Vector2<int8_t> model::Tetrimino::Test[ (int)::model::tetrimino::Rotation::NONE_MAX ][ 4 ] =
 	{ 
 		{ {1,0}, {1,-1}, {0,2}, {1,2} },
 		{ {-1,0}, {-1,1}, {0,-2}, {-1,-2} },
@@ -18,8 +18,6 @@ sf::Vector2<int8_t> model::Tetrimino::Test[ (int)::model::tetrimino::Rotation::N
 	::model::tetrimino::Type type = static_cast<::model::tetrimino::Type>(shapeDist(rE));
 	Tetrimino retVal;
 	retVal.setType( type );
-	retVal.mPosition.x = ::model::stage::GRID_WIDTH/2u - 1u;
-	retVal.mPosition.y = 0u;
 
 	return retVal;
 }
@@ -34,7 +32,7 @@ void model::Tetrimino::tryRotate( const ::model::stage::Grid& grid )
 	uint8_t rotID = static_cast< uint8_t >( afterRot.mRotationID );
 	++rotID;
 	using Rot = ::model::tetrimino::Rotation;
-	afterRot.mRotationID = ( Rot::NULL_MAX == (Rot)rotID )?
+	afterRot.mRotationID = ( Rot::NONE_MAX == (Rot)rotID )?
 		Rot::A: (Rot)rotID;
 	// When no collision happens,
 	if ( false == afterRot.hasCollidedWith( grid ) )
@@ -73,7 +71,7 @@ void model::Tetrimino::land( ::model::stage::Grid& grid )
 		if ( blocks & (0x1u<<(::model::tetrimino::LOCAL_SPACE_SIZE-i-1u)) )
 		{
 			const uint8_t x = mPosition.x + i%model::tetrimino::BLOCKS_A_TETRIMINO;
-			const uint8_t y = mPosition.y + i/model::tetrimino::BLOCKS_A_TETRIMINO - 1;
+			const uint8_t y = mPosition.y + i/model::tetrimino::BLOCKS_A_TETRIMINO;
 			ASSERT_TRUE( (x<::model::stage::GRID_WIDTH) && (y<::model::stage::GRID_HEIGHT) );
 			grid[ y ][ x ].blocked = true;
 			grid[ y ][ x ].color = mBlockShape.getFillColor( );
@@ -182,4 +180,6 @@ void model::Tetrimino::setType( const::model::tetrimino::Type type )
 			__assume( 0 );
 #endif
 	}
+	mPosition.x = ::model::stage::GRID_WIDTH/2u - 1u;
+	mPosition.y = 0u;
 }

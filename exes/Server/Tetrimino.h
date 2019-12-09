@@ -23,7 +23,7 @@ namespace model
 			mPosition( arg.mPosition ), mColor( arg.mColor ),
 			mType( arg.mType ), mRotationID( arg.mRotationID )
 		{
-			for ( uint8_t i = 0u; i != (uint8_t)::model::tetrimino::Rotation::NULL_MAX; ++i )
+			for ( uint8_t i = 0u; i != (uint8_t)::model::tetrimino::Rotation::NONE_MAX; ++i )
 			{
 				mPossibleRotations[ i ] = arg.mPossibleRotations[ i ];
 			}
@@ -34,7 +34,7 @@ namespace model
 			mColor = arg.mColor;
 			mType = arg.mType;
 			mRotationID = arg.mRotationID;
-			for ( uint8_t i = 0u; i != (uint8_t)::model::tetrimino::Rotation::NULL_MAX; ++i )
+			for ( uint8_t i = 0u; i != (uint8_t)::model::tetrimino::Rotation::NONE_MAX; ++i )
 			{
 				mPossibleRotations[ i ] = arg.mPossibleRotations[ i ];
 			}
@@ -69,7 +69,12 @@ namespace model
 		{
 			ASSERT_TRUE( diff < ::model::stage::GRID_HEIGHT );
 			mPosition.y += diff;
-			return hasCollidedWith( grid );
+			const bool retVal = hasCollidedWith( grid );
+			if ( true == retVal )
+			{
+				mPosition.y -= diff;
+			}
+			return retVal;
 		}
 		inline void tryMoveLeft( const ::model::stage::Grid& grid, const uint8_t diff = 1u )
 		{
@@ -107,7 +112,7 @@ namespace model
 		sf::Color mColor;
 		::model::tetrimino::Type mType;
 		::model::tetrimino::Rotation mRotationID;
-		LocalSpace mPossibleRotations[ (int)::model::tetrimino::Rotation::NULL_MAX ];
-		static sf::Vector2<int8_t> Test[ (int)::model::tetrimino::Rotation::NULL_MAX ][ 4 ];
+		LocalSpace mPossibleRotations[ (int)::model::tetrimino::Rotation::NONE_MAX ];
+		static sf::Vector2<int8_t> Test[ (int)::model::tetrimino::Rotation::NONE_MAX ][ 4 ];
 	};
 }

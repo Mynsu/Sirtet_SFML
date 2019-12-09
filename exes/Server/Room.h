@@ -3,6 +3,8 @@
 
 class Client;
 
+const uint8_t PARTICIPANT_CAPACITY = 4u;
+
 class Room
 {
 public:
@@ -14,25 +16,34 @@ public:
 		PLAYING,
 	};
 
-	// NOTE: DO NOT USE!  Declared to use std::unordered_map.
+	// NOTE: DO NOT USE!  Defined to use std::unordered_map.
 	Room( );
 	explicit Room( const ClientIndex hostIndex );
 	Room( const Room& ) = delete;
 	void operator=( const Room& ) = delete;
 	~Room( ) = default;
 
-	// NOTE: Called only in Server.cpp.  Not called in Client.cpp.
-	std::forward_list<ClientIndex> update( std::vector<Client>& clientS );
 	void start( );
+	bool leave( const ClientIndex index );
+	void perceive( const ClientIndex index, const ::model::tetrimino::Move move );
+	void perceive( const ClientIndex index, const bool async );
+	std::forward_list<ClientIndex> update( );
+	std::forward_list<ClientIndex> notify( std::vector<Client>& clientS );
 	// MUST destruct this room when returning false, which means having kicked out the last one.
-	bool kick( const ClientIndex index );
 	ClientIndex hostIndex( ) const;
 private:
-	inline void restartTimer( )
+	inline bool alarmAfter( const uint32_t milliseconds )
 	{
-		mStartTime = Clock::now( );
+		if ( std::chrono::milliseconds(milliseconds) < (Clock::now()-mStartTime) )
+		{
+			mStartTime = Clock::now( );
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
-	bool hasElapsedMs( const uint32_t milliseconds ) const;
 	ClientIndex mHostIndex;
 	Room::State mState;
 	Clock::time_point mStartTime;

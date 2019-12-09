@@ -92,8 +92,6 @@ Console::Console( ) : mVisible( false ),
 #endif
 	mCurrentInputTextField.setFont( mFont );
 	mCurrentInputTextField.setString( mCurrentInput );
-	//mCursorForegroundTextField.setFont( mFont );
-	//mCursorForegroundTextField.setString( mCursorForeground );
 	for ( auto& it : mHistoryTextFields )
 	{
 		it.setFont( mFont );
@@ -127,7 +125,7 @@ void Console::print( const std::string& message, sf::Color color )
 
 void Console::printFailure( const FailureLevel failureLevel, const std::string& message )
 {
-	// Concatenate error level info with message
+	// Concatenate error level onNet with message
 	std::stringstream ss;
 	switch ( failureLevel )
 	{
@@ -251,7 +249,7 @@ void Console::setPosition( const sf::Vector2u& winSize )
 	mConsoleWindow.setPosition( sf::Vector2f( margin, _winSize.y*consoleRatio-margin ) );
 	mConsoleWindow.setSize( sf::Vector2f( _winSize.x-margin*2, _winSize.y*consoleRatio ) );
 	const auto fontSize = mCurrentInputTextField.getCharacterSize( );
-	sf::Vector2f textFieldPos( margin+5.f, _winSize.y - margin - static_cast<float>(fontSize) );
+	sf::Vector2f textFieldPos( margin+5.f, _winSize.y-margin-(float)fontSize-5.f );
 	mCurrentInputTextField.setPosition( textFieldPos );
 	for ( auto& it : mHistoryTextFields )
 	{

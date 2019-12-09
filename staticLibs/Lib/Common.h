@@ -46,7 +46,7 @@ namespace model
 			C,
 			D,
 
-			NULL_MAX,
+			NONE_MAX,
 		};
 
 		enum class Move
@@ -56,12 +56,7 @@ namespace model
 			LEFT,
 			RIGHT,
 			ROTATE,
-		};
-
-		struct Info
-		{
-			sf::Vector2<int8_t> position;
-			::model::tetrimino::Type type;
+			NONE_MAX,
 		};
 
 		const uint8_t BLOCKS_A_TETRIMINO = 4u;
@@ -92,8 +87,10 @@ enum class _Tag
 	// Inplay
 	////
 	MY_CURRENT_TETRIMINO,
+	MY_TEMPO_MS,
 	MY_STAGE,
 	TETRIMINO_MOVE,
+	SYNC,
 };
 
 using Tag = char[];
@@ -129,7 +126,7 @@ enum class Request
 };
 
 constexpr Tag TAG_REQUEST = { '0'+(int)_Tag::REQUEST, ':', '\0' };
-constexpr uint8_t TAG_REQUEST_LEN = ::util::hash::Measure( TAG_REQUEST );
+const uint8_t TAG_REQUEST_LEN = ::util::hash::Measure( TAG_REQUEST );
 constexpr Tag TAGGED_REQ_CREATE_ROOM = { '0'+(int)_Tag::REQUEST, ':', '0'+(int)Request::CREATE_ROOM, '\0' };
 constexpr Tag TAGGED_REQ_START_GAME = { '0'+(int)_Tag::REQUEST, ':', '0'+(int)Request::START_GAME, '\0' };
 constexpr Tag TAGGED_REQ_GET_READY = { '0'+(int)_Tag::REQUEST, ':', '0'+(int)Request::GET_READY, '\0' };
@@ -140,8 +137,10 @@ constexpr Tag TAGGED_REQ_LEAVE_ROOM = { '0'+(int)_Tag::REQUEST, ':', '0'+(int)Re
 ////
 
 constexpr Tag TAG_MY_CURRENT_TETRIMINO = { '0'+(int)_Tag::MY_CURRENT_TETRIMINO, ':', '\0' };
+constexpr Tag TAG_MY_TEMPO_MS = { '0'+(int)_Tag::MY_TEMPO_MS, ':', '\0' };
 constexpr Tag TAG_MY_STAGE = { '0'+(int)_Tag::MY_STAGE, ':', '\0' };
 constexpr Tag TAG_TETRIMINO_MOVE = { '0'+(int)_Tag::TETRIMINO_MOVE, ':', '\0' };
+const uint8_t TAG_TETRIMINO_MOVE_LEN = ::util::hash::Measure( TAG_TETRIMINO_MOVE );
 constexpr Tag TAGGED_TETRIMINO_MOVE_FALLDOWN = { '0'+(int)_Tag::TETRIMINO_MOVE, ':',
 												'0'+(int)::model::tetrimino::Move::FALL_DOWN, '\0' };
 constexpr Tag TAGGED_TETRIMINO_MOVE_DOWN = { '0'+(int)_Tag::TETRIMINO_MOVE, ':',
@@ -152,3 +151,5 @@ constexpr Tag TAGGED_TETRIMINO_MOVE_RIGHT = { '0'+(int)_Tag::TETRIMINO_MOVE, ':'
 											'0'+(int)::model::tetrimino::Move::RIGHT, '\0' };
 constexpr Tag TAGGED_TETRIMINO_MOVE_ROTATE = { '0'+(int)_Tag::TETRIMINO_MOVE, ':',
 											'0'+(int)::model::tetrimino::Move::ROTATE, '\0' };
+constexpr Tag TAG_SYNC = { '0'+(int)_Tag::SYNC, ':', '\0' };
+const uint8_t TAG_SYNC_LEN = ::util::hash::Measure( TAG_SYNC );

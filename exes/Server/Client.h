@@ -9,7 +9,8 @@ public:
 	{
 		UNVERIFIED,
 		IN_LOBBY,
-		IN_ROOM,
+		WAITING_IN_ROOM,
+		PLAYING_IN_ROOM,
 	};
 
 	Client( ) = delete;
@@ -18,10 +19,9 @@ public:
 	void operator=( const Client& ) = delete;
 	~Client( ) = default;
 
-	// NOTE: Called only in Server.cpp.  Not called in Room.cpp.
 	bool complete( std::unordered_map<HashedKey, Room>& roomS );
-	void setState( const Client::State state );
 	Client::State state( ) const;
+	void setState( const Client::State state );
 	void holdTicket( const Ticket ticket );
 	RoomID roomID( ) const;
 	void setRoomID( const RoomID roomID );
@@ -29,7 +29,7 @@ public:
 	void setSocket( const Socket::Type type, const Socket::CompletedWork completedWork );
 	void reset( );
 private:
-	ClientIndex mIndex;
+	const ClientIndex mIndex;
 	Client::State mState;
 	//궁금: 필요 있으려나?
 	Ticket mTicket;

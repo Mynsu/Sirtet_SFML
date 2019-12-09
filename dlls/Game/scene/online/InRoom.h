@@ -18,7 +18,6 @@ namespace scene::online
 		::scene::online::ID update( std::list<sf::Event>& eventQueue ) override;
 		void draw( ) override;
 	private:
-		//void invite( const std::string_view& arg );
 		void startGame( const std::string_view& arg );
 		void leaveRoom( const std::string_view& arg );
 		static bool IsInstantiated;

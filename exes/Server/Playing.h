@@ -5,11 +5,10 @@
 class Playing
 {
 public:
-	enum class Change
+	enum class UpdateResult
 	{
-		NONE = 0b0,
-		CURRENT_TETRIMINO_MOVED = 0b1,
-		CURRENT_TETRIMINO_LANDED = 0b1<<1,
+		NONE,
+		TETRIMINO_LANDED,
 	};
 
 	Playing( );
@@ -18,9 +17,13 @@ public:
 	~Playing( ) = default;
 
 	void spawnTetrimino( );
-	Playing::Change update( );
-	std::string currentTetriminoInfo( );
-	std::string stageInfo( );
+	void perceive( const ::model::tetrimino::Move move );
+	bool update( );
+	Playing::UpdateResult updateResult( );
+	std::string tetriminoOnNet( );
+	std::string tempoMsOnNet( );
+	std::string stageOnNet( );
+	void synchronize( const bool async );
 private:
 	inline void reloadTetrimino( )
 	{
@@ -28,24 +31,40 @@ private:
 		mNextTetriminoS.pop( );
 		mNextTetriminoS.emplace( ::model::Tetrimino::Spawn() );
 	}
+	inline bool alarmAfter( const uint32_t milliseconds )
+	{
+		const Clock::time_point now = Clock::now( );
+		if ( std::chrono::milliseconds(milliseconds) < (now-mOldTime) )
+		{
+			mOldTime = now;
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	bool mIsAsync;
 	Clock::time_point mOldTime;
-	Clock::duration mTempo;
+	uint32_t mTempoMs;
+	::model::tetrimino::Move mMoveToUpdate;
+	UpdateResult mUpdateResult;
 	::model::Tetrimino mCurrentTetrimino;
 	std::queue< ::model::Tetrimino > mNextTetriminoS;
 	::model::Stage mStage;
 };
 
-inline Playing::Change operator|( const Playing::Change lh, const Playing::Change rh )
+inline Playing::UpdateResult operator|( const Playing::UpdateResult lh, const Playing::UpdateResult rh )
 {
-	return (Playing::Change)((uint32_t)lh | (uint32_t)rh);
+	return (Playing::UpdateResult)((uint32_t)lh | (uint32_t)rh);
 }
 
-inline Playing::Change& operator|=( Playing::Change& lh, const Playing::Change rh )
+inline Playing::UpdateResult& operator|=( Playing::UpdateResult& lh, const Playing::UpdateResult rh )
 {
 	return lh = lh | rh;
 }
 
-inline bool operator&( const Playing::Change lh, const Playing::Change rh )
+inline bool operator&( const Playing::UpdateResult lh, const Playing::UpdateResult rh )
 {
 	return (bool)((uint32_t)lh & (uint32_t)rh);
 }

@@ -26,7 +26,7 @@ namespace model
 			mBlockShape.setFillColor( arg.mBlockShape.getFillColor( ) );
 			mBlockShape.setOutlineThickness( 1.f );
 			mBlockShape.setOutlineColor( sf::Color::Black );
-			for ( uint8_t i = 0u; i != (uint8_t)::model::tetrimino::Rotation::NULL_MAX; ++i )
+			for ( uint8_t i = 0u; i != (uint8_t)::model::tetrimino::Rotation::NONE_MAX; ++i )
 			{
 				mPossibleRotations[ i ] = arg.mPossibleRotations[ i ];
 			}
@@ -37,7 +37,7 @@ namespace model
 			mRotationID = arg.mRotationID;
 			mPosition = arg.mPosition;
 			mBlockShape.setFillColor( arg.mBlockShape.getFillColor( ) );
-			for ( uint8_t i = 0u; i != (uint8_t)::model::tetrimino::Rotation::NULL_MAX; ++i )
+			for ( uint8_t i = 0u; i != (uint8_t)::model::tetrimino::Rotation::NONE_MAX; ++i )
 			{
 				mPossibleRotations[ i ] = arg.mPossibleRotations[ i ];
 			}
@@ -88,7 +88,12 @@ namespace model
 		{
 			ASSERT_TRUE( diff < ::model::stage::GRID_HEIGHT );
 			mPosition.y += diff;
-			return hasCollidedWith( grid );
+			const bool retVal = hasCollidedWith( grid );
+			if ( true == retVal )
+			{
+				mPosition.y -= diff;
+			}
+			return retVal;
 		}
 		inline void tryMoveLeft( const ::model::stage::Grid& grid, const uint8_t diff = 1u )
 		{
@@ -119,10 +124,11 @@ namespace model
 		}
 		inline void updateOnNet( const std::string& data )
 		{
-			::model::tetrimino::Info* const info = (::model::tetrimino::Info*)data.data( );
-			info->type = (decltype(info->type))::ntohl( (u_long)info->type );
-			mPosition = info->position;
-			setType( info->type );
+			::model::tetrimino::Type* const p =
+				(::model::tetrimino::Type*)data.data( );
+			const ::model::tetrimino::Type type =
+				(::model::tetrimino::Type)::ntohl( (u_long)*p );
+			setType( type );
 		}
 		inline void setOrigin( const sf::Vector2f& origin )
 		{
@@ -151,7 +157,7 @@ namespace model
 		float mBlockSize_;
 		sf::Vector2f mOrigin_;
 		sf::RectangleShape mBlockShape;
-		::model::tetrimino::LocalSpace mPossibleRotations[ (int)::model::tetrimino::Rotation::NULL_MAX ];
-		static sf::Vector2<int8_t> Test[ (int)::model::tetrimino::Rotation::NULL_MAX ][ 4 ];
+		::model::tetrimino::LocalSpace mPossibleRotations[ (int)::model::tetrimino::Rotation::NONE_MAX ];
+		static sf::Vector2<int8_t> Test[ (int)::model::tetrimino::Rotation::NONE_MAX ][ 4 ];
 	};
 }

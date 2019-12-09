@@ -19,8 +19,8 @@ namespace scene::online
 		void disconnect( );
 		void send( char* data, const int size );
 		void sendZeroByte( );
-		void receive( );
-		bool hasReceived( );
+		void receive( ) const;
+		bool hasReceived( const uint32_t intervalMs = 0 );
 		enum class Option
 		{
 			NONE = 0,
@@ -28,8 +28,8 @@ namespace scene::online
 			SERIALIZED = 1 << 1,
 			RETURN_TAG_ATTACHED = 1 << 2,
 		};
-		std::optional< std::string > getByTag( const Tag tag, const Online::Option option );
-		void stopReceivingFromQueueServer( );
+		std::optional< std::string > getByTag( const Tag tag, const Online::Option option ) const;
+		void stopReceivingFromQueueServer( ) const;
 		void setNickname( std::string& nickname )
 		{
 			mNickname = nickname;
