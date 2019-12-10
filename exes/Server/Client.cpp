@@ -290,10 +290,10 @@ bool Client::complete( std::unordered_map<HashedKey, Room>& roomS )
 						}
 						break;
 					}
-					case _Tag::TETRIMINO_MOVE:
+					case _Tag::MY_TETRIMINO_MOVE:
 					{
 						const ::model::tetrimino::Move move =
-							(::model::tetrimino::Move)std::atoi( &rcvBuf[TAG_TETRIMINO_MOVE_LEN] );
+							(::model::tetrimino::Move)std::atoi( &rcvBuf[TAG_MY_TETRIMINO_MOVE_LEN] );
 						if ( auto it = roomS.find(mRoomID); roomS.end() != it )
 						{
 							it->second.perceive( mIndex, move );
@@ -309,10 +309,10 @@ bool Client::complete( std::unordered_map<HashedKey, Room>& roomS )
 						}
 						break;
 					}
-					case _Tag::SYNC:
+					case _Tag::MY_SYNC:
 						if ( auto it = roomS.find(mRoomID); roomS.end() != it )
 						{
-							const bool async = (bool)std::atoi( &rcvBuf[TAG_SYNC_LEN] );
+							const bool async = (bool)std::atoi( &rcvBuf[TAG_MY_SYNC_LEN] );
 							it->second.perceive( mIndex, async );
 						}
 						break;

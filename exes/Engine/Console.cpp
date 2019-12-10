@@ -195,7 +195,7 @@ void Console::handleEvent( std::list< sf::Event >& eventQueue )
 					 input > 0x1f && input < 0x7f )
 				{
 					mCurrentInput.pop_back( );
-					mCurrentInput += static_cast< char >( input );
+					mCurrentInput += (char)input;
 					mCurrentInput += '_';
 					mCurrentInputTextField.setString( mCurrentInput );
 				}

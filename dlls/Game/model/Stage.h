@@ -13,7 +13,7 @@ namespace model
 		Stage( sf::RenderWindow& window )
 			: mCellSize_( 30.f ), mWindow_( &window )
 		{
-			mPanel.setFillColor( sf::Color::Black );
+			mPanel.setFillColor( sf::Color(63,63,63,255) );
 			mCellShape.setOutlineThickness( 1.f );
 			mCellShape.setOutlineColor( sf::Color::Black );
 		}
@@ -59,12 +59,12 @@ namespace model
 		{
 			const sf::Color GRAY( 0x808080ff );
 			#pragma omp parallel
-			for ( auto& it : mGrid )
+			for ( auto& row : mGrid )
 			{
-				for ( auto& itit : it )
+				for ( auto& cell : row )
 				{
 					// Gray
-					itit.color = GRAY;
+					cell.color = GRAY;
 				}
 			}
 		}

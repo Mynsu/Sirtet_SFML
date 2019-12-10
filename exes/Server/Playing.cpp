@@ -2,11 +2,14 @@
 #include "Playing.h"
 
 const uint32_t FPS = 60;
-constexpr uint8_t MS_PER_FRAME = 1000/FPS;
+const uint8_t MS_PER_FRAME = 1000/FPS;
+const uint8_t FALLING_DIFF = 3;
+const uint8_t TEMPO_DIFF_MS = 20;
 const uint32_t ASYNC_TOLERANCE_MS = 1000;
+const uint32_t GAME_OVER_CHK_INTERVAL_MS = 250;
 
 Playing::Playing()
-	: mTempoMs( 1000 ), mIsAsync( false )
+	: mIsAsync( false ), mTempoMs( 1000 ), mNumOfLinesCleared( 0 )
 {
 }
 
@@ -26,35 +29,40 @@ void Playing::perceive( const ::model::tetrimino::Move move )
 
 bool Playing::update( )
 {
-	bool retVal = true;
+	bool isAsyncOver = true;
 	mUpdateResult = Playing::UpdateResult::NONE;
 	if ( true == mIsAsync )
 	{
 		mMoveToUpdate = ::model::tetrimino::Move::NONE_MAX;
 		// Exception
-		if ( true == alarmAfter(ASYNC_TOLERANCE_MS) )
+		if ( true == alarmAfter(ASYNC_TOLERANCE_MS, AlarmIndex::ASYNC_TOLERANCE) )
 		{
-			retVal = false;
+			isAsyncOver = false;
 		}
-		return retVal;
+		return isAsyncOver;
 	}
 
 	bool hasCollided = false;
 	if ( true == mCurrentTetrimino.isFallingDown() )
 	{
-		if ( true == alarmAfter(MS_PER_FRAME) )
+		if ( true == alarmAfter(MS_PER_FRAME, AlarmIndex::TETRIMINO_FALLDOWN) )
 		{
 			// TODO: delta 줄여가면서 log로.
-			hasCollided = mCurrentTetrimino.moveDown( mStage.cgrid() );
-			if ( true == hasCollided )
+			for ( uint8_t i = 0; FALLING_DIFF != i; ++i )
 			{
-				mCurrentTetrimino.fallDown( false );
+				hasCollided = mCurrentTetrimino.moveDown( mStage.cgrid() );
+				if ( true == hasCollided )
+				{
+					mCurrentTetrimino.fallDown( false );
+					goto last;
+				}
 			}
+			return isAsyncOver;
 		}
 	}
 	else
 	{
-		if ( true == alarmAfter(mTempoMs) )
+		if ( true == alarmAfter(mTempoMs, AlarmIndex::TETRIMINO_FALLDOWN) )
 		{
 			hasCollided = mCurrentTetrimino.moveDown( mStage.cgrid() );
 		}
@@ -66,7 +74,7 @@ bool Playing::update( )
 				[[ fallthrough ]];
 			case ::model::tetrimino::Move::DOWN:
 				hasCollided = mCurrentTetrimino.moveDown( mStage.cgrid() );
-				mOldTime = Clock::now( );
+				mPast[(int)AlarmIndex::TETRIMINO_FALLDOWN] = Clock::now( );
 				break;
 			case ::model::tetrimino::Move::LEFT:
 				mCurrentTetrimino.tryMoveLeft( mStage.cgrid() );
@@ -83,14 +91,30 @@ bool Playing::update( )
 		mMoveToUpdate = ::model::tetrimino::Move::NONE_MAX;
 	}
 
+	last:
 	if ( true == hasCollided )
 	{
 		mCurrentTetrimino.land( mStage.grid() );
 		reloadTetrimino( );
-		mTempoMs -= 20;
 		mUpdateResult = Playing::UpdateResult::TETRIMINO_LANDED;
+
+		const uint8_t numOfLinesCleared = mStage.tryClearRow( );
+		if ( 0 != numOfLinesCleared )
+		{
+			mNumOfLinesCleared = numOfLinesCleared;
+			mTempoMs -= TEMPO_DIFF_MS;
+			mUpdateResult = Playing::UpdateResult::LINE_CLEARED;
+		}
 	}
-	return retVal;
+
+	if ( true == alarmAfter(GAME_OVER_CHK_INTERVAL_MS, AlarmIndex::GAME_OVER) 
+		&& true == mStage.isOver() )
+	{
+		mStage.blackout( );
+		mUpdateResult = Playing::UpdateResult::GAME_OVER;
+	}
+
+	return isAsyncOver;
 }
 
 Playing::UpdateResult Playing::updateResult( )
@@ -122,6 +146,11 @@ void Playing::synchronize( const bool async )
 	if ( async != mIsAsync )
 	{
 		mIsAsync = async;
-		mOldTime = Clock::now( );
+		mPast[(int)AlarmIndex::ASYNC_TOLERANCE] = Clock::now( );
 	}
+}
+
+uint8_t Playing::numOfLinesCleared() const
+{
+	return mNumOfLinesCleared;
 }

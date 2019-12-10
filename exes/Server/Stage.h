@@ -22,6 +22,19 @@ namespace model
 			}
 			return retVal;
 		}
+		inline void blackout( )
+		{
+			const sf::Color GRAY( 0x808080ff );
+#pragma omp parallel
+			for ( auto& row : mGrid )
+			{
+				for ( auto& cell : row )
+				{
+					// Gray
+					cell.color = GRAY;
+				}
+			}
+		}
 		inline ::model::stage::Grid& grid( )
 		{
 			return mGrid;

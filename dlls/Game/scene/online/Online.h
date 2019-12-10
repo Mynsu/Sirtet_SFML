@@ -17,7 +17,8 @@ namespace scene::online
 
 		bool connectToMainServer( );
 		void disconnect( );
-		void send( char* data, const int size );
+		void send( char* const data, const int size );
+		void send( Packet& packet );
 		void sendZeroByte( );
 		void receive( ) const;
 		bool hasReceived( const uint32_t intervalMs = 0 );

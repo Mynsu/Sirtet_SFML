@@ -23,10 +23,7 @@ namespace
 
 	void Receive( Socket& socket )
 	{
-		// Reset
-		ReceivingResult = -2;
 		IsReceiving = true;
-
 		while ( true == IsReceiving )
 		{
 			ReceivingResult = socket.receiveBlock( );
@@ -34,12 +31,11 @@ namespace
 			{
 				std::unique_lock uLock( MutexRcvBuf );
 				CvForResumingRcv.wait( uLock );
-				// Reset
-				ReceivingResult = -2;
 			}
-			else if ( ReceivingResult < 0 && WSAETIMEDOUT == WSAGetLastError() )
+			else if ( -1 == ReceivingResult && WSAETIMEDOUT == WSAGetLastError() )
 			{
 				// Reset
+				std::scoped_lock lock( MutexRcvBuf );
 				ReceivingResult = -2;
 				// Trying to receive again
 			}
@@ -320,6 +316,12 @@ void scene::online::Online::send( char* const data, const int size )
 	}
 }
 
+void scene::online::Online::send( Packet& packet )
+{
+	std::string& data =	packet.data();
+	send( data.data(), (int)data.size() );
+}
+
 void scene::online::Online::sendZeroByte()
 {
 	char ignored = ' ';
@@ -328,7 +330,10 @@ void scene::online::Online::sendZeroByte()
 
 void scene::online::Online::receive( ) const
 {
-	ReceivingResult = -2;
+	{
+		std::scoped_lock lock( MutexRcvBuf );
+		ReceivingResult = -2;
+	}
 	FrameCount_interval = 0u;
 	if ( nullptr == ThreadToReceive )
 	{
@@ -354,7 +359,8 @@ bool scene::online::Online::hasReceived( const uint32_t intervalMs )
 	}
 	else
 	{
-		if ( 0 == ReceivingResult || -1 == ReceivingResult )
+		if ( 0 == ReceivingResult ||
+			-1 == ReceivingResult && WSAETIMEDOUT != WSAGetLastError() )
 		{
 			gService( )->console( ).printFailure( FailureLevel::FATAL, "Failed to receive." );
 			// Triggering

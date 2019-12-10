@@ -9,6 +9,8 @@ public:
 	{
 		NONE,
 		TETRIMINO_LANDED,
+		LINE_CLEARED,
+		GAME_OVER,
 	};
 
 	Playing( );
@@ -24,6 +26,7 @@ public:
 	std::string tempoMsOnNet( );
 	std::string stageOnNet( );
 	void synchronize( const bool async );
+	uint8_t numOfLinesCleared( ) const;
 private:
 	inline void reloadTetrimino( )
 	{
@@ -31,12 +34,19 @@ private:
 		mNextTetriminoS.pop( );
 		mNextTetriminoS.emplace( ::model::Tetrimino::Spawn() );
 	}
-	inline bool alarmAfter( const uint32_t milliseconds )
+	enum class AlarmIndex
+	{
+		TETRIMINO_FALLDOWN,
+		ASYNC_TOLERANCE,
+		GAME_OVER,
+		NONE_MAX,
+	};
+	inline bool alarmAfter( const uint32_t milliseconds, const AlarmIndex index )
 	{
 		const Clock::time_point now = Clock::now( );
-		if ( std::chrono::milliseconds(milliseconds) < (now-mOldTime) )
+		if ( std::chrono::milliseconds(milliseconds) < now-mPast[(int)index] )
 		{
-			mOldTime = now;
+			mPast[(int)index] = now;
 			return true;
 		}
 		else
@@ -45,8 +55,9 @@ private:
 		}
 	}
 	bool mIsAsync;
-	Clock::time_point mOldTime;
+	uint8_t mNumOfLinesCleared;
 	uint32_t mTempoMs;
+	Clock::time_point mPast[ (int)AlarmIndex::NONE_MAX ];
 	::model::tetrimino::Move mMoveToUpdate;
 	UpdateResult mUpdateResult;
 	::model::Tetrimino mCurrentTetrimino;

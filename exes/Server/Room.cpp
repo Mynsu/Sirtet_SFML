@@ -139,41 +139,82 @@ std::forward_list<ClientIndex> Room::notify( std::vector<Client>& clientS )
 			{
 				const ClientIndex participantIdx = it.first;
 				Socket& participantSocket = clientS[ participantIdx ].socket( );
-				if ( const Playing::UpdateResult res = it.second.updateResult();
-					Playing::UpdateResult::TETRIMINO_LANDED == res )
+				const Playing::UpdateResult res = it.second.updateResult( );
+				switch ( res )
 				{
-					Packet packet;
-					Playing& participantPlay = it.second;
-					std::string tetriminoOnNet( participantPlay.tetriminoOnNet() );
-					packet.pack( TAG_MY_CURRENT_TETRIMINO, tetriminoOnNet );
-					std::string tempoOnNet( participantPlay.tempoMsOnNet() );
-					packet.pack( TAG_MY_TEMPO_MS, tempoOnNet );
-					std::string stageOnNet( participantPlay.stageOnNet() );
-					packet.pack( TAG_MY_STAGE, stageOnNet );
+					case Playing::UpdateResult::TETRIMINO_LANDED:
+					{
+						Packet packet;
+						Playing& participantPlay = it.second;
+						std::string tetriminoOnNet( participantPlay.tetriminoOnNet() );
+						packet.pack( TAG_MY_CURRENT_TETRIMINO, tetriminoOnNet );
+						std::string stageOnNet( participantPlay.stageOnNet() );
+						packet.pack( TAG_MY_STAGE, stageOnNet );
 
-					if ( -1 == participantSocket.sendOverlapped(packet) )
-					{
-						// Exception
-						std::cerr << "Failed to send the current info to Client "
-							<< participantIdx << ".\n";
-						retVal.emplace_front( participantIdx );
-						continue;
-					}
-					participantSocket.pend( );
-				}
-				else
-				{
-					if ( false == participantSocket.isPending() )
-					{
-						if ( -1 == participantSocket.receiveOverlapped() )
+						if ( -1 == participantSocket.sendOverlapped(packet) )
 						{
 							// Exception
-							std::cerr << "Failed to pend reception from Client "
-								<< participantIdx << std::endl;
+							std::cerr << "Failed to send the current info to Client "
+								<< participantIdx << ".\n";
 							retVal.emplace_front( participantIdx );
+							continue;
 						}
 						participantSocket.pend( );
+						break;
 					}
+					case Playing::UpdateResult::LINE_CLEARED:
+					{
+						Packet packet;
+						Playing& participantPlay = it.second;
+						std::string tetriminoOnNet( participantPlay.tetriminoOnNet() );
+						packet.pack( TAG_MY_CURRENT_TETRIMINO, tetriminoOnNet );
+						std::string stageOnNet( participantPlay.stageOnNet() );
+						packet.pack( TAG_MY_STAGE, stageOnNet );
+						std::string tempoMsOnNet( participantPlay.tempoMsOnNet() );
+						packet.pack( TAG_MY_TEMPO_MS, tempoMsOnNet );
+						packet.pack( TAG_MY_LINES_CLEARED, participantPlay.numOfLinesCleared() );
+						if ( -1 == participantSocket.sendOverlapped(packet) )
+						{
+							// Exception
+							std::cerr << "Failed to send the current info to Client "
+								<< participantIdx << ".\n";
+							retVal.emplace_front( participantIdx );
+							continue;
+						}
+						participantSocket.pend( );
+						break;
+					}
+					case Playing::UpdateResult::GAME_OVER:
+					{
+						Packet packet;
+						Playing& participantPlay = it.second;
+						std::string stageOnNet( participantPlay.stageOnNet() );
+						packet.pack( TAG_MY_STAGE, stageOnNet );
+						packet.pack( TAG_MY_GAME_OVER, 1 );
+						if ( -1 == participantSocket.sendOverlapped(packet) )
+						{
+							// Exception
+							std::cerr << "Failed to send the current info to Client "
+								<< participantIdx << ".\n";
+							retVal.emplace_front( participantIdx );
+							continue;
+						}
+						participantSocket.pend( );
+						break;
+					}
+					default:
+						if ( false == participantSocket.isPending() )
+						{
+							if ( -1 == participantSocket.receiveOverlapped() )
+							{
+								// Exception
+								std::cerr << "Failed to pend reception from Client "
+									<< participantIdx << std::endl;
+								retVal.emplace_front( participantIdx );
+							}
+							participantSocket.pend( );
+						}
+						break;
 				}
 			}
 			break;

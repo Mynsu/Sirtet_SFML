@@ -4,8 +4,9 @@
 #include "../ServiceLocatorMirror.h"
 #include "../VaultKeyList.h"
 
-const uint32_t INPUT_DELAY_MS = 50;
-const uint8_t ASYNC_TOLERANCE_MS = 1000;
+const uint8_t FALLING_DIFF = 3;
+const uint32_t INPUT_DELAY_MS = 40;
+const uint32_t ASYNC_TOLERANCE_MS = 1000;
  
 ui::PlayView::PlayView( )
 	: mCellSize( 0.f ),
@@ -15,8 +16,10 @@ ui::PlayView::PlayView( )
 
 ui::PlayView::PlayView( sf::RenderWindow& window, ::scene::online::Online& net )
 	: mHasTetrimino( false ), mHasTetriminoCollidedInClient( false ),
-	mFrameCount_sync( 0 ), mFrameCount_falldown( 0 ), mFrameCount_input( 0 ),
-	mTempo( 1000 ), mCellSize( 30.f ),
+	mIsGameOver( false ),
+	mNumOfLinesCleared( 0 ),
+	mFrameCount_sync( 0 ), mFrameCount_input( 0 ), mFrameCount_clearingVFX( 0 ),
+	mCellSize( 30.f ), mTempoMs( std::chrono::milliseconds(1000) ),
 	mWindow_( &window ), mNet( &net ), mStage( window )
 {
 	if ( false == mTexture.loadFromFile("Images/Ready.png") )
@@ -40,7 +43,15 @@ void ui::PlayView::setDimension( const sf::Vector2f position, const float cellSi
 
 bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 {
-	const uint32_t fps = gService()->vault()[HK_FORE_FPS];
+	uint32_t fps;
+	if ( 1 == gService()->vault()[HK_HAS_GAINED_FOCUS] )
+	{
+		fps = gService()->vault()[HK_FORE_FPS];
+	}
+	else
+	{
+		fps = gService()->vault()[HK_BACK_FPS];
+	}
 	// Exception
 	if ( fps*ASYNC_TOLERANCE_MS/1000 < mFrameCount_sync )
 	{
@@ -76,8 +87,7 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 			std::nullopt != tempoMs )
 		{
 			uint32_t* const p = (uint32_t*)tempoMs.value().data();
-			const uint32_t _tempoMs = (uint32_t)::ntohl((u_long)*p);
-			mTempo = fps*_tempoMs/1000;
+			mTempoMs = std::chrono::milliseconds( (uint32_t)::ntohl((u_long)*p) );
 		}
 
 		if ( std::optional<std::string> stageOnNet(mNet->getByTag(TAG_MY_STAGE,
@@ -101,38 +111,60 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 			}
 		}
 
+		if ( std::optional<std::string> numOfLinesClearedOnNet(mNet->getByTag(TAG_MY_LINES_CLEARED,
+																		 ::scene::online::Online::Option::NONE) );
+			std::nullopt != numOfLinesClearedOnNet )
+		{
+			mNumOfLinesCleared = (uint8_t)*numOfLinesClearedOnNet.value().data();
+			mFrameCount_clearingVFX = 1;
+		}
+
+		if ( std::optional<std::string> isGameOverOnNet(mNet->getByTag(TAG_MY_GAME_OVER,
+																		 ::scene::online::Online::Option::RETURN_TAG_ATTACHED) );
+			std::nullopt != isGameOverOnNet )
+		{
+			mHasTetrimino = false;
+			mIsGameOver = true;
+		}
+
 		hasToRespond = true;
 	}
 	else if ( true == mHasTetriminoCollidedInClient )
 	{
-		return false;
+		return hasToRespond;
 	}
 
-	if ( true == mCurrentTetrimino.isFallingDown() )
+	if ( false == mHasTetrimino )
 	{
-		mHasTetriminoCollidedInClient = mCurrentTetrimino.moveDown( mStage.cgrid() );
-		if ( true == mHasTetriminoCollidedInClient )
+		return hasToRespond;
+	}
+	else if ( true == mCurrentTetrimino.isFallingDown() )
+	{
+		for ( uint8_t i = 0; FALLING_DIFF != i; ++i )
 		{
-			mCurrentTetrimino.fallDown( false );
-			std::string async( TAG_SYNC );
-			async += '0';
-			mNet->send( async.data(), (int)async.size() );
+			mHasTetriminoCollidedInClient = mCurrentTetrimino.moveDown(mStage.cgrid());
+			if ( true == mHasTetriminoCollidedInClient )
+			{
+				mCurrentTetrimino.fallDown( false );
+				Packet async;
+				async.pack( TAG_MY_SYNC, (uint8_t)false );
+				mNet->send( async );
+				hasToRespond = false;
+				goto last;
+			}
+		}
+
+		if ( 0 < mFrameCount_sync )
+		{
+			Packet async;
+			async.pack( TAG_MY_SYNC, (uint8_t)true );
+			mNet->send( async );
 			hasToRespond = false;
+			return hasToRespond;
 		}
 		else
 		{
-			if ( 0 < mFrameCount_sync )
-			{
-				std::string async( TAG_SYNC );
-				async += '1';
-				mNet->send( async.data(), (int)async.size() );
-				hasToRespond = false;
-				return hasToRespond;
-			}
-			else
-			{
-				return hasToRespond;
-			}
+			return hasToRespond;
 		}
 	}
 	else
@@ -148,29 +180,26 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 					case sf::Keyboard::Space:
 						if ( 0 == mFrameCount_sync )
 						{
-							input += TAG_TETRIMINO_MOVE;
-							input += '0'+(int)::model::tetrimino::Move::FALL_DOWN;
+							input += TAGGED_MY_TETRIMINO_MOVE_FALLDOWN;
 						}
 						mCurrentTetrimino.fallDown( );
-						mFrameCount_falldown = 0u;
+						mPast_falldown = Clock::now();
 						mFrameCount_input = 0;
 						break;
 					case sf::Keyboard::Down:
 						if ( 0 == mFrameCount_sync )
 						{
-							input += TAG_TETRIMINO_MOVE;
-							input += '0'+(int)::model::tetrimino::Move::DOWN;
+							input += TAGGED_MY_TETRIMINO_MOVE_DOWN;
 						}
 						mHasTetriminoCollidedInClient = mCurrentTetrimino.moveDown( mStage.cgrid() );
-						mFrameCount_falldown = 0u;
+						mPast_falldown = Clock::now();
 						mFrameCount_input = 0;
 						it = eventQueue.erase( it );
 						break;
 					case sf::Keyboard::Left:
 						if ( 0 == mFrameCount_sync )
 						{
-							input += TAG_TETRIMINO_MOVE;
-							input += '0'+(int)::model::tetrimino::Move::LEFT;
+							input += TAGGED_MY_TETRIMINO_MOVE_LEFT;
 							mCurrentTetrimino.tryMoveLeft( mStage.cgrid() );
 						}
 						mFrameCount_input = 0;
@@ -179,8 +208,7 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 					case sf::Keyboard::Right:
 						if ( 0 == mFrameCount_sync )
 						{
-							input += TAG_TETRIMINO_MOVE;
-							input += '0'+(int)::model::tetrimino::Move::RIGHT;
+							input += TAGGED_MY_TETRIMINO_MOVE_RIGHT;
 							mCurrentTetrimino.tryMoveRight( mStage.cgrid() );
 						}
 						mFrameCount_input = 0;
@@ -191,8 +219,7 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 					case sf::Keyboard::Up:
 						if ( 0 == mFrameCount_sync )
 						{
-							input += TAG_TETRIMINO_MOVE;
-							input += '0'+(int)::model::tetrimino::Move::ROTATE;
+							input += TAGGED_MY_TETRIMINO_MOVE_ROTATE;
 							mCurrentTetrimino.tryRotate( mStage.cgrid() );
 						}
 						mFrameCount_input = 0;
@@ -215,13 +242,15 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 			hasToRespond = false;
 		}
 
-		if ( mTempo <= mFrameCount_falldown )
+		Clock::time_point now =	Clock::now();
+		if ( mTempoMs <= now-mPast_falldown )
 		{
 			mHasTetriminoCollidedInClient = mCurrentTetrimino.moveDown( mStage.cgrid() );
-			mFrameCount_falldown = 0;
+			mPast_falldown = now;
 		}
 	}
 
+	last:
 	if ( true == mHasTetriminoCollidedInClient )
 	{
 		if ( 0 < mFrameCount_sync )
@@ -258,11 +287,24 @@ void ui::PlayView::draw( const int time )
 	{
 		mCurrentTetrimino.draw( *mWindow_ );
 	}
+	if ( 0 < mFrameCount_clearingVFX )
+	{
 
-	++mFrameCount_falldown;
+		++mFrameCount_clearingVFX;
+	}
+	if ( true == mIsGameOver )
+	{
+
+	}
+
 	++mFrameCount_input;
 	if ( 0 != mFrameCount_sync )
 	{
 		++mFrameCount_sync;
+	}
+	const uint32_t fps = (uint32_t)gService()->vault()[HK_FORE_FPS];
+	if ( fps <= mFrameCount_clearingVFX )
+	{
+		mFrameCount_clearingVFX = 0u;
 	}
 }

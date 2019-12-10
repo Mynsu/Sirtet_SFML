@@ -20,12 +20,15 @@ namespace ui
 		bool update( std::list<sf::Event>& eventQueue );
 		void draw( const int time );
 	private:
-		bool mHasTetrimino, mHasTetriminoCollidedInClient;
+		using Clock = std::chrono::high_resolution_clock;
+		bool mHasTetrimino, mHasTetriminoCollidedInClient, mIsGameOver;
+		uint8_t mNumOfLinesCleared;
 		// NOTE: Also as mHasTetriminoCollidedIn-Server.
 		uint32_t mFrameCount_sync;
-		uint32_t mFrameCount_falldown, mFrameCount_input;
-		uint32_t mTempo;
+		uint32_t mFrameCount_input, mFrameCount_clearingVFX;
 		float mCellSize;
+		Clock::time_point mPast_falldown;
+		Clock::duration	mTempoMs;
 		sf::RenderWindow* mWindow_;
 		::scene::online::Online* mNet;
 		sf::Texture mTexture;

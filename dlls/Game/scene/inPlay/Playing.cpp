@@ -5,12 +5,14 @@
 #include "Assertion.h"
 #include "../VaultKeyList.h"
 
+const float TEMPO_DIFF_RATIO = 0.02f;
 const uint8_t FALLING_DIFF = 3u;
+const uint32_t LINE_CLEAR_CHK_INTERVAL_MS = 100;
 
 ::scene::inPlay::Playing::Playing( sf::RenderWindow& window,
 								   sf::Drawable& shapeOrSprite,
 								   const std::unique_ptr<::scene::inPlay::IScene>& overlappedScene )
-	: mRowCleared( 0u ),
+	: mNumOfLinesCleared( 0u ),
 	mFrameCount_fallDown( 0u ), mFrameCount_clearingInterval_( 0u ), mFrameCount_clearingVfx_( 0u ), mFrameCount_gameOver( 0u ),
 	mTempo( 0.75f ),
 	mWindow_( window ), mBackgroundRect_( (sf::RectangleShape&)shapeOrSprite ),
@@ -275,7 +277,8 @@ void ::scene::inPlay::Playing::loadResources( )
 	{
 		for ( uint8_t i = 0u; i != FALLING_DIFF; ++i )
 		{
-			if ( hasCollidedAtThisFrame = mCurrentTetrimino.moveDown(mPlayerStage.cgrid()); true == hasCollidedAtThisFrame )
+			hasCollidedAtThisFrame = mCurrentTetrimino.moveDown(mPlayerStage.cgrid());
+			if ( true == hasCollidedAtThisFrame )
 			{
 				mCurrentTetrimino.fallDown( false );
 				// NOTE: Break the loop and stop stuff in the 1st if-scope immediately.
@@ -355,14 +358,14 @@ void ::scene::inPlay::Playing::loadResources( )
 
 	// Check if a row or more have to be cleared,
 	// NOTE: It's better to check that every several frames than every frame.
-	if ( static_cast<uint32_t>(fps*0.1f) < mFrameCount_clearingInterval_ )
+	if ( (uint32_t)fps*LINE_CLEAR_CHK_INTERVAL_MS/1000 < mFrameCount_clearingInterval_ )
 	{
-		const uint8_t cardinalRowCleared = mPlayerStage.tryClearRow( );
+		const uint8_t numOfLinesCleared = mPlayerStage.tryClearRow( );
 		mFrameCount_clearingInterval_ = 0u;
-		if ( 0 != cardinalRowCleared )
+		if ( 0 != numOfLinesCleared )
 		{
-			mRowCleared = cardinalRowCleared;
-			mTempo -= 0.02f;
+			mNumOfLinesCleared = numOfLinesCleared;
+			mTempo -= TEMPO_DIFF_RATIO;
 			// Making 0 to 1 so as to start the timer.
 			++mFrameCount_clearingVfx_;
 		}
@@ -388,7 +391,7 @@ void ::scene::inPlay::Playing::draw( )
 	mCurrentTetrimino.draw( mWindow_ );
 	if ( 0u != mFrameCount_clearingVfx_ )
 	{
-		mVfxCombo.draw( mRowCleared );
+		mVfxCombo.draw( mNumOfLinesCleared );
 		++mFrameCount_clearingVfx_;
 	}
 	mWindow_.draw( mNextTetriminoPanel );

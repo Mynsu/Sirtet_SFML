@@ -18,7 +18,7 @@ namespace scene::inPlay
 		void draw( ) override;
 	private:
 		void reloadTetrimino( );
-		uint8_t mRowCleared;
+		uint8_t mNumOfLinesCleared;
 		uint32_t mFrameCount_fallDown, mFrameCount_clearingInterval_, mFrameCount_clearingVfx_, mFrameCount_gameOver;
 		float mTempo;
 		float mCellSize_;
