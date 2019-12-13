@@ -14,6 +14,7 @@ Playing::Playing()
 	mNumOfLinesCleared( 0 ), mTempoMs( 1000 ),
 	mMoveToUpdate( ::model::tetrimino::Move::NONE_MAX )
 {
+	mPast[(int)AlarmIndex::GAME_OVER] = Clock::now();
 }
 
 void Playing::spawnTetrimino()
