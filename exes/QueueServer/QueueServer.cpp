@@ -2,6 +2,7 @@
 
 //TODO: 티켓 랜덤하게, RDBMS로 ID와 Password 매칭.
 
+using Ticket = HashedKey;
 const uint32_t CAPACITY = 10000u;
 // Capacity in the main server defaults to 10000u.
 // You can resize it indirectly here without re-compliing or rescaling the main server.
@@ -57,37 +58,6 @@ inline int ResetMainServerSocket( std::unique_ptr<Socket>& toMainServer )
 	return ConnectToMainServer( toMainServer );
 }
 
-class Postman
-{
-public:
-	inline Postman( )
-		: mHasStuff( false )
-	{ }
-	inline ~Postman( ) = default;
-
-	inline void pack( const char* TAG, const std::string& untaggedStuff, const char separator = ' ' )
-	{
-		mHasStuff = true;
-		mBox << TAG << untaggedStuff << separator;
-	}
-	inline void pack( const std::string& taggedStuff, const char separator = ' ' )
-	{
-		mHasStuff = true;
-		mBox << taggedStuff << separator;
-	}
-	inline bool hasStuff( ) const
-	{
-		return mHasStuff;
-	}
-	inline std::string package( ) const
-	{
-		return mBox.str( );
-	}
-private:
-	bool mHasStuff;
-	std::stringstream mBox;
-};
-
 enum Status
 {
 	VERIFYING_SALT,
@@ -124,8 +94,7 @@ int main( )
 	std::cout << "\n##########\n### QUEUE SERVER\n##########\n\nWhat is today's salt, Sir?" << std::endl;
 	std::string todaysSalt;
 	std::cin >> todaysSalt;
-	std::string encryptedSalt( std::to_string(::util::hash::Digest(todaysSalt.data(), 
-																	static_cast<uint8_t>(todaysSalt.size()))) );
+	const HashedKey encryptedSalt = ::util::hash::Digest( todaysSalt.data(), (uint8_t)todaysSalt.size() );
 	// NOTE: Skipped because a socket isn't pending at first.
 	///socketToMainServer.pend( false );
 	int tolerance = 0;
@@ -138,17 +107,21 @@ int main( )
 		return -1;
 	}
 	// Acquiring how much room remains in the main server.
-	while ( -1 == socketToMainServer->sendOverlapped(encryptedSalt.data(),encryptedSalt.size())
-		 && ERROR_IO_PENDING != WSAGetLastError() )
 	{
-		// Exception
-		std::cerr << "Failed to send Salt to main server.\n";
-		++tolerance;
-		if ( 3 == tolerance || -1 == ResetMainServerSocket(socketToMainServer) )
+		Packet packet;
+		packet.pack( "", encryptedSalt );
+		while ( -1 == socketToMainServer->sendOverlapped(packet)
+			 && ERROR_IO_PENDING != WSAGetLastError() )
 		{
-			socketToMainServer->close( );
-			WSACleanup( );
-			return -1;
+			// Exception
+			std::cerr << "Failed to send Salt to main server.\n";
+			++tolerance;
+			if ( 3 == tolerance || -1 == ResetMainServerSocket(socketToMainServer) )
+			{
+				socketToMainServer->close( );
+				WSACleanup( );
+				return -1;
+			}
 		}
 	}
 	socketToMainServer->pend( );
@@ -242,7 +215,7 @@ int main( )
 	while ( true == IsWorking )
 	{
 		iocp.wait( event, 100 );
-		Postman postmanToMainServer;
+		Packet packetToMainServer;
 		for ( uint32_t i = 0u; i != event.eventCount; ++i )
 		{
 			const OVERLAPPED_ENTRY& ev = event.events[ i ];
@@ -328,18 +301,20 @@ int main( )
 						{
 							status.set(Status::VERIFYING_SALT, false );
 						}
+
 						// When having received population in the main server,
 						if ( 1 == status[Status::AWAITING_POPULATION] )
 						{
 							// NOTE: Assuming that there's a message about nothing but population in and from the main server.
 							status.set( Status::AWAITING_POPULATION, 0 );
 							// NOTE: Assuming that no tag is attached.
-							const int pop = std::atoi( socketToMainServer->receivingBuffer() );
+							const char* const rcvBuf = socketToMainServer->receivingBuffer();
+							const uint32_t pop = ::ntohl(*(uint32_t*)rcvBuf);
 							// When population is out of range,
 							if ( pop<0 || MAIN_SERVER_CAPACITY<pop )
 							{
 								// Asking again the main server how many clients are there.
-								postmanToMainServer.pack( encryptedSalt );
+								packetToMainServer.pack( "", encryptedSalt );
 								status.set( Status::AWAITING_POPULATION, 1 );
 								std::cout << "Asking again the main server how many clients are there.\n";
 								continue;
@@ -466,9 +441,9 @@ int main( )
 		for ( auto it = queue.cbegin(); queue.cend()!=it && 0<roomInMainServer; )
 		{
 			Socket& clientSocket = clientS[ *it ];
-			const std::string undigestedID( std::to_string(clientSocket.handle()) + encryptedSalt );
-			std::string ticket( TAG_TICKET + std::to_string(::util::hash::Digest(undigestedID.data(),
-																					static_cast<uint8_t>(undigestedID.size()))) );
+			const Ticket id = ::util::hash::Digest((uint32_t)(clientSocket.handle() + encryptedSalt));
+			Packet ticket;
+			ticket.pack( TAG_TICKET, id );
 #ifdef _DEBUG
 			if ( false != clientSocket.isPending() ) __debugbreak( );
 #endif
@@ -478,7 +453,7 @@ int main( )
 			// actually not issued to the client.
 			//
 			// Issuing the ticket to the client.
-			if ( -1 == clientSocket.sendOverlapped(ticket.data(),ticket.size())
+			if ( -1 == clientSocket.sendOverlapped( ticket )
 					&& ERROR_IO_PENDING != WSAGetLastError() )
 			{
 				// Exception
@@ -495,16 +470,13 @@ int main( )
 			else
 			{
 #ifdef _DEBUG
-				std::cout << "Sending a ticket " << ticket.data( ) << " to a client " << *it << " succeeded.\n";
+				std::cout << "Sending a ticket " << id << " to Client " << *it << " succeeded.\n";
 #endif
 				clientSocket.pend( );
 				clientSocket.earnTicket( );
 				// Trying to send the issued ticket to the main server.
-				postmanToMainServer.pack( ticket );
+				packetToMainServer.pack( TAG_TICKET, id );
 				--roomInMainServer;
-#ifdef _DEBUG
-				std::cout << "Sending a ticket " << ticket.data( ) << " to the main server succeeded, too.\n";
-#endif
 			}
 			it = queue.erase( it );
 		}
@@ -519,12 +491,13 @@ int main( )
 
 			Socket& clientSocket = clientS[ *it ];
 			++order;
-			std::string itsOrderInQueueLine( TAG_ORDER_IN_QUEUE + std::to_string(order) );
+			Packet packet;
+			packet.pack( TAG_ORDER_IN_QUEUE, order );
 #ifdef _DEBUG
 			if ( false != clientSocket.isPending( ) ) __debugbreak( );
 #endif
 			clientSocket.pend( false );
-			if ( -1 == clientSocket.sendOverlapped(itsOrderInQueueLine.data(),itsOrderInQueueLine.size())
+			if ( -1 == clientSocket.sendOverlapped(packet)
 					&& ERROR_IO_PENDING != WSAGetLastError( ) )
 			{
 				// Exception
@@ -554,7 +527,7 @@ int main( )
 			// Reset
 			old1 = now;
 			// Asking the main server how many clients are there.
-			postmanToMainServer.pack( encryptedSalt );
+			packetToMainServer.pack( "", encryptedSalt );
 			status.set( Status::AWAITING_POPULATION, 1 );
 #ifdef _DEBUG
 			std::cout << "Asking the main server how many clients are there.\n";
@@ -562,15 +535,14 @@ int main( )
 		}
 
 		// When there's something to send to the main server,
-		if ( true == postmanToMainServer.hasStuff() )
+		if ( true == packetToMainServer.hasData() )
 		{
 #ifdef _DEBUG
 			if ( false != socketToMainServer->isPending( ) ) __debugbreak( );
 #endif
 			socketToMainServer->pend( false );
-			std::string package( postmanToMainServer.package() );
 			tolerance = 0;
-			while ( -1 == socketToMainServer->sendOverlapped(package.data(),package.size())
+			while ( -1 == socketToMainServer->sendOverlapped(packetToMainServer)
 					&& ERROR_IO_PENDING != WSAGetLastError( ) )
 			{
 				// Exception

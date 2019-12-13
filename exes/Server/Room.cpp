@@ -47,11 +47,11 @@ void Room::perceive( const ClientIndex index, const ::model::tetrimino::Move mov
 	}
 }
 
-void Room::perceive( const ClientIndex index, const bool async )
+void Room::perceive( const ClientIndex index, const bool hasTetriminoCollidedInClient )
 {
 	if ( auto it = mParticipantS.find(index); mParticipantS.end() != it )
 	{
-		it->second.synchronize( async );
+		it->second.perceive( );
 	}
 	// Exception
 	else
@@ -71,7 +71,7 @@ std::forward_list<ClientIndex> Room::update( )
 			if ( false == it.second.update() )
 			{
 				retVal.emplace_front( it.first );
-				std::cerr << "FAIL: Client " << it.first << "'s timed out.\n";
+				std::cerr << "FAIL: Client " << it.first << "'s time out.\n";
 			}
 		}
 	}

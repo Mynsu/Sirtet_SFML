@@ -21,10 +21,10 @@ namespace ui
 		void draw( const int time );
 	private:
 		using Clock = std::chrono::high_resolution_clock;
-		bool mHasTetrimino, mHasTetriminoCollidedInClient, mIsGameOver;
+		bool mHasTetrimino, mHasTetriminoCollidedAlready, mIsGameOverOnServer;
 		uint8_t mNumOfLinesCleared;
 		// NOTE: Also as mHasTetriminoCollidedIn-Server.
-		uint32_t mFrameCount_sync;
+		uint32_t mFrameCount_async;
 		uint32_t mFrameCount_input, mFrameCount_clearingVFX;
 		float mCellSize;
 		Clock::time_point mPast_falldown;

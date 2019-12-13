@@ -26,7 +26,7 @@ public:
 	void start( );
 	bool leave( const ClientIndex index );
 	void perceive( const ClientIndex index, const ::model::tetrimino::Move move );
-	void perceive( const ClientIndex index, const bool async );
+	void perceive( const ClientIndex index, const bool hasTetriminoCollidedInClient = true );
 	std::forward_list<ClientIndex> update( );
 	std::forward_list<ClientIndex> notify( std::vector<Client>& clientS );
 	// MUST destruct this room when returning false, which means having kicked out the last one.

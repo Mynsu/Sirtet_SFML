@@ -97,6 +97,7 @@ int main()
 	{
 		Client& client = clientS[ idx ];
 		client.setSocket( Socket::Type::TCP, Socket::CompletedWork::DISCONNECT );
+		candidatesIndices.emplace_back( idx );
 		std::cout << "Forced to disconnect Client " << idx << ". (Now "
 			<< CLIENT_CAPACITY-candidatesIndices.size() << "/" << CLIENT_CAPACITY << " connections.)\n";
 		if ( -1 == iocp.add(client.socket(), idx) )
@@ -105,12 +106,12 @@ int main()
 			std::cerr << "FATAL: Failed to add Client " << idx << " into IOCP.\n";
 			return -1;
 		}
+
 		if ( const auto it = roomS.find(client.roomID()); roomS.end() != it )
 		{
 			it->second.leave( idx );
 		}
 		client.reset( );
-		candidatesIndices.emplace_back( idx );
 		return 0;
 	};
 
@@ -118,8 +119,7 @@ int main()
 	std::string todaysSalt;
 	std::cin >> todaysSalt;
 	std::cout << "Ready.\n";
-	const HashedKey refinedSalt = ::util::hash::Digest( todaysSalt.data(), (uint8_t)todaysSalt.size() );
-	const std::string encryptedSalt( std::to_string(refinedSalt) );
+	const HashedKey encryptedSalt = ::util::hash::Digest( todaysSalt.data(), (uint8_t)todaysSalt.size() );
 	bool wasBoatful = false;
 	ClientIndex queueServerIdx = -1;
 	std::unordered_set< Ticket > ticketS;
@@ -252,15 +252,17 @@ int main()
 					if ( Socket::CompletedWork::RECEIVE == cmpl )
 					{
 // TODO: getline
-						const std::string_view strView( socketToQueueServer.receivingBuffer() );
+						const char* const rcvBuf = socketToQueueServer.receivingBuffer();
 						// When the queue server asked how many clients keep connecting,
-						if ( std::string_view::npos != strView.find(encryptedSalt) )
+						if ( encryptedSalt == ::ntohl(*(HashedKey*)rcvBuf) )
 						{
 #ifdef _DEBUG
 							std::cout << "Population has been asked by the queue server.\n";
 #endif
-							std::string pop( std::to_string(CLIENT_CAPACITY-candidatesIndices.size()) );
-							if ( -1 == socketToQueueServer.sendOverlapped(pop.data(),pop.size()) )
+							const uint32_t pop = CLIENT_CAPACITY-candidatesIndices.size();
+							Packet packet;
+							packet.pack( "", pop );
+							if ( -1 == socketToQueueServer.sendOverlapped(packet) )
 							{
 								// Exception
 								std::cerr << "Failed to pend sending population\n";
@@ -276,7 +278,7 @@ int main()
 							{
 								socketToQueueServer.pend( );
 #ifdef _DEBUG
-								std::cout << "Population has been told: " << pop.data( ) << ".\n";
+								std::cout << "Population has been told: " << pop << ".\n";
 #endif
 							}
 						}
@@ -299,6 +301,7 @@ int main()
 								socketToQueueServer.pend( );
 							}
 						}
+						const std::string_view strView( rcvBuf );
 						size_t off = 0u;
 						// When having received copies of the issued ticket,
 						while ( true )
@@ -309,16 +312,15 @@ int main()
 								break;
 							}
 							constexpr uint8_t TAG_TICKET_LEN = ::util::hash::Measure( TAG_TICKET );
- 							const uint32_t beginPos = static_cast< uint32_t >( tagPos ) + TAG_TICKET_LEN;
+ 							const uint32_t beginPos = (uint32_t)tagPos + TAG_TICKET_LEN;
 							off = strView.find( TOKEN_SEPARATOR, tagPos );
 #ifdef _DEBUG
 							if ( std::string_view::npos == off ) __debugbreak( );
 #endif
-							const uint32_t endPos = static_cast< uint32_t >( off );
-							const std::string ticketID( strView.substr(beginPos, endPos-beginPos) );
-							ticketS.emplace( static_cast<Ticket>(std::atoll(ticketID.data())) );
+							const Ticket id = ::ntohl(*(Ticket*)&rcvBuf[beginPos]);
+							ticketS.emplace( id );
 #ifdef _DEBUG
-							std::cout << "A copy of the issued ticket arrived: " << ticketID << ".\n";
+							std::cout << "A copy of the issued ticket arrived: " << id << ".\n";
 #endif
 						}
 					}
@@ -422,7 +424,7 @@ int main()
 							const char* const rcvBuf = clientSocket.receivingBuffer( );
 							// When having a copy of the ticket received from this client,
 							constexpr uint8_t TAG_TICKET_LEN = ::util::hash::Measure( TAG_TICKET );
-							if ( const Ticket ticket = (Ticket)std::atoll(&rcvBuf[TAG_TICKET_LEN]);
+							if ( const Ticket ticket = ::ntohl(*(Ticket*)&rcvBuf[TAG_TICKET_LEN]);
 								ticketS.cend() != ticketS.find(ticket) )
 							{
 								client.holdTicket( ticket );
@@ -443,7 +445,7 @@ int main()
 								clientSocket.pend( );
 							}
 							// When the queue server as a client asked how many clients keep connecting,
-							else if ( refinedSalt == (HashedKey)std::atoll(rcvBuf) )
+							else if ( encryptedSalt == ::ntohl(*(HashedKey*)rcvBuf) )
 							{
 								queueServerIdx = clientIdx;
 #ifdef _DEBUG
@@ -452,9 +454,11 @@ int main()
 								// Letting the queue server know the population here
 								// makes the queue server possible
 								// to scale up/down the virtual capacity of the main server elastically and independently.
-								std::string pop( std::to_string(CLIENT_CAPACITY-candidatesIndices.size()) );
+								Packet packet;
+								const uint32_t pop = CLIENT_CAPACITY-candidatesIndices.size();
+								packet.pack( "", pop );
 								Socket& queueServerSocket = clientSocket;
-								if ( -1 == queueServerSocket.sendOverlapped(pop.data(), pop.size()) )
+								if ( -1 == queueServerSocket.sendOverlapped(packet) )
 								{
 									// Exception
 									std::cerr << "Failed to pend sending population\n";
@@ -467,7 +471,7 @@ int main()
 								}
 								queueServerSocket.pend( );
 #ifdef _DEBUG
-								std::cout << "Population has been told: " << pop.data( ) << ".\n";
+								std::cout << "Population has been told: " << pop << ".\n";
 #endif
 							}
 							// When not having a copy of the ticket received from this client or

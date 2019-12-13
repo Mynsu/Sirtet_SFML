@@ -74,7 +74,7 @@ enum class _Tag
 	////
 	// Connection
 	////
-	TICKET,
+	TICKET = 1,
 	ORDER_IN_QUEUE,
 	MY_NICKNAME,
 
@@ -90,7 +90,7 @@ enum class _Tag
 	MY_TEMPO_MS,
 	MY_STAGE,
 	MY_TETRIMINO_MOVE,
-	MY_SYNC,
+	MY_TETRIMINO_COLLIDED_IN_CLIENT,
 	MY_LINES_CLEARED,
 	MY_GAME_OVER,
 };
@@ -106,7 +106,7 @@ using Tag = char[];
 // ... the client having submitted the valid invitation.
 // The client receives and sends to the main server as it is.
 // With that the main server can see the connecting client is genuine or not.
-constexpr Tag TAG_TICKET = { '0'+(int)_Tag::TICKET, ':', '\0' };
+constexpr Tag TAG_TICKET = { (char)_Tag::TICKET, ':', '\0' };
 // The queue server sends the client's order attached by this tag.
 constexpr Tag TAG_ORDER_IN_QUEUE = { '0'+(int)_Tag::ORDER_IN_QUEUE, ':', '\0' };
 constexpr Tag TAG_MY_NICKNAME = { '0'+(int)_Tag::MY_NICKNAME, ':', '\0' };
@@ -153,7 +153,6 @@ constexpr Tag TAGGED_MY_TETRIMINO_MOVE_RIGHT = { '0'+(int)_Tag::MY_TETRIMINO_MOV
 											'0'+(int)::model::tetrimino::Move::RIGHT, '\0' };
 constexpr Tag TAGGED_MY_TETRIMINO_MOVE_ROTATE = { '0'+(int)_Tag::MY_TETRIMINO_MOVE, ':',
 											'0'+(int)::model::tetrimino::Move::ROTATE, '\0' };
-constexpr Tag TAG_MY_SYNC = { '0'+(int)_Tag::MY_SYNC, ':', '\0' };
-const uint8_t TAG_MY_SYNC_LEN = ::util::hash::Measure( TAG_MY_SYNC );
+constexpr Tag TAG_MY_TETRIMINO_COLLIDED_IN_CLIENT = { '0'+(int)_Tag::MY_TETRIMINO_COLLIDED_IN_CLIENT, ':', '\0' };
 constexpr Tag TAG_MY_LINES_CLEARED = { '0'+(int)_Tag::MY_LINES_CLEARED, ':', '\0' };
 constexpr Tag TAG_MY_GAME_OVER = { '1', '0'+(int)_Tag::MY_GAME_OVER%10, ':', '\0' };

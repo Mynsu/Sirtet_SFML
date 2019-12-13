@@ -67,6 +67,7 @@ void scene::online::InRoom::loadResources( )
 	bool hasToRespond = false;
 	if ( true == mNet.hasReceived() )
 	{
+		mIsReceiving = false;
 		if ( std::optional<std::string> response(mNet.getByTag(TAGGED_REQ_GET_READY,
 																Online::Option::RETURN_TAG_ATTACHED));
 			 std::nullopt != response )
@@ -74,12 +75,11 @@ void scene::online::InRoom::loadResources( )
 			mFrameCount = mFPS_*-3;
 		}
 		hasToRespond = true;
-		mIsReceiving = false;
 	}
 
 	for ( auto& it : mParticipants )
 	{
-		hasToRespond |= it.second.update( eventQueue );
+		hasToRespond = it.second.update( eventQueue );
 	}
 
 	if ( true == hasToRespond )

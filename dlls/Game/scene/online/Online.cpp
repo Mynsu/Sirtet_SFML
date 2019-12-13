@@ -17,6 +17,7 @@ namespace
 	std::unique_ptr< std::thread > ThreadToReceive;
 	bool IsReceiving;
 	int ReceivingResult;
+	int Error;
 	std::condition_variable CvForResumingRcv;
 	std::mutex MutexRcvBuf;
 	uint32_t FrameCount_interval = 0;
@@ -26,18 +27,16 @@ namespace
 		IsReceiving = true;
 		while ( true == IsReceiving )
 		{
-			ReceivingResult = socket.receiveBlock( );
-			if ( 0 < ReceivingResult )
+			ReceivingResult = socket.receiveBlock();
+			Error =	WSAGetLastError();
+			if ( -1 == ReceivingResult && WSAETIMEDOUT == Error )
+			{
+				// Trying to receive again
+			}
+			else if ( 0 < ReceivingResult )
 			{
 				std::unique_lock uLock( MutexRcvBuf );
 				CvForResumingRcv.wait( uLock );
-			}
-			else if ( -1 == ReceivingResult && WSAETIMEDOUT == WSAGetLastError() )
-			{
-				// Reset
-				std::scoped_lock lock( MutexRcvBuf );
-				ReceivingResult = -2;
-				// Trying to receive again
 			}
 			else
 			{
@@ -77,6 +76,7 @@ scene::online::Online::Online( sf::RenderWindow& window )
 		gService( )->console( ).print( "Succeeded to connect to the queue server.", sf::Color::Green );
 		const Dword version = gService( )->vault( ).at( HK_VERSION );
 //TODO: OTP로 신원 확인
+		ReceivingResult = -2;
 		ThreadToReceive = std::make_unique< std::thread >( &Receive, std::ref(*SocketToServer) );
 	}
 	setScene( ::scene::online::ID::WAITING );
@@ -330,11 +330,15 @@ void scene::online::Online::sendZeroByte()
 
 void scene::online::Online::receive( ) const
 {
+	if ( 0 == ReceivingResult ||
+		-1 == ReceivingResult && WSAETIMEDOUT != Error )
 	{
-		std::scoped_lock lock( MutexRcvBuf );
-		ReceivingResult = -2;
+		gService()->console().printFailure( FailureLevel::WARNING, "Can't receive." );
+		return;
 	}
-	FrameCount_interval = 0u;
+
+	ReceivingResult = -2;
+	Error = 0;
 	if ( nullptr == ThreadToReceive )
 	{
 		ThreadToReceive = std::make_unique< std::thread >( &Receive, std::ref(*SocketToServer) );
@@ -355,12 +359,13 @@ bool scene::online::Online::hasReceived( const uint32_t intervalMs )
 
 	if ( converted <= FrameCount_interval && 0 < ReceivingResult )
 	{
+		FrameCount_interval = 0u;
 		return true;
 	}
 	else
 	{
 		if ( 0 == ReceivingResult ||
-			-1 == ReceivingResult && WSAETIMEDOUT != WSAGetLastError() )
+			-1 == ReceivingResult && WSAETIMEDOUT != Error )
 		{
 			gService( )->console( ).printFailure( FailureLevel::FATAL, "Failed to receive." );
 			// Triggering
@@ -414,9 +419,21 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag, const
 		if ( size_t pos = strView.find(TOKEN_SEPARATOR_2, dataPos);
 			 std::string_view::npos != pos )
 		{
-			const int size = std::atoi( &rcvBuf[dataPos] );
+			const uint32_t size = ::ntohl(*(uint32_t*)&rcvBuf[dataPos]);
 			dataPos = (uint32_t)++pos;
 			endPos = (uint32_t)pos + size;
+		}
+		// Exception
+		else
+		{
+#ifdef _DEBUG
+			__debugbreak( );
+#else
+			std::string msg( "Can't find a token separator with tag(" );
+			msg += tag;
+			msg += ").";
+			gService()->console().printFailure(FailureLevel::WARNING, msg);
+#endif
 		}
 	}
 	else
@@ -425,6 +442,18 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag, const
 			 std::string_view::npos != pos )
 		{
 			endPos = (uint32_t)pos;
+		}
+		// Exception
+		else
+		{
+#ifdef _DEBUG
+			__debugbreak( );
+#else
+			std::string msg( "Can't find a token separator with tag(" );
+			msg += tag;
+			msg += ").";
+			gService()->console().printFailure(FailureLevel::WARNING, msg);
+#endif
 		}
 	}
 

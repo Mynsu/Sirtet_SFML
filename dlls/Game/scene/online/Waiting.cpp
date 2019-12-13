@@ -49,13 +49,15 @@ void scene::online::Waiting::loadResources( )
 																	   Online::Option::RETURN_TAG_ATTACHED);
 					 std::nullopt != ticket )
 				{
-					std::string& _ticket = ticket.value( );
+					std::string& _ticket = ticket.value();
 #ifdef _DEBUG
-					gService( )->console( ).print( _ticket, sf::Color::Green );
+					const char* const ptr = _ticket.data();
+
+					std::string ticketID( std::to_string(::ntohl(*(HashedKey*)&ptr[std::strlen(TAG_TICKET)])) );
+					gService( )->console( ).print( ticketID, sf::Color::Green );
 #endif
 					// Reset
 					mNet.stopReceivingFromQueueServer( );
-
 					if ( true == mNet.connectToMainServer() )
 					{
 						// Sending to the main server the ticket, which the main server will verify.
@@ -68,7 +70,7 @@ void scene::online::Waiting::loadResources( )
 																		 Online::Option::FIND_END_TO_BEGIN);
 						  std::nullopt != order )
 				{
-					mOrder = (int32_t)std::atoi( order.value().data() );
+					mOrder = ::ntohl(*(uint32_t*)order.value().data());
 					mNet.receive( );
 #ifdef _DEBUG
 					std::string msg( "My order in the queue line: " );

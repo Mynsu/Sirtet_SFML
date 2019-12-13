@@ -25,7 +25,7 @@ public:
 	std::string tetriminoOnNet( );
 	std::string tempoMsOnNet( );
 	std::string stageOnNet( );
-	void synchronize( const bool async );
+	void perceive( const bool hasTetriminoCollidedInClient = true );
 	uint8_t numOfLinesCleared( ) const;
 private:
 	inline void reloadTetrimino( )
@@ -54,7 +54,7 @@ private:
 			return false;
 		}
 	}
-	bool mIsAsync;
+	bool mHasTetriminoCollidedOnClient, mIsWaitingUntilTetriminoCollidedOnClient;
 	uint8_t mNumOfLinesCleared;
 	uint32_t mTempoMs;
 	Clock::time_point mPast[ (int)AlarmIndex::NONE_MAX ];

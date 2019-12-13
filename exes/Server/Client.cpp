@@ -231,98 +231,113 @@ bool Client::complete( std::unordered_map<HashedKey, Room>& roomS )
 		case ::Client::State::PLAYING_IN_ROOM:
 			if ( Socket::CompletedWork::RECEIVE == cmpl )
 			{
-				const _Tag tag = (_Tag)std::atoi( rcvBuf );
-				switch ( tag )
+				std::string_view strView( rcvBuf );
+				bool hasException = true;
+				if ( const size_t pos = strView.find(TAG_REQUEST); strView.npos != pos )
 				{
-					case _Tag::REQUEST:
+					hasException = false;
+					const Request req = (Request)std::atoi( &rcvBuf[pos+TAG_REQUEST_LEN] );
+					switch ( req )
 					{
-						const Request req = (Request)std::atoi( &rcvBuf[TAG_REQUEST_LEN] );
-						switch ( req )
-						{
-							case Request::LEAVE_ROOM:
-								if ( auto it = roomS.find(mRoomID); it != roomS.end() )
+						case Request::LEAVE_ROOM:
+							if ( auto it = roomS.find(mRoomID); it != roomS.end() )
+							{
+								mRoomID = -1;
+								mState = State::IN_LOBBY;
+#ifdef _DEBUG
+								std::cout << "Client "
+									<< mIndex << " leaved Room " << it->first << ".\n";
+#endif
+								if ( false == it->second.leave(mIndex) )
 								{
-									mRoomID = -1;
-									mState = State::IN_LOBBY;
-	#ifdef _DEBUG
-									std::cout << "Client "
-										<< mIndex << " leaved Room " << it->first << ".\n";
-	#endif
-									if ( false == it->second.leave(mIndex) )
-									{
-	#ifdef _DEBUG
-										std::cout << "Room "
-											<< it->first << " has been destructed.\n";
-	#endif
-										it = roomS.erase( it );
-									}
+#ifdef _DEBUG
+									std::cout << "Room "
+										<< it->first << " has been destructed.\n";
+#endif
+									it = roomS.erase( it );
 								}
-	#ifdef _DEBUG
-								else
-								{
-									std::cerr << "Client "
-										<< mIndex << " tried to leave the non-existent Room "
-										<< mRoomID << ".\n";
-								}
-	#endif
-								if ( -1 == mSocket.receiveOverlapped() )
-								{
-									// Exception
-									std::cerr << "Failed to pend reception from Client "
-										<< mIndex << std::endl;
-									return false;
-								}
-								mSocket.pend( );
-								break;
+							}
 							// Exception
-							default:
-								std::cerr << "WARNING: Client "
-									<< mIndex << " sent an undefined request.\n";
-								if ( -1 == mSocket.receiveOverlapped() )
-								{
-									// Exception
-									std::cerr << "Failed to pend reception from Client "
-										<< mIndex << std::endl;
-									return false;
-								}
-								mSocket.pend( );
-								break;
-						}
-						break;
+							else
+							{
+								std::cerr << "Client "
+									<< mIndex << " tried to leave the non-existent Room "
+									<< mRoomID << ".\n";
+#ifdef _DEBUG
+								__debugbreak( );
+#endif
+							}
+
+							if ( -1 == mSocket.receiveOverlapped() )
+							{
+								// Exception
+								std::cerr << "Failed to pend reception from Client "
+									<< mIndex << std::endl;
+								return false;
+							}
+							mSocket.pend( );
+							break;
+						// Exception
+						default:
+							std::cerr << "WARNING: Client "
+								<< mIndex << " sent an undefined request.\n";
+							if ( -1 == mSocket.receiveOverlapped() )
+							{
+								// Exception
+								std::cerr << "Failed to pend reception from Client "
+									<< mIndex << std::endl;
+								return false;
+							}
+							mSocket.pend( );
+							break;
 					}
-					case _Tag::MY_TETRIMINO_MOVE:
+				}
+
+				if ( const size_t pos = strView.find(TAG_MY_TETRIMINO_MOVE); strView.npos != pos )
+				{
+					hasException = false;
+					if ( auto it = roomS.find(mRoomID); roomS.end() != it )
 					{
 						const ::model::tetrimino::Move move =
-							(::model::tetrimino::Move)std::atoi( &rcvBuf[TAG_MY_TETRIMINO_MOVE_LEN] );
-						if ( auto it = roomS.find(mRoomID); roomS.end() != it )
-						{
-							it->second.perceive( mIndex, move );
-						}
-						// Exception
-						else
-						{
-							std::cerr << "The room where Client "
-								<< mIndex << " thinks they are doesn't exist.\n";
-#ifdef _DEBUG
-							__debugbreak( );
-#endif
-						}
-						break;
+							(::model::tetrimino::Move)*(uint8_t*)&rcvBuf[pos+TAG_MY_TETRIMINO_MOVE_LEN];
+						it->second.perceive( mIndex, move );
 					}
-					case _Tag::MY_SYNC:
-						if ( auto it = roomS.find(mRoomID); roomS.end() != it )
-						{
-							const bool async = (bool)std::atoi( &rcvBuf[TAG_MY_SYNC_LEN] );
-							it->second.perceive( mIndex, async );
-						}
-						break;
 					// Exception
-					default:
+					else
 					{
-						std::cerr << "WARNING: Client "
-							<< mIndex << " sent data without a valid tag.\n";
+						std::cerr << "Client "
+							<< mIndex << " tried to leave the non-existent Room "
+							<< mRoomID << ".\n";
+#ifdef _DEBUG
+						__debugbreak( );
+#endif
 					}
-					break;
+				}
+
+				if ( const size_t pos = strView.find(TAG_MY_TETRIMINO_COLLIDED_IN_CLIENT); strView.npos != pos )
+				{
+					hasException = false;
+					if ( auto it = roomS.find(mRoomID); roomS.end() != it )
+					{
+						it->second.perceive( mIndex );
+					}
+					// Exception
+					else
+					{
+						std::cerr << "Client "
+							<< mIndex << " tried to leave the non-existent Room "
+							<< mRoomID << ".\n";
+#ifdef _DEBUG
+						__debugbreak( );
+#endif
+					}
+				}
+				
+				// Exception
+				if ( true == hasException )
+				{
+					std::cerr << "WARNING: Client "
+						<< mIndex << " sent data without a valid tag.\n";
 				}
 			}
 			else if ( Socket::CompletedWork::SEND == cmpl )

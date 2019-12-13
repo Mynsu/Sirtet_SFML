@@ -9,7 +9,10 @@ const uint32_t ASYNC_TOLERANCE_MS = 1000;
 const uint32_t GAME_OVER_CHK_INTERVAL_MS = 250;
 
 Playing::Playing()
-	: mIsAsync( false ), mTempoMs( 1000 ), mNumOfLinesCleared( 0 )
+	: mHasTetriminoCollidedOnClient( false ),
+	mIsWaitingUntilTetriminoCollidedOnClient( false ),
+	mNumOfLinesCleared( 0 ), mTempoMs( 1000 ),
+	mMoveToUpdate( ::model::tetrimino::Move::NONE_MAX )
 {
 }
 
@@ -29,17 +32,30 @@ void Playing::perceive( const ::model::tetrimino::Move move )
 
 bool Playing::update( )
 {
-	bool isAsyncOver = true;
+	bool isAsyncTolerable = true;
 	mUpdateResult = Playing::UpdateResult::NONE;
-	if ( true == mIsAsync )
+	if ( true == mStage.isOver() )
 	{
-		mMoveToUpdate = ::model::tetrimino::Move::NONE_MAX;
-		// Exception
-		if ( true == alarmAfter(ASYNC_TOLERANCE_MS, AlarmIndex::ASYNC_TOLERANCE) )
+		return isAsyncTolerable;
+	}
+
+	if ( true == mIsWaitingUntilTetriminoCollidedOnClient )
+	{
+		if ( true == mHasTetriminoCollidedOnClient )
 		{
-			isAsyncOver = false;
+			mHasTetriminoCollidedOnClient = false;
+			mIsWaitingUntilTetriminoCollidedOnClient = false;
 		}
-		return isAsyncOver;
+		else
+		{
+			mMoveToUpdate = ::model::tetrimino::Move::NONE_MAX;
+			// Exception
+			if ( true == alarmAfter(ASYNC_TOLERANCE_MS, AlarmIndex::ASYNC_TOLERANCE) )
+			{
+				isAsyncTolerable = false;
+			}
+			return isAsyncTolerable;
+		}
 	}
 
 	bool hasCollided = false;
@@ -57,7 +73,7 @@ bool Playing::update( )
 					goto last;
 				}
 			}
-			return isAsyncOver;
+			return true;
 		}
 	}
 	else
@@ -85,7 +101,15 @@ bool Playing::update( )
 			case ::model::tetrimino::Move::ROTATE:
 				mCurrentTetrimino.tryRotate( mStage.cgrid() );
 				break;
+			case ::model::tetrimino::Move::NONE_MAX:
+				break;
 			default:
+				std::cerr << "Undefined move.\n";
+#ifdef _DEBUG
+				__debugbreak( );
+#else
+				__assume( 0 );
+#endif
 				break;
 		}
 		mMoveToUpdate = ::model::tetrimino::Move::NONE_MAX;
@@ -114,7 +138,14 @@ bool Playing::update( )
 		mUpdateResult = Playing::UpdateResult::GAME_OVER;
 	}
 
-	return isAsyncOver;
+	if ( Playing::UpdateResult::LINE_CLEARED == mUpdateResult ||
+		Playing::UpdateResult::TETRIMINO_LANDED == mUpdateResult )
+	{
+		mIsWaitingUntilTetriminoCollidedOnClient = true;
+		mPast[(int)AlarmIndex::ASYNC_TOLERANCE] = Clock::now();
+	}
+
+	return true;
 }
 
 Playing::UpdateResult Playing::updateResult( )
@@ -131,7 +162,7 @@ std::string Playing::tetriminoOnNet( )
 
 std::string Playing::tempoMsOnNet()
 {
-	const uint32_t tempoMsOnNet = (uint32_t)::htonl((u_long)mTempoMs);
+	const uint32_t tempoMsOnNet = ::htonl(mTempoMs);
 	return std::string( (char*)&tempoMsOnNet, sizeof(tempoMsOnNet) );
 }
 
@@ -141,13 +172,9 @@ std::string Playing::stageOnNet( )
 	return std::string( (char*)&grid, sizeof(::model::stage::Grid) );
 }
 
-void Playing::synchronize( const bool async )
+void Playing::perceive( const bool hasTetriminoCollidedInClient )
 {
-	if ( async != mIsAsync )
-	{
-		mIsAsync = async;
-		mPast[(int)AlarmIndex::ASYNC_TOLERANCE] = Clock::now( );
-	}
+	mHasTetriminoCollidedOnClient = hasTetriminoCollidedInClient;
 }
 
 uint8_t Playing::numOfLinesCleared() const
