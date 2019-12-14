@@ -87,6 +87,7 @@ enum class _Tag
 	// Inplay
 	////
 	MY_CURRENT_TETRIMINO,
+	MY_NEXT_TETRIMINO,
 	MY_TEMPO_MS,
 	MY_STAGE,
 	MY_TETRIMINO_MOVE,
@@ -139,6 +140,7 @@ constexpr Tag TAGGED_REQ_LEAVE_ROOM = { '0'+(int)_Tag::REQUEST, ':', '0'+(int)Re
 ////
 
 constexpr Tag TAG_MY_CURRENT_TETRIMINO = { '0'+(int)_Tag::MY_CURRENT_TETRIMINO, ':', '\0' };
+constexpr Tag TAG_MY_NEXT_TETRIMINO = { '0'+(int)_Tag::MY_NEXT_TETRIMINO, ':', '\0' };
 constexpr Tag TAG_MY_TEMPO_MS = { '0'+(int)_Tag::MY_TEMPO_MS, ':', '\0' };
 constexpr Tag TAG_MY_STAGE = { '0'+(int)_Tag::MY_STAGE, ':', '\0' };
 constexpr Tag TAG_MY_TETRIMINO_MOVE = { '0'+(int)_Tag::MY_TETRIMINO_MOVE, ':', '\0' };
@@ -153,6 +155,6 @@ constexpr Tag TAGGED_MY_TETRIMINO_MOVE_RIGHT = { '0'+(int)_Tag::MY_TETRIMINO_MOV
 											'0'+(int)::model::tetrimino::Move::RIGHT, '\0' };
 constexpr Tag TAGGED_MY_TETRIMINO_MOVE_ROTATE = { '0'+(int)_Tag::MY_TETRIMINO_MOVE, ':',
 											'0'+(int)::model::tetrimino::Move::ROTATE, '\0' };
-constexpr Tag TAG_MY_TETRIMINO_COLLIDED_IN_CLIENT = { '0'+(int)_Tag::MY_TETRIMINO_COLLIDED_IN_CLIENT, ':', '\0' };
-constexpr Tag TAG_MY_LINES_CLEARED = { '0'+(int)_Tag::MY_LINES_CLEARED, ':', '\0' };
+constexpr Tag TAG_MY_TETRIMINO_COLLIDED_IN_CLIENT = { '1', '0'+(int)_Tag::MY_TETRIMINO_COLLIDED_IN_CLIENT%10, ':', '\0' };
+constexpr Tag TAG_MY_LINES_CLEARED = { '1', '0'+(int)_Tag::MY_LINES_CLEARED%10, ':', '\0' };
 constexpr Tag TAG_MY_GAME_OVER = { '1', '0'+(int)_Tag::MY_GAME_OVER%10, ':', '\0' };

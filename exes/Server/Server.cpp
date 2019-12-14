@@ -430,9 +430,10 @@ int main()
 								client.holdTicket( ticket );
 								ticketS.erase( ticket );
 //TODO: 닉네임
-								std::string nickname( TAG_MY_NICKNAME );
-								nickname += "nickname01";
-								if ( -1 == clientSocket.sendOverlapped(nickname.data(), nickname.size()) )
+								Packet packet;
+								std::string nickname( "nickname01" );
+								packet.pack( TAG_MY_NICKNAME, nickname );
+								if ( -1 == clientSocket.sendOverlapped(packet) )
 								{
 									// Exception
 									std::cerr << "Failed to acknowledge Client " << clientIdx << ".\n";

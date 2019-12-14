@@ -13,8 +13,11 @@ Playing::Playing()
 	mIsWaitingUntilTetriminoCollidedOnClient( false ),
 	mNumOfLinesCleared( 0 ), mTempoMs( 1000 ),
 	mMoveToUpdate( ::model::tetrimino::Move::NONE_MAX )
-{
-	mPast[(int)AlarmIndex::GAME_OVER] = Clock::now();
+{	
+	for ( auto& it : mPast )
+	{
+		it = Clock::now( );
+	}
 }
 
 void Playing::spawnTetrimino()
@@ -64,6 +67,7 @@ bool Playing::update( )
 	{
 		if ( true == alarmAfter(MS_PER_FRAME, AlarmIndex::TETRIMINO_FALLDOWN) )
 		{
+			resetAlarm( AlarmIndex::TETRIMINO_FALLDOWN );
 			// TODO: delta 줄여가면서 log로.
 			for ( uint8_t i = 0; FALLING_DIFF != i; ++i )
 			{
@@ -81,6 +85,7 @@ bool Playing::update( )
 	{
 		if ( true == alarmAfter(mTempoMs, AlarmIndex::TETRIMINO_FALLDOWN) )
 		{
+			resetAlarm( AlarmIndex::TETRIMINO_FALLDOWN );
 			hasCollided = mCurrentTetrimino.moveDown( mStage.cgrid() );
 		}
 
@@ -119,6 +124,9 @@ bool Playing::update( )
 	last:
 	if ( true == hasCollided )
 	{
+#ifdef _DEBUG
+		std::cout << (int)mCurrentTetrimino.type() << " landed.\n";
+#endif
 		mCurrentTetrimino.land( mStage.grid() );
 		reloadTetrimino( );
 		mUpdateResult = Playing::UpdateResult::TETRIMINO_LANDED;
@@ -126,15 +134,20 @@ bool Playing::update( )
 		const uint8_t numOfLinesCleared = mStage.tryClearRow( );
 		if ( 0 != numOfLinesCleared )
 		{
+#ifdef _DEBUG
+			std::cout << numOfLinesCleared << " lines were cleared.\n";
+#endif
 			mNumOfLinesCleared = numOfLinesCleared;
 			mTempoMs -= TEMPO_DIFF_MS;
 			mUpdateResult = Playing::UpdateResult::LINE_CLEARED;
 		}
 	}
 
-	if ( true == alarmAfter(GAME_OVER_CHK_INTERVAL_MS, AlarmIndex::GAME_OVER) 
-		&& true == mStage.isOver() )
+	if ( true == mStage.isOver() )
 	{
+#ifdef _DEBUG
+		std::cout << " Game is over.\n";
+#endif
 		mStage.blackout( );
 		mUpdateResult = Playing::UpdateResult::GAME_OVER;
 	}
@@ -154,17 +167,31 @@ Playing::UpdateResult Playing::updateResult( )
 	return mUpdateResult;
 }
 
-std::string Playing::tetriminoOnNet( )
+::model::tetrimino::Type Playing::currentTetriminoType() const
 {
-	::model::tetrimino::Type tetriminoOnNet =
-		(::model::tetrimino::Type)::htonl( (u_long)mCurrentTetrimino.type() );
-	return std::string( (char*)&tetriminoOnNet, sizeof(tetriminoOnNet) );
+#ifdef _DEBUG
+	const auto type = mCurrentTetrimino.type();
+	std::cout << "curTet: " << (int)type << "\n";
+	return type;
+#else
+	return mCurrentTetrimino.type();
+#endif
 }
 
-std::string Playing::tempoMsOnNet()
+::model::tetrimino::Type Playing::nextTetriminoType() const
 {
-	const uint32_t tempoMsOnNet = ::htonl(mTempoMs);
-	return std::string( (char*)&tempoMsOnNet, sizeof(tempoMsOnNet) );
+#ifdef _DEBUG
+	const auto type = mNextTetriminoS.front().type();
+	std::cout << "nextTet: " << (int)type << "\n";
+	return type;
+#else
+	return mNextTetriminoS.front().type();
+#endif
+}
+
+uint32_t Playing::tempoMs() const
+{
+	return mTempoMs;
 }
 
 std::string Playing::stageOnNet( )

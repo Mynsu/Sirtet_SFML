@@ -22,8 +22,9 @@ public:
 	void perceive( const ::model::tetrimino::Move move );
 	bool update( );
 	Playing::UpdateResult updateResult( );
-	std::string tetriminoOnNet( );
-	std::string tempoMsOnNet( );
+	::model::tetrimino::Type currentTetriminoType( ) const;
+	::model::tetrimino::Type nextTetriminoType( ) const;
+	uint32_t tempoMs( ) const;
 	std::string stageOnNet( );
 	void perceive( const bool hasTetriminoCollidedInClient = true );
 	uint8_t numOfLinesCleared( ) const;
@@ -43,16 +44,18 @@ private:
 	};
 	inline bool alarmAfter( const uint32_t milliseconds, const AlarmIndex index )
 	{
-		const Clock::time_point now = Clock::now( );
-		if ( std::chrono::milliseconds(milliseconds) < now-mPast[(int)index] )
+		if ( std::chrono::milliseconds(milliseconds) < Clock::now()-mPast[(int)index] )
 		{
-			mPast[(int)index] = now;
 			return true;
 		}
 		else
 		{
 			return false;
 		}
+	}
+	inline void resetAlarm( const AlarmIndex index )
+	{
+		mPast[(int)index] = Clock::now( );
 	}
 	bool mHasTetriminoCollidedOnClient, mIsWaitingUntilTetriminoCollidedOnClient;
 	uint8_t mNumOfLinesCleared;

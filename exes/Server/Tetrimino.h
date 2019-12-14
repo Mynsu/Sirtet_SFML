@@ -41,7 +41,7 @@ namespace model
 		}
 		~Tetrimino( ) = default;
 
-		static Tetrimino Spawn( );
+		static ::model::Tetrimino Spawn( );
 
 		inline bool isFallingDown( ) const
 		{

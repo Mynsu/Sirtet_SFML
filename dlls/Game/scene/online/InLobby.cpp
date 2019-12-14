@@ -50,8 +50,9 @@ void scene::online::InLobby::loadResources( )
 	::scene::online::ID retVal = ::scene::online::ID::AS_IS;
 	if ( true == mNet.hasReceived(1000u) )
 	{
-		if ( std::optional<std::string> response(mNet.getByTag(TAGGED_REQ_CREATE_ROOM,
-															   Online::Option::RETURN_TAG_ATTACHED));
+		if ( std::optional<std::string> response(mNet.getByTag(TAG_REQUEST,
+															   Online::Option::RETURN_TAG_ATTACHED,
+															   sizeof(char)));
 			std::nullopt != response )
 		{
 			retVal = ::scene::online::ID::IN_ROOM_AS_HOST;

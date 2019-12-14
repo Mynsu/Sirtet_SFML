@@ -11,12 +11,12 @@ sf::Vector2<int8_t> model::Tetrimino::Test[ (int)::model::tetrimino::Rotation::N
 
 ::model::Tetrimino model::Tetrimino::Spawn( )
 {
+	::model::Tetrimino retVal;
 	std::random_device rD;
 	std::minstd_rand rE( rD() ); //±Ã±Ý: ·¹ÆÛ·±½º ¹®¼­ º¸ÀÚ.
 	std::uniform_int_distribution shapeDist( (int)::model::tetrimino::Type::I,
 											 (int)::model::tetrimino::Type::NONE_MAX-1 ); //±Ã±Ý: ¾êµµ.
-	::model::tetrimino::Type type = (::model::tetrimino::Type)shapeDist(rE);
-	Tetrimino retVal;
+	const ::model::tetrimino::Type type = (::model::tetrimino::Type)shapeDist(rE);
 	retVal.mType = type;
 	switch ( type )
 	{

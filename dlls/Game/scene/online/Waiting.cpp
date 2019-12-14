@@ -15,8 +15,9 @@ scene::online::Waiting::Waiting( sf::RenderWindow& window, Online& net )
 	mWindow_( window ), mNet( net )
 {
 #ifdef _DEV
-	gService( )->console( ).addCommand( CMD_CANCEL_CONNECTION, std::bind(&::scene::online::Waiting::cancelConnection,
-																			this, std::placeholders::_1) );
+	gService( )->console( ).addCommand( CMD_CANCEL_CONNECTION,
+									   std::bind(&::scene::online::Waiting::cancelConnection,
+										this, std::placeholders::_1) );
 #endif
 	IsInstantiated = true;
 }
@@ -46,7 +47,8 @@ void scene::online::Waiting::loadResources( )
 			if ( true == mNet.hasReceived() )
 			{
 				if ( std::optional<std::string> ticket = mNet.getByTag(TAG_TICKET,
-																	   Online::Option::RETURN_TAG_ATTACHED);
+																	   Online::Option::RETURN_TAG_ATTACHED,
+																	   sizeof(uint32_t));
 					 std::nullopt != ticket )
 				{
 					std::string& _ticket = ticket.value();
@@ -65,9 +67,11 @@ void scene::online::Waiting::loadResources( )
 						mState = State::SUBMITTING_TICKET;
 					}
 				}
-				// When having received only the updated order(s) in the waiting queue line without any ticket for the main server,
+				// When having received only the updated order(s) in the waiting queue line
+				// without any ticket for the main server,
 				else if ( std::optional<std::string> order = mNet.getByTag(TAG_ORDER_IN_QUEUE,
-																		 Online::Option::FIND_END_TO_BEGIN);
+																		 Online::Option::FIND_END_TO_BEGIN,
+																		   sizeof(uint32_t));
 						  std::nullopt != order )
 				{
 					mOrder = ::ntohl(*(uint32_t*)order.value().data());
@@ -79,7 +83,8 @@ void scene::online::Waiting::loadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printFailure( FailureLevel::FATAL, "Unknown message from the queue server." );
+					gService( )->console( ).printFailure( FailureLevel::FATAL,
+														 "Unknown message from the queue server." );
 					mNet.disconnect( );
 				}
 			}
@@ -92,7 +97,8 @@ void scene::online::Waiting::loadResources( )
 			}
 			else if ( true == mNet.hasReceived() )
 			{
-				if ( std::optional<std::string> nickname( mNet.getByTag(TAG_MY_NICKNAME, Online::Option::NONE) );
+				if ( std::optional<std::string> nickname( mNet.getByTag(TAG_MY_NICKNAME,
+																		Online::Option::INDETERMINATE_SIZE) );
 					 std::nullopt != nickname )
 				{
 #ifdef _DEBUG

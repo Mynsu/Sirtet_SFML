@@ -44,7 +44,7 @@ namespace model
 		}
 		~Tetrimino( ) = default;
 
-		static Tetrimino Spawn( );
+		static Tetrimino Spawn( ::model::tetrimino::Type type = ::model::tetrimino::Type::NONE_MAX );
 
 		inline void draw( sf::RenderWindow& window )
 		{
@@ -56,7 +56,8 @@ namespace model
 					(0x1u<<(::model::tetrimino::LOCAL_SPACE_SIZE-i-1u)) )
 				{
 					// Coordinate transformation
-					const sf::Vector2< int8_t > localPos( i%model::tetrimino::BLOCKS_A_TETRIMINO, i/model::tetrimino::BLOCKS_A_TETRIMINO );
+					const sf::Vector2< int8_t > localPos( i%model::tetrimino::BLOCKS_A_TETRIMINO,
+														 i/model::tetrimino::BLOCKS_A_TETRIMINO );
 					mBlockShape.setPosition( mOrigin_ + sf::Vector2f(mPosition+localPos)*mBlockSize_ );
 					window.draw( mBlockShape );
 				}
@@ -122,14 +123,6 @@ namespace model
 		{
 			mIsFallingDown = isFallingDown;
 		}
-		inline void updateOnNet( const std::string& data )
-		{
-			::model::tetrimino::Type* const p =
-				(::model::tetrimino::Type*)data.data( );
-			const ::model::tetrimino::Type type =
-				(::model::tetrimino::Type)::ntohl( (u_long)*p );
-			setType( type );
-		}
 		inline void setOrigin( const sf::Vector2f& origin )
 		{
 			mOrigin_ = origin;
@@ -146,7 +139,6 @@ namespace model
 		}
 	private:
 		bool hasCollidedWith( const ::model::stage::Grid& grid ) const;
-		void setType( const ::model::tetrimino::Type type );
 		
 		bool mIsFallingDown;
 		// X and y on global coordinate.

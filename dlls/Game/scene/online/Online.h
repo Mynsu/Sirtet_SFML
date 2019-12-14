@@ -24,12 +24,15 @@ namespace scene::online
 		bool hasReceived( const uint32_t intervalMs = 0 );
 		enum class Option
 		{
-			NONE = 0,
-			FIND_END_TO_BEGIN = 1 << 0,
-			SERIALIZED = 1 << 1,
-			RETURN_TAG_ATTACHED = 1 << 2,
+			SPECIFIED_SIZE = 0b0,
+			INDETERMINATE_SIZE = 0b1,
+
+			FIND_END_TO_BEGIN = 0b10,
+			RETURN_TAG_ATTACHED = 0b100,
 		};
-		std::optional< std::string > getByTag( const Tag tag, const Online::Option option ) const;
+		std::optional< std::string > getByTag( const Tag tag,
+											  const Online::Option option,
+											  const uint32_t size = 0 ) const;
 		void stopReceivingFromQueueServer( ) const;
 		void setNickname( std::string& nickname )
 		{

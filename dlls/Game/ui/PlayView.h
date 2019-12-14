@@ -24,7 +24,7 @@ namespace ui
 		bool mHasTetrimino, mHasTetriminoCollidedAlready, mIsGameOverOnServer;
 		uint8_t mNumOfLinesCleared;
 		// NOTE: Also as mHasTetriminoCollidedIn-Server.
-		uint32_t mFrameCount_async;
+		uint32_t mFrameCount_collisionOnServer;
 		uint32_t mFrameCount_input, mFrameCount_clearingVFX;
 		float mCellSize;
 		Clock::time_point mPast_falldown;
@@ -34,7 +34,8 @@ namespace ui
 		sf::Texture mTexture;
 		sf::Sprite mSprite;
 		::model::Tetrimino mCurrentTetrimino;
-		std::string mNextTetrimino, mNextStage;
+		std::queue<::model::Tetrimino> mNextTetriminoS;
+		std::string mNextStage;
 		::model::Stage mStage;
 	};
 }

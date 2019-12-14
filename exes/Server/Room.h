@@ -16,7 +16,7 @@ public:
 		PLAYING,
 	};
 
-	// NOTE: DO NOT USE!  Defined to use std::unordered_map.
+	// !IMPORTANT: DO NOT USE!  Defined to use std::unordered_map.
 	Room( );
 	explicit Room( const ClientIndex hostIndex );
 	Room( const Room& ) = delete;
@@ -47,5 +47,5 @@ private:
 	ClientIndex mHostIndex;
 	Room::State mState;
 	Clock::time_point mStartTime;
-	std::unordered_map< ClientIndex, Playing > mParticipantS;
+	std::unordered_map< ClientIndex, Playing > mGuestS;
 };

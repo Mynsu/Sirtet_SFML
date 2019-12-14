@@ -18,7 +18,7 @@ ui::PlayView::PlayView( sf::RenderWindow& window, ::scene::online::Online& net )
 	: mHasTetrimino( false ), mHasTetriminoCollidedAlready( false ),
 	mIsGameOverOnServer( false ),
 	mNumOfLinesCleared( 0 ),
-	mFrameCount_async( 0 ), mFrameCount_input( 0 ), mFrameCount_clearingVFX( 0 ),
+	mFrameCount_collisionOnServer( 0 ), mFrameCount_input( 0 ), mFrameCount_clearingVFX( 0 ),
 	mCellSize( 30.f ), mTempoMs( std::chrono::milliseconds(1000) ),
 	mWindow_( &window ), mNet( &net ), mStage( window )
 {
@@ -58,7 +58,7 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 		fps = gService()->vault()[HK_BACK_FPS];
 	}
 	// Exception
-	if ( fps*ASYNC_TOLERANCE_MS/1000 < mFrameCount_async )
+	if ( fps*ASYNC_TOLERANCE_MS/1000 < mFrameCount_collisionOnServer )
 	{
 		mNet->disconnect( );
 		gService()->console().printFailure( FailureLevel::FATAL, "Over asynchronization." );
@@ -68,59 +68,73 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 	bool hasToRespond = false;
 	if ( true == mNet->hasReceived() )
 	{
-		if ( std::optional<std::string> isGameOverOnNet(mNet->getByTag(TAG_MY_GAME_OVER,
-																	   ::scene::online::Online::Option::RETURN_TAG_ATTACHED) );
-			std::nullopt != isGameOverOnNet )
+		if ( std::optional<std::string> isGameOverOnServer(mNet->getByTag(TAG_MY_GAME_OVER,
+																	   ::scene::online::Online::Option::RETURN_TAG_ATTACHED,
+																		  sizeof(uint8_t)) );
+			std::nullopt != isGameOverOnServer )
 		{
 			mIsGameOverOnServer = true;
 			mHasTetrimino = false;
 		}
 
-		if ( std::optional<std::string> curTet(mNet->getByTag(TAG_MY_CURRENT_TETRIMINO,
-																::scene::online::Online::Option::SERIALIZED));
-			std::nullopt != curTet )
+		if ( std::optional<std::string> curTetType(mNet->getByTag(TAG_MY_CURRENT_TETRIMINO,
+																::scene::online::Online::Option::SPECIFIED_SIZE,
+																  sizeof(::model::tetrimino::Type)));
+			std::nullopt != curTetType )
 		{
-			if ( true == mHasTetriminoCollidedAlready || false == mHasTetrimino )
+			const ::model::tetrimino::Type type =
+				(::model::tetrimino::Type)::ntohl(*(u_long*)curTetType.value().data());
+			mCurrentTetrimino = ::model::Tetrimino::Spawn( type );
+			mHasTetrimino = true;
+		}
+
+		if ( std::optional<std::string> nextTetType(mNet->getByTag(TAG_MY_NEXT_TETRIMINO,
+															   ::scene::online::Online::Option::SPECIFIED_SIZE,
+																   sizeof(::model::tetrimino::Type)));
+			std::nullopt != nextTetType	)
+		{
+			const ::model::tetrimino::Type type =
+				(::model::tetrimino::Type)::ntohl(*(u_long*)nextTetType.value().data());
+			const ::model::Tetrimino nextTet( ::model::Tetrimino::Spawn(type) );
+			mNextTetriminoS.emplace( nextTet );
+			if ( true == mHasTetriminoCollidedAlready )
 			{
-				mCurrentTetrimino.updateOnNet( curTet.value() );
-				mHasTetrimino = true;
-			}
-			else
-			{
-				mNextTetrimino = std::move( curTet.value() );
-				mFrameCount_async = 1;
+				mCurrentTetrimino = mNextTetriminoS.front();
+				mNextTetriminoS.pop( );
 			}
 		}
 
 		if ( std::optional<std::string> tempoMs(mNet->getByTag(TAG_MY_TEMPO_MS,
-																 ::scene::online::Online::Option::SERIALIZED));
+																 ::scene::online::Online::Option::SPECIFIED_SIZE,
+															   sizeof(uint32_t)));
 			std::nullopt != tempoMs )
 		{
 			uint32_t* const p = (uint32_t*)tempoMs.value().data();
 			mTempoMs = std::chrono::milliseconds( (uint32_t)::ntohl((u_long)*p) );
 		}
 
-		if ( std::optional<std::string> stageOnNet(mNet->getByTag(TAG_MY_STAGE,
-																  ::scene::online::Online::Option::SERIALIZED));
-			std::nullopt != stageOnNet )
+		if ( std::optional<std::string> stageOnServer(mNet->getByTag(TAG_MY_STAGE,
+																  ::scene::online::Online::Option::INDETERMINATE_SIZE));
+			std::nullopt != stageOnServer )
 		{
 			if ( true == mHasTetriminoCollidedAlready || true == mIsGameOverOnServer )
 			{
- 				mStage.updateOnNet( stageOnNet.value() );
+ 				mStage.updateOnNet( stageOnServer.value() );
 				mHasTetriminoCollidedAlready = false;
 			}
 			else
 			{
-				mNextStage = std::move( stageOnNet.value() );
-				mFrameCount_async = 1;
+				mNextStage = std::move( stageOnServer.value() );
+				mFrameCount_collisionOnServer = 1;
 			}
 		}
 
-		if ( std::optional<std::string> numOfLinesClearedOnNet(mNet->getByTag(TAG_MY_LINES_CLEARED,
-																		 ::scene::online::Online::Option::NONE) );
-			std::nullopt != numOfLinesClearedOnNet )
+		if ( std::optional<std::string> numOfLinesClearedOnServer(mNet->getByTag(TAG_MY_LINES_CLEARED,
+																		 ::scene::online::Online::Option::SPECIFIED_SIZE,
+																				 sizeof(uint8_t)) );
+			std::nullopt != numOfLinesClearedOnServer )
 		{
-			mNumOfLinesCleared = (uint8_t)*numOfLinesClearedOnNet.value().data();
+			mNumOfLinesCleared = (uint8_t)*numOfLinesClearedOnServer.value().data();
 		}
 
 		hasToRespond = true;
@@ -158,7 +172,7 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 				switch ( it->key.code )
 				{
 					case sf::Keyboard::Space:
-						if ( 0 == mFrameCount_async )
+						if ( 0 == mFrameCount_collisionOnServer )
 						{
 							packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::FALL_DOWN );
 						}
@@ -167,7 +181,7 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 						mFrameCount_input = 0;
 						break;
 					case sf::Keyboard::Down:
-						if ( 0 == mFrameCount_async )
+						if ( 0 == mFrameCount_collisionOnServer )
 						{
 							packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::DOWN );
 						}
@@ -177,7 +191,7 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 						it = eventQueue.erase( it );
 						break;
 					case sf::Keyboard::Left:
-						if ( 0 == mFrameCount_async )
+						if ( 0 == mFrameCount_collisionOnServer )
 						{
 							packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::LEFT );
 							mCurrentTetrimino.tryMoveLeft( mStage.cgrid() );
@@ -186,7 +200,7 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 						it = eventQueue.erase( it );
 						break;
 					case sf::Keyboard::Right:
-						if ( 0 == mFrameCount_async )
+						if ( 0 == mFrameCount_collisionOnServer )
 						{
 							packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::RIGHT );
 							mCurrentTetrimino.tryMoveRight( mStage.cgrid() );
@@ -197,7 +211,7 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 					case sf::Keyboard::LShift:
 						[[ fallthrough ]];
 					case sf::Keyboard::Up:
-						if ( 0 == mFrameCount_async )
+						if ( 0 == mFrameCount_collisionOnServer )
 						{
 							packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::ROTATE );
 							mCurrentTetrimino.tryRotate( mStage.cgrid() );
@@ -227,14 +241,14 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 	last:
 	if ( true == mHasTetriminoCollidedAlready )
 	{
-		if ( 0 < mFrameCount_async )
+		if ( 0 < mFrameCount_collisionOnServer )
 		{
-			mCurrentTetrimino.updateOnNet( mNextTetrimino );
-			mNextTetrimino.clear( );
+			mFrameCount_collisionOnServer = 0;
 			mHasTetriminoCollidedAlready = false;
+			mCurrentTetrimino = mNextTetriminoS.front();
+			mNextTetriminoS.pop( );
 			mStage.updateOnNet( mNextStage );
 			mNextStage.clear( );
-			mFrameCount_async = 0;
 			mFrameCount_clearingVFX = 1;
 #ifdef _DEBUG
 			gService()->console().print( "Server has it done while Client hasn't it done yet.",
@@ -285,9 +299,9 @@ void ui::PlayView::draw( const int time )
 	}
 
 	++mFrameCount_input;
-	if ( 0 != mFrameCount_async )
+	if ( 0 != mFrameCount_collisionOnServer )
 	{
-		++mFrameCount_async;
+		++mFrameCount_collisionOnServer;
 	}
 	const uint32_t fps = (uint32_t)gService()->vault()[HK_FORE_FPS];
 	if ( fps <= mFrameCount_clearingVFX )

@@ -5,13 +5,13 @@
 Room::Room( )
 	: mHostIndex( -1 ), mState( State::WAITING )
 {
-	mParticipantS.reserve( PARTICIPANT_CAPACITY );
+	mGuestS.reserve( PARTICIPANT_CAPACITY );
 }
 
 Room::Room( const ClientIndex hostIndex )
 	: mHostIndex( hostIndex ), mState( State::WAITING )
 {
-	mParticipantS.emplace( hostIndex, Playing() );
+	mGuestS.emplace( hostIndex, Playing() );
 }
 
 void Room::start( )
@@ -22,21 +22,21 @@ void Room::start( )
 bool Room::leave( const ClientIndex index )
 {
 	bool retVal = true;
-	mParticipantS.erase( index );
-	if ( true == mParticipantS.empty() )
+	mGuestS.erase( index );
+	if ( true == mGuestS.empty() )
 	{
 		retVal = false;
 	}
 	else if ( index == mHostIndex )
 	{
-		mHostIndex = mParticipantS.cbegin( )->first;
+		mHostIndex = mGuestS.cbegin( )->first;
 	}
 	return retVal;
 }
 
 void Room::perceive( const ClientIndex index, const ::model::tetrimino::Move move )
 {
-	if ( auto it = mParticipantS.find(index); mParticipantS.end() != it )
+	if ( auto it = mGuestS.find(index); mGuestS.end() != it )
 	{
 		it->second.perceive( move );
 	}
@@ -49,7 +49,7 @@ void Room::perceive( const ClientIndex index, const ::model::tetrimino::Move mov
 
 void Room::perceive( const ClientIndex index, const bool hasTetriminoCollidedInClient )
 {
-	if ( auto it = mParticipantS.find(index); mParticipantS.end() != it )
+	if ( auto it = mGuestS.find(index); mGuestS.end() != it )
 	{
 		it->second.perceive( );
 	}
@@ -65,7 +65,7 @@ std::forward_list<ClientIndex> Room::update( )
 	std::forward_list<ClientIndex> retVal;
 	if ( Room::State::PLAYING == mState )
 	{
-		for ( auto& it : mParticipantS )
+		for ( auto& it : mGuestS )
 		{
 			// Exception
 			if ( false == it.second.update() )
@@ -87,19 +87,19 @@ std::forward_list<ClientIndex> Room::notify( std::vector<Client>& clientS )
 			//TODO
 			break;
 		case Room::State::STARTED:
-			for ( auto& it : mParticipantS )
+			for ( auto& it : mGuestS )
 			{
-				const ClientIndex participantIdx = it.first;
-				Socket& participantSocket = clientS[ participantIdx ].socket( );
+				const ClientIndex guestIdx = it.first;
+				Socket& guestSocket = clientS[ guestIdx ].socket( );
 				std::string response( TAGGED_REQ_GET_READY );
-				if ( -1 == participantSocket.sendOverlapped(response.data(), response.size()) )
+				if ( -1 == guestSocket.sendOverlapped(response.data(), response.size()) )
 				{
 					// Exception
-					std::cerr << "Failed to notify Client " << participantIdx
+					std::cerr << "Failed to notify Client " << guestIdx
 						<< " that the game get started.\n";
-					retVal.emplace_front( participantIdx );
+					retVal.emplace_front( guestIdx );
 				}
-				participantSocket.pend( );
+				guestSocket.pend( );
 				it.second.spawnTetrimino( );
 			}
 			mStartTime = Clock::now( );
@@ -111,108 +111,111 @@ std::forward_list<ClientIndex> Room::notify( std::vector<Client>& clientS )
 #ifdef _DEBUG
 				std::cout << "Room hosted by " << mHostIndex << " gets started now.\n";
 #endif
-				for ( auto& it : mParticipantS )
+				for ( auto& it : mGuestS )
 				{
-					const ClientIndex participantIdx = it.first;
-					Socket& participantSocket = clientS[ participantIdx ].socket( );
-					Playing& participantPlay = it.second;
-					std::string tetOnNet( participantPlay.tetriminoOnNet() );
-					std::string tempoOnNet( participantPlay.tempoMsOnNet() );
+					const ClientIndex guestIdx = it.first;
+					Socket& guestSocket = clientS[ guestIdx ].socket( );
+					Playing& guestPlay = it.second;
 					Packet packet;
-					packet.pack( TAG_MY_CURRENT_TETRIMINO, tetOnNet );
-					packet.pack( TAG_MY_TEMPO_MS, tempoOnNet );
-					if ( -1 == participantSocket.sendOverlapped(packet) )
+					const ::model::tetrimino::Type curTetType = guestPlay.currentTetriminoType();
+					packet.pack( TAG_MY_CURRENT_TETRIMINO, (uint32_t)curTetType );
+					const ::model::tetrimino::Type nextTetType = guestPlay.nextTetriminoType();
+					packet.pack( TAG_MY_NEXT_TETRIMINO, (uint32_t)nextTetType );
+					const uint32_t tempoMs = guestPlay.tempoMs();
+					packet.pack( TAG_MY_TEMPO_MS, tempoMs );
+					if ( -1 == guestSocket.sendOverlapped(packet) )
 					{
 						// Exception
 						std::cerr << "Failed to send the current tetrimino to Client "
-							<< participantIdx << ".\n";
-						retVal.emplace_front( participantIdx );
+							<< guestIdx << ".\n";
+						retVal.emplace_front( guestIdx );
 						continue;
 					}
-					participantSocket.pend( );
+					guestSocket.pend( );
 				}
 				mState = Room::State::PLAYING;
 			}
 			break;
 		case Room::State::PLAYING:
-			for ( auto& it : mParticipantS )
+			for ( auto& it : mGuestS )
 			{
-				const ClientIndex participantIdx = it.first;
-				Socket& participantSocket = clientS[ participantIdx ].socket( );
+				const ClientIndex guestIdx = it.first;
+				Socket& guestSocket = clientS[ guestIdx ].socket( );
 				const Playing::UpdateResult res = it.second.updateResult( );
 				switch ( res )
 				{
 					case Playing::UpdateResult::TETRIMINO_LANDED:
 					{
 						Packet packet;
-						Playing& participantPlay = it.second;
-						std::string tetriminoOnNet( participantPlay.tetriminoOnNet() );
-						packet.pack( TAG_MY_CURRENT_TETRIMINO, tetriminoOnNet );
-						std::string stageOnNet( participantPlay.stageOnNet() );
+						Playing& guestPlay = it.second;
+						const ::model::tetrimino::Type nextTetType = guestPlay.nextTetriminoType();
+						packet.pack( TAG_MY_NEXT_TETRIMINO, (uint32_t)nextTetType );
+						std::string stageOnNet( guestPlay.stageOnNet() );
 						packet.pack( TAG_MY_STAGE, stageOnNet );
-
-						if ( -1 == participantSocket.sendOverlapped(packet) )
+						if ( -1 == guestSocket.sendOverlapped(packet) )
 						{
 							// Exception
 							std::cerr << "Failed to send the current info to Client "
-								<< participantIdx << ".\n";
-							retVal.emplace_front( participantIdx );
+								<< guestIdx << ".\n";
+							retVal.emplace_front( guestIdx );
 							continue;
 						}
-						participantSocket.pend( );
+						guestSocket.pend( );
 						break;
 					}
 					case Playing::UpdateResult::LINE_CLEARED:
 					{
 						Packet packet;
-						Playing& participantPlay = it.second;
-						std::string tetriminoOnNet( participantPlay.tetriminoOnNet() );
-						packet.pack( TAG_MY_CURRENT_TETRIMINO, tetriminoOnNet );
-						std::string stageOnNet( participantPlay.stageOnNet() );
+						Playing& guestPlay = it.second;
+						const ::model::tetrimino::Type nextTetType = guestPlay.nextTetriminoType();
+						packet.pack( TAG_MY_NEXT_TETRIMINO, (uint32_t)nextTetType );
+						std::string stageOnNet( guestPlay.stageOnNet() );
 						packet.pack( TAG_MY_STAGE, stageOnNet );
-						std::string tempoMsOnNet( participantPlay.tempoMsOnNet() );
-						packet.pack( TAG_MY_TEMPO_MS, tempoMsOnNet );
-						packet.pack( TAG_MY_LINES_CLEARED, participantPlay.numOfLinesCleared() );
-						if ( -1 == participantSocket.sendOverlapped(packet) )
+						const uint32_t tempoMs = guestPlay.tempoMs();
+						packet.pack( TAG_MY_TEMPO_MS, tempoMs );
+						const uint8_t numOfLinesCleared = guestPlay.numOfLinesCleared();
+						packet.pack( TAG_MY_LINES_CLEARED, numOfLinesCleared );
+						if ( -1 == guestSocket.sendOverlapped(packet) )
 						{
 							// Exception
 							std::cerr << "Failed to send the current info to Client "
-								<< participantIdx << ".\n";
-							retVal.emplace_front( participantIdx );
+								<< guestIdx << ".\n";
+							retVal.emplace_front( guestIdx );
 							continue;
 						}
-						participantSocket.pend( );
+						guestSocket.pend( );
 						break;
 					}
 					case Playing::UpdateResult::GAME_OVER:
 					{
 						Packet packet;
-						Playing& participantPlay = it.second;
-						std::string stageOnNet( participantPlay.stageOnNet() );
+						Playing& guestPlay = it.second;
+						std::string stageOnNet( guestPlay.stageOnNet() );
 						packet.pack( TAG_MY_STAGE, stageOnNet );
-						packet.pack( TAG_MY_GAME_OVER, 1 );
-						if ( -1 == participantSocket.sendOverlapped(packet) )
+						const uint8_t ignored = 1;
+						packet.pack( TAG_MY_GAME_OVER, ignored );
+						if ( -1 == guestSocket.sendOverlapped(packet) )
 						{
 							// Exception
 							std::cerr << "Failed to send the current info to Client "
-								<< participantIdx << ".\n";
-							retVal.emplace_front( participantIdx );
+								<< guestIdx << ".\n";
+							retVal.emplace_front( guestIdx );
 							continue;
 						}
-						participantSocket.pend( );
+						guestSocket.pend( );
 						break;
 					}
 					default:
-						if ( false == participantSocket.isPending() )
+						if ( false == guestSocket.isPending() )
 						{
-							if ( -1 == participantSocket.receiveOverlapped() )
+							if ( -1 == guestSocket.receiveOverlapped() )
 							{
 								// Exception
 								std::cerr << "Failed to pend reception from Client "
-									<< participantIdx << std::endl;
-								retVal.emplace_front( participantIdx );
+									<< guestIdx << std::endl;
+								retVal.emplace_front( guestIdx );
 							}
-							participantSocket.pend( );
+							guestSocket.pend( );
 						}
 						break;
 				}
