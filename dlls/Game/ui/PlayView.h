@@ -11,8 +11,10 @@ namespace ui
 	class PlayView
 	{
 	public:
-		// NOTE: DO NOT USE.  Declared to use std::unordered_map.
+		// NOTE: DO NOT USE.  Not deleted because std::unordered_map requires.
 		PlayView( );
+		// NOTE: DO NOT USE.  Not deleted because std::unordered_map requires.
+		PlayView( PlayView&& ) = default;
 		PlayView( sf::RenderWindow& window, ::scene::online::Online& net );
 		~PlayView( ) = default;
 		
@@ -31,7 +33,8 @@ namespace ui
 		Clock::duration	mTempoMs;
 		sf::RenderWindow* mWindow_;
 		::scene::online::Online* mNet;
-		sf::Texture mTexture;
+		// NOTE: Stack-based sf::Texture instance makes a malfunction.
+		std::unique_ptr< sf::Texture > mTexture;
 		sf::Sprite mSprite;
 		::model::Tetrimino mCurrentTetrimino;
 		std::queue<::model::Tetrimino> mNextTetriminoS;

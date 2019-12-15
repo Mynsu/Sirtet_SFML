@@ -20,13 +20,15 @@ ui::PlayView::PlayView( sf::RenderWindow& window, ::scene::online::Online& net )
 	mNumOfLinesCleared( 0 ),
 	mFrameCount_collisionOnServer( 0 ), mFrameCount_input( 0 ), mFrameCount_clearingVFX( 0 ),
 	mCellSize( 30.f ), mTempoMs( std::chrono::milliseconds(1000) ),
-	mWindow_( &window ), mNet( &net ), mStage( window )
+	mWindow_( &window ), mNet( &net ),
+	mTexture( std::make_unique<sf::Texture>() ),
+	mStage( window )
 {
-	if ( false == mTexture.loadFromFile("Images/Ready.png") )
+	if ( false == mTexture->loadFromFile("Images/Ready.png") )
 	{
 		gService()->console().printFailure( FailureLevel::WARNING, "Can't find the countdown image." );
 	}
-	mSprite.setTexture( mTexture );
+	mSprite.setTexture( *mTexture );
 	mSprite.setOrigin( 128.f, 128.f );
 }
 
@@ -278,11 +280,9 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 void ui::PlayView::draw( const int time )
 {
 	mStage.draw( );
-	if ( time < 0 )
+	if ( time < -1 )
 	{
-		//mSprite.setTextureRect( sf::IntRect( 0, 256*(-time-1), 256, 256 ) );
-		mSprite.setTextureRect( sf::IntRect( 0, 0, 128, 128 ) );
-		mSprite.setColor( sf::Color::Transparent );
+		mSprite.setTextureRect( sf::IntRect( 0, 256*(-time-1), 256, 256 ) );
 		mWindow_->draw( mSprite );
 	}
 

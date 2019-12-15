@@ -5,7 +5,7 @@ namespace model
 	class Stage
 	{
 	public:
-		// NOTE: DO NOT USE.  Declared to use std::unordered_map.
+		// NOTE: DO NOT USE.  Not deleted because std::unordered_map requires.
 		Stage( )
 			: mCellSize_( 0.f ), mWindow_( nullptr )
 		{

@@ -4,6 +4,9 @@
 #include "../../ServiceLocatorMirror.h"
 #include "../CommandList.h"
 #include "../VaultKeyList.h"
+#include <utility>
+
+const uint8_t ROOM_CAPACITY = 4;
 
 bool scene::online::InRoom::IsInstantiated = false;
 
@@ -13,6 +16,7 @@ scene::online::InRoom::InRoom( sf::RenderWindow& window, Online& net, const bool
 {
 	mFPS_ = (int32_t)gService( )->vault( )[ HK_FORE_FPS ];
 	const std::string& nickname = mNet.nickname( );
+	mParticipants.reserve( ROOM_CAPACITY );
 	mDigestedNickname_ = ::util::hash::Digest( nickname.data(), (uint8_t)nickname.size() );
 	mParticipants.emplace( mDigestedNickname_, ::ui::PlayView(mWindow_, mNet) );
 	loadResources( );
@@ -53,7 +57,11 @@ void scene::online::InRoom::loadResources( )
 	mBackgroundRect.setFillColor( SKY );
 	sf::Vector2f playerViewPos( 130.f, 0.f );
 	float cellSize = 30.f;
-	mParticipants[ mDigestedNickname_ ].setDimension( playerViewPos, cellSize );
+	if ( auto it = mParticipants.find(mDigestedNickname_);
+		mParticipants.end() != it )
+	{
+		it->second.setDimension( playerViewPos, cellSize );
+	}
 }
 
 ::scene::online::ID scene::online::InRoom::update( std::list<sf::Event>& eventQueue )
@@ -101,7 +109,7 @@ void scene::online::InRoom::draw( )
 	mWindow_.draw( mBackgroundRect );
 	for ( auto& it : mParticipants )
 	{
-		it.second.draw( mFrameCount/mFPS_ );
+		it.second.draw( mFrameCount/mFPS_-1 );
 	}
 	if ( 0 != mFrameCount )
 	{
