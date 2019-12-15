@@ -29,10 +29,10 @@ bool Client::complete( std::unordered_map<HashedKey, Room>& roomS )
 		case Client::State::IN_LOBBY:
 			if ( Socket::CompletedWork::RECEIVE == cmpl )
 			{
-				const _Tag tag = (_Tag)std::atoi( rcvBuf );
+				const _Tag tag = (_Tag)*rcvBuf;
 				if ( _Tag::REQUEST == tag )
 				{
-					const Request req = (Request)std::atoi( &rcvBuf[TAG_REQUEST_LEN] );
+					const Request req = (Request)rcvBuf[TAG_REQUEST_LEN];
 					switch ( req )
 					{
 						case Request::CREATE_ROOM:
@@ -111,10 +111,10 @@ bool Client::complete( std::unordered_map<HashedKey, Room>& roomS )
 		case ::Client::State::WAITING_IN_ROOM:
 			if ( ::Socket::CompletedWork::RECEIVE == cmpl )
 			{
-				const _Tag tag = (_Tag)std::atoi( rcvBuf );
+				const _Tag tag = (_Tag)*rcvBuf;
 				if ( _Tag::REQUEST == tag )
 				{
-					const Request req = (Request)std::atoi( &rcvBuf[TAG_REQUEST_LEN] );
+					const Request req = (Request)rcvBuf[TAG_REQUEST_LEN];
 					switch ( req )
 					{
 						case Request::START_GAME:
@@ -236,7 +236,7 @@ bool Client::complete( std::unordered_map<HashedKey, Room>& roomS )
 				if ( const size_t pos = strView.find(TAG_REQUEST); strView.npos != pos )
 				{
 					hasException = false;
-					const Request req = (Request)std::atoi( &rcvBuf[pos+TAG_REQUEST_LEN] );
+					const Request req = (Request)rcvBuf[pos+TAG_REQUEST_LEN];
 					switch ( req )
 					{
 						case Request::LEAVE_ROOM:

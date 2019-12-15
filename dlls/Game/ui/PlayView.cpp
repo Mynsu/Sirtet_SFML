@@ -281,6 +281,8 @@ void ui::PlayView::draw( const int time )
 	if ( time < 0 )
 	{
 		//mSprite.setTextureRect( sf::IntRect( 0, 256*(-time-1), 256, 256 ) );
+		mSprite.setTextureRect( sf::IntRect( 0, 0, 128, 128 ) );
+		mSprite.setColor( sf::Color::Transparent );
 		mWindow_->draw( mSprite );
 	}
 

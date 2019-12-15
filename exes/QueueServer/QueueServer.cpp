@@ -7,7 +7,7 @@ const uint32_t CAPACITY = 10000u;
 // Capacity in the main server defaults to 10000u.
 // You can resize it indirectly here without re-compliing or rescaling the main server.
 // !IMPORTANT: This must be less than the real capacity of the server.
-const uint32_t MAIN_SERVER_CAPACITY = 3u;
+const uint32_t MAIN_SERVER_CAPACITY = 2u;
 const Dword VERSION = 8191015;
 constexpr HashedKey ENCRYPTED_INVITATION = ::util::hash::Digest(VERSION+ADDITIVE);
 const uint16_t LISTENER_PORT = QUEUE_SERVER_PORT;
@@ -305,22 +305,22 @@ int main( )
 						// When having received population in the main server,
 						if ( 1 == status[Status::AWAITING_POPULATION] )
 						{
-							// NOTE: Assuming that there's a message about nothing but population in and from the main server.
 							status.set( Status::AWAITING_POPULATION, 0 );
-							// NOTE: Assuming that no tag is attached.
 							const char* const rcvBuf = socketToMainServer->receivingBuffer();
-							const uint32_t pop = ::ntohl(*(uint32_t*)rcvBuf);
+							// NOTE: Assuming that there's a message about nothing but population in and from the main server.
+							const uint32_t pop = ::ntohl(*(uint32_t*)&rcvBuf[TAG_POPULATION_LEN]);
 							// When population is out of range,
 							if ( pop<0 || MAIN_SERVER_CAPACITY<pop )
 							{
 								// Asking again the main server how many clients are there.
-								packetToMainServer.pack( "", encryptedSalt );
+								const uint8_t ignored = 1;
+								packetToMainServer.pack( TAG_POPULATION, ignored );
 								status.set( Status::AWAITING_POPULATION, 1 );
 								std::cout << "Asking again the main server how many clients are there.\n";
 								continue;
 							}
 							// Otherwise, when population is in range,
-							roomInMainServer = static_cast< int >( MAIN_SERVER_CAPACITY ) - pop;
+							roomInMainServer = (int)MAIN_SERVER_CAPACITY-pop;
 #ifdef _DEBUG
 							std::cout << "Room in the main server: " << roomInMainServer << std::endl;
 #endif
@@ -527,7 +527,8 @@ int main( )
 			// Reset
 			old1 = now;
 			// Asking the main server how many clients are there.
-			packetToMainServer.pack( "", encryptedSalt );
+			const uint8_t ignored = 1;
+			packetToMainServer.pack( TAG_POPULATION, ignored );
 			status.set( Status::AWAITING_POPULATION, 1 );
 #ifdef _DEBUG
 			std::cout << "Asking the main server how many clients are there.\n";

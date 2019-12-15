@@ -74,7 +74,8 @@ enum class _Tag
 	////
 	// Connection
 	////
-	TICKET = 1,
+	POPULATION = 1,
+	TICKET,
 	ORDER_IN_QUEUE,
 	MY_NICKNAME,
 
@@ -102,22 +103,25 @@ using Tag = char[];
 // Connection
 ////
 
+// 4 Bytes
+constexpr Tag TAG_POPULATION = { (char)_Tag::POPULATION, ':', '\0' };
+const uint8_t TAG_POPULATION_LEN = ::util::hash::Measure( TAG_POPULATION );
 // The queue server sends encrypted data attached by this tag to the both of them,
 // the main server and ...
 // ... the client having submitted the valid invitation.
 // The client receives and sends to the main server as it is.
 // With that the main server can see the connecting client is genuine or not.
+// 4 Bytes
 constexpr Tag TAG_TICKET = { (char)_Tag::TICKET, ':', '\0' };
 // The queue server sends the client's order attached by this tag.
-constexpr Tag TAG_ORDER_IN_QUEUE = { '0'+(int)_Tag::ORDER_IN_QUEUE, ':', '\0' };
-constexpr Tag TAG_MY_NICKNAME = { '0'+(int)_Tag::MY_NICKNAME, ':', '\0' };
+// 4 Bytes
+constexpr Tag TAG_ORDER_IN_QUEUE = { (char)_Tag::ORDER_IN_QUEUE, ':', '\0' };
+// Resilient size
+constexpr Tag TAG_MY_NICKNAME = { (char)_Tag::MY_NICKNAME, ':', '\0' };
 
 ////
 // Request
 ////
-
-constexpr char RESPONSE_AFFIRMATION = '1';
-constexpr char RESPONSE_NEGATION = '0';
 
 enum class Request
 {
@@ -128,33 +132,31 @@ enum class Request
 	LEAVE_ROOM,
 };
 
-constexpr Tag TAG_REQUEST = { '0'+(int)_Tag::REQUEST, ':', '\0' };
+// 1 Byte
+constexpr Tag TAG_REQUEST = { (char)_Tag::REQUEST, ':', '\0' };
 const uint8_t TAG_REQUEST_LEN = ::util::hash::Measure( TAG_REQUEST );
-constexpr Tag TAGGED_REQ_CREATE_ROOM = { '0'+(int)_Tag::REQUEST, ':', '0'+(int)Request::CREATE_ROOM, '\0' };
-constexpr Tag TAGGED_REQ_START_GAME = { '0'+(int)_Tag::REQUEST, ':', '0'+(int)Request::START_GAME, '\0' };
-constexpr Tag TAGGED_REQ_GET_READY = { '0'+(int)_Tag::REQUEST, ':', '0'+(int)Request::GET_READY, '\0' };
-constexpr Tag TAGGED_REQ_LEAVE_ROOM = { '0'+(int)_Tag::REQUEST, ':', '0'+(int)Request::LEAVE_ROOM, '\0' };
+constexpr Tag TAGGED_REQ_CREATE_ROOM = { (char)_Tag::REQUEST, ':', (char)Request::CREATE_ROOM, '\0' };
+constexpr Tag TAGGED_REQ_START_GAME = { (char)_Tag::REQUEST, ':', (char)Request::START_GAME, '\0' };
+constexpr Tag TAGGED_REQ_GET_READY = { (char)_Tag::REQUEST, ':', (char)Request::GET_READY, '\0' };
+constexpr Tag TAGGED_REQ_LEAVE_ROOM = { (char)_Tag::REQUEST, ':', (char)Request::LEAVE_ROOM, '\0' };
 
 ////
 // Inplay
 ////
 
-constexpr Tag TAG_MY_CURRENT_TETRIMINO = { '0'+(int)_Tag::MY_CURRENT_TETRIMINO, ':', '\0' };
-constexpr Tag TAG_MY_NEXT_TETRIMINO = { '0'+(int)_Tag::MY_NEXT_TETRIMINO, ':', '\0' };
-constexpr Tag TAG_MY_TEMPO_MS = { '0'+(int)_Tag::MY_TEMPO_MS, ':', '\0' };
-constexpr Tag TAG_MY_STAGE = { '0'+(int)_Tag::MY_STAGE, ':', '\0' };
-constexpr Tag TAG_MY_TETRIMINO_MOVE = { '0'+(int)_Tag::MY_TETRIMINO_MOVE, ':', '\0' };
+// Type( 4 Bytes )
+constexpr Tag TAG_MY_CURRENT_TETRIMINO = { (char)_Tag::MY_CURRENT_TETRIMINO, ':', '\0' };
+constexpr Tag TAG_MY_NEXT_TETRIMINO = { (char)_Tag::MY_NEXT_TETRIMINO, ':', '\0' };
+// 4 Bytes
+constexpr Tag TAG_MY_TEMPO_MS = { (char)_Tag::MY_TEMPO_MS, ':', '\0' };
+// Resilient size
+constexpr Tag TAG_MY_STAGE = { (char)_Tag::MY_STAGE, ':', '\0' };
+// 1 Byte
+constexpr Tag TAG_MY_TETRIMINO_MOVE = { (char)_Tag::MY_TETRIMINO_MOVE, ':', '\0' };
 const uint8_t TAG_MY_TETRIMINO_MOVE_LEN = ::util::hash::Measure( TAG_MY_TETRIMINO_MOVE );
-constexpr Tag TAGGED_MY_TETRIMINO_MOVE_FALLDOWN = { '0'+(int)_Tag::MY_TETRIMINO_MOVE, ':',
-												'0'+(int)::model::tetrimino::Move::FALL_DOWN, '\0' };
-constexpr Tag TAGGED_MY_TETRIMINO_MOVE_DOWN = { '0'+(int)_Tag::MY_TETRIMINO_MOVE, ':',
-											'0'+(int)::model::tetrimino::Move::DOWN, '\0' };
-constexpr Tag TAGGED_MY_TETRIMINO_MOVE_LEFT = { '0'+(int)_Tag::MY_TETRIMINO_MOVE, ':',
-											'0'+(int)::model::tetrimino::Move::LEFT, '\0' };
-constexpr Tag TAGGED_MY_TETRIMINO_MOVE_RIGHT = { '0'+(int)_Tag::MY_TETRIMINO_MOVE, ':',
-											'0'+(int)::model::tetrimino::Move::RIGHT, '\0' };
-constexpr Tag TAGGED_MY_TETRIMINO_MOVE_ROTATE = { '0'+(int)_Tag::MY_TETRIMINO_MOVE, ':',
-											'0'+(int)::model::tetrimino::Move::ROTATE, '\0' };
-constexpr Tag TAG_MY_TETRIMINO_COLLIDED_IN_CLIENT = { '1', '0'+(int)_Tag::MY_TETRIMINO_COLLIDED_IN_CLIENT%10, ':', '\0' };
-constexpr Tag TAG_MY_LINES_CLEARED = { '1', '0'+(int)_Tag::MY_LINES_CLEARED%10, ':', '\0' };
-constexpr Tag TAG_MY_GAME_OVER = { '1', '0'+(int)_Tag::MY_GAME_OVER%10, ':', '\0' };
+// Zero Byte
+constexpr Tag TAG_MY_TETRIMINO_COLLIDED_IN_CLIENT = { (char)_Tag::MY_TETRIMINO_COLLIDED_IN_CLIENT, ':', '\0' };
+// 1 Bytes
+constexpr Tag TAG_MY_LINES_CLEARED = { (char)_Tag::MY_LINES_CLEARED, ':', '\0' };
+// Zero Byte
+constexpr Tag TAG_MY_GAME_OVER = { (char)_Tag::MY_GAME_OVER, ':', '\0' };

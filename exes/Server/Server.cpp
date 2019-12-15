@@ -253,15 +253,17 @@ int main()
 					{
 // TODO: getline
 						const char* const rcvBuf = socketToQueueServer.receivingBuffer();
+						const std::string_view strView( rcvBuf );
 						// When the queue server asked how many clients keep connecting,
-						if ( encryptedSalt == ::ntohl(*(HashedKey*)rcvBuf) )
+						if ( const size_t pos = strView.find(TAG_POPULATION);
+							std::string_view::npos != pos )
 						{
 #ifdef _DEBUG
 							std::cout << "Population has been asked by the queue server.\n";
 #endif
 							const uint32_t pop = CLIENT_CAPACITY-candidatesIndices.size();
 							Packet packet;
-							packet.pack( "", pop );
+							packet.pack( TAG_POPULATION, pop );
 							if ( -1 == socketToQueueServer.sendOverlapped(packet) )
 							{
 								// Exception
@@ -301,7 +303,7 @@ int main()
 								socketToQueueServer.pend( );
 							}
 						}
-						const std::string_view strView( rcvBuf );
+						
 						size_t off = 0u;
 						// When having received copies of the issued ticket,
 						while ( true )
@@ -313,10 +315,7 @@ int main()
 							}
 							constexpr uint8_t TAG_TICKET_LEN = ::util::hash::Measure( TAG_TICKET );
  							const uint32_t beginPos = (uint32_t)tagPos + TAG_TICKET_LEN;
-							off = strView.find( TOKEN_SEPARATOR, tagPos );
-#ifdef _DEBUG
-							if ( std::string_view::npos == off ) __debugbreak( );
-#endif
+							off += sizeof(Ticket);
 							const Ticket id = ::ntohl(*(Ticket*)&rcvBuf[beginPos]);
 							ticketS.emplace( id );
 #ifdef _DEBUG
@@ -457,7 +456,7 @@ int main()
 								// to scale up/down the virtual capacity of the main server elastically and independently.
 								Packet packet;
 								const uint32_t pop = CLIENT_CAPACITY-candidatesIndices.size();
-								packet.pack( "", pop );
+								packet.pack( TAG_POPULATION, pop );
 								Socket& queueServerSocket = clientSocket;
 								if ( -1 == queueServerSocket.sendOverlapped(packet) )
 								{
