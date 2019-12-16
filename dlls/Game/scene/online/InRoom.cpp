@@ -11,7 +11,7 @@ const uint8_t ROOM_CAPACITY = 4;
 bool scene::online::InRoom::IsInstantiated = false;
 
 scene::online::InRoom::InRoom( sf::RenderWindow& window, Online& net, const bool asHost )
-	: mAsHost( asHost ), mIsReceiving( false ), mHasCanceled( false ), mFrameCount( 0 ),
+	: mAsHost( asHost ), mIsReceiving( false ), mHasCanceled( false ), mFrameCount_countDown( 0 ),
 	mWindow_( window ), mNet( net )
 {
 	mFPS_ = (int32_t)gService( )->vault( )[ HK_FORE_FPS ];
@@ -80,7 +80,7 @@ void scene::online::InRoom::loadResources( )
 																Online::Option::RETURN_TAG_ATTACHED));
 			 std::nullopt != response )
 		{
-			mFrameCount = mFPS_*-3;
+			mFrameCount_countDown = mFPS_*-3;
 		}
 		hasToRespond = true;
 	}
@@ -109,11 +109,15 @@ void scene::online::InRoom::draw( )
 	mWindow_.draw( mBackgroundRect );
 	for ( auto& it : mParticipants )
 	{
-		it.second.draw( mFrameCount/mFPS_-1 );
+		it.second.draw( mFrameCount_countDown/mFPS_-1 );
 	}
-	if ( 0 != mFrameCount )
+	if ( 0 != mFrameCount_countDown )
 	{
-		++mFrameCount;
+		++mFrameCount_countDown;
+	}
+	else
+	{
+		mFrameCount_countDown = 60;
 	}
 }
 

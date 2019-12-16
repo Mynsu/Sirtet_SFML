@@ -23,7 +23,7 @@ namespace scene::online
 		static bool IsInstantiated;
 		bool mAsHost, mIsReceiving, mHasCanceled;
 		HashedKey mDigestedNickname_;
-		int32_t mFrameCount, mFPS_;
+		int32_t mFrameCount_countDown, mFPS_;
 		sf::RenderWindow& mWindow_;
 		Online& mNet;
 //TODO

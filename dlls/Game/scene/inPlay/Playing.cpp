@@ -13,11 +13,13 @@ const uint32_t LINE_CLEAR_CHK_INTERVAL_MS = 100;
 								   sf::Drawable& shapeOrSprite,
 								   const std::unique_ptr<::scene::inPlay::IScene>& overlappedScene )
 	: mNumOfLinesCleared( 0u ),
-	mFrameCount_fallDown( 0u ), mFrameCount_clearingInterval_( 0u ), mFrameCount_clearingVfx_( 0u ), mFrameCount_gameOver( 0u ),
+	mFrameCount_fallDown( 0u ), mFrameCount_clearingInterval_( 0u ),
+	mFrameCount_clearingVfx_( 0u ), mFrameCount_gameOver( 0u ),
 	mTempo( 0.75f ),
 	mWindow_( window ), mBackgroundRect_( (sf::RectangleShape&)shapeOrSprite ),
 	mOverlappedScene_( overlappedScene ),
-	mCurrentTetrimino( ::model::Tetrimino::Spawn( ) ), mPlayerStage( window ), mVfxCombo( window )
+	mNextTetriminoPanel( window ),
+	mVfxCombo( window ), mCurrentTetrimino( ::model::Tetrimino::Spawn( ) ), mPlayerStage( window )
 {
 //TODO: 스크립트로 옮기기
 	const sf::Color CYAN( 0x29cdb5fau );
@@ -26,12 +28,9 @@ const uint32_t LINE_CLEAR_CHK_INTERVAL_MS = 100;
 	mNextTetriminos.emplace( ::model::Tetrimino::Spawn( ) );
 	mNextTetriminos.emplace( ::model::Tetrimino::Spawn( ) );
 	mNextTetriminos.emplace( ::model::Tetrimino::Spawn( ) );
-	mNextTetriminoPanel.setFillColor( sf::Color::Black );
-	mNextTetriminoBlock_.setFillColor( mNextTetriminos.front( ).color( ) );
-	mNextTetriminoBlock_.setOutlineColor( sf::Color::Black );
-	mNextTetriminoBlock_.setOutlineThickness( 1.0f );
-
+	
 	loadResources( );
+	mNextTetriminoPanel.setTetrimino( mNextTetriminos.front() );
 }
 
 void ::scene::inPlay::Playing::loadResources( )
@@ -249,13 +248,9 @@ void ::scene::inPlay::Playing::loadResources( )
 	mVfxCombo.setOrigin( panelPos, cellSize, vfxSize );
 	mPlayerStage.setSize( cellSize );
 	mCurrentTetrimino.setSize( cellSize );
-	mNextTetriminoPanel.setPosition( nextTetPanelPos );
-	mNextTetriminoPanelPosition_ = nextTetPanelPos;
-	mNextTetriminoPanel.setSize(
-		sf::Vector2f(::model::tetrimino::BLOCKS_A_TETRIMINO+2,::model::tetrimino::BLOCKS_A_TETRIMINO+2)*cellSize );
+	mNextTetriminoPanel.setDimension( nextTetPanelPos, cellSize );
 	mMargin_.x = cellSize;
 	mMargin_.y = cellSize;
-	mNextTetriminoBlock_.setSize( sf::Vector2f( cellSize, cellSize ) );
 	mCellSize_ = cellSize;
 }
 
@@ -389,38 +384,13 @@ void ::scene::inPlay::Playing::draw( )
 	mWindow_.draw( mBackgroundRect_ ); //TODO: Z 버퍼로 컬링해서 부하를 줄여볼까?
 	mPlayerStage.draw( );
 	mCurrentTetrimino.draw( mWindow_ );
+	mNextTetriminoPanel.draw( );
 	if ( 0u != mFrameCount_clearingVfx_ )
 	{
 		mVfxCombo.draw( mNumOfLinesCleared );
 		++mFrameCount_clearingVfx_;
 	}
-	mWindow_.draw( mNextTetriminoPanel );
-	const ::model::Tetrimino& nextTet = mNextTetriminos.front( );
-	const ::model::tetrimino::LocalSpace nextTetBlocks = nextTet.blocks( );
-	for ( uint8_t i = 0u; i != ::model::tetrimino::BLOCKS_A_TETRIMINO*::model::tetrimino::BLOCKS_A_TETRIMINO; ++i )
-	{
-		if ( nextTetBlocks & (0x1u<<(::model::tetrimino::BLOCKS_A_TETRIMINO*::model::tetrimino::BLOCKS_A_TETRIMINO-i-1u)) )
-		{
-			sf::Vector2f localPos( sf::Vector2<uint8_t>(i%model::tetrimino::BLOCKS_A_TETRIMINO,i/model::tetrimino::BLOCKS_A_TETRIMINO) );
-			const ::model::tetrimino::Type type = nextTet.type( );
-			if ( ::model::tetrimino::Type::O == type )
-			{
-				mNextTetriminoBlock_.setPosition( mNextTetriminoPanelPosition_ + mMargin_ + localPos*mCellSize_ );
-			}
-			else if ( ::model::tetrimino::Type::I == type )
-			{
-				mNextTetriminoBlock_.setPosition( mNextTetriminoPanelPosition_ + mMargin_ - sf::Vector2f(0.f, mCellSize_*0.5f)
-												  + localPos*mCellSize_ );
-			}
-			else
-			{
-				mNextTetriminoBlock_.setPosition( mNextTetriminoPanelPosition_ + mMargin_*1.5f + sf::Vector2f(0.f,mCellSize_*0.5f)
-												  + localPos*mCellSize_);
-			}
-			mWindow_.draw( mNextTetriminoBlock_ );
-		}
-	}
-
+	
 	const uint32_t fps = (uint32_t)gService( )->vault( )[ HK_FORE_FPS ];
 	if ( fps <= mFrameCount_clearingVfx_ )
 	{
@@ -441,6 +411,6 @@ void scene::inPlay::Playing::reloadTetrimino()
 	mCurrentTetrimino.setSize( mCellSize_ );
 	mNextTetriminos.pop( );
 	mNextTetriminos.emplace( ::model::Tetrimino::Spawn() );
-	mNextTetriminoBlock_.setFillColor( mNextTetriminos.front().color() );
+	mNextTetriminoPanel.setTetrimino( mNextTetriminos.front() );
 	mFrameCount_fallDown = 0u;
 }

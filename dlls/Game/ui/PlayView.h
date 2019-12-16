@@ -1,5 +1,6 @@
 #pragma once
 #include "../model/Tetrimino.h"
+#include "../ui/NextTetriminoPanel.h"
 
 namespace scene::online
 {
@@ -23,7 +24,7 @@ namespace ui
 		void draw( const int time );
 	private:
 		using Clock = std::chrono::high_resolution_clock;
-		bool mHasTetrimino, mHasTetriminoCollidedAlready, mIsGameOverOnServer;
+		bool mHasTetriminos, mHasTetriminoCollidedAlready, mIsGameOverOnServer;
 		uint8_t mNumOfLinesCleared;
 		// NOTE: Also as mHasTetriminoCollidedIn-Server.
 		uint32_t mFrameCount_collisionOnServer;
@@ -40,5 +41,6 @@ namespace ui
 		std::queue<::model::Tetrimino> mNextTetriminoS;
 		std::string mNextStage;
 		::model::Stage mStage;
+		::ui::NextTetriminoPanel mNextTetriminoPanel;
 	};
 }

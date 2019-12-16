@@ -3,6 +3,7 @@
 #include "../../model/Tetrimino.h"
 #include "../../model/Stage.h"
 #include "../../vfx/Combo.h"
+#include "../../ui/NextTetriminoPanel.h"
 
 namespace scene::inPlay
 {
@@ -26,9 +27,7 @@ namespace scene::inPlay
 		sf::RectangleShape& mBackgroundRect_;
 		const std::unique_ptr<::scene::inPlay::IScene>& mOverlappedScene_;
 		sf::Vector2f mMargin_;
-		sf::Vector2f mNextTetriminoPanelPosition_;
-		sf::RectangleShape mNextTetriminoPanel;
-		sf::RectangleShape mNextTetriminoBlock_;
+		::ui::NextTetriminoPanel mNextTetriminoPanel;
 		::vfx::Combo mVfxCombo;
 		::model::Tetrimino mCurrentTetrimino;
 		std::queue< ::model::Tetrimino > mNextTetriminos;

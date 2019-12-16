@@ -10,19 +10,19 @@ const uint32_t ASYNC_TOLERANCE_MS = 1000;
  
 ui::PlayView::PlayView( )
 	: mCellSize( 0.f ),
-	mWindow_( nullptr ), mNet( nullptr )
+	mWindow_( nullptr ), mNet( nullptr ), mNextTetriminoPanel( *mWindow_ )
 {
 }
 
 ui::PlayView::PlayView( sf::RenderWindow& window, ::scene::online::Online& net )
-	: mHasTetrimino( false ), mHasTetriminoCollidedAlready( false ),
+	: mHasTetriminos( false ), mHasTetriminoCollidedAlready( false ),
 	mIsGameOverOnServer( false ),
 	mNumOfLinesCleared( 0 ),
 	mFrameCount_collisionOnServer( 0 ), mFrameCount_input( 0 ), mFrameCount_clearingVFX( 0 ),
 	mCellSize( 30.f ), mTempoMs( std::chrono::milliseconds(1000) ),
 	mWindow_( &window ), mNet( &net ),
 	mTexture( std::make_unique<sf::Texture>() ),
-	mStage( window )
+	mStage( window ), mNextTetriminoPanel( window )
 {
 	if ( false == mTexture->loadFromFile("Images/Ready.png") )
 	{
@@ -41,6 +41,7 @@ void ui::PlayView::setDimension( const sf::Vector2f position, const float cellSi
 	mCurrentTetrimino.setSize( cellSize );
 	mStage.setPosition( position );
 	mStage.setSize( cellSize );
+	mNextTetriminoPanel.setDimension( sf::Vector2f(525.f, 70.f), 30.f );
 }
 
 bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
@@ -76,7 +77,7 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 			std::nullopt != isGameOverOnServer )
 		{
 			mIsGameOverOnServer = true;
-			mHasTetrimino = false;
+			mHasTetriminos = false;
 		}
 
 		if ( std::optional<std::string> curTetType(mNet->getByTag(TAG_MY_CURRENT_TETRIMINO,
@@ -87,7 +88,6 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 			const ::model::tetrimino::Type type =
 				(::model::tetrimino::Type)::ntohl(*(u_long*)curTetType.value().data());
 			mCurrentTetrimino = ::model::Tetrimino::Spawn( type );
-			mHasTetrimino = true;
 		}
 
 		if ( std::optional<std::string> nextTetType(mNet->getByTag(TAG_MY_NEXT_TETRIMINO,
@@ -103,6 +103,12 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 			{
 				mCurrentTetrimino = mNextTetriminoS.front();
 				mNextTetriminoS.pop( );
+				mNextTetriminoPanel.setTetrimino( mNextTetriminoS.front() );
+			}
+			else if ( false == mHasTetriminos )
+			{
+				mNextTetriminoPanel.setTetrimino( mNextTetriminoS.front() );
+				mHasTetriminos = true;
 			}
 		}
 
@@ -147,7 +153,7 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 	}
 
 	Packet packet;
-	if ( false == mHasTetrimino )
+	if ( false == mHasTetriminos )
 	{
 		return hasToRespond;
 	}
@@ -251,6 +257,7 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 			mNextTetriminoS.pop( );
 			mStage.updateOnNet( mNextStage );
 			mNextStage.clear( );
+			mNextTetriminoPanel.setTetrimino( mNextTetriminoS.front() );
 			mFrameCount_clearingVFX = 1;
 #ifdef _DEBUG
 			gService()->console().print( "Server has it done while Client hasn't it done yet.",
@@ -280,21 +287,24 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 void ui::PlayView::draw( const int time )
 {
 	mStage.draw( );
-	if ( time < -1 )
+	if ( time < 0 )
 	{
 		mSprite.setTextureRect( sf::IntRect( 0, 256*(-time-1), 256, 256 ) );
 		mWindow_->draw( mSprite );
 	}
 
-	if ( true == mHasTetrimino )
+	if ( true == mHasTetriminos )
 	{
 		mCurrentTetrimino.draw( *mWindow_ );
+		mNextTetriminoPanel.draw( );
 	}
+	
 	if ( 0 < mFrameCount_clearingVFX )
 	{
 
 		++mFrameCount_clearingVFX;
 	}
+	
 	if ( true == mIsGameOverOnServer )
 	{
 
