@@ -35,7 +35,7 @@ void scene::inPlay::GameOver::loadResources( )
 	{
 		luaL_openlibs( lua );
 		const int TOP_IDX = -1;
-		const std::string tableName( "Sprite" );
+		const std::string tableName( "Image" );
 		lua_getglobal( lua, tableName.data() );
 		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )

@@ -13,12 +13,70 @@ namespace model
 		Stage( sf::RenderWindow& window )
 			: mCellSize_( 30.f ), mWindow_( &window )
 		{
-			mPanel.setFillColor( sf::Color(63,63,63,255) );
-			mCellShape.setOutlineThickness( 1.f );
-			mCellShape.setOutlineColor( sf::Color::Black );
 		}
 		~Stage( ) = default;
 
+		inline void setBackgroundColor( const sf::Color color,
+									   const float outlineThickness,
+									   const sf::Color outlineColor,
+									   const sf::Color cellOutlineColor )
+		{
+			mPanel.setFillColor( color );
+			mPanel.setOutlineThickness( outlineThickness );
+			mPanel.setOutlineColor( outlineColor );
+			mCellShape.setOutlineThickness( 1.f );
+			mCellShape.setOutlineColor( cellOutlineColor );
+		}
+		inline void updateOnNet( const std::string& data )
+		{
+			::model::stage::Grid* const ptr = (::model::stage::Grid*)data.data();
+			mGrid = *ptr;
+		}
+		uint8_t tryClearRow( );
+		inline bool isOver( ) const
+		{
+			bool retVal = false;
+			for ( const auto& it : mGrid[ 1 ] )
+			{
+				if ( true == it.blocked )
+				{
+					retVal = true;
+					break;
+				}
+			}
+			return retVal;
+		}
+		inline void blackout( )
+		{
+			const sf::Color GRAY( 0x808080ff );
+#pragma omp parallel
+			for ( auto& row : mGrid )
+			{
+				for ( auto& cell : row )
+				{
+					// Gray
+					cell.color = GRAY;
+				}
+			}
+		}
+		inline sf::Vector2f position( ) const
+		{
+			return mPosition_;
+		}
+		inline void setPosition( const sf::Vector2f& position )
+		{
+			mPanel.setPosition( position );
+			mPosition_ = position;
+		}
+		void setSize( const float cellSize );
+		inline ::model::stage::Grid& grid( )
+		{
+			return mGrid;
+		}
+		inline const ::model::stage::Grid& cgrid( ) const
+		{
+			return mGrid;
+		}
 		inline void draw( )
 		{
 			mWindow_->draw( mPanel );
@@ -36,56 +94,6 @@ namespace model
 					}
 				}
 			}
-		}
-		uint8_t tryClearRow( );
-		inline sf::Vector2f position( ) const
-		{
-			return mPosition_;
-		}
-		inline bool isOver( ) const
-		{
-			bool retVal = false;
-			for ( const auto& it : mGrid[ 1 ] )
-			{
-				if ( true == it.blocked )
-				{
-					retVal = true;
-					break;
-				}
-			}
-			return retVal;
-		}
-		inline void blackout( )
-		{
-			const sf::Color GRAY( 0x808080ff );
-			#pragma omp parallel
-			for ( auto& row : mGrid )
-			{
-				for ( auto& cell : row )
-				{
-					// Gray
-					cell.color = GRAY;
-				}
-			}
-		}
-		inline ::model::stage::Grid& grid( )
-		{
-			return mGrid;
-		}
-		inline const ::model::stage::Grid& cgrid( ) const
-		{
-			return mGrid;
-		}
-		inline void setPosition( const sf::Vector2f& position )
-		{
-			mPanel.setPosition( position );
-			mPosition_ = position;
-		}
-		void setSize( const float cellSize );
-		inline void updateOnNet( const std::string& data )
-		{
-			::model::stage::Grid* const ptr = (::model::stage::Grid*)data.data();
-			mGrid = *ptr;
 		}
 	private:
 		float mCellSize_;

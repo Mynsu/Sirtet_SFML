@@ -22,11 +22,9 @@ namespace scene::online
 		void leaveRoom( const std::string_view& arg );
 		static bool IsInstantiated;
 		bool mAsHost, mIsReceiving, mHasCanceled;
-		HashedKey mDigestedNickname_;
-		int32_t mFrameCount_countDown, mFPS_;
+		HashedKey mMyNicknameHash_;
 		sf::RenderWindow& mWindow_;
 		Online& mNet;
-//TODO
 		std::unordered_map< HashedKey, ::ui::PlayView > mParticipants;
 		sf::RectangleShape mBackgroundRect;
 	};

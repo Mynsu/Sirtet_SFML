@@ -13,14 +13,21 @@ namespace ui
 		inline NextTetriminoPanel( sf::RenderWindow& window )
 			: mWindow_( window )
 		{
-			mPanel.setFillColor( sf::Color::Black );
-			for ( uint8_t i = 0; ::model::tetrimino::BLOCKS_A_TETRIMINO != i; ++i )
-			{
-				mBlocks[i].setOutlineColor( sf::Color::Black );
-				mBlocks[i].setOutlineThickness( 1.0f );
-			}
 		}
 
+		inline void setBackgroundColor( const sf::Color color,
+									   const float outlineThickness, const sf::Color outlineColor,
+									   const sf::Color cellOutlineColor )
+		{
+			mPanel.setFillColor( color );
+			mPanel.setOutlineThickness( outlineThickness );
+			mPanel.setOutlineColor( outlineColor );
+			for ( uint8_t i = 0; ::model::tetrimino::BLOCKS_A_TETRIMINO != i; ++i )
+			{
+				mBlocks[i].setOutlineThickness( 1.0f );
+				mBlocks[i].setOutlineColor( cellOutlineColor );
+			}
+		}
 		inline void setDimension( const sf::Vector2f position, const float cellSize )
 		{
 			mPanel.setPosition( position );

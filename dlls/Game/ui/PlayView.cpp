@@ -9,8 +9,7 @@ const uint32_t INPUT_DELAY_MS = 40;
 const uint32_t ASYNC_TOLERANCE_MS = 1000;
  
 ui::PlayView::PlayView( )
-	: mCellSize( 0.f ),
-	mWindow_( nullptr ), mNet( nullptr ), mNextTetriminoPanel( *mWindow_ )
+	: mWindow_( nullptr ), mNet( nullptr ), mVfxCombo( *mWindow_), mNextTetriminoPanel( *mWindow_ )
 {
 }
 
@@ -18,30 +17,198 @@ ui::PlayView::PlayView( sf::RenderWindow& window, ::scene::online::Online& net )
 	: mHasTetriminos( false ), mHasTetriminoCollidedAlready( false ),
 	mIsGameOverOnServer( false ),
 	mNumOfLinesCleared( 0 ),
-	mFrameCount_collisionOnServer( 0 ), mFrameCount_input( 0 ), mFrameCount_clearingVFX( 0 ),
-	mCellSize( 30.f ), mTempoMs( std::chrono::milliseconds(1000) ),
+	mFrameCount_collisionOnServer( 0 ), mFrameCount_input( 0 ),
+	mFrameCount_countdown( 0 ), mFrameCount_clearingVFX( 0 ),
+	mTempoMs( std::chrono::milliseconds(1000) ),
 	mWindow_( &window ), mNet( &net ),
-	mTexture( std::make_unique<sf::Texture>() ),
+	mTexture( std::make_unique<sf::Texture>() ), mVfxCombo( window ),
 	mStage( window ), mNextTetriminoPanel( window )
 {
-	if ( false == mTexture->loadFromFile("Images/Ready.png") )
-	{
-		gService()->console().printFailure( FailureLevel::WARNING, "Can't find the countdown image." );
-	}
-	mSprite.setTexture( *mTexture );
-	mSprite.setOrigin( 128.f, 128.f );
 }
 
-void ui::PlayView::setDimension( const sf::Vector2f position, const float cellSize )
+void ui::PlayView::loadResource( const sf::Vector2f position, const float cellSize )
 {
-	mCellSize = cellSize;
+	sf::Vector2f countdownSpriteSize( 256.f, 256.f );
+	sf::Vector2i vfxComboSize(256, 256);
+	
+	lua_State* lua = luaL_newstate( );
+	const char scriptPathNName[] = "Scripts/PlayView.lua";
+	if ( true == luaL_dofile(lua, scriptPathNName) )
+	{
+		// File Not Found Exception
+		gService( )->console( ).printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
+		lua_close( lua );
+	}
+	else
+	{
+		luaL_openlibs( lua );
+		const int TOP_IDX = -1;
+
+		const std::string tableName0( "CountdownSprite" );
+		lua_getglobal( lua, tableName0.data( ) );
+		// Type Check Exception
+		if ( false == lua_istable( lua, TOP_IDX ) )
+		{
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+													 tableName0.data(), scriptPathNName );
+		}
+		else
+		{
+			const char field0[ ] = "path";
+			lua_pushstring( lua, field0 );
+			lua_gettable( lua, 1 );
+			int type = lua_type( lua, TOP_IDX );
+			// Type check
+			if ( LUA_TSTRING == type )
+			{
+				if ( false == mTexture->loadFromFile(lua_tostring(lua, TOP_IDX)) )
+				{
+					// File Not Found Exception
+					gService( )->console( ).printScriptError( ExceptionType::FILE_NOT_FOUND,
+						(tableName0+":"+field0).data(), scriptPathNName );
+					const char defaultFilePathNName[] = "Images/Ready.png";
+					if ( false == mTexture->loadFromFile(defaultFilePathNName) )
+					{
+						// Exception: When there's not even the default file,
+						gService( )->console( ).printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+defaultFilePathNName );
+#ifdef _DEBUG
+						__debugbreak( );
+#endif
+					}
+				}
+			}
+			// Type Check Exception
+			else
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					(tableName0+":"+field0).data(), scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			const char field1[ ] = "width";
+			lua_pushstring( lua, field1 );
+			lua_gettable( lua, 1 );
+			type = lua_type( lua, TOP_IDX );
+			// Type check
+			if ( LUA_TNUMBER == type )
+			{
+				countdownSpriteSize.x = (float)lua_tonumber(lua, TOP_IDX);
+			}
+			// Type Check Exception
+			else if ( LUA_TNIL != type )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					(tableName0+":"+field1).data(), scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			const char field2[ ] = "height";
+			lua_pushstring( lua, field2 );
+			lua_gettable( lua, 1 );
+			type = lua_type( lua, TOP_IDX );
+			// Type check
+			if ( LUA_TNUMBER == type )
+			{
+				countdownSpriteSize.y = (float)lua_tonumber(lua, TOP_IDX);
+			}
+			// Type Check Exception
+			else if ( LUA_TNIL != type )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					(tableName0+":"+field1).data(), scriptPathNName );
+			}
+			lua_pop( lua, 2 );
+		}
+
+		
+
+		const std::string tableName1( "VfxCombo" );
+		lua_getglobal( lua, tableName1.data( ) );
+		// Type Check Exception
+		if ( false == lua_istable( lua, TOP_IDX ) )
+		{
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+													 tableName1.data(), scriptPathNName );
+		}
+		else
+		{
+			const char field0[ ] = "path";
+			lua_pushstring( lua, field0 );
+			lua_gettable( lua, 1 );
+			int type = lua_type( lua, TOP_IDX );
+			// Type check
+			if ( LUA_TSTRING == type )
+			{
+				if ( false == mVfxCombo.loadResources(lua_tostring(lua, TOP_IDX)) )
+				{
+					// File Not Found Exception
+					gService( )->console( ).printScriptError( ExceptionType::FILE_NOT_FOUND,
+						(tableName1+":"+field0).data(), scriptPathNName );
+					const char defaultFilePathNName[] = "Vfxs/Combo.png";
+					if ( false == mVfxCombo.loadResources(defaultFilePathNName) )
+					{
+						// Exception: When there's not even the default file,
+						gService( )->console( ).printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+defaultFilePathNName );
+#ifdef _DEBUG
+						__debugbreak( );
+#endif
+					}
+				}
+			}
+			// Type Check Exception
+			else
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					(tableName1+":"+field0).data(), scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			const char field1[ ] = "width";
+			lua_pushstring( lua, field1 );
+			lua_gettable( lua, 1 );
+			type = lua_type( lua, TOP_IDX );
+			// Type check
+			if ( LUA_TNUMBER == type )
+			{
+				vfxComboSize.x = (int)lua_tointeger(lua, TOP_IDX);
+			}
+			// Type Check Exception
+			else if ( LUA_TNIL != type )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					(tableName1+":"+field1).data(), scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			const char field2[ ] = "height";
+			lua_pushstring( lua, field2 );
+			lua_gettable( lua, 1 );
+			type = lua_type( lua, TOP_IDX );
+			// Type check
+			if ( LUA_TNUMBER == type )
+			{
+				vfxComboSize.y = (int)lua_tointeger(lua, TOP_IDX);
+			}
+			// Type Check Exception
+			else if ( LUA_TNIL != type )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					(tableName1+":"+field1).data(), scriptPathNName );
+			}
+			lua_pop( lua, 2 );
+		}
+		lua_close( lua );
+	}
+
+	mSprite.setTexture( *mTexture );
+	mSprite.setOrigin( countdownSpriteSize*.5f );
 	const sf::Vector2f size( sf::Vector2f(::model::stage::GRID_WIDTH, ::model::stage::GRID_HEIGHT)*cellSize );
 	mSprite.setPosition( position + size*.5f );
 	mCurrentTetrimino.setOrigin( position );
 	mCurrentTetrimino.setSize( cellSize );
 	mStage.setPosition( position );
 	mStage.setSize( cellSize );
-	mNextTetriminoPanel.setDimension( sf::Vector2f(525.f, 70.f), 30.f );
+	mVfxCombo.setOrigin( position, cellSize, vfxComboSize );
 }
 
 bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
@@ -51,17 +218,16 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 		return false;
 	}
 
-	uint32_t fps;
 	if ( 1 == gService()->vault()[HK_HAS_GAINED_FOCUS] )
 	{
-		fps = gService()->vault()[HK_FORE_FPS];
+		mFPS_ = gService()->vault()[HK_FORE_FPS];
 	}
 	else
 	{
-		fps = gService()->vault()[HK_BACK_FPS];
+		mFPS_ = gService()->vault()[HK_BACK_FPS];
 	}
 	// Exception
-	if ( fps*ASYNC_TOLERANCE_MS/1000 < mFrameCount_collisionOnServer )
+	if ( mFPS_*ASYNC_TOLERANCE_MS/1000 < mFrameCount_collisionOnServer )
 	{
 		mNet->disconnect( );
 		gService()->console().printFailure( FailureLevel::FATAL, "Over asynchronization." );
@@ -143,6 +309,7 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 			std::nullopt != numOfLinesClearedOnServer )
 		{
 			mNumOfLinesCleared = (uint8_t)*numOfLinesClearedOnServer.value().data();
+			mFrameCount_clearingVFX = mFPS_;
 		}
 
 		hasToRespond = true;
@@ -172,7 +339,7 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 	}
 	else
 	{
-		const uint32_t inputDelayFPS = fps * INPUT_DELAY_MS / 1000;
+		const uint32_t inputDelayFPS = mFPS_ * INPUT_DELAY_MS / 1000;
 		for ( auto it = eventQueue.cbegin(); eventQueue.cend() != it && inputDelayFPS < mFrameCount_input; )
 		{
 			if ( sf::Event::KeyPressed == it->type )
@@ -258,7 +425,6 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 			mStage.updateOnNet( mNextStage );
 			mNextStage.clear( );
 			mNextTetriminoPanel.setTetrimino( mNextTetriminoS.front() );
-			mFrameCount_clearingVFX = 1;
 #ifdef _DEBUG
 			gService()->console().print( "Server has it done while Client hasn't it done yet.",
 										sf::Color::Red );
@@ -284,12 +450,14 @@ bool ui::PlayView::update( std::list<sf::Event>& eventQueue )
 	return hasToRespond;
 }
 
-void ui::PlayView::draw( const int time )
+void ui::PlayView::draw( )
 {
 	mStage.draw( );
-	if ( time < 0 )
+	if ( 0 < mFrameCount_countdown )
 	{
-		mSprite.setTextureRect( sf::IntRect( 0, 256*(-time-1), 256, 256 ) );
+		--mFrameCount_countdown;
+		const uint8_t y = mFrameCount_countdown/mFPS_;
+		mSprite.setTextureRect( sf::IntRect( 0, 256*y, 256, 256 ) );
 		mWindow_->draw( mSprite );
 	}
 
@@ -301,8 +469,8 @@ void ui::PlayView::draw( const int time )
 	
 	if ( 0 < mFrameCount_clearingVFX )
 	{
-
-		++mFrameCount_clearingVFX;
+		mVfxCombo.draw( mNumOfLinesCleared );
+		--mFrameCount_clearingVFX;
 	}
 	
 	if ( true == mIsGameOverOnServer )
@@ -314,10 +482,5 @@ void ui::PlayView::draw( const int time )
 	if ( 0 != mFrameCount_collisionOnServer )
 	{
 		++mFrameCount_collisionOnServer;
-	}
-	const uint32_t fps = (uint32_t)gService()->vault()[HK_FORE_FPS];
-	if ( fps <= mFrameCount_clearingVFX )
-	{
-		mFrameCount_clearingVFX = 0u;
 	}
 }

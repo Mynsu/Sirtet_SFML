@@ -1,1 +1,1 @@
-Sprite = { path = "Images/GameOver.png", width = 512, height = 256 }
+Image = { path = "Images/GameOver.png", width = 512, height = 256 }

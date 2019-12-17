@@ -26,11 +26,10 @@ namespace scene::inPlay
 		sf::RenderWindow& mWindow_;
 		sf::RectangleShape& mBackgroundRect_;
 		const std::unique_ptr<::scene::inPlay::IScene>& mOverlappedScene_;
-		sf::Vector2f mMargin_;
 		::ui::NextTetriminoPanel mNextTetriminoPanel;
 		::vfx::Combo mVfxCombo;
 		::model::Tetrimino mCurrentTetrimino;
 		std::queue< ::model::Tetrimino > mNextTetriminos;
-		::model::Stage mPlayerStage;
+		::model::Stage mStage;
 	};
 }

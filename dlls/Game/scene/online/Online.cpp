@@ -121,7 +121,7 @@ void ::scene::online::Online::loadResources( )
 	{
 		luaL_openlibs( lua );
 		const int TOP_IDX = -1;
-		const std::string tableName0( "Sprite" );
+		const std::string tableName0( "DisconnectionSprite" );
 		lua_getglobal( lua, tableName0.data() );
 		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )

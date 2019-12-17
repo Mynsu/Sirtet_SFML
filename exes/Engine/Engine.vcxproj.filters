@@ -67,9 +67,6 @@
     <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\MainMenu.lua">
       <Filter>리소스 파일\scripts</Filter>
     </None>
-    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\Playing.lua">
-      <Filter>리소스 파일\scripts</Filter>
-    </None>
     <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\Ready.lua">
       <Filter>리소스 파일\scripts</Filter>
     </None>
@@ -79,7 +76,13 @@
     <None Include="Scripts\Online.lua">
       <Filter>리소스 파일\scripts</Filter>
     </None>
-    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\Room.lua">
+    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\InRoom.lua">
+      <Filter>리소스 파일\scripts</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\Playing.lua">
+      <Filter>리소스 파일\scripts</Filter>
+    </None>
+    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\Tetrimino.lua">
       <Filter>리소스 파일\scripts</Filter>
     </None>
   </ItemGroup>
