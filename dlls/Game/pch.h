@@ -3,6 +3,7 @@
 #include <list>
 #include <queue>
 #include <array>
+#include <unordered_set>
 #include <bitset>
 #include <thread>
 #include <condition_variable>
@@ -23,6 +24,7 @@
 #include <Lib/IGame.h>
 #include <Lib/Common.h>
 #include <Lib/Packet.h>
+#include <Lib/math/Vector.h>
 
 // !IMPORTANT: On delivery, make sure that this macro is canceled, or undefined for the security.
 #define _DEV

@@ -430,7 +430,8 @@ int main()
 								ticketS.erase( ticket );
 //TODO: 닉네임
 								Packet packet;
-								std::string nickname( "nickname01" );
+								std::string nickname( "nickname" );
+								nickname += std::to_string( clientIdx );
 								packet.pack( TAG_MY_NICKNAME, nickname );
 								if ( -1 == clientSocket.sendOverlapped(packet) )
 								{
@@ -538,7 +539,7 @@ int main()
 					}
 					else
 					{
-						if ( false == client.complete(roomS) )
+						if ( false == client.complete(roomS, clientS) )
 						{
 							if ( -1 == forceDisconnection(clientIdx) )
 							{

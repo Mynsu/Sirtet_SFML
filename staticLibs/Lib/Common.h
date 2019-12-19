@@ -126,6 +126,7 @@ constexpr Tag TAG_MY_NICKNAME = { (char)_Tag::MY_NICKNAME, ':', '\0' };
 enum class Request
 {
 	NONE,
+	UPDATE_USER_LIST,
 	CREATE_ROOM,
 	START_GAME,
 	GET_READY,
@@ -135,6 +136,7 @@ enum class Request
 // 1 Byte
 constexpr Tag TAG_REQUEST = { (char)_Tag::REQUEST, ':', '\0' };
 const uint8_t TAG_REQUEST_LEN = ::util::hash::Measure( TAG_REQUEST );
+constexpr Tag TAGGED_REQ_USER_LIST = { (char)_Tag::REQUEST, ':', (char)Request::UPDATE_USER_LIST, '\0' };
 constexpr Tag TAGGED_REQ_CREATE_ROOM = { (char)_Tag::REQUEST, ':', (char)Request::CREATE_ROOM, '\0' };
 constexpr Tag TAGGED_REQ_START_GAME = { (char)_Tag::REQUEST, ':', (char)Request::START_GAME, '\0' };
 constexpr Tag TAGGED_REQ_GET_READY = { (char)_Tag::REQUEST, ':', (char)Request::GET_READY, '\0' };

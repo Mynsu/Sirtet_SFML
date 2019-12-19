@@ -19,7 +19,7 @@ public:
 	void operator=( const Client& ) = delete;
 	~Client( ) = default;
 
-	bool complete( std::unordered_map<HashedKey, Room>& roomS );
+	bool complete( std::unordered_map<HashedKey, Room>& roomS, std::vector<Client>& clientS );
 	Client::State state( ) const;
 	void setState( const Client::State state );
 	void holdTicket( const Ticket ticket );

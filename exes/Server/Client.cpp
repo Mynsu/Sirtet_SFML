@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Client.h"
 #include "Room.h"
+#include <sstream>
 
 Client::Client( const Socket::Type type, const ClientIndex index )
 	: mIndex( index ), mState( State::UNVERIFIED ),
@@ -10,7 +11,7 @@ Client::Client( const Socket::Type type, const ClientIndex index )
 {
 }
 
-bool Client::complete( std::unordered_map<HashedKey, Room>& roomS )
+bool Client::complete( std::unordered_map<HashedKey, Room>& roomS, std::vector<Client>& clientS )
 {
 	const Socket::CompletedWork cmpl = mSocket.completedWork( );
 	if ( Socket::CompletedWork::RECEIVE != cmpl &&
@@ -35,6 +36,43 @@ bool Client::complete( std::unordered_map<HashedKey, Room>& roomS )
 					const Request req = (Request)rcvBuf[TAG_REQUEST_LEN];
 					switch ( req )
 					{
+						case Request::UPDATE_USER_LIST:
+						{
+							std::stringstream ss;
+							for ( auto& it : clientS )
+							{
+								if ( Client::State::UNVERIFIED != it.state() )
+								{
+									ss << "nickname" << it.mIndex << TOKEN_SEPARATOR_2;
+								}
+							}
+							std::string userList( ss.str() );
+							if ( false == userList.empty() )
+							{
+								Packet packet;
+								packet.pack( TAGGED_REQ_USER_LIST, userList );
+								if ( -1 == mSocket.sendOverlapped(packet) )
+								{
+									// Exception
+									std::cerr << "Failed to tell Client "
+										<< mIndex << " the user list.\n";
+									return false;
+								}
+								mSocket.pend( );
+							}
+							else
+							{
+								if ( -1 == mSocket.receiveOverlapped() )
+								{
+									// Exception
+									std::cerr << "Failed to pend reception from Client "
+										<< mIndex << std::endl;
+									return false;
+								}
+							}
+							mRecentRequest = req;
+							break;
+						}
 						case Request::CREATE_ROOM:
 						{
 							////
@@ -51,7 +89,7 @@ bool Client::complete( std::unordered_map<HashedKey, Room>& roomS )
 							{
 								// Exception
 								std::cerr << "Failed to affirm Client "
-									<< mIndex << "'s room creation";
+									<< mIndex << "'s room creation.\n";
 								return false;
 							}
 							mSocket.pend( );
@@ -92,6 +130,8 @@ bool Client::complete( std::unordered_map<HashedKey, Room>& roomS )
 			{
 				switch( mRecentRequest )
 				{
+					case Request::UPDATE_USER_LIST:
+						[[ fallthrough ]];
 					case Request::CREATE_ROOM:
 						mState = Client::State::WAITING_IN_ROOM;
 						if ( -1 == mSocket.receiveOverlapped() )
