@@ -34,13 +34,13 @@ namespace scene::online
 											  const Online::Option option,
 											  const uint32_t size = 0 ) const;
 		void stopReceivingFromQueueServer( ) const;
-		void setNickname( std::string& nickname )
+		void setMyNickname( std::string& myNickname )
 		{
-			mNickname = nickname;
+			mMyNickname = myNickname;
 		}
-		const std::string& nickname( ) const
+		const std::string& myNickname( ) const
 		{
-			return mNickname;
+			return mMyNickname;
 		}
 #ifdef _DEV
 		::scene::ID currentScene( ) const override;
@@ -54,7 +54,7 @@ namespace scene::online
 		sf::Vector2f mSpriteClipSize_;
 		sf::RenderWindow& mWindow_;
 		std::unique_ptr< ::scene::online::IScene > mCurrentScene;
-		std::string mNickname;
+		std::string mMyNickname;
 		sf::Texture mTexture;
 		sf::Sprite mSprite;
 	};

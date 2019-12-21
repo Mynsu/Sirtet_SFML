@@ -14,7 +14,7 @@ scene::online::InRoom::InRoom( sf::RenderWindow& window, Online& net, const bool
 	: mAsHost( asHost ), mIsReceiving( false ), mHasCanceled( false ),
 	mWindow_( window ), mNet( net )
 {
-	const std::string& nickname = mNet.nickname( );
+	const std::string& nickname = mNet.myNickname( );
 	mParticipants.reserve( ROOM_CAPACITY );
 	mMyNicknameHash_ = ::util::hash::Digest( nickname.data(), (uint8_t)nickname.size() );
 	mParticipants.emplace( mMyNicknameHash_, ::ui::PlayView(mWindow_, mNet) );

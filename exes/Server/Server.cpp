@@ -7,8 +7,9 @@
 
 //DOING: 로직
 
-const uint32_t CLIENT_CAPACITY = 2u;
+const uint32_t CLIENT_CAPACITY = 10u;
 const uint32_t ROOM_CAPACITY = 100u;
+const uint32_t LOBBY_CAPACITY = 100u;
 const uint16_t LISTENER_PORT = MAIN_SERVER_PORT;
 
 volatile bool IsWorking = true;
@@ -93,7 +94,9 @@ int main()
 	listener.pend( );
 	std::unordered_map< HashedKey, Room > roomS;
 	roomS.reserve( ROOM_CAPACITY );
-	auto forceDisconnection = [ &clientS, &iocp, &candidatesIndices, &roomS ]( const ClientIndex idx )->int
+	std::unordered_set< ClientIndex > lobby;
+	lobby.reserve( LOBBY_CAPACITY );
+	auto forceDisconnection = [ &clientS, &iocp, &candidatesIndices, &roomS, &lobby ]( const ClientIndex idx )->int
 	{
 		Client& client = clientS[ idx ];
 		client.setSocket( Socket::Type::TCP, Socket::CompletedWork::DISCONNECT );
@@ -107,7 +110,29 @@ int main()
 			return -1;
 		}
 
-		if ( const auto it = roomS.find(client.roomID()); roomS.end() != it )
+		if ( Client::State::IN_LOBBY == client.state() )
+		{
+			lobby.erase( idx );
+			for ( const ClientIndex otherIdx : lobby )
+			{
+				Socket& _socket = clientS[otherIdx].socket();
+				Packet packet;
+				std::string nickname( client.nickname() );
+				packet.pack( TAGGED_NOTI_SOMEONE_LEFT, nickname );
+				if ( -1 == _socket.sendOverlapped(packet) )
+				{
+					// Exception
+					std::cerr << "Failed to notify to Client "
+						<< otherIdx << " that " << idx << " left the lobby.\n";
+#ifdef _DEBUG
+					__debugbreak( );
+#endif
+					continue;
+				}
+				_socket.pend( );
+			}
+		}
+		else if ( const auto it = roomS.find(client.roomID()); roomS.end() != it )
 		{
 			it->second.leave( idx );
 		}
@@ -372,7 +397,31 @@ int main()
 					}
 					else if ( 0 == res )
 					{
-						if ( const auto it = roomS.find(client.roomID()); roomS.end() != it )
+						if( Client::State::IN_LOBBY == client.state() )
+						{
+							lobby.erase( clientIdx );
+							for ( const ClientIndex idx : lobby )
+							{
+								Socket& _socket = clientS[idx].socket();
+								Packet packet;
+								std::string nickname( client.nickname() );
+								packet.pack( TAGGED_NOTI_SOMEONE_LEFT, nickname );
+								if ( -1 == _socket.sendOverlapped(packet) )
+								{
+									// Exception
+									std::cerr << "Failed to notify to Client "
+										<< idx << " that " << clientIdx << " left the lobby.\n";
+									if ( -1 == forceDisconnection(clientIdx) )
+									{
+										// Break twice
+										goto cleanUp;
+									}
+									continue;
+								}
+								_socket.pend( );
+							}
+						}
+						else if ( const auto it = roomS.find(client.roomID()); roomS.end() != it )
 						{
 							it->second.leave( clientIdx );
 						}
@@ -429,9 +478,11 @@ int main()
 								client.holdTicket( ticket );
 								ticketS.erase( ticket );
 //TODO: 닉네임
-								Packet packet;
 								std::string nickname( "nickname" );
 								nickname += std::to_string( clientIdx );
+								client.setNickname( nickname );
+
+								Packet packet;
 								packet.pack( TAG_MY_NICKNAME, nickname );
 								if ( -1 == clientSocket.sendOverlapped(packet) )
 								{
@@ -442,6 +493,7 @@ int main()
 										// Break twice
 										goto cleanUp;
 									}
+									continue;
 								}
 								clientSocket.pend( );
 							}
@@ -462,7 +514,7 @@ int main()
 								if ( -1 == queueServerSocket.sendOverlapped(packet) )
 								{
 									// Exception
-									std::cerr << "Failed to pend sending population\n";
+									std::cerr << "Failed to pend sending population.\n";
 									if ( -1 == forceDisconnection(queueServerIdx) )
 									{
 										// Break twice
@@ -514,6 +566,26 @@ int main()
 						else if ( Socket::CompletedWork::SEND == cmpl )
 						{
 							client.setState( Client::State::IN_LOBBY );
+							for ( const ClientIndex idx : lobby )
+							{
+								Client& clientInLobby = clientS[idx];
+								std::string nickname( client.nickname() );
+								Packet packet;
+								packet.pack( TAGGED_NOTI_VISITOR, nickname );
+								Socket& _socket = clientInLobby.socket();
+								if ( -1 == _socket.sendOverlapped(packet) )
+								{
+									// Exception
+									std::cerr << "Failed to pend notifying that a visitor came into the lobby.\n";
+									if ( -1 == forceDisconnection(idx) )
+									{
+										// Break twice
+										goto cleanUp;
+									}
+									continue;
+								}
+							}
+							lobby.emplace( clientIdx );
 							if ( -1 == clientSocket.receiveOverlapped() )
 							{
 								// Exception
@@ -539,7 +611,7 @@ int main()
 					}
 					else
 					{
-						if ( false == client.complete(roomS, clientS) )
+						if ( false == client.complete(clientS, lobby, roomS) )
 						{
 							if ( -1 == forceDisconnection(clientIdx) )
 							{

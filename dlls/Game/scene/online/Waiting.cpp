@@ -104,7 +104,7 @@ void scene::online::Waiting::loadResources( )
 #ifdef _DEBUG
 					gService( )->console( ).print( nickname.value(), sf::Color::Green );
 #endif
-					mNet.setNickname( nickname.value() );
+					mNet.setMyNickname( nickname.value() );
 					retVal = ::scene::online::ID::IN_LOBBY;
 				}
 				else

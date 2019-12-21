@@ -85,6 +85,11 @@ enum class _Tag
 	REQUEST,
 
 	////
+	// Notification
+	////
+	NOTIFICATION,
+
+	////
 	// Inplay
 	////
 	MY_CURRENT_TETRIMINO,
@@ -136,11 +141,24 @@ enum class Request
 // 1 Byte
 constexpr Tag TAG_REQUEST = { (char)_Tag::REQUEST, ':', '\0' };
 const uint8_t TAG_REQUEST_LEN = ::util::hash::Measure( TAG_REQUEST );
-constexpr Tag TAGGED_REQ_USER_LIST = { (char)_Tag::REQUEST, ':', (char)Request::UPDATE_USER_LIST, '\0' };
+constexpr Tag TAGGED_REQ_UPDATE_USER_LIST = { (char)_Tag::REQUEST, ':', (char)Request::UPDATE_USER_LIST, '\0' };
 constexpr Tag TAGGED_REQ_CREATE_ROOM = { (char)_Tag::REQUEST, ':', (char)Request::CREATE_ROOM, '\0' };
 constexpr Tag TAGGED_REQ_START_GAME = { (char)_Tag::REQUEST, ':', (char)Request::START_GAME, '\0' };
 constexpr Tag TAGGED_REQ_GET_READY = { (char)_Tag::REQUEST, ':', (char)Request::GET_READY, '\0' };
 constexpr Tag TAGGED_REQ_LEAVE_ROOM = { (char)_Tag::REQUEST, ':', (char)Request::LEAVE_ROOM, '\0' };
+
+////
+// Notification
+////
+enum class Notification
+{
+	// NOTE: 0 equals '\0'
+	VISITOR = 1,
+	SOMEONE_LEFT,
+};
+
+constexpr Tag TAGGED_NOTI_VISITOR = { (char)_Tag::NOTIFICATION, ':', (char)Notification::VISITOR, '\0' };
+constexpr Tag TAGGED_NOTI_SOMEONE_LEFT = { (char)_Tag::NOTIFICATION, ':', (char)Notification::SOMEONE_LEFT, '\0' };
 
 ////
 // Inplay

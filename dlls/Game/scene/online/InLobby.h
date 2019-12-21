@@ -26,12 +26,10 @@ namespace scene::online
 		void createRoom( const std::string_view& );
 		static bool IsInstantiated;
 		bool mIsReceiving, mHasCanceled, mHasJoined;
-		uint32_t mFrameCount_userListUpdate;
 		::scene::online::Online& mNet;
 		sf::RenderWindow& mWindow_;
 		std::array< sf::Vector2f, MOVING_POINT_NUM > mMovingPoint;
-		std::vector< std::string > mUserList;
-		std::vector< std::pair<sf::Text, uint8_t> > mUserNicknameTextFields;
+		std::unordered_map< std::string, std::pair<sf::Text, uint8_t> > mUserList;
 		sf::Font mFont_;
 		sf::RectangleShape mBackground;
 		sf::RectangleShape mUserNicknamesBox;

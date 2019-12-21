@@ -3,11 +3,11 @@
 //TODO: 티켓 랜덤하게, RDBMS로 ID와 Password 매칭.
 
 using Ticket = HashedKey;
-const uint32_t CAPACITY = 10000u;
+const uint32_t CAPACITY = 10u;
 // Capacity in the main server defaults to 10000u.
 // You can resize it indirectly here without re-compliing or rescaling the main server.
 // !IMPORTANT: This must be less than the real capacity of the server.
-const uint32_t MAIN_SERVER_CAPACITY = 2u;
+const uint32_t MAIN_SERVER_CAPACITY = 10u;
 const Dword VERSION = 8191015;
 constexpr HashedKey ENCRYPTED_INVITATION = ::util::hash::Digest(VERSION+ADDITIVE);
 const uint16_t LISTENER_PORT = QUEUE_SERVER_PORT;

@@ -108,7 +108,8 @@ public:
 		DWORD flag = 0;
 		mCompletedWork = CompletedWork::RECEIVE;
 		const int res = WSARecv( mhSocket, &b, 1, NULL, &flag, &mOverlappedStruct, NULL );
-		return (-1==res&&ERROR_IO_PENDING==WSAGetLastError())? -2: res;
+		const int err = WSAGetLastError();
+		return (-1==res&&ERROR_IO_PENDING==err)? -2: res;
 	}
 	int receiveBlock( );
 	int sendOverlapped( char* const data, const size_t size,
@@ -142,7 +143,8 @@ public:
 		b.len = (ULONG)data.size( );
 		int res = ::WSASend( mhSocket, &b, 1, NULL, 0, &mOverlappedStruct, NULL );
 		mCompletedWork = CompletedWork::SEND;
-		return (-1==res && ERROR_IO_PENDING==WSAGetLastError())? -2: res;
+		const int err = WSAGetLastError();
+		return (-1==res && ERROR_IO_PENDING==err)? -2: res;
 	}
 
 	void close( )
