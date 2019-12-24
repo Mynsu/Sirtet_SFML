@@ -295,7 +295,7 @@ void model::Tetrimino::tryRotate( const ::model::stage::Grid& grid )
 	//
 	// Moving the prototype around here
 	//
-	for ( uint8_t i = 0u; i != 4u; ++i )
+	for ( uint8_t i = 0u; i != (int)Rot::NONE_MAX; ++i )
 	{
 		afterRot.mPosition += Test[ static_cast<int>(afterRot.mRotationID) ][ i ];
 		// When the rotation is possible after moving,

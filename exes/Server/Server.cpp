@@ -94,7 +94,7 @@ int main()
 	listener.pend( );
 	std::unordered_map< HashedKey, Room > roomS;
 	roomS.reserve( ROOM_CAPACITY );
-	std::unordered_set< ClientIndex > lobby;
+	std::vector< ClientIndex > lobby;
 	lobby.reserve( LOBBY_CAPACITY );
 	auto forceDisconnection = [ &clientS, &iocp, &candidatesIndices, &roomS, &lobby ]( const ClientIndex idx )->int
 	{
@@ -112,7 +112,14 @@ int main()
 
 		if ( Client::State::IN_LOBBY == client.state() )
 		{
-			lobby.erase( idx );
+			for ( auto it = lobby.cbegin(); lobby.cend() != it; ++it )
+			{
+				if ( idx == *it )
+				{
+					lobby.erase( it );
+					break;
+				}
+			}
 			for ( const ClientIndex otherIdx : lobby )
 			{
 				Socket& _socket = clientS[otherIdx].socket();
@@ -147,7 +154,7 @@ int main()
 	const HashedKey encryptedSalt = ::util::hash::Digest( todaysSalt.data(), (uint8_t)todaysSalt.size() );
 	bool wasBoatful = false;
 	ClientIndex queueServerIdx = -1;
-	std::unordered_set< Ticket > ticketS;
+	std::vector< Ticket > ticketS;
 	IOCPEvent event;
 	while ( true == IsWorking )
 	{
@@ -342,7 +349,7 @@ int main()
  							const uint32_t beginPos = (uint32_t)tagPos + TAG_TICKET_LEN;
 							off += sizeof(Ticket);
 							const Ticket id = ::ntohl(*(Ticket*)&rcvBuf[beginPos]);
-							ticketS.emplace( id );
+							ticketS.emplace_back( id );
 #ifdef _DEBUG
 							std::cout << "A copy of the issued ticket arrived: " << id << ".\n";
 #endif
@@ -397,9 +404,16 @@ int main()
 					}
 					else if ( 0 == res )
 					{
-						if( Client::State::IN_LOBBY == client.state() )
+						if ( Client::State::IN_LOBBY == client.state() )
 						{
-							lobby.erase( clientIdx );
+							for ( auto it = lobby.cbegin(); lobby.cend() != it; ++it )
+							{
+								if ( clientIdx == *it )
+								{
+									lobby.erase( it );
+									break;
+								}
+							}
 							for ( const ClientIndex idx : lobby )
 							{
 								Socket& _socket = clientS[idx].socket();
@@ -472,33 +486,48 @@ int main()
 							const char* const rcvBuf = clientSocket.receivingBuffer( );
 							// When having a copy of the ticket received from this client,
 							constexpr uint8_t TAG_TICKET_LEN = ::util::hash::Measure( TAG_TICKET );
-							if ( const Ticket ticket = ::ntohl(*(Ticket*)&rcvBuf[TAG_TICKET_LEN]);
-								ticketS.cend() != ticketS.find(ticket) )
 							{
-								client.holdTicket( ticket );
-								ticketS.erase( ticket );
-//TODO: 닉네임
-								std::string nickname( "nickname" );
-								nickname += std::to_string( clientIdx );
-								client.setNickname( nickname );
-
-								Packet packet;
-								packet.pack( TAG_MY_NICKNAME, nickname );
-								if ( -1 == clientSocket.sendOverlapped(packet) )
+								const Ticket ticket = ::ntohl(*(Ticket*)&rcvBuf[TAG_TICKET_LEN]);
+								auto it = ticketS.cbegin();
+								while ( ticketS.cend() != it )
 								{
-									// Exception
-									std::cerr << "Failed to acknowledge Client " << clientIdx << ".\n";
-									if ( -1 == forceDisconnection(clientIdx) )
+									if ( ticket == *it )
 									{
-										// Break twice
-										goto cleanUp;
+										break;
 									}
+									else
+									{
+										++it;
+									}
+								}
+								if ( ticketS.cend() != it )
+								{
+									client.holdTicket( ticket );
+									ticketS.erase( it );
+//TODO: 닉네임
+									std::string nickname( "nickname" );
+									nickname += std::to_string( clientIdx );
+									client.setNickname( nickname );
+
+									Packet packet;
+									packet.pack( TAG_MY_NICKNAME, nickname );
+									if ( -1 == clientSocket.sendOverlapped(packet) )
+									{
+										// Exception
+										std::cerr << "Failed to acknowledge Client " << clientIdx << ".\n";
+										if ( -1 == forceDisconnection(clientIdx) )
+										{
+											// Break twice
+											goto cleanUp;
+										}
+										continue;
+									}
+									clientSocket.pend( );
 									continue;
 								}
-								clientSocket.pend( );
 							}
 							// When the queue server as a client asked how many clients keep connecting,
-							else if ( encryptedSalt == ::ntohl(*(HashedKey*)rcvBuf) )
+							if ( encryptedSalt == ::ntohl(*(HashedKey*)rcvBuf) )
 							{
 								queueServerIdx = clientIdx;
 #ifdef _DEBUG
@@ -571,7 +600,7 @@ int main()
 								Client& clientInLobby = clientS[idx];
 								std::string nickname( client.nickname() );
 								Packet packet;
-								packet.pack( TAGGED_NOTI_VISITOR, nickname );
+								packet.pack( TAGGED_NOTI_SOMEONE_VISITED, nickname );
 								Socket& _socket = clientInLobby.socket();
 								if ( -1 == _socket.sendOverlapped(packet) )
 								{
@@ -585,7 +614,7 @@ int main()
 									continue;
 								}
 							}
-							lobby.emplace( clientIdx );
+							lobby.emplace_back( clientIdx );
 							if ( -1 == clientSocket.receiveOverlapped() )
 							{
 								// Exception
@@ -624,9 +653,9 @@ int main()
 			}
 		}
 
-		for ( auto it = roomS.begin(); roomS.end() != it; ++it )
+		for ( auto& it : roomS )
 		{
-			std::forward_list< ClientIndex > failedIndices( it->second.update() );
+			std::forward_list< ClientIndex > failedIndices( it.second.update() );
 			for ( const ClientIndex index : failedIndices )
 			{
 				if ( -1 == forceDisconnection(index) )
@@ -636,7 +665,7 @@ int main()
 				}
 			}
 
-			failedIndices = it->second.notify( clientS );
+			failedIndices = it.second.notify( clientS );
 			for ( const ClientIndex index : failedIndices )
 			{
 				if ( -1 == forceDisconnection(index) )

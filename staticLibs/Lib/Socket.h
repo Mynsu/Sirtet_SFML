@@ -112,35 +112,23 @@ public:
 		return (-1==res&&ERROR_IO_PENDING==err)? -2: res;
 	}
 	int receiveBlock( );
-	int sendOverlapped( char* const data, const size_t size,
-					   const char separator = TOKEN_SEPARATOR )
+	int sendOverlapped( char* const data, const size_t size )
 	{
 		WSABUF b;
 		int res = -2;
-		if ( 0 < size && separator != data[size-1u] )
-		{
-			std::string _data( data, size+1u );
-			_data[size] = separator;
-			b.buf = _data.data( );
-			b.len = (ULONG)_data.size( );
-			res = ::WSASend( mhSocket, &b, 1, NULL, 0, &mOverlappedStruct, NULL );
-		}
-		else
-		{
-			b.buf = data;
-			b.len = (ULONG)size;
-			res = ::WSASend( mhSocket, &b, 1, NULL, 0, &mOverlappedStruct, NULL );
-		}
+		b.buf = data;
+		b.len = (ULONG)size;
+		res = ::WSASend( mhSocket, &b, 1, NULL, 0, &mOverlappedStruct, NULL );
 		mCompletedWork = CompletedWork::SEND;
-		return (-1==res && ERROR_IO_PENDING==WSAGetLastError())? -2: res;
+		const int err = WSAGetLastError();
+		return (-1==res && ERROR_IO_PENDING==err)? -2: res;
 	}
-	int sendOverlapped( Packet& packet,
-					   const char separator = TOKEN_SEPARATOR )
+	int sendOverlapped( Packet& packet )
 	{
 		WSABUF b;
-		std::string& data = packet.data( );
-		b.buf = data.data( );
-		b.len = (ULONG)data.size( );
+		std::string& data = packet.data();
+		b.buf = data.data();
+		b.len = (ULONG)data.size();
 		int res = ::WSASend( mhSocket, &b, 1, NULL, 0, &mOverlappedStruct, NULL );
 		mCompletedWork = CompletedWork::SEND;
 		const int err = WSAGetLastError();

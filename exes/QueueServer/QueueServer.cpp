@@ -211,7 +211,7 @@ int main( )
 	int roomInMainServer = 0;
 	std::list< Index > queue;
 	IOCPEvent event;
-	std::chrono::high_resolution_clock::time_point old0, old1;
+	std::chrono::high_resolution_clock::time_point lastTimeNotifyingQueue, lastTimeSendingToMainServer;
 	while ( true == IsWorking )
 	{
 		iocp.wait( event, 100 );
@@ -484,10 +484,10 @@ int main( )
 		const auto now = std::chrono::high_resolution_clock::now( );
 		// Notifying their own order in the queue line.
 		uint32_t order = 0u;
-		for ( auto it = queue.cbegin(); queue.cend()!=it && std::chrono::seconds(1)<now-old0; )
+		for ( auto it = queue.cbegin(); queue.cend()!=it && std::chrono::seconds(1)<now-lastTimeNotifyingQueue; )
 		{
 			// Reset
-			old0 = now;
+			lastTimeNotifyingQueue = now;
 
 			Socket& clientSocket = clientS[ *it ];
 			++order;
@@ -522,10 +522,10 @@ int main( )
 
 		// When there's no more room in the main server,
 		if ( 0 == roomInMainServer && 0 == status[Status::AWAITING_POPULATION]
-			 && std::chrono::seconds(1)<now-old1 )
+			 && std::chrono::seconds(1)<now-lastTimeSendingToMainServer )
 		{
 			// Reset
-			old1 = now;
+			lastTimeSendingToMainServer = now;
 			// Asking the main server how many clients are there.
 			const uint8_t ignored = 1;
 			packetToMainServer.pack( TAG_POPULATION, ignored );
@@ -535,6 +535,7 @@ int main( )
 #endif
 		}
 
+		//궁금: 클라이언트 막 들이닥치면 lastTimeSendingToMainServer 써야할 수도?
 		// When there's something to send to the main server,
 		if ( true == packetToMainServer.hasData() )
 		{
@@ -559,6 +560,7 @@ int main( )
 			}
 			socketToMainServer->pend( );
 		}
+		// 궁금: 보내기 성공하고 일단 받기 걸어도, 메인서버에서 0바이트 송신하면 받기 풀린다는 걸 발견하기 전에 쓰던 방식.
 		// When there's nothing to send to the main server,
 		else
 		{

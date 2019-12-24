@@ -133,7 +133,7 @@ void scene::online::Waiting::loadResources( )
 
 void scene::online::Waiting::draw( )
 {
-//TODO: юс╫ц
+	//TODO
 }
 
 void scene::online::Waiting::cancelConnection( const std::string_view& )

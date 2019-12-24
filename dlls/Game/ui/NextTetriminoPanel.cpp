@@ -5,9 +5,9 @@
 void ui::NextTetriminoPanel::setTetrimino( const::model::Tetrimino& next )
 {
 	const sf::Color nextTetColor( next.color() );
-	for ( uint8_t i = 0; ::model::tetrimino::BLOCKS_A_TETRIMINO != i; ++i )
+	for ( auto& it : mBlocks )
 	{
-		mBlocks[i].setFillColor( nextTetColor );
+		it.setFillColor( nextTetColor );
 	}
 	const ::model::tetrimino::Type type = next.type( );
 	const ::model::tetrimino::LocalSpace nextTetBlocks = next.blocks( );
@@ -44,8 +44,8 @@ void ui::NextTetriminoPanel::setTetrimino( const::model::Tetrimino& next )
 void ui::NextTetriminoPanel::draw( )
 {
 	mWindow_.draw( mPanel );
-	for ( uint8_t i = 0; ::model::tetrimino::BLOCKS_A_TETRIMINO != i; ++i )
+	for ( auto& it : mBlocks )
 	{
-		mWindow_.draw( mBlocks[i] );
+		mWindow_.draw( it );
 	}
 }

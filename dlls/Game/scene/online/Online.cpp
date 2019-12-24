@@ -20,7 +20,6 @@ namespace
 	int Error;
 	std::condition_variable CvForResumingRcv;
 	std::mutex MutexRcvBuf;
-	uint32_t FrameCount_interval = 0;
 
 	void Receive( Socket& socket )
 	{
@@ -53,7 +52,6 @@ scene::online::Online::Online( sf::RenderWindow& window )
 	ASSERT_FALSE( IsInstantiated );
 
 	mFPS_ = (uint32_t)gService( )->vault( )[ HK_FORE_FPS ];
-	FrameCount_interval = mFPS_;
 	SocketToServer = std::make_unique< Socket >( Socket::Type::TCP );
 	ASSERT_TRUE( -1 != SocketToServer->bind(EndPoint::Any) );
 	// NOTE: Setting socket option should be done following binding it.
@@ -95,7 +93,6 @@ scene::online::Online::Online( sf::RenderWindow& window )
 		ThreadToReceive->join( );
 	}
 	ThreadToReceive.reset( );
-	FrameCount_interval = 0;
 	SocketToServer->close( );
 	SocketToServer.reset( );
 
@@ -274,7 +271,6 @@ void ::scene::online::Online::draw( )
 		mWindow_.draw( mSprite );
 		++mFrameCount_disconnection;
 	}
-	++FrameCount_interval;
 }
 
 bool scene::online::Online::connectToMainServer( )
@@ -349,17 +345,10 @@ void scene::online::Online::receive( ) const
 	}
 }
 
-bool scene::online::Online::hasReceived( const uint32_t intervalMs )
+bool scene::online::Online::hasReceived( )
 {
-	uint32_t converted = 0;
-	if ( 16 < intervalMs )
+	if ( 0 < ReceivingResult )
 	{
-		converted = intervalMs*mFPS_/1000u;
-	}
-
-	if ( converted <= FrameCount_interval && 0 < ReceivingResult )
-	{
-		FrameCount_interval = 0u;
 		return true;
 	}
 	else
@@ -423,8 +412,8 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag,
 	if ( option & Option::INDETERMINATE_SIZE )
 	{
 		const uint32_t _size = ::ntohl(*(uint32_t*)&rcvBuf[dataPos]);
-		dataPos += (sizeof(_size) + 1);
-		endPos = (uint32_t)dataPos + _size;
+		dataPos += sizeof(_size);
+		endPos = dataPos + _size;
 	}
 	else
 	{

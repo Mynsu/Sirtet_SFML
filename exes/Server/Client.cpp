@@ -12,7 +12,7 @@ Client::Client( const Socket::Type type, const ClientIndex index )
 }
 
 bool Client::complete( std::vector<Client>& clientS,
-					  std::unordered_set<ClientIndex>& lobby,
+					  std::vector<ClientIndex>& lobby,
 					  std::unordered_map<HashedKey, Room>& roomS )
 {
 	const Socket::CompletedWork cmpl = mSocket.completedWork( );
@@ -40,12 +40,15 @@ bool Client::complete( std::vector<Client>& clientS,
 					{
 						case Request::UPDATE_USER_LIST:
 						{
-							std::stringstream ss;
+							std::string userList;
+							userList.reserve( lobby.size()*10 );
 							for ( const ClientIndex idx : lobby )
 							{
-								ss << clientS[idx].nickname() << TOKEN_SEPARATOR_2;
+								const std::string& nickname = clientS[idx].nickname();
+								const uint32_t nicknameLen = ::htonl((u_long)nickname.size());
+								userList.append( (char*)&nicknameLen, sizeof(uint32_t) );
+								userList += nickname;
 							}
-							std::string userList( ss.str() );
 							Packet packet;
 							packet.pack( TAGGED_REQ_UPDATE_USER_LIST, userList );
 							if ( -1 == mSocket.sendOverlapped(packet) )
@@ -81,6 +84,70 @@ bool Client::complete( std::vector<Client>& clientS,
 							mRecentRequest = req;
 							break;
 						}
+						case Request::JOIN_ROOM:
+						{
+							const uint32_t size	= ::ntohl(*(uint32_t*)&rcvBuf[TAGGED_REQ_JOIN_ROOM_LEN]);
+							const std::string otherNickname( &rcvBuf[TAGGED_REQ_JOIN_ROOM_LEN+sizeof(uint32_t)], size );
+							ResultJoiningRoom res = ResultJoiningRoom::NONE;
+							if ( otherNickname == mNickname )
+							{
+								res = ResultJoiningRoom::FAILED_DUE_TO_SELF_TARGET;
+							}
+							else
+							{
+								auto cit = clientS.cbegin();
+								while ( clientS.cend() != cit )
+								{
+									if ( otherNickname == cit->nickname() )
+									{
+										const RoomID roomID = cit->roomID();
+										if ( auto rit = roomS.find(roomID);
+											rit != roomS.end() )
+										{
+											mRoomID = roomID;
+											res = (ResultJoiningRoom)rit->second.tryAccept( mIndex );
+											if ( ResultJoiningRoom::SUCCCEDED == res )
+											{
+												mRecentRequest = req;
+											}
+										}
+#ifdef _DEBUG
+										// Failure
+										else
+										{
+											res = ResultJoiningRoom::FAILED_BY_SERVER_ERROR;
+											std::cerr << "Failed to help Client " << mIndex
+												<< " join Room " << roomID << ", which doesn't exist at all.\n";
+										}
+#endif
+										break;
+									}
+									++cit;
+								}
+								if ( clientS.cend() == cit )
+								{
+									res = ResultJoiningRoom::FAILED_DUE_TO_TARGET_NOT_CONNECTING;
+								}
+#ifdef _DEBUG
+								// Failure
+								if ( ResultJoiningRoom::NONE == res )
+								{
+									__debugbreak( );
+								}
+#endif
+							}
+							Packet packet;
+							packet.pack( TAGGED_REQ_JOIN_ROOM, (uint32_t)res );
+							if ( -1 == mSocket.sendOverlapped(packet) )
+							{
+								// Exception
+								std::cerr << "Failed to tell if Client "
+									<< mIndex << " can join the room or not.\n";
+								return false;
+							}
+							mSocket.pend( );
+							break;
+						}
 						// Exception
 						default:
 							std::cerr << "WARNING: Client "
@@ -113,10 +180,18 @@ bool Client::complete( std::vector<Client>& clientS,
 			}
 			else if ( Socket::CompletedWork::SEND == cmpl )
 			{
-				if ( Request::CREATE_ROOM == mRecentRequest )
+				if ( Request::CREATE_ROOM == mRecentRequest ||
+					Request::JOIN_ROOM == mRecentRequest )
 				{
-#ifdef _DEBUG
-					lobby.erase(mIndex);
+					mRecentRequest = Request::NONE;
+					for ( auto it = lobby.cbegin(); lobby.cend() != it; ++it )
+					{
+						if ( mIndex == *it )
+						{
+							lobby.erase( it );
+							break;
+						}
+					}
 					for ( const ClientIndex idx : lobby )
 					{
 						Packet packet;
@@ -134,9 +209,6 @@ bool Client::complete( std::vector<Client>& clientS,
 						}
 						_socket.pend( );
 					}
-#else
-					lobby.erase( mIndex );
-#endif
 					mState = Client::State::WAITING_IN_ROOM;
 				}
 
@@ -213,7 +285,7 @@ bool Client::complete( std::vector<Client>& clientS,
 								for ( const ClientIndex idx : lobby	)
 								{
 									Packet packet;
-									packet.pack( TAGGED_NOTI_VISITOR, mNickname );
+									packet.pack( TAGGED_NOTI_SOMEONE_VISITED, mNickname );
 									Socket& _socket = clientS[idx].socket();
 									if ( -1 == _socket.sendOverlapped(packet) )
 									{
@@ -227,7 +299,7 @@ bool Client::complete( std::vector<Client>& clientS,
 									}
 									_socket.pend( );
 								}
-								lobby.emplace( mIndex );
+								lobby.emplace_back( mIndex );
 							}
 #ifdef _DEBUG
 							else
@@ -319,7 +391,7 @@ bool Client::complete( std::vector<Client>& clientS,
 								for ( const ClientIndex idx : lobby	)
 								{
 									Packet packet;
-									packet.pack( TAGGED_NOTI_VISITOR, mNickname );
+									packet.pack( TAGGED_NOTI_SOMEONE_VISITED, mNickname );
 									Socket& _socket = clientS[idx].socket();
 									if ( -1 == _socket.sendOverlapped(packet) )
 									{
@@ -333,7 +405,7 @@ bool Client::complete( std::vector<Client>& clientS,
 									}
 									_socket.pend( );
 								}
-								lobby.emplace( mIndex );
+								lobby.emplace_back( mIndex );
 							}
 							// Exception
 							else

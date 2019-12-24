@@ -31,17 +31,11 @@ constexpr HashedKey CMD_CREATE_ROOM = ::util::hash::Digest( _CMD_CREATE_ROOM, ::
 constexpr char _CMD_CANCEL_CONNECTION[ ] = "cnclCon";
 constexpr HashedKey CMD_CANCEL_CONNECTION = ::util::hash::Digest( _CMD_CANCEL_CONNECTION, ::util::hash::Measure(_CMD_CANCEL_CONNECTION) );
 
-constexpr char _CMD_INVITE[ ] = "inv";
-constexpr HashedKey CMD_INVITE = ::util::hash::Digest( _CMD_INVITE, ::util::hash::Measure(_CMD_INVITE) );
-
-constexpr char _CMD_RESPOND_YES[ ] = "y";
-constexpr HashedKey CMD_RESPOND_YES = ::util::hash::Digest( _CMD_RESPOND_YES, ::util::hash::Measure(_CMD_RESPOND_YES) );
-
-constexpr char _CMD_RESPOND_NO[ ] = "n";
-constexpr HashedKey CMD_RESPOND_NO = ::util::hash::Digest( _CMD_RESPOND_NO, ::util::hash::Measure(_CMD_RESPOND_NO) );
-
 constexpr char _CMD_START_GAME[ ] = "start";
-constexpr HashedKey CMD_START_GAME = ::util::hash::Digest( _CMD_START_GAME, ::util::hash::Measure( _CMD_START_GAME ) );
+constexpr HashedKey CMD_START_GAME = ::util::hash::Digest( _CMD_START_GAME, ::util::hash::Measure(_CMD_START_GAME) );
 
 constexpr char _CMD_LEAVE_ROOM[ ] = "leave";
-constexpr HashedKey CMD_LEAVE_ROOM = ::util::hash::Digest( _CMD_LEAVE_ROOM, ::util::hash::Measure( _CMD_LEAVE_ROOM ) );
+constexpr HashedKey CMD_LEAVE_ROOM = ::util::hash::Digest( _CMD_LEAVE_ROOM, ::util::hash::Measure(_CMD_LEAVE_ROOM) );
+
+constexpr char _CMD_JOIN_ROOM[ ] = "join";
+constexpr HashedKey CMD_JOIN_ROOM = ::util::hash::Digest( _CMD_JOIN_ROOM, ::util::hash::Measure(_CMD_JOIN_ROOM) );

@@ -22,10 +22,11 @@ namespace scene::online
 		void draw( ) override;
 	private:
 		void cancelConnection( const std::string_view& );
-		//TODO: 방제, 비번 등
 		void createRoom( const std::string_view& );
-		static bool IsInstantiated;
+		void joinRoom( const std::string_view& arg );
+		static bool IsInstantiated, BinarySemaphore;
 		bool mIsReceiving, mHasCanceled, mHasJoined;
+		uint32_t mFrameCount_update;
 		::scene::online::Online& mNet;
 		sf::RenderWindow& mWindow_;
 		std::array< sf::Vector2f, MOVING_POINT_NUM > mMovingPoint;

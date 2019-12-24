@@ -20,8 +20,9 @@ namespace scene::online
 		void send( char* const data, const int size );
 		void send( Packet& packet );
 		void sendZeroByte( );
+		// Reset and resume reception.
 		void receive( ) const;
-		bool hasReceived( const uint32_t intervalMs = 0 );
+		bool hasReceived( );
 		enum class Option
 		{
 			SPECIFIED_SIZE = 0b0,

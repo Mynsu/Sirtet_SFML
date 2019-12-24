@@ -5,14 +5,16 @@
 #include "Online.h"
 #include "../VaultKeyList.h"
 
-const uint32_t USER_LIST_UPDATE_INTERVAL = 600;
+const uint32_t UPDATE_INTERVAL = 120;
 const float ERROR_RANGE = 5.f;
 const float SPEED = .5f;
 
 bool scene::online::InLobby::IsInstantiated = false;
+bool scene::online::InLobby::BinarySemaphore;
 
 scene::online::InLobby::InLobby( sf::RenderWindow& window, ::scene::online::Online& net )
 	: mIsReceiving( false ), mHasCanceled( false ), mHasJoined( false ),
+	mFrameCount_update( 30 ),
 	mWindow_( window ), mNet( net )
 {
 #ifdef _DEBUG
@@ -23,18 +25,17 @@ scene::online::InLobby::InLobby( sf::RenderWindow& window, ::scene::online::Onli
 																	  this, std::placeholders::_1) );
 	gService( )->console( ).addCommand( CMD_CANCEL_CONNECTION, std::bind(&scene::online::InLobby::cancelConnection,
 																			this, std::placeholders::_1) );
+	gService( )->console( ).addCommand( CMD_JOIN_ROOM, std::bind(&scene::online::InLobby::joinRoom,
+																		 this, std::placeholders::_1) );
 #endif
 	sf::Text tf( mNet.myNickname(), mFont_ );
 	const sf::Vector2f center( mWindow_.getSize() );
-	tf.setPosition(	center*.5f );
+	// 궁금: 어떻게 겹치지 않게 할까?
+	tf.setPosition(	center*.4f );
 	tf.setFillColor( sf::Color(0xffa500ff) ); // Orange
 	mUserList.emplace( mNet.myNickname(), std::make_pair(tf,0) );
-
-	Packet packet;
-	uint8_t ignored = 1;
-	packet.pack( TAGGED_REQ_UPDATE_USER_LIST, ignored );
-	mNet.send( packet );
 	loadResources( );
+	BinarySemaphore = false;
 	IsInstantiated = true;
 }
 
@@ -45,6 +46,7 @@ scene::online::InLobby::~InLobby( )
 	{
 		gService( )->console( ).removeCommand( CMD_CREATE_ROOM );
 		gService( )->console( ).removeCommand( CMD_CANCEL_CONNECTION );
+		gService( )->console( ).removeCommand( CMD_JOIN_ROOM );
 	}
 #endif
 	IsInstantiated = false;
@@ -70,25 +72,55 @@ void scene::online::InLobby::loadResources( )
 
 ::scene::online::ID scene::online::InLobby::update( std::list<sf::Event>& eventQueue )
 {
-	if ( false == mIsReceiving )
-	{
-		mNet.receive( );
-		mIsReceiving = true;
-	}
-
 	::scene::online::ID retVal = ::scene::online::ID::AS_IS;
 	bool hasToRespond = false;
-	if ( true == mNet.hasReceived(1000u) )
+	if ( true == mNet.hasReceived() )
 	{
 		hasToRespond = true;
-		if ( std::optional<std::string> response(mNet.getByTag(TAGGED_REQ_CREATE_ROOM,
+		if ( std::optional<std::string> resultCreatingRoom(mNet.getByTag(TAGGED_REQ_CREATE_ROOM,
 															   Online::Option::RETURN_TAG_ATTACHED,
 															   sizeof(char)));
-			std::nullopt != response )
+			std::nullopt != resultCreatingRoom )
 		{
 			retVal = ::scene::online::ID::IN_ROOM_AS_HOST;
 		}
-		else if ( std::optional<std::string> visitor(mNet.getByTag(TAGGED_NOTI_VISITOR,
+		else if ( std::optional<std::string> resultJoiningRoom(mNet.getByTag(TAGGED_REQ_JOIN_ROOM,
+																			 Online::Option::SPECIFIED_SIZE,
+																			 sizeof(ResultJoiningRoom)));
+				 std::nullopt != resultJoiningRoom )
+		{
+			const ResultJoiningRoom res = (ResultJoiningRoom)::ntohl(*(uint32_t*)resultJoiningRoom.value().data());
+			switch( res )
+			{
+				case ResultJoiningRoom::FAILED_BY_SERVER_ERROR:
+					gService()->console().print( "Failed to join the room by an error.", sf::Color::Green );
+					BinarySemaphore = false;
+					break;
+				case ResultJoiningRoom::FAILED_BY_FULL_ROOM:
+					gService()->console().print( "Room is full.", sf::Color::Green );
+					BinarySemaphore = false;
+					break;
+				case ResultJoiningRoom::SUCCCEDED:
+					retVal = ::scene::online::ID::IN_ROOM;
+					break;
+				case ResultJoiningRoom::FAILED_DUE_TO_TARGET_NOT_CONNECTING:
+					gService()->console().print( "That nicknamed-user is not connecting.", sf::Color::Green );
+					BinarySemaphore = false;
+					break;
+				case ResultJoiningRoom::FAILED_DUE_TO_SELF_TARGET:
+					gService()->console().print( "It doesn't make any sense to join yourself.", sf::Color::Green );
+					BinarySemaphore = false;
+					break;
+				default:
+#ifdef _DEBUG
+					__debugbreak( );
+#else
+					__assume( 0 );
+#endif
+					break;
+			}
+		}
+		else if ( std::optional<std::string> visitor(mNet.getByTag(TAGGED_NOTI_SOMEONE_VISITED,
 																   Online::Option::INDETERMINATE_SIZE));
 				 std::nullopt != visitor )
 		{
@@ -115,29 +147,48 @@ void scene::online::InLobby::loadResources( )
 															   Online::Option::INDETERMINATE_SIZE));
 			std::nullopt != userList )
 		{
+			BinarySemaphore = false;
 			const std::string& _userList( userList.value() );
-			size_t curPos = 0;
-			size_t nextPos = _userList.find(TOKEN_SEPARATOR_2);
-			const sf::Vector2f offset( 10.f, 0.f );
+			const char* const ptr = _userList.data();
+			const uint32_t userListSize = (uint32_t)_userList.size();
+			uint32_t curPos = 0;
+			const sf::Vector2f offset( 20.f, 0.f );
 			float mul = 0.f;
-			while ( _userList.npos != nextPos )
+			while ( userListSize != curPos )
 			{
-				const std::string otherNickname( _userList.substr(curPos, nextPos-curPos) );
-				sf::Text tf( otherNickname, mFont_ );
-				const sf::Vector2f center( mWindow_.getSize() );
-				tf.setPosition( center*.5f + offset*mul );
-				mUserList.emplace( otherNickname, std::make_pair(tf, 0) );
-				curPos = nextPos + 1;
-				nextPos = _userList.find(TOKEN_SEPARATOR_2, curPos);
+				uint32_t curSize = ::ntohl(*(uint32_t*)&ptr[curPos]);
+				curPos += sizeof(uint32_t);
+				const std::string otherNickname( _userList.substr(curPos, curSize) );
+				if ( otherNickname != mNet.myNickname() )
+				{
+					sf::Text tf( otherNickname, mFont_ );
+					const sf::Vector2f center( mWindow_.getSize() );
+					tf.setPosition( center*.5f + offset*mul );
+					mUserList.emplace( otherNickname, std::make_pair(tf, 0) );
+				}
+				curPos += curSize;
 				mul += 1.f;
 			}
 		}
 		mIsReceiving = false;
 	}
 
+	if ( false == mIsReceiving )
+	{
+		mNet.receive( );
+		mIsReceiving = true;
+	}
+
 	if ( true == hasToRespond )
 	{
 		mNet.sendZeroByte( );
+	}
+	else if ( UPDATE_INTERVAL <= mFrameCount_update && false == BinarySemaphore )
+	{
+		BinarySemaphore = true;
+		mFrameCount_update = 0;
+		std::string req( TAGGED_REQ_UPDATE_USER_LIST );
+		mNet.send( req.data(), (int)req.size() );
 	}
 
 	if ( true == mHasCanceled )
@@ -222,17 +273,48 @@ void scene::online::InLobby::draw( )
 			}
 		}
 	}
+	++mFrameCount_update;
 }
 
 void scene::online::InLobby::cancelConnection( const std::string_view& )
 {
-	//TODO
 	mHasCanceled = true;
 }
 
 void scene::online::InLobby::createRoom( const std::string_view& )
 {
-	//TODO
+	if ( false != BinarySemaphore )
+	{
+		gService()->console().print( "Please retry to create a room.", sf::Color::Green );
+		return;
+	}
+	BinarySemaphore = true;
 	std::string request( TAGGED_REQ_CREATE_ROOM );
 	mNet.send( request.data(), (int)request.size() );
+}
+
+void scene::online::InLobby::joinRoom( const std::string_view& arg )
+{
+	if ( false != BinarySemaphore )
+	{
+		gService()->console().print( "Please retry to join the room.", sf::Color::Green );
+		return;
+	}
+	BinarySemaphore = true;
+	// Exception
+	if ( const size_t pos = arg.find_first_of(' ');
+		arg.npos != pos	)
+	{
+		gService()->console().print( "User's nickname shouldn't have a space." );
+		return;
+	}
+	else if ( arg == mNet.myNickname() )
+	{
+		gService()->console().print( "It doesn't make any sense to join yourself." );
+		return;
+	}
+	Packet packet;
+	std::string otherNickname( arg );
+	packet.pack( TAGGED_REQ_JOIN_ROOM, otherNickname );
+	mNet.send( packet );
 }

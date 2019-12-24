@@ -16,7 +16,7 @@ public:
 		mData += tag;
 		const uint32_t size = ::htonl((uint32_t)data.size());
 		mData.append( (char*)&size, sizeof(size) );
-		mData += TOKEN_SEPARATOR_2 + data + TOKEN_SEPARATOR;
+		mData += data;
 		mHasSomethingToSend = true;
 	}
 	template < typename T, std::enable_if_t<std::is_integral_v<T>>* = nullptr >
@@ -52,7 +52,6 @@ public:
 				break;
 		}
 		mData.append( (char*)&data, sizeof(T) );
-		mData += TOKEN_SEPARATOR;
 		mHasSomethingToSend = true;
 	}
 	inline bool hasData( ) const

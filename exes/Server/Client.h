@@ -20,7 +20,7 @@ public:
 	~Client( ) = default;
 
 	bool complete( std::vector<Client>& clientS,
-				  std::unordered_set<ClientIndex>& lobby,
+				  std::vector<ClientIndex>& lobby,
 				  std::unordered_map<HashedKey, Room>& roomS );
 	Client::State state( ) const;
 	void setState( const Client::State state );

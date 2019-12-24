@@ -6,8 +6,6 @@
 #include "../VaultKeyList.h"
 #include <utility>
 
-const uint8_t ROOM_CAPACITY = 4;
-
 bool scene::online::InRoom::IsInstantiated = false;
 
 scene::online::InRoom::InRoom( sf::RenderWindow& window, Online& net, const bool asHost )
@@ -521,19 +519,20 @@ void scene::online::InRoom::loadResources( )
 	if ( auto it = mParticipants.find(mMyNicknameHash_);
 		mParticipants.end() != it )
 	{
-		::model::Stage& stage = it->second.stage();
+		::ui::PlayView& playView = it->second;
+		::model::Stage& stage = playView.stage();
 		stage.setPosition( stagePanelPos );
 		stage.setSize( stageCellSize );
 		stage.setBackgroundColor( sf::Color(stagePanelColor),
 								 stagePanelOutlineThickness, sf::Color(stagePanelOutlineColor),
 								 sf::Color(stageCellOutlineColor) );
-		it->second.setCountdownSpriteDimension( stagePanelPos, stageCellSize, countdownSpriteSize );
-		::model::Tetrimino& tetrimino =	it->second.tetrimino();
+		playView.setCountdownSpriteDimension( stagePanelPos, stageCellSize, countdownSpriteSize );
+		::model::Tetrimino& tetrimino =	playView.tetrimino();
 		tetrimino.setOrigin( stagePanelPos );
 		tetrimino.setSize( stageCellSize );
-		::vfx::Combo& vfxCombo = it->second.vfxCombo();
+		::vfx::Combo& vfxCombo = playView.vfxCombo();
 		vfxCombo.setOrigin( stagePanelPos, stageCellSize, vfxComboSize );
-		::ui::NextTetriminoPanel& nextTetPanel = it->second.nextTetriminoPanel();
+		::ui::NextTetriminoPanel& nextTetPanel = playView.nextTetriminoPanel();
 		nextTetPanel.setDimension( nextTetPanelPos, nextTetPanelCellSize );
 		nextTetPanel.setBackgroundColor( sf::Color(nextTetPanelColor),
 										nextTetPanelOutlineThickness, sf::Color(nextTetPanelOutlineColor),
@@ -558,17 +557,34 @@ void scene::online::InRoom::loadResources( )
 
 	}
 
+	sf::Vector2f otherStagePanelPos( 550.f, 300.f );
+	float otherStageCellSize = 10.f;
+	const sf::Vector2f size( ::model::stage::GRID_WIDTH*otherStageCellSize, ::model::stage::GRID_HEIGHT*otherStageCellSize );
+	sf::Vector2f diff( 0.f, otherStageCellSize*::model::stage::GRID_HEIGHT );
+	mEmptySlotsForOtherPlayers[ 0 ].setFillColor( sf::Color(0x0000007f) );
+	mEmptySlotsForOtherPlayers[ 0 ].setPosition( otherStagePanelPos - diff );
+	mEmptySlotsForOtherPlayers[ 0 ].setSize( size );
+	mEmptySlotsForOtherPlayers[ 0 ].setOutlineThickness( 5.f );
+	mEmptySlotsForOtherPlayers[ 0 ].setOutlineColor( sf::Color(0x000000ff) );
+
+	mEmptySlotsForOtherPlayers[ 1 ].setFillColor( sf::Color(0x0000007f) );
+	diff = sf::Vector2f( otherStageCellSize*::model::stage::GRID_WIDTH, 0.f	);
+	mEmptySlotsForOtherPlayers[ 1 ].setPosition( otherStagePanelPos - diff );
+	mEmptySlotsForOtherPlayers[ 1 ].setSize( size );
+	mEmptySlotsForOtherPlayers[ 1 ].setOutlineThickness( 5.f );
+	mEmptySlotsForOtherPlayers[ 1 ].setOutlineColor( sf::Color(0x000000ff) );
+
+	mEmptySlotsForOtherPlayers[ 2 ].setFillColor( sf::Color(0x0000007f) );
+	mEmptySlotsForOtherPlayers[ 2 ].setPosition( otherStagePanelPos );
+	mEmptySlotsForOtherPlayers[ 2 ].setSize( size );
+	mEmptySlotsForOtherPlayers[ 2 ].setOutlineThickness( 5.f );
+	mEmptySlotsForOtherPlayers[ 2 ].setOutlineColor( sf::Color(0x000000ff) );
+
 	::model::Tetrimino::LoadResources( );
 }
 
 ::scene::online::ID scene::online::InRoom::update( std::list<sf::Event>& eventQueue )
 {
-	if ( false == mIsReceiving )
-	{
-		mNet.receive( );
-		mIsReceiving = true;
-	}
-	
 	bool hasToRespond = false;
 	if ( true == mNet.hasReceived() )
 	{
@@ -582,12 +598,70 @@ void scene::online::InRoom::loadResources( )
 				it.second.start( );
 			}
 		}
+
+		if ( std::optional<std::string> userList(mNet.getByTag(TAGGED_NOTI_UPDATE_USER_LIST,
+															   Online::Option::INDETERMINATE_SIZE));
+			std::nullopt != userList )
+		{
+			const std::string& _userList( userList.value() );
+			const char* const ptr = _userList.data();
+			const uint32_t userListSize = (uint32_t)_userList.size();
+			std::vector< HashedKey > temp;
+			for ( auto& it : mParticipants )
+			{
+				temp.emplace_back( it.first );
+			}
+			uint32_t curPos = 0;
+			while ( userListSize != curPos )
+			{
+				uint32_t curSize = ::ntohl(*(uint32_t*)&ptr[curPos]);
+				curPos += sizeof(uint32_t);
+				const std::string otherNickname( _userList.substr(curPos, curSize) );
+				const HashedKey otherNicknameHashed = ::util::hash::Digest( otherNickname.data(),
+																	(uint8_t)otherNickname.size() );
+				for ( auto it = temp.cbegin(); temp.cend() != it; ++it )
+				{
+					if ( otherNicknameHashed == *it )
+					{
+						temp.erase( it );
+						break;
+					}
+				}
+				if ( const auto it = mParticipants.find(otherNicknameHashed);
+					mParticipants.end() == it )
+				{
+					mParticipants.emplace( otherNicknameHashed, ::ui::PlayView(mWindow_,mNet) );
+					::model::Stage& stage =	mParticipants[ otherNicknameHashed ].stage();
+					stage.setBackgroundColor( sf::Color::Black, 5.f, sf::Color(0x0000007f), sf::Color(0x0000007f) );
+					sf::RectangleShape& r =	mEmptySlotsForOtherPlayers[mParticipants.size()-(ROOM_CAPACITY-2)];
+					const sf::Vector2f pos( r.getPosition() );
+					stage.setPosition( pos );
+					const float cellSize = r.getSize().x / ::model::stage::GRID_WIDTH;
+					stage.setSize( cellSize );
+					::model::Tetrimino& tet = mParticipants[ otherNicknameHashed ].tetrimino();
+					tet.setOrigin( pos );
+					tet.setSize( cellSize );
+				}
+				curPos += curSize;
+			}
+			for ( const auto it : temp )
+			{
+				mParticipants.erase( it );
+				//TODO: 누가 종료했습니다.
+			}
+		}
 		hasToRespond = true;
 	}
 
 	for ( auto& it : mParticipants )
 	{
 		hasToRespond = it.second.update( eventQueue );
+	}
+
+	if ( false == mIsReceiving )
+	{
+		mNet.receive( );
+		mIsReceiving = true;
 	}
 
 	if ( true == hasToRespond )
@@ -607,6 +681,10 @@ void scene::online::InRoom::loadResources( )
 void scene::online::InRoom::draw( )
 {
 	mWindow_.draw( mBackgroundRect );
+	for ( size_t i = mParticipants.size()-1; ROOM_CAPACITY-1 != i; ++i )
+	{
+		mWindow_.draw( mEmptySlotsForOtherPlayers[i] );
+	}
 	for ( auto& it : mParticipants )
 	{
 		it.second.draw( );

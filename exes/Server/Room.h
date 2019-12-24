@@ -31,12 +31,20 @@ public:
 	std::forward_list<ClientIndex> notify( std::vector<Client>& clientS );
 	// MUST destruct this room when returning false, which means having kicked out the last one.
 	ClientIndex hostIndex( ) const;
+	bool tryAccept( const ClientIndex index );
 private:
-	inline bool alarmAfter( const uint32_t milliseconds )
+	enum class AlarmIndex
 	{
-		if ( std::chrono::milliseconds(milliseconds) < (Clock::now()-mStartTime) )
+		START,
+		UPDATE_USER_LIST,
+		NONE_MAX,
+	};
+	inline bool alarmAfter( const uint32_t milliseconds, const AlarmIndex index )
+	{
+		const Clock::time_point now = Clock::now();
+		if ( std::chrono::milliseconds(milliseconds) < (now-mAlarms[(int)index]) )
 		{
-			mStartTime = Clock::now( );
+			mAlarms[(int)index] = now;
 			return true;
 		}
 		else
@@ -46,6 +54,7 @@ private:
 	}
 	ClientIndex mHostIndex;
 	Room::State mState;
-	Clock::time_point mStartTime;
+	std::vector< ClientIndex > mCandidateGuestS;
+	Clock::time_point mAlarms[(int)AlarmIndex::NONE_MAX];
 	std::unordered_map< ClientIndex, Playing > mGuestS;
 };

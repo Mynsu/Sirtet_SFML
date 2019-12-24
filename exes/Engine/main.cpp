@@ -4,7 +4,7 @@
 
 //TODO: 개발 완료 후 auto 쓰는 대신 타입 명시, 브랜치에 커밋
 //TODO: https://tetris.fandom.com/wiki/Tetris_Guideline
-//TODO: TAG를 좀 더 특이하게 해야 할까?
+//TODO: DDoS 방지, 보냈으면 응답을 받아서 성공 여부 결정
 
 const uint32_t VERSION = 8191015;
 const uint32_t DEFAULT_FOREGROUND_FPS = 60u;

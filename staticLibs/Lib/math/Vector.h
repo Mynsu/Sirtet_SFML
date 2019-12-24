@@ -35,9 +35,9 @@ public:
 		if ( 0.0 == mMagnitude )
 		{
 			T magnitudeSquare = 0.f;
-			for ( uint8_t i = 0; i != N; ++i )
+			for ( const auto it : mComponents )
 			{
-				magnitudeSquare += mComponents[i]*mComponents[i];
+				magnitudeSquare += it*it;
 			}
 			mMagnitude = std::sqrt(magnitudeSquare);
 		}
@@ -47,9 +47,9 @@ public:
 	Vector normalize( ) const
 	{
 		Vector retVal( *this );
-		for ( uint8_t i = 0; N != i; ++i )
+		for ( auto& it : retVal.mComponents )
 		{
-			retVal.mComponents[i] /= mMagnitude;
+			it /= mMagnitude;
 		}
 		return retVal;
 	}

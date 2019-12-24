@@ -5,13 +5,17 @@
 Room::Room( )
 	: mHostIndex( -1 ), mState( State::WAITING )
 {
-	mGuestS.reserve( PARTICIPANT_CAPACITY );
 }
 
 Room::Room( const ClientIndex hostIndex )
 	: mHostIndex( hostIndex ), mState( State::WAITING )
 {
 	mGuestS.emplace( hostIndex, Playing() );
+	const Clock::time_point init = Clock::now();
+	for ( auto& it : mAlarms )
+	{
+		it = init;
+	}
 }
 
 void Room::start( )
@@ -22,14 +26,26 @@ void Room::start( )
 bool Room::leave( const ClientIndex index )
 {
 	bool retVal = true;
-	mGuestS.erase( index );
-	if ( true == mGuestS.empty() )
+	auto it = mCandidateGuestS.cbegin();
+	for ( ; mCandidateGuestS.cend() != it; ++it )
 	{
-		retVal = false;
+		if ( index == *it )
+		{
+			mCandidateGuestS.erase( it );
+			break;
+		}
 	}
-	else if ( index == mHostIndex )
+	if ( mCandidateGuestS.cend() == it )
 	{
-		mHostIndex = mGuestS.cbegin( )->first;
+		mGuestS.erase( index );
+		if ( true == mGuestS.empty() )
+		{
+			retVal = false;
+		}
+		else if ( index == mHostIndex )
+		{
+			mHostIndex = mGuestS.cbegin( )->first;
+		}
 	}
 	return retVal;
 }
@@ -63,6 +79,15 @@ void Room::perceive( const ClientIndex index, const bool hasTetriminoCollidedInC
 std::forward_list<ClientIndex> Room::update( )
 {
 	std::forward_list<ClientIndex> retVal;
+	if ( false == mCandidateGuestS.empty() )
+	{
+		for ( const auto it : mCandidateGuestS )
+		{
+			mGuestS.emplace( it, Playing() );
+		}
+		mCandidateGuestS.clear( );
+	}
+
 	if ( Room::State::PLAYING == mState )
 	{
 		for ( auto& it : mGuestS )
@@ -84,13 +109,37 @@ std::forward_list<ClientIndex> Room::notify( std::vector<Client>& clientS )
 	switch ( mState )
 	{
 		case Room::State::WAITING:
-			//TODO
+			if ( true == alarmAfter(1000, AlarmIndex::UPDATE_USER_LIST) )
+			{
+				std::string userList;
+				userList.reserve( mGuestS.size()*10 );
+				for ( auto& it : mGuestS )
+				{
+					const std::string& nickname = clientS[it.first].nickname();
+					const uint32_t nicknameLen = ::htonl((u_long)nickname.size());
+					userList.append( (char*)&nicknameLen, sizeof(uint32_t) );
+					userList += nickname;
+				}
+				Packet packet;
+				packet.pack( TAGGED_NOTI_UPDATE_USER_LIST, userList	);
+				for ( auto& it : mGuestS )
+				{
+					Socket& socket = clientS[it.first].socket();
+					if ( -1 == socket.sendOverlapped(packet) )
+					{
+						// Exception
+						std::cerr << "Failed to notify Client " << it.first <<
+							" the updated user list.\n";
+						retVal.emplace_front(it.first);
+					}
+				}
+			}
 			break;
 		case Room::State::STARTED:
 			for ( auto& it : mGuestS )
 			{
 				const ClientIndex guestIdx = it.first;
-				Socket& guestSocket = clientS[ guestIdx ].socket( );
+				Socket& guestSocket = clientS[guestIdx].socket();
 				std::string response( TAGGED_REQ_GET_READY );
 				if ( -1 == guestSocket.sendOverlapped(response.data(), response.size()) )
 				{
@@ -102,11 +151,11 @@ std::forward_list<ClientIndex> Room::notify( std::vector<Client>& clientS )
 				guestSocket.pend( );
 				it.second.spawnTetrimino( );
 			}
-			mStartTime = Clock::now( );
+			mAlarms[(int)AlarmIndex::START] = Clock::now( );
 			mState = Room::State::READY;
 			break;
 		case Room::State::READY:
-			if ( true == alarmAfter(3000) )
+			if ( true == alarmAfter(3000, AlarmIndex::START) )
 			{
 #ifdef _DEBUG
 				std::cout << "Room hosted by " << mHostIndex << " gets started now.\n";
@@ -230,4 +279,18 @@ std::forward_list<ClientIndex> Room::notify( std::vector<Client>& clientS )
 ClientIndex Room::hostIndex( ) const
 {
 	return mHostIndex;
+}
+
+bool Room:: tryAccept( const ClientIndex index )
+{
+	const uint8_t pop = (uint8_t)(mGuestS.size() + mCandidateGuestS.size());
+	if ( PARTICIPANT_CAPACITY == pop )
+	{
+		return false;
+	}
+	else
+	{
+		mCandidateGuestS.emplace_back( index );
+		return true;
+	}
 }

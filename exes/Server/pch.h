@@ -7,7 +7,6 @@
 #include <signal.h>
 #include <Windows.h>
 #include <thread>
-#include <unordered_set>
 #include <queue>
 #include <array>
 #include <forward_list>

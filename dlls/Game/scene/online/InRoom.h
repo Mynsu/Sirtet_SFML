@@ -3,6 +3,8 @@
 #include "../../ui/PlayView.h"
 #include "../../model/Tetrimino.h"
 
+const uint8_t ROOM_CAPACITY = 4;
+
 namespace scene::online
 {
 	class Online;
@@ -27,5 +29,6 @@ namespace scene::online
 		Online& mNet;
 		std::unordered_map< HashedKey, ::ui::PlayView > mParticipants;
 		sf::RectangleShape mBackgroundRect;
+		sf::RectangleShape mEmptySlotsForOtherPlayers[ ROOM_CAPACITY-1 ];
 	};
 }

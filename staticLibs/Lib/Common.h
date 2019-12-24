@@ -66,9 +66,6 @@ namespace model
 	}
 }
 
-constexpr char TOKEN_SEPARATOR = ' ';
-constexpr char TOKEN_SEPARATOR_2 = '_';
-
 enum class _Tag
 {
 	////
@@ -136,6 +133,7 @@ enum class Request
 	START_GAME,
 	GET_READY,
 	LEAVE_ROOM,
+	JOIN_ROOM,
 };
 
 // 1 Byte
@@ -146,6 +144,18 @@ constexpr Tag TAGGED_REQ_CREATE_ROOM = { (char)_Tag::REQUEST, ':', (char)Request
 constexpr Tag TAGGED_REQ_START_GAME = { (char)_Tag::REQUEST, ':', (char)Request::START_GAME, '\0' };
 constexpr Tag TAGGED_REQ_GET_READY = { (char)_Tag::REQUEST, ':', (char)Request::GET_READY, '\0' };
 constexpr Tag TAGGED_REQ_LEAVE_ROOM = { (char)_Tag::REQUEST, ':', (char)Request::LEAVE_ROOM, '\0' };
+constexpr Tag TAGGED_REQ_JOIN_ROOM = { (char)_Tag::REQUEST, ':', (char)Request::JOIN_ROOM, '\0' };
+constexpr uint8_t TAGGED_REQ_JOIN_ROOM_LEN = ::util::hash::Measure(TAGGED_REQ_JOIN_ROOM);
+enum class ResultJoiningRoom
+{
+	FAILED_BY_SERVER_ERROR = -1,
+	//
+	FAILED_BY_FULL_ROOM,
+	SUCCCEDED,
+	FAILED_DUE_TO_TARGET_NOT_CONNECTING,
+	FAILED_DUE_TO_SELF_TARGET,
+	NONE,
+};
 
 ////
 // Notification
@@ -153,12 +163,14 @@ constexpr Tag TAGGED_REQ_LEAVE_ROOM = { (char)_Tag::REQUEST, ':', (char)Request:
 enum class Notification
 {
 	// NOTE: 0 equals '\0'
-	VISITOR = 1,
+	SOMEONE_VISITED = 1,
 	SOMEONE_LEFT,
+	UPDATE_USER_LIST,
 };
 
-constexpr Tag TAGGED_NOTI_VISITOR = { (char)_Tag::NOTIFICATION, ':', (char)Notification::VISITOR, '\0' };
+constexpr Tag TAGGED_NOTI_SOMEONE_VISITED = { (char)_Tag::NOTIFICATION, ':', (char)Notification::SOMEONE_VISITED, '\0' };
 constexpr Tag TAGGED_NOTI_SOMEONE_LEFT = { (char)_Tag::NOTIFICATION, ':', (char)Notification::SOMEONE_LEFT, '\0' };
+constexpr Tag TAGGED_NOTI_UPDATE_USER_LIST = { (char)_Tag::NOTIFICATION, ':', (char)Notification::UPDATE_USER_LIST, '\0' };
 
 ////
 // Inplay
