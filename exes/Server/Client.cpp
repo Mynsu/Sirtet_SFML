@@ -6,31 +6,29 @@
 Client::Client( const Socket::Type type, const ClientIndex index )
 	: mIndex( index ), mState( State::UNVERIFIED ),
 	mTicket( 0u ), mRoomID( -1 ),
-	mRecentRequest( (Request)-1 ),
+	mNicknameHashed_( 0 ),
 	mSocket( type )
 {
 }
 
-bool Client::complete( std::vector<Client>& clientS,
-					  std::vector<ClientIndex>& lobby,
-					  std::unordered_map<HashedKey, Room>& roomS )
+std::vector<ClientIndex> Client::work( const IOType completedIOType, 
+									std::vector<Client>& clients,
+									 std::vector<ClientIndex>& lobby,
+									 std::unordered_map<HashedKey, Room>& rooms )
 {
-	const Socket::CompletedWork cmpl = mSocket.completedWork( );
-	if ( Socket::CompletedWork::RECEIVE != cmpl &&
-		Socket::CompletedWork::SEND != cmpl	)
-	{
-		// Exception
 #ifdef _DEBUG
+	if ( IOType::RECEIVE != completedIOType && 
+		IOType::SEND != completedIOType	)
+	{
 		__debugbreak( );
-#else
-		__assume( 0 );
-#endif
 	}
+#endif
+	std::vector<ClientIndex> failedIndices;
 	const char* const rcvBuf = mSocket.receivingBuffer( );
 	switch( mState )
 	{
 		case Client::State::IN_LOBBY:
-			if ( Socket::CompletedWork::RECEIVE == cmpl )
+			if ( IOType::RECEIVE == completedIOType )
 			{
 				const _Tag tag = (_Tag)*rcvBuf;
 				if ( _Tag::REQUEST == tag )
@@ -40,75 +38,104 @@ bool Client::complete( std::vector<Client>& clientS,
 					{
 						case Request::UPDATE_USER_LIST:
 						{
+							if ( -1 == mSocket.receiveOverlapped() )
+							{
+								std::cerr << "Failed to receive from Client " <<
+									mIndex << ".\n";
+								failedIndices.emplace_back( mIndex );
+								return failedIndices;
+							}
+#ifdef _DEBUG
+							std::cout << "Client " << mIndex << " requested the list of users in the lobby.\n";
+#endif
 							std::string userList;
 							userList.reserve( lobby.size()*10 );
 							for ( const ClientIndex idx : lobby )
 							{
-								const std::string& nickname = clientS[idx].nickname();
-								const uint32_t nicknameLen = ::htonl((u_long)nickname.size());
-								userList.append( (char*)&nicknameLen, sizeof(uint32_t) );
+								if ( idx == mIndex )
+								{
+									continue;
+								}
+								const std::string& nickname = clients[idx].nickname();
+								const uint8_t nicknameLen = (uint8_t)nickname.size();
+								userList += (char)nicknameLen;
 								userList += nickname;
 							}
-							Packet packet;
-							packet.pack( TAGGED_REQ_UPDATE_USER_LIST, userList );
-							if ( -1 == mSocket.sendOverlapped(packet) )
+							if ( false == userList.empty() )
 							{
-								// Exception
-								std::cerr << "Failed to notify Client "
-									<< mIndex << " the list of users in the lobby.\n";
-								return false;
+								Packet packet;
+								packet.pack( TAGGED_REQ_USER_LIST_IN_LOBBY, userList );
+								if ( -1 == mSocket.sendOverlapped(packet) )
+								{
+									// Exception
+									std::cerr << "Failed to notify Client "
+										<< mIndex << " the list of users in the lobby.\n";
+									failedIndices.emplace_back( mIndex );
+									return failedIndices;
+								}
 							}
-							mSocket.pend( );
 							break;
 						}
 						case Request::CREATE_ROOM:
 						{
+							if ( -1 == mSocket.receiveOverlapped() )
+							{
+								std::cerr << "Failed to receive from Client " <<
+									mIndex << ".\n";
+								failedIndices.emplace_back( mIndex );
+								return failedIndices;
+							}
 							////
 							// Generating random room ID
 							////
 							std::random_device rd;
 							std::minstd_rand re( rd() );
-							const RoomID roomID = (RoomID)re( );
-							mRoomID = roomID;
+							const RoomID roomID = (RoomID)re();
 							////
-							roomS.emplace( roomID, mIndex );
+							mRoomID = roomID;
+							rooms.emplace( roomID, mIndex );
 							std::string response( TAGGED_REQ_CREATE_ROOM );
 							if ( -1 == mSocket.sendOverlapped(response.data(), response.size()) )
 							{
 								// Exception
 								std::cerr << "Failed to affirm Client "
 									<< mIndex << "'s room creation.\n";
-								return false;
+								failedIndices.emplace_back( mIndex );
+								return failedIndices;
 							}
-							mSocket.pend( );
-							mRecentRequest = req;
 							break;
 						}
 						case Request::JOIN_ROOM:
 						{
 							const uint32_t size	= ::ntohl(*(uint32_t*)&rcvBuf[TAGGED_REQ_JOIN_ROOM_LEN]);
-							const std::string otherNickname( &rcvBuf[TAGGED_REQ_JOIN_ROOM_LEN+sizeof(uint32_t)], size );
+							const std::string targetNickname( &rcvBuf[TAGGED_REQ_JOIN_ROOM_LEN+sizeof(uint32_t)], size );
+							if ( -1 == mSocket.receiveOverlapped() )
+							{
+								std::cerr << "Failed to receive from Client " <<
+									mIndex << ".\n";
+								failedIndices.emplace_back( mIndex );
+								return failedIndices;
+							}
 							ResultJoiningRoom res = ResultJoiningRoom::NONE;
-							if ( otherNickname == mNickname )
+							if ( targetNickname == mNickname )
 							{
 								res = ResultJoiningRoom::FAILED_DUE_TO_SELF_TARGET;
 							}
 							else
 							{
-								auto cit = clientS.cbegin();
-								while ( clientS.cend() != cit )
+								auto cit = clients.cbegin();
+								while ( clients.cend() != cit )
 								{
-									if ( otherNickname == cit->nickname() )
+									if ( targetNickname == cit->nickname() )
 									{
 										const RoomID roomID = cit->roomID();
-										if ( auto rit = roomS.find(roomID);
-											rit != roomS.end() )
+										if ( auto rit = rooms.find(roomID);
+											rit != rooms.end() )
 										{
-											mRoomID = roomID;
-											res = (ResultJoiningRoom)rit->second.tryAccept( mIndex );
+											res = (ResultJoiningRoom)rit->second.tryAccept(mIndex);
 											if ( ResultJoiningRoom::SUCCCEDED == res )
 											{
-												mRecentRequest = req;
+												mRoomID = roomID;
 											}
 										}
 #ifdef _DEBUG
@@ -124,7 +151,7 @@ bool Client::complete( std::vector<Client>& clientS,
 									}
 									++cit;
 								}
-								if ( clientS.cend() == cit )
+								if ( clients.cend() == cit )
 								{
 									res = ResultJoiningRoom::FAILED_DUE_TO_TARGET_NOT_CONNECTING;
 								}
@@ -137,15 +164,15 @@ bool Client::complete( std::vector<Client>& clientS,
 #endif
 							}
 							Packet packet;
-							packet.pack( TAGGED_REQ_JOIN_ROOM, (uint32_t)res );
+							packet.pack( TAGGED_REQ_JOIN_ROOM, (uint8_t)res );
 							if ( -1 == mSocket.sendOverlapped(packet) )
 							{
 								// Exception
 								std::cerr << "Failed to tell if Client "
 									<< mIndex << " can join the room or not.\n";
-								return false;
+								failedIndices.emplace_back( mIndex );
+								return failedIndices;
 							}
-							mSocket.pend( );
 							break;
 						}
 						// Exception
@@ -154,13 +181,26 @@ bool Client::complete( std::vector<Client>& clientS,
 								<< mIndex << " sent an undefined request.\n";
 							if ( -1 == mSocket.receiveOverlapped() )
 							{
-								// Exception
-								std::cerr << "Failed to pend reception from Client "
-									<< mIndex << std::endl;
-								return false;
+								std::cerr << "Failed to receive from Client " <<
+									mIndex << ".\n";
+								failedIndices.emplace_back( mIndex );
+								return failedIndices;
 							}
-							mSocket.pend( );
 							break;
+					}
+
+					if ( Request::CREATE_ROOM == req ||
+						Request::JOIN_ROOM == req )
+					{
+						for ( auto it = lobby.cbegin(); lobby.cend() != it; ++it )
+						{
+							if ( mIndex == *it )
+							{
+								lobby.erase( it );
+								break;
+							}
+						}
+						mState = Client::State::WAITING_IN_ROOM;
 					}
 				}
 				// Exception
@@ -170,60 +210,16 @@ bool Client::complete( std::vector<Client>& clientS,
 						<< mIndex << " sent data without a valid tag.\n";
 					if ( -1 == mSocket.receiveOverlapped() )
 					{
-						// Exception
-						std::cerr << "Failed to pend reception from Client "
-							<< mIndex << std::endl;
-						return false;
+						std::cerr << "Failed to receive from Client " <<
+							mIndex << ".\n";
+						failedIndices.emplace_back( mIndex );
+						return failedIndices;
 					}
-					mSocket.pend( );
 				}
-			}
-			else if ( Socket::CompletedWork::SEND == cmpl )
-			{
-				if ( Request::CREATE_ROOM == mRecentRequest ||
-					Request::JOIN_ROOM == mRecentRequest )
-				{
-					mRecentRequest = Request::NONE;
-					for ( auto it = lobby.cbegin(); lobby.cend() != it; ++it )
-					{
-						if ( mIndex == *it )
-						{
-							lobby.erase( it );
-							break;
-						}
-					}
-					for ( const ClientIndex idx : lobby )
-					{
-						Packet packet;
-						packet.pack( TAGGED_NOTI_SOMEONE_LEFT, mNickname );
-						Socket& _socket = clientS[idx].socket();
-						if ( -1 == _socket.sendOverlapped(packet) )
-						{
-							// Exception
-							std::cerr << "Failed to notify to Client "
-								<< idx << " that " << mIndex << " left the lobby.\n";
-#ifdef _DEBUG
-							__debugbreak( );
-#endif
-							continue;
-						}
-						_socket.pend( );
-					}
-					mState = Client::State::WAITING_IN_ROOM;
-				}
-
-				if ( -1 == mSocket.receiveOverlapped() )
-				{
-					// Exception
-					std::cerr << "Failed to pend reception from Client "
-						<< mIndex << std::endl;
-					return false;
-				}
-				mSocket.pend( );
 			}
 			break;
 		case ::Client::State::WAITING_IN_ROOM:
-			if ( ::Socket::CompletedWork::RECEIVE == cmpl )
+			if ( IOType::RECEIVE == completedIOType )
 			{
 				const _Tag tag = (_Tag)*rcvBuf;
 				if ( _Tag::REQUEST == tag )
@@ -232,41 +228,40 @@ bool Client::complete( std::vector<Client>& clientS,
 					switch ( req )
 					{
 						case Request::START_GAME:
-							if ( Room& room = roomS[mRoomID];
-								room.hostIndex() == mIndex )
+							if ( -1 == mSocket.receiveOverlapped() )
+							{
+								std::cerr << "Failed to receive from Client " <<
+									mIndex << ".\n";
+								failedIndices.emplace_back( mIndex );
+								return failedIndices;
+							}
+							if ( auto it = rooms.find(mRoomID);
+								rooms.end() != it &&
+								it->second.hostIndex() == mIndex )
 							{
 #ifdef _DEBUG
 								std::cout << "Client "
 									<< mIndex << " requested to create a room.\n";
 #endif
-								room.start( );
-								mState = Client::State::PLAYING_IN_ROOM;
+								it->second.start( );
 							}
-							// Exception
+#ifdef _DEBUG
 							else
 							{
-								const int res = mSocket.disconnectOverlapped( );
-								if ( 0 == res && ERROR_IO_PENDING != WSAGetLastError() )
-								{
-									// Exception
-									std::cerr << "Failed to disconnect Client "
-										<< mIndex << ".\n";
-									return false;
-								}
-								else if ( -1 == res )
-								{
-									std::cerr << "FATAL: Failed to get DisconnectEx(...) for Client "
-										<< mIndex << ".\n";
-									return false;
-								}
-								else
-								{
-									mSocket.pend( );
-								}
+								__debugbreak( );
 							}
+#endif
 							break;
 						case Request::LEAVE_ROOM:
-							if ( auto it = roomS.find(mRoomID); it != roomS.end() )
+							if ( -1 == mSocket.receiveOverlapped() )
+							{
+								std::cerr << "Failed to receive from Client " <<
+									mIndex << ".\n";
+								failedIndices.emplace_back( mIndex );
+								return failedIndices;
+							}
+							if ( auto it = rooms.find(mRoomID);
+								it != rooms.end() )
 							{
 								mRoomID = -1;
 								mState = State::IN_LOBBY;
@@ -274,49 +269,22 @@ bool Client::complete( std::vector<Client>& clientS,
 								std::cout << "Client "
 									<< mIndex << " leaved Room " << it->first << ".\n";
 #endif
-								if ( false == it->second.leave(mIndex) )
+								if ( 0 == it->second.leave(mIndex) )
 								{
 #ifdef _DEBUG
 									std::cout << "Room "
 										<< it->first << " has been destructed.\n";
 #endif
-									it = roomS.erase( it );
-								}
-								for ( const ClientIndex idx : lobby	)
-								{
-									Packet packet;
-									packet.pack( TAGGED_NOTI_SOMEONE_VISITED, mNickname );
-									Socket& _socket = clientS[idx].socket();
-									if ( -1 == _socket.sendOverlapped(packet) )
-									{
-										// Exception
-										std::cerr << "Failed to notify to Client "
-											<< idx << " that " << mIndex << " came into the lobby.\n";
-#ifdef _DEBUG
-										__debugbreak( );
-#endif
-										continue;
-									}
-									_socket.pend( );
+									rooms.erase( it );
 								}
 								lobby.emplace_back( mIndex );
 							}
 #ifdef _DEBUG
 							else
 							{
-								std::cerr << "Client "
-									<< mIndex << " tried to leave the non-existent Room "
-									<< mRoomID << ".\n";
+								__debugbreak( );
 							}
 #endif
-							if ( -1 == mSocket.receiveOverlapped() )
-							{
-								// Exception
-								std::cerr << "Failed to pend reception from Client "
-									<< mIndex << std::endl;
-								return false;
-							}
-							mSocket.pend( );
 							break;
 						// Exception
 						default:
@@ -324,12 +292,11 @@ bool Client::complete( std::vector<Client>& clientS,
 								<< mIndex << " sent an undefined request.\n";
 							if ( -1 == mSocket.receiveOverlapped() )
 							{
-								// Exception
-								std::cerr << "Failed to pend reception from Client "
-									<< mIndex << std::endl;
-								return false;
+								std::cerr << "Failed to receive from Client " <<
+									mIndex << ".\n";
+								failedIndices.emplace_back( mIndex );
+								return failedIndices;
 							}
-							mSocket.pend( );
 							break;
 					}
 				}
@@ -340,39 +307,36 @@ bool Client::complete( std::vector<Client>& clientS,
 						<< mIndex << " sent data without a valid tag.\n";
 					if ( -1 == mSocket.receiveOverlapped() )
 					{
-						// Exception
-						std::cerr << "Failed to pend reception from Client "
-							<< mIndex << std::endl;
-						return false;
+						std::cerr << "Failed to receive from Client " <<
+							mIndex << ".\n";
+						failedIndices.emplace_back( mIndex );
+						return failedIndices;
 					}
-					mSocket.pend( );
 				}
-			}
-			else if ( ::Socket::CompletedWork::SEND == cmpl )
-			{
-				if ( -1 == mSocket.receiveOverlapped() )
-				{
-					// Exception
-					std::cerr << "Failed to pend reception from Client "
-						<< mIndex << std::endl;
-					return false;
-				}
-				mSocket.pend( );
 			}
 			break;
 		case ::Client::State::PLAYING_IN_ROOM:
-			if ( Socket::CompletedWork::RECEIVE == cmpl )
+			if ( IOType::RECEIVE == completedIOType )
 			{
 				std::string_view strView( rcvBuf );
 				bool hasException = true;
-				if ( const size_t pos = strView.find(TAG_REQUEST); strView.npos != pos )
+				if ( const size_t pos = strView.find(TAG_REQUEST);
+					strView.npos != pos )
 				{
 					hasException = false;
 					const Request req = (Request)rcvBuf[pos+TAG_REQUEST_LEN];
 					switch ( req )
 					{
 						case Request::LEAVE_ROOM:
-							if ( auto it = roomS.find(mRoomID); it != roomS.end() )
+							if ( -1 == mSocket.receiveOverlapped() )
+							{
+								std::cerr << "Failed to receive from Client " <<
+									mIndex << ".\n";
+								failedIndices.emplace_back( mIndex );
+								return failedIndices;
+							}
+							if ( auto it = rooms.find(mRoomID);
+								it != rooms.end() )
 							{
 								mRoomID = -1;
 								mState = State::IN_LOBBY;
@@ -380,52 +344,22 @@ bool Client::complete( std::vector<Client>& clientS,
 								std::cout << "Client "
 									<< mIndex << " leaved Room " << it->first << ".\n";
 #endif
-								if ( false == it->second.leave(mIndex) )
+								if ( 0 == it->second.leave(mIndex) )
 								{
 #ifdef _DEBUG
 									std::cout << "Room "
 										<< it->first << " has been destructed.\n";
 #endif
-									it = roomS.erase( it );
-								}
-								for ( const ClientIndex idx : lobby	)
-								{
-									Packet packet;
-									packet.pack( TAGGED_NOTI_SOMEONE_VISITED, mNickname );
-									Socket& _socket = clientS[idx].socket();
-									if ( -1 == _socket.sendOverlapped(packet) )
-									{
-										// Exception
-										std::cerr << "Failed to notify to Client "
-											<< idx << " that " << mIndex << " came into the lobby.\n";
-#ifdef _DEBUG
-										__debugbreak( );
-#endif
-										continue;
-									}
-									_socket.pend( );
+									rooms.erase( it );
 								}
 								lobby.emplace_back( mIndex );
 							}
-							// Exception
+#ifdef _DEBUG
 							else
 							{
-								std::cerr << "Client "
-									<< mIndex << " tried to leave the non-existent Room "
-									<< mRoomID << ".\n";
-#ifdef _DEBUG
 								__debugbreak( );
+							}
 #endif
-							}
-
-							if ( -1 == mSocket.receiveOverlapped() )
-							{
-								// Exception
-								std::cerr << "Failed to pend reception from Client "
-									<< mIndex << std::endl;
-								return false;
-							}
-							mSocket.pend( );
 							break;
 						// Exception
 						default:
@@ -433,74 +367,66 @@ bool Client::complete( std::vector<Client>& clientS,
 								<< mIndex << " sent an undefined request.\n";
 							if ( -1 == mSocket.receiveOverlapped() )
 							{
-								// Exception
-								std::cerr << "Failed to pend reception from Client "
-									<< mIndex << std::endl;
-								return false;
+								std::cerr << "Failed to receive from Client " <<
+									mIndex << ".\n";
+								failedIndices.emplace_back( mIndex );
+								return failedIndices;
 							}
-							mSocket.pend( );
 							break;
 					}
 					break;
 				}
 
-				if ( const size_t pos = strView.find(TAG_MY_TETRIMINO_MOVE); strView.npos != pos )
+				if ( const size_t pos = strView.find(TAG_MY_TETRIMINO_MOVE);
+					strView.npos != pos )
 				{
 					hasException = false;
-					if ( auto it = roomS.find(mRoomID); roomS.end() != it )
+					if ( auto it = rooms.find(mRoomID);
+						rooms.end() != it )
 					{
 						const ::model::tetrimino::Move move =
-							(::model::tetrimino::Move)*(uint8_t*)&rcvBuf[pos+TAG_MY_TETRIMINO_MOVE_LEN];
+							(::model::tetrimino::Move)rcvBuf[pos+TAG_MY_TETRIMINO_MOVE_LEN];
 						it->second.perceive( mIndex, move );
 					}
-					// Exception
+#ifdef _DEBUG
 					else
 					{
-						std::cerr << "Client "
-							<< mIndex << " tried to leave the non-existent Room "
-							<< mRoomID << ".\n";
-#ifdef _DEBUG
 						__debugbreak( );
-#endif
 					}
+#endif
 				}
 
-				if ( const size_t pos = strView.find(TAG_MY_TETRIMINO_COLLIDED_IN_CLIENT); strView.npos != pos )
+				if ( const size_t pos = strView.find(TAG_MY_TETRIMINO_COLLIDED_ON_CLIENT);
+					strView.npos != pos )
 				{
 					hasException = false;
-					if ( auto it = roomS.find(mRoomID); roomS.end() != it )
+					if ( auto it = rooms.find(mRoomID);
+						rooms.end() != it )
 					{
 						it->second.perceive( mIndex );
 					}
-					// Exception
+#ifdef _DEBUG
 					else
 					{
-						std::cerr << "Client "
-							<< mIndex << " tried to leave the non-existent Room "
-							<< mRoomID << ".\n";
-#ifdef _DEBUG
 						__debugbreak( );
-#endif
 					}
+#endif
+				}
+
+				if ( -1 == mSocket.receiveOverlapped() )
+				{
+					std::cerr << "Failed to receive from Client " <<
+						mIndex << ".\n";
+					failedIndices.emplace_back( mIndex );
+					return failedIndices;
 				}
 				
 				// Exception
 				if ( true == hasException )
 				{
 					std::cerr << "WARNING: Client "
-						<< mIndex << " sent data without a valid tag.\n";
+					<< mIndex << " sent data without a valid tag.\n";
 				}
-			}
-			else if ( Socket::CompletedWork::SEND == cmpl )
-			{
-				if ( -1 == mSocket.receiveOverlapped() )
-				{
-					// Exception
-					std::cerr << "Failed to pend reception from Client "
-						<< mIndex << std::endl;
-					return false;
-				}
-				mSocket.pend( );
 			}
 			break;
 		default:
@@ -512,7 +438,7 @@ bool Client::complete( std::vector<Client>& clientS,
 				break;
 	}
 
-	return true;
+	return failedIndices;
 }
 
 Client::State Client::state() const
@@ -545,10 +471,16 @@ const std::string& Client::nickname() const
 	return mNickname;
 }
 
+HashedKey Client::nicknameHashed() const
+{
+	return mNicknameHashed_;
+}
+
 void Client::setNickname( std::string& nickname )
 {
 	mNickname.clear( );
 	mNickname = nickname;
+	mNicknameHashed_ = ::util::hash::Digest( nickname.data(), (uint8_t)nickname.size() );
 }
 
 Socket& Client::socket( )
@@ -556,16 +488,13 @@ Socket& Client::socket( )
 	return mSocket;
 }
 
-void Client::setSocket( const Socket::Type type, const Socket::CompletedWork completedWork )
-{
-	mSocket.close( );
-	mSocket = Socket( type, completedWork );
-}
-
 void Client::reset()
 {
 	mState = Client::State::UNVERIFIED;
 	mTicket = 0u;
 	mRoomID = -1;
-	mRecentRequest = Request::NONE;
+	mNicknameHashed_ = 0;
+	mNickname.clear( );
+	mSocket.close( );
+	mSocket = Socket( Socket::Type::TCP );
 }

@@ -30,6 +30,7 @@ namespace scene::online
 		::scene::online::Online& mNet;
 		sf::RenderWindow& mWindow_;
 		std::array< sf::Vector2f, MOVING_POINT_NUM > mMovingPoint;
+		// NOTE: std::pair<sf::Text, target point to move>.
 		std::unordered_map< std::string, std::pair<sf::Text, uint8_t> > mUserList;
 		sf::Font mFont_;
 		sf::RectangleShape mBackground;

@@ -38,7 +38,7 @@ void ::scene::inPlay::Playing::loadResources( )
 	float stagePanelOutlineThickness = 11.0;
 	uint32_t stagePanelOutlineColor = 0x3f3f3f'7f;
 	uint32_t stageCellOutlineColor = 0x000000'7f;
-	sf::Vector2i vfxComboSize( 256, 256 );
+	sf::Vector2i vfxComboClipSize( 256, 256 );
 	sf::Vector2f nextTetPanelPos( 525.0, 70.0 );
 	float nextTetPanelCellSize = 30.0;
 	uint32_t nextTetPanelColor = 0x000000'ff;
@@ -240,14 +240,14 @@ void ::scene::inPlay::Playing::loadResources( )
 			}
 			lua_pop( lua, 1 );
 
-			const char field1[ ] = "width";
+			const char field1[ ] = "clipWidth";
 			lua_pushstring( lua, field1 );
 			lua_gettable( lua, 1 );
 			type = lua_type( lua, TOP_IDX );
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				vfxComboSize.x = (int)lua_tointeger(lua, TOP_IDX);
+				vfxComboClipSize.x = (int)lua_tointeger(lua, TOP_IDX);
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
@@ -257,14 +257,14 @@ void ::scene::inPlay::Playing::loadResources( )
 			}
 			lua_pop( lua, 1 );
 
-			const char field2[ ] = "height";
+			const char field2[ ] = "clipHeight";
 			lua_pushstring( lua, field2 );
 			lua_gettable( lua, 1 );
 			type = lua_type( lua, TOP_IDX );
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				vfxComboSize.y = (int)lua_tointeger(lua, TOP_IDX);
+				vfxComboClipSize.y = (int)lua_tointeger(lua, TOP_IDX);
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
@@ -429,7 +429,7 @@ void ::scene::inPlay::Playing::loadResources( )
 	mStage.setBackgroundColor( sf::Color(stagePanelColor),
 							  stagePanelOutlineThickness, sf::Color(stagePanelOutlineColor),
 							  sf::Color(stageCellOutlineColor) );
-	mVfxCombo.setOrigin( stagePanelPos, stageCellSize, vfxComboSize );
+	mVfxCombo.setOrigin( stagePanelPos, stageCellSize, vfxComboClipSize );
 	mNextTetriminoPanel.setDimension( nextTetPanelPos, nextTetPanelCellSize );
 	mNextTetriminoPanel.setBackgroundColor( sf::Color(nextTetPanelColor),
 										   nextTetPanelOutlineThickness, sf::Color(nextTetPanelOutlineColor),

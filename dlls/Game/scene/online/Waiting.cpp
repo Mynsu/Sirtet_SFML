@@ -10,7 +10,7 @@
 bool scene::online::Waiting::IsInstantiated = false;
 
 scene::online::Waiting::Waiting( sf::RenderWindow& window, Online& net )
-	: mHasCanceled( false ), mIsReceiving( false ), mOrder( 0u ),
+	: mHasCanceled( false ), mOrder( 0 ),
 	mState( ::scene::online::Waiting::State::TICKETING ),
 	mWindow_( window ), mNet( net )
 {
@@ -58,8 +58,6 @@ void scene::online::Waiting::loadResources( )
 					std::string ticketID( std::to_string(::ntohl(*(HashedKey*)&ptr[std::strlen(TAG_TICKET)])) );
 					gService( )->console( ).print( ticketID, sf::Color::Green );
 #endif
-					// Reset
-					mNet.stopReceivingFromQueueServer( );
 					if ( true == mNet.connectToMainServer() )
 					{
 						// Sending to the main server the ticket, which the main server will verify.
@@ -67,15 +65,12 @@ void scene::online::Waiting::loadResources( )
 						mState = State::SUBMITTING_TICKET;
 					}
 				}
-				// When having received only the updated order(s) in the waiting queue line
-				// without any ticket for the main server,
 				else if ( std::optional<std::string> order = mNet.getByTag(TAG_ORDER_IN_QUEUE,
 																		 Online::Option::FIND_END_TO_BEGIN,
 																		   sizeof(uint32_t));
 						  std::nullopt != order )
 				{
 					mOrder = ::ntohl(*(uint32_t*)order.value().data());
-					mNet.receive( );
 #ifdef _DEBUG
 					std::string msg( "My order in the queue line: " );
 					gService( )->console( ).print( msg+std::to_string(mOrder), sf::Color::Green );
@@ -86,19 +81,16 @@ void scene::online::Waiting::loadResources( )
 					gService( )->console( ).printFailure( FailureLevel::FATAL,
 														 "Unknown message from the queue server." );
 					mNet.disconnect( );
+					break;
 				}
+				mNet.receive( );
 			}
 			break;
 		case State::SUBMITTING_TICKET:
-			if ( false == mIsReceiving )
-			{
-				mNet.receive( );
-				mIsReceiving = true;
-			}
-			else if ( true == mNet.hasReceived() )
+			if ( true == mNet.hasReceived() )
 			{
 				if ( std::optional<std::string> nickname( mNet.getByTag(TAG_MY_NICKNAME,
-																		Online::Option::INDETERMINATE_SIZE) );
+																		Online::Option::INDETERMINATE_SIZE, NULL) );
 					 std::nullopt != nickname )
 				{
 #ifdef _DEBUG
@@ -111,7 +103,6 @@ void scene::online::Waiting::loadResources( )
 				{
 					mNet.disconnect( );
 				}
-				mIsReceiving = false;
 			}
 			break;
 		default:

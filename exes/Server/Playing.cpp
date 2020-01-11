@@ -5,12 +5,13 @@ const uint32_t FPS = 60;
 const uint8_t MS_PER_FRAME = 1000/FPS;
 const uint8_t FALLING_DIFF = 3;
 const uint8_t TEMPO_DIFF_MS = 20;
-const uint32_t ASYNC_TOLERANCE_MS = 1000;
+const uint32_t ASYNC_TOLERANCE_MS = 1000000;
 const uint32_t GAME_OVER_CHK_INTERVAL_MS = 250;
 
 Playing::Playing()
 	: mHasTetriminoCollidedOnClient( false ),
-	mIsWaitingUntilTetriminoCollidedOnClient( false ),
+	mHasTetriminoCollidedOnServer( false ),
+	mIsGameOver_( false ),
 	mNumOfLinesCleared( 0 ), mTempoMs( 1000 ),
 	mMoveToUpdate( ::model::tetrimino::Move::NONE_MAX )
 {	
@@ -23,9 +24,9 @@ Playing::Playing()
 void Playing::spawnTetrimino()
 {
 	mCurrentTetrimino = ::model::Tetrimino::Spawn();
-	mNextTetriminoS.emplace( ::model::Tetrimino::Spawn() );
-	mNextTetriminoS.emplace( ::model::Tetrimino::Spawn() );
-	mNextTetriminoS.emplace( ::model::Tetrimino::Spawn() );
+	mNextTetriminos.emplace( ::model::Tetrimino::Spawn() );
+	mNextTetriminos.emplace( ::model::Tetrimino::Spawn() );
+	mNextTetriminos.emplace( ::model::Tetrimino::Spawn() );
 } 
 
 void Playing::perceive( const ::model::tetrimino::Move move )
@@ -34,21 +35,26 @@ void Playing::perceive( const ::model::tetrimino::Move move )
 	mMoveToUpdate = move;
 }
 
+void Playing::perceive( const bool hasTetriminoCollidedOnClient )
+{
+	mHasTetriminoCollidedOnClient = hasTetriminoCollidedOnClient;
+}
+
 bool Playing::update( )
 {
 	bool isAsyncTolerable = true;
 	mUpdateResult = Playing::UpdateResult::NONE;
-	if ( true == mStage.isOver() )
+	if ( true == mIsGameOver_ )
 	{
 		return isAsyncTolerable;
 	}
 
-	if ( true == mIsWaitingUntilTetriminoCollidedOnClient )
+	if ( true == mHasTetriminoCollidedOnServer )
 	{
 		if ( true == mHasTetriminoCollidedOnClient )
 		{
 			mHasTetriminoCollidedOnClient = false;
-			mIsWaitingUntilTetriminoCollidedOnClient = false;
+			mHasTetriminoCollidedOnServer = false;
 		}
 		else
 		{
@@ -62,50 +68,49 @@ bool Playing::update( )
 		}
 	}
 
-	bool hasCollided = false;
+	bool hasCollidedOnServer = false;
 	if ( true == mCurrentTetrimino.isFallingDown() )
 	{
 		if ( true == alarmAfter(MS_PER_FRAME, AlarmIndex::TETRIMINO_FALLDOWN) )
 		{
 			resetAlarm( AlarmIndex::TETRIMINO_FALLDOWN );
-			// TODO: delta 줄여가면서 log로.
+			// TODO: delta 줄여가면서 logarithm으로.
 			for ( uint8_t i = 0; FALLING_DIFF != i; ++i )
 			{
-				hasCollided = mCurrentTetrimino.moveDown( mStage.cgrid() );
-				if ( true == hasCollided )
+				hasCollidedOnServer = mCurrentTetrimino.moveDown( mStage.cgrid() );
+				if ( true == hasCollidedOnServer )
 				{
 					mCurrentTetrimino.fallDown( false );
 					goto last;
 				}
 			}
+			mUpdateResult = Playing::UpdateResult::TETRIMINO_MOVED;
 			return true;
 		}
 	}
 	else
 	{
-		if ( true == alarmAfter(mTempoMs, AlarmIndex::TETRIMINO_FALLDOWN) )
-		{
-			resetAlarm( AlarmIndex::TETRIMINO_FALLDOWN );
-			hasCollided = mCurrentTetrimino.moveDown( mStage.cgrid() );
-		}
-
 		switch ( mMoveToUpdate )
 		{
 			case ::model::tetrimino::Move::FALL_DOWN:
 				mCurrentTetrimino.fallDown( );
 				[[ fallthrough ]];
 			case ::model::tetrimino::Move::DOWN:
-				hasCollided = mCurrentTetrimino.moveDown( mStage.cgrid() );
-				mPast[(int)AlarmIndex::TETRIMINO_FALLDOWN] = Clock::now( );
+				hasCollidedOnServer = mCurrentTetrimino.moveDown( mStage.cgrid() );
+				mPast[(int)AlarmIndex::TETRIMINO_FALLDOWN] = Clock::now();
+				mUpdateResult = Playing::UpdateResult::TETRIMINO_MOVED;
 				break;
 			case ::model::tetrimino::Move::LEFT:
 				mCurrentTetrimino.tryMoveLeft( mStage.cgrid() );
+				mUpdateResult = Playing::UpdateResult::TETRIMINO_MOVED;
 				break;
 			case ::model::tetrimino::Move::RIGHT:
 				mCurrentTetrimino.tryMoveRight( mStage.cgrid() );
+				mUpdateResult = Playing::UpdateResult::TETRIMINO_MOVED;
 				break;
 			case ::model::tetrimino::Move::ROTATE:
 				mCurrentTetrimino.tryRotate( mStage.cgrid() );
+				mUpdateResult = Playing::UpdateResult::TETRIMINO_MOVED;
 				break;
 			case ::model::tetrimino::Move::NONE_MAX:
 				break;
@@ -118,11 +123,18 @@ bool Playing::update( )
 #endif
 				break;
 		}
+		if ( true == alarmAfter(mTempoMs, AlarmIndex::TETRIMINO_FALLDOWN) )
+		{
+			resetAlarm( AlarmIndex::TETRIMINO_FALLDOWN );
+			hasCollidedOnServer = mCurrentTetrimino.moveDown( mStage.cgrid() );
+			mUpdateResult = Playing::UpdateResult::TETRIMINO_MOVED;
+		}
+
 		mMoveToUpdate = ::model::tetrimino::Move::NONE_MAX;
 	}
 
 	last:
-	if ( true == hasCollided )
+	if ( true == hasCollidedOnServer )
 	{
 #ifdef _DEBUG
 		std::cout << (int)mCurrentTetrimino.type() << " landed.\n";
@@ -131,7 +143,7 @@ bool Playing::update( )
 		reloadTetrimino( );
 		mUpdateResult = Playing::UpdateResult::TETRIMINO_LANDED;
 
-		const uint8_t numOfLinesCleared = mStage.tryClearRow( );
+		const uint8_t numOfLinesCleared = mStage.tryClearRow();
 		if ( 0 != numOfLinesCleared )
 		{
 #ifdef _DEBUG
@@ -150,19 +162,27 @@ bool Playing::update( )
 #endif
 		mStage.blackout( );
 		mUpdateResult = Playing::UpdateResult::GAME_OVER;
+		mIsGameOver_ = true;
 	}
 
 	if ( Playing::UpdateResult::LINE_CLEARED == mUpdateResult ||
 		Playing::UpdateResult::TETRIMINO_LANDED == mUpdateResult )
 	{
-		mIsWaitingUntilTetriminoCollidedOnClient = true;
-		mPast[(int)AlarmIndex::ASYNC_TOLERANCE] = Clock::now();
+		if ( false == mHasTetriminoCollidedOnClient )
+		{
+			mHasTetriminoCollidedOnServer = true;
+			mPast[(int)AlarmIndex::ASYNC_TOLERANCE] = Clock::now();
+		}
+		else
+		{
+			mHasTetriminoCollidedOnClient = false;
+		}
 	}
 
 	return true;
 }
 
-Playing::UpdateResult Playing::updateResult( )
+Playing::UpdateResult Playing::updateResult( ) const
 {
 	return mUpdateResult;
 }
@@ -178,14 +198,24 @@ Playing::UpdateResult Playing::updateResult( )
 #endif
 }
 
+::model::tetrimino::Rotation Playing::currentTetriminoRotationID() const
+{
+	return mCurrentTetrimino.rotationID();
+}
+
+sf::Vector2<int8_t> Playing::currentTetriminoPosition() const
+{
+	return mCurrentTetrimino.position();
+}
+
 ::model::tetrimino::Type Playing::nextTetriminoType() const
 {
 #ifdef _DEBUG
-	const auto type = mNextTetriminoS.front().type();
+	const auto type = mNextTetriminos.front().type();
 	std::cout << "nextTet: " << (int)type << "\n";
 	return type;
 #else
-	return mNextTetriminoS.front().type();
+	return mNextTetriminos.front().type();
 #endif
 }
 
@@ -194,18 +224,18 @@ uint32_t Playing::tempoMs() const
 	return mTempoMs;
 }
 
-std::string Playing::stageOnNet( )
+std::string Playing::serializedStage( ) const
 {
-	::model::stage::Grid& grid = mStage.grid( );
+	const ::model::stage::Grid& grid = mStage.cgrid();
 	return std::string( (char*)&grid, sizeof(::model::stage::Grid) );
-}
-
-void Playing::perceive( const bool hasTetriminoCollidedInClient )
-{
-	mHasTetriminoCollidedOnClient = hasTetriminoCollidedInClient;
 }
 
 uint8_t Playing::numOfLinesCleared() const
 {
 	return mNumOfLinesCleared;
+}
+
+bool Playing::isGameOver() const
+{
+	return mIsGameOver_;
 }

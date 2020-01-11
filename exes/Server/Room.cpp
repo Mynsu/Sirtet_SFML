@@ -2,6 +2,9 @@
 #include "Room.h"
 #include "Client.h"
 
+const uint32_t UPDATE_USER_LIST_INTERVAL_MS = 1000;
+const uint32_t COUNTDOWN_MS = 3000;
+
 Room::Room( )
 	: mHostIndex( -1 ), mState( State::WAITING )
 {
@@ -10,7 +13,8 @@ Room::Room( )
 Room::Room( const ClientIndex hostIndex )
 	: mHostIndex( hostIndex ), mState( State::WAITING )
 {
-	mGuestS.emplace( hostIndex, Playing() );
+	mParticipants.reserve( PARTICIPANT_CAPACITY );
+	mCandidateParticipants.emplace_back( hostIndex );
 	const Clock::time_point init = Clock::now();
 	for ( auto& it : mAlarms )
 	{
@@ -23,36 +27,55 @@ void Room::start( )
 	mState = State::STARTED;
 }
 
-bool Room::leave( const ClientIndex index )
+int Room::leave( const ClientIndex index )
 {
-	bool retVal = true;
-	auto it = mCandidateGuestS.cbegin();
-	for ( ; mCandidateGuestS.cend() != it; ++it )
+	bool isThereSomeoneRemains = true;
+	bool wasCandidateParticipant = false;
+	for ( auto it = mCandidateParticipants.begin(); mCandidateParticipants.end() != it; ++it )
 	{
 		if ( index == *it )
 		{
-			mCandidateGuestS.erase( it );
+			mCandidateParticipants.erase( it );
+			wasCandidateParticipant = true;
 			break;
 		}
 	}
-	if ( mCandidateGuestS.cend() == it )
+	if ( false == wasCandidateParticipant )
 	{
-		mGuestS.erase( index );
-		if ( true == mGuestS.empty() )
+#ifdef _DEBUG
+		if ( 1 != mParticipants.erase(index) )
 		{
-			retVal = false;
+			__debugbreak( );
 		}
-		else if ( index == mHostIndex )
+#else
+		mParticipants.erase( index );
+#endif
+	}
+
+	if ( const uint8_t pop = (uint8_t)(mCandidateParticipants.size()+mParticipants.size());
+		0 == pop )
+	{
+		isThereSomeoneRemains = false;
+	}
+	else if ( index == mHostIndex )
+	{
+		if ( true == wasCandidateParticipant )
 		{
-			mHostIndex = mGuestS.cbegin( )->first;
+			const auto it = mCandidateParticipants.cbegin();
+			mHostIndex = *it;
+		}
+		else
+		{
+			const auto it = mParticipants.cbegin();
+			mHostIndex = it->first;
 		}
 	}
-	return retVal;
+	return (true==isThereSomeoneRemains)? 1: 0;
 }
 
 void Room::perceive( const ClientIndex index, const ::model::tetrimino::Move move )
 {
-	if ( auto it = mGuestS.find(index); mGuestS.end() != it )
+	if ( auto it = mParticipants.find(index); mParticipants.end() != it )
 	{
 		it->second.perceive( move );
 	}
@@ -65,7 +88,7 @@ void Room::perceive( const ClientIndex index, const ::model::tetrimino::Move mov
 
 void Room::perceive( const ClientIndex index, const bool hasTetriminoCollidedInClient )
 {
-	if ( auto it = mGuestS.find(index); mGuestS.end() != it )
+	if ( auto it = mParticipants.find(index); mParticipants.end() != it )
 	{
 		it->second.perceive( );
 	}
@@ -76,204 +99,317 @@ void Room::perceive( const ClientIndex index, const bool hasTetriminoCollidedInC
 	}
 }
 
-std::forward_list<ClientIndex> Room::update( )
+std::vector<ClientIndex> Room::update( std::vector<Client>& clients )
 {
-	std::forward_list<ClientIndex> retVal;
-	if ( false == mCandidateGuestS.empty() )
-	{
-		for ( const auto it : mCandidateGuestS )
-		{
-			mGuestS.emplace( it, Playing() );
-		}
-		mCandidateGuestS.clear( );
-	}
-
-	if ( Room::State::PLAYING == mState )
-	{
-		for ( auto& it : mGuestS )
-		{
-			// Exception
-			if ( false == it.second.update() )
-			{
-				retVal.emplace_front( it.first );
-				std::cerr << "FAIL: Client " << it.first << "'s time out.\n";
-			}
-		}
-	}
-	return retVal;
-}
-
-std::forward_list<ClientIndex> Room::notify( std::vector<Client>& clientS )
-{
-	std::forward_list<ClientIndex> retVal;
+	std::vector<ClientIndex> failedIndices;
 	switch ( mState )
 	{
 		case Room::State::WAITING:
-			if ( true == alarmAfter(1000, AlarmIndex::UPDATE_USER_LIST) )
+			break;
+		case Room::State::STARTED:
+			for ( const ClientIndex idx : mCandidateParticipants )
 			{
-				std::string userList;
-				userList.reserve( mGuestS.size()*10 );
-				for ( auto& it : mGuestS )
+				mParticipants.emplace( idx, Playing() );
+				clients[idx].setState( Client::State::PLAYING_IN_ROOM );
+			}
+			mCandidateParticipants.clear( );
+			break;
+		case Room::State::READY:
+			break;
+		case Room::State::PLAYING:
+		{
+			for ( auto& pair : mParticipants )
+			{
+				if ( false == pair.second.update() )
 				{
-					const std::string& nickname = clientS[it.first].nickname();
-					const uint32_t nicknameLen = ::htonl((u_long)nickname.size());
-					userList.append( (char*)&nicknameLen, sizeof(uint32_t) );
-					userList += nickname;
-				}
-				Packet packet;
-				packet.pack( TAGGED_NOTI_UPDATE_USER_LIST, userList	);
-				for ( auto& it : mGuestS )
-				{
-					Socket& socket = clientS[it.first].socket();
-					if ( -1 == socket.sendOverlapped(packet) )
-					{
-						// Exception
-						std::cerr << "Failed to notify Client " << it.first <<
-							" the updated user list.\n";
-						retVal.emplace_front(it.first);
-					}
+					// Exception
+					std::cerr << "FAIL: Client " << pair.first << "'s time out.\n";
+					failedIndices.emplace_back( pair.first );
 				}
 			}
 			break;
-		case Room::State::STARTED:
-			for ( auto& it : mGuestS )
+		}
+		case Room::State::ALL_OVER:
+			for ( auto& pair : mParticipants )
 			{
-				const ClientIndex guestIdx = it.first;
-				Socket& guestSocket = clientS[guestIdx].socket();
-				std::string response( TAGGED_REQ_GET_READY );
-				if ( -1 == guestSocket.sendOverlapped(response.data(), response.size()) )
+				mCandidateParticipants.emplace_back( pair.first );
+				clients[pair.first].setState( Client::State::WAITING_IN_ROOM );
+			}
+			mParticipants.clear( );
+			break;
+		default:
+#ifdef _DEBUG
+			__debugbreak( );
+#else
+			__assume( 0 );
+#endif
+	}
+	return failedIndices;
+}
+
+std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
+{
+	std::vector<ClientIndex> failedIndices;
+	std::vector<ClientIndex> everyoneInRoom;
+	for ( const ClientIndex idx : mCandidateParticipants )
+	{
+		everyoneInRoom.emplace_back( idx );
+	}
+	for ( const auto& pair : mParticipants )
+	{
+		everyoneInRoom.emplace_back( pair.first );
+	}
+	bool isAllOver = true;
+	switch ( mState )
+	{
+		case Room::State::WAITING:
+			break;
+		case Room::State::STARTED:
+		{
+			Packet packet;
+			const uint8_t ignored = 1;
+			packet.pack( TAGGED_REQ_GET_READY, ignored );
+			for ( auto& pair : mParticipants )
+			{
+				Socket& socket = clients[pair.first].socket();
+				if ( -1 == socket.sendOverlapped(packet) )
 				{
-					// Exception
-					std::cerr << "Failed to notify Client " << guestIdx
-						<< " that the game get started.\n";
-					retVal.emplace_front( guestIdx );
+					std::cerr << "WARNING: Failed to tell that the game gets started to Client " <<
+						pair.first << ".\n";
+					failedIndices.emplace_back( pair.first );
 				}
-				guestSocket.pend( );
-				it.second.spawnTetrimino( );
+				pair.second.spawnTetrimino( );
 			}
 			mAlarms[(int)AlarmIndex::START] = Clock::now( );
 			mState = Room::State::READY;
 			break;
+		}
 		case Room::State::READY:
-			if ( true == alarmAfter(3000, AlarmIndex::START) )
+			if ( true == alarmAfter(COUNTDOWN_MS, AlarmIndex::START) )
 			{
-#ifdef _DEBUG
-				std::cout << "Room hosted by " << mHostIndex << " gets started now.\n";
-#endif
-				for ( auto& it : mGuestS )
+				std::string tetriminos;
+				for ( const auto& pair : mParticipants )
 				{
-					const ClientIndex guestIdx = it.first;
-					Socket& guestSocket = clientS[ guestIdx ].socket( );
-					Playing& guestPlay = it.second;
+					const Playing& playing = pair.second;
+					const ::model::tetrimino::Type curTetType = playing.currentTetriminoType();
+					const ::model::tetrimino::Type nextTetType = playing.nextTetriminoType();
+					const uint32_t tempoMs = playing.tempoMs();
 					Packet packet;
-					const ::model::tetrimino::Type curTetType = guestPlay.currentTetriminoType();
-					packet.pack( TAG_MY_CURRENT_TETRIMINO, (uint32_t)curTetType );
-					const ::model::tetrimino::Type nextTetType = guestPlay.nextTetriminoType();
-					packet.pack( TAG_MY_NEXT_TETRIMINO, (uint32_t)nextTetType );
-					const uint32_t tempoMs = guestPlay.tempoMs();
+					packet.pack( TAG_MY_NEW_CURRENT_TETRIMINO, (uint8_t)curTetType );
+					packet.pack( TAG_MY_NEXT_TETRIMINO, (uint8_t)nextTetType );
 					packet.pack( TAG_MY_TEMPO_MS, tempoMs );
-					if ( -1 == guestSocket.sendOverlapped(packet) )
+					Socket& socket = clients[pair.first].socket();
+					if ( -1 == socket.sendOverlapped(packet) )
 					{
-						// Exception
-						std::cerr << "Failed to send the current tetrimino to Client "
-							<< guestIdx << ".\n";
-						retVal.emplace_front( guestIdx );
-						continue;
+						std::cerr << "WARNING: Failed to send to Client " << pair.first << ".\n";
+						failedIndices.emplace_back( pair.first );
 					}
-					guestSocket.pend( );
+					const HashedKey nicknameHashed = ::htonl(clients[pair.first].nicknameHashed());
+					tetriminos.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
+					tetriminos += (char)curTetType;
+				}
+				Packet packet;
+				packet.pack( TAG_NEW_CURRENT_TETRIMINOS, tetriminos );
+				for ( const ClientIndex idx : everyoneInRoom )
+				{
+					Socket& socket = clients[idx].socket();
+					if ( -1 == socket.sendOverlapped(packet) )
+					{
+						std::cerr << "WARNING: Failed to send new tetriminos to Client " <<
+							idx << ".\n";
+						failedIndices.emplace_back( idx );
+					}
 				}
 				mState = Room::State::PLAYING;
 			}
 			break;
 		case Room::State::PLAYING:
-			for ( auto& it : mGuestS )
+		{
+			std::string currentTetriminosMove;
+			std::string newCurrentTetriminos;
+			std::string stages;
+			std::string numsOfLinesCleared;
+			std::string gamesOver;
+			for ( const auto& pair : mParticipants )
 			{
-				const ClientIndex guestIdx = it.first;
-				Socket& guestSocket = clientS[ guestIdx ].socket( );
-				const Playing::UpdateResult res = it.second.updateResult( );
-				switch ( res )
+				if ( true == isAllOver && false == pair.second.isGameOver() )
 				{
+					isAllOver = false;
+				}
+				const Playing::UpdateResult result = pair.second.updateResult();
+				switch ( result )
+				{
+					case Playing::UpdateResult::NONE:
+						break;
+					case Playing::UpdateResult::TETRIMINO_MOVED:
+					{
+						const HashedKey nicknameHashed = ::htonl(clients[pair.first].nicknameHashed());
+						const Playing& playing = pair.second;
+						const ::model::tetrimino::Rotation rotID = playing.currentTetriminoRotationID();
+						const sf::Vector2<int8_t> pos( playing.currentTetriminoPosition() );
+						currentTetriminosMove.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
+						currentTetriminosMove += (char)rotID;
+						currentTetriminosMove.append( (char*)&pos, sizeof(pos) );
+						break;
+					}
 					case Playing::UpdateResult::TETRIMINO_LANDED:
 					{
+						const Playing& playing = pair.second;
+						const ::model::tetrimino::Type nextTetType = playing.nextTetriminoType();
+						std::string serializedStage( playing.serializedStage() );
 						Packet packet;
-						Playing& guestPlay = it.second;
-						const ::model::tetrimino::Type nextTetType = guestPlay.nextTetriminoType();
-						packet.pack( TAG_MY_NEXT_TETRIMINO, (uint32_t)nextTetType );
-						std::string stageOnNet( guestPlay.stageOnNet() );
-						packet.pack( TAG_MY_STAGE, stageOnNet );
-						if ( -1 == guestSocket.sendOverlapped(packet) )
+						packet.pack( TAG_MY_NEXT_TETRIMINO, (uint8_t)nextTetType );
+						packet.pack( TAG_MY_STAGE, serializedStage, false );
+						Socket& socket = clients[pair.first].socket();
+						if ( -1 == socket.sendOverlapped(packet) )
 						{
-							// Exception
-							std::cerr << "Failed to send the current info to Client "
-								<< guestIdx << ".\n";
-							retVal.emplace_front( guestIdx );
-							continue;
+							std::cerr << "WARNING: Failed to send to Client " << pair.first << ".\n";
+							failedIndices.emplace_back( pair.first );
 						}
-						guestSocket.pend( );
+						const HashedKey nicknameHashed = ::htonl(clients[pair.first].nicknameHashed());
+						const ::model::tetrimino::Type curTetType = playing.currentTetriminoType();
+						newCurrentTetriminos.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
+						newCurrentTetriminos += (char)curTetType;
+						stages.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
+						stages.append( serializedStage.data(), serializedStage.size() );
 						break;
 					}
 					case Playing::UpdateResult::LINE_CLEARED:
 					{
+						const Playing& playing = pair.second;
+						const ::model::tetrimino::Type nextTetType = playing.nextTetriminoType();
+						std::string serializedStage( playing.serializedStage() );
+						uint32_t tempoMs = playing.tempoMs();
+						const uint8_t numOfLinesCleared = playing.numOfLinesCleared();
 						Packet packet;
-						Playing& guestPlay = it.second;
-						const ::model::tetrimino::Type nextTetType = guestPlay.nextTetriminoType();
-						packet.pack( TAG_MY_NEXT_TETRIMINO, (uint32_t)nextTetType );
-						std::string stageOnNet( guestPlay.stageOnNet() );
-						packet.pack( TAG_MY_STAGE, stageOnNet );
-						const uint32_t tempoMs = guestPlay.tempoMs();
+						packet.pack( TAG_MY_NEXT_TETRIMINO, (uint8_t)nextTetType );
+						packet.pack( TAG_MY_STAGE, serializedStage, false );
 						packet.pack( TAG_MY_TEMPO_MS, tempoMs );
-						const uint8_t numOfLinesCleared = guestPlay.numOfLinesCleared();
-						packet.pack( TAG_MY_LINES_CLEARED, numOfLinesCleared );
-						if ( -1 == guestSocket.sendOverlapped(packet) )
+						packet.pack( TAG_MY_NUM_OF_LINES_CLEARED, numOfLinesCleared );
+						Socket& socket = clients[pair.first].socket();
+						if ( -1 == socket.sendOverlapped(packet) )
 						{
-							// Exception
-							std::cerr << "Failed to send the current info to Client "
-								<< guestIdx << ".\n";
-							retVal.emplace_front( guestIdx );
-							continue;
+							std::cerr << "WARNING: Failed to send to Client " << pair.first << ".\n";
+							failedIndices.emplace_back( pair.first );
 						}
-						guestSocket.pend( );
+						const HashedKey nicknameHashed = ::htonl(clients[pair.first].nicknameHashed());
+						const ::model::tetrimino::Type curTetType = playing.currentTetriminoType();
+						newCurrentTetriminos.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
+						newCurrentTetriminos += (char)curTetType;
+						stages.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
+						stages.append( serializedStage.data(), serializedStage.size() );
+						numsOfLinesCleared.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
+						numsOfLinesCleared += (char)numOfLinesCleared;
 						break;
 					}
 					case Playing::UpdateResult::GAME_OVER:
 					{
+						const Playing& playing = pair.second;
+						std::string serializedStage( playing.serializedStage() );
 						Packet packet;
-						Playing& guestPlay = it.second;
-						std::string stageOnNet( guestPlay.stageOnNet() );
-						packet.pack( TAG_MY_STAGE, stageOnNet );
+						packet.pack( TAG_MY_STAGE, serializedStage, false );
 						const uint8_t ignored = 1;
 						packet.pack( TAG_MY_GAME_OVER, ignored );
-						if ( -1 == guestSocket.sendOverlapped(packet) )
+						Socket& socket = clients[pair.first].socket();
+						if ( -1 == socket.sendOverlapped(packet) )
 						{
-							// Exception
-							std::cerr << "Failed to send the current info to Client "
-								<< guestIdx << ".\n";
-							retVal.emplace_front( guestIdx );
-							continue;
+							std::cerr << "WARNING: Failed to send to Client " << pair.first << ".\n";
+							failedIndices.emplace_back( pair.first );
 						}
-						guestSocket.pend( );
+						const HashedKey nicknameHashed = ::htonl(clients[pair.first].nicknameHashed());
+						stages.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
+						stages.append( serializedStage.data(), serializedStage.size() );
+						gamesOver.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
 						break;
 					}
 					default:
-						if ( false == guestSocket.isPending() )
-						{
-							if ( -1 == guestSocket.receiveOverlapped() )
-							{
-								// Exception
-								std::cerr << "Failed to pend reception from Client "
-									<< guestIdx << std::endl;
-								retVal.emplace_front( guestIdx );
-							}
-							guestSocket.pend( );
-						}
+#ifdef _DEBUG
+						__debugbreak( );
+#else
+						__assume( 0 );
+#endif
 						break;
 				}
 			}
+			Packet packet;
+			if ( false == currentTetriminosMove.empty() )
+			{
+				packet.pack( TAG_CURRENT_TETRIMINOS_MOVE, currentTetriminosMove );
+			}
+			if ( false == newCurrentTetriminos.empty() )
+			{
+				packet.pack( TAG_NEW_CURRENT_TETRIMINOS, newCurrentTetriminos );
+			}
+			if ( false == stages.empty() )
+			{
+				packet.pack( TAG_STAGES, stages );
+			}
+			if ( false == numsOfLinesCleared.empty() )
+			{
+				packet.pack( TAG_NUMS_OF_LINES_CLEARED, numsOfLinesCleared );
+			}
+			if ( false == gamesOver.empty() )
+			{
+				packet.pack( TAG_GAMES_OVER, gamesOver );
+			}
+			if ( true == isAllOver )
+			{
+				const uint8_t ignored = 1;
+				packet.pack( TAG_ALL_OVER, ignored );
+				mState = Room::State::ALL_OVER;
+			}
+			if ( true == packet.hasData() )
+			{
+				for ( const ClientIndex idx : everyoneInRoom )
+				{
+					Socket& socket = clients[idx].socket();
+					if ( -1 == socket.sendOverlapped(packet) )
+					{
+						std::cerr << "WARNING: Failed to send to Client " << idx << ".\n";
+						failedIndices.emplace_back( idx );
+					}
+				}
+			}
+			break;
+		}
+		case Room::State::ALL_OVER:
+			mState = Room::State::WAITING;
 			break;
 		default:
+#ifdef _DEBUG
+			__debugbreak( );
+#else
+			__assume( 0 );
+#endif
 			break;
 	}
-	return retVal;
+	if ( true == alarmAfter(UPDATE_USER_LIST_INTERVAL_MS, AlarmIndex::UPDATE_USER_LIST) ||
+		true == isAllOver )
+	{
+		std::string userList;
+		userList.reserve( PARTICIPANT_CAPACITY*10 );
+		for ( const ClientIndex idx : everyoneInRoom )
+		{
+			const std::string& nickname = clients[idx].nickname();
+			const uint8_t nicknameLen = (uint8_t)nickname.size();
+			userList += (char)nicknameLen;
+			userList += nickname;
+		}
+		Packet packet;
+		packet.pack( TAGGED_NOTI_UPDATE_USER_LIST, userList );
+		for ( const ClientIndex idx : everyoneInRoom )
+		{
+			Socket& socket = clients[idx].socket();
+			if ( -1 == socket.sendOverlapped(packet) )
+			{
+				std::cerr << "WARNING: Failed to send the list of users in the room to Client " <<
+					idx << ".\n";
+				failedIndices.emplace_back( idx );
+		}
+	}
+	}
+
+	return failedIndices;
 }
 
 ClientIndex Room::hostIndex( ) const
@@ -281,16 +417,17 @@ ClientIndex Room::hostIndex( ) const
 	return mHostIndex;
 }
 
-bool Room:: tryAccept( const ClientIndex index )
+bool Room::tryAccept( const ClientIndex index )
 {
-	const uint8_t pop = (uint8_t)(mGuestS.size() + mCandidateGuestS.size());
+	bool isFull = false;
+	const uint8_t pop = (uint8_t)(mCandidateParticipants.size() + mParticipants.size());
 	if ( PARTICIPANT_CAPACITY == pop )
 	{
-		return false;
+		isFull = true;
 	}
 	else
 	{
-		mCandidateGuestS.emplace_back( index );
-		return true;
+		mCandidateParticipants.emplace_back( index );
 	}
+	return isFull;
 }

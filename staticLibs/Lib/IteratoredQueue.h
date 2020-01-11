@@ -19,43 +19,40 @@ namespace container
 
 		inline void reserve( const uint32_t max )
 		{
-			mFlags.reserve( max );
+			mForRandomAccess.reserve( max );
 		}
 		inline void emplace_back( T&& value, const size_t index )
 		{
-			mBody.emplace_back( std::make_pair(std::forward(value), index) );
-			mFlags.emplace( index );
+			mQueue.emplace_back( std::make_pair(std::forward(value), index) );
+			mForRandomAccess.emplace( index );
 		}
 		inline T& front( )
 		{
-			return mBody.front( );
+			return mQueue.front( );
 		}
 		inline void pop_front( )
 		{
-			mFlags.erase( mBody.front( ).second );
-			mBody.pop_front( );
+			mForRandomAccess.erase( mQueue.front( ).second );
+			mQueue.pop_front( );
 		}
-		// Returns -1 when containing 2 or more, otherwise return 0 or 1.
-		inline int8_t contains( const size_t index )
+		inline bool contains( const size_t index ) const
 		{
-			size_t cnt = mFlags.count( index );
+			const size_t cnt = mForRandomAccess.count( index );
+#ifdef _DEBUG
 			if ( 1 < cnt )
 			{
-				return -1;
+				__debugbreak( );
 			}
-			else
-			{
-				return static_cast< int8_t >( cnt );
-			}
+#endif
+			return (1==cnt)? true: false;
 		}
 		inline uint32_t size( ) const
 		{
-			return static_cast< uint32_t >( mBody.size( ) );
+			return (uint32_t)mQueue.size();
 		}
 	private:
-		std::list< std::pair<T,size_t> > mBody;
-		// 4 bytes for x86, 8 bytes for x64.
-		std::unordered_set< size_t > mFlags;
+		std::list< std::pair<T,size_t> > mQueue;
+		std::unordered_set< size_t > mForRandomAccess;
 	};
 
 	// Iterator and random access is available.
@@ -70,42 +67,39 @@ namespace container
 
 		inline void reserve( const uint32_t max )
 		{
-			mFlags.reserve( max );
+			mForRandomAccess.reserve( max );
 		}
 		inline void emplace_back( const uint32_t value )
 		{
-			mBody.emplace_back( value );
-			mFlags.emplace( value );
+			mQueue.emplace_back( value );
+			mForRandomAccess.emplace( value );
 		}
 		inline uint32_t front( )
 		{
-			return mBody.front( );
+			return mQueue.front( );
 		}
 		inline void pop_front( )
 		{
-			mFlags.erase( mBody.front() );
-			mBody.pop_front( );
+			mForRandomAccess.erase( mQueue.front() );
+			mQueue.pop_front( );
 		}
-		// Returns -1 when containing 2 or more, otherwise return 0 or 1.
-		inline int8_t contains( const size_t index )
+		inline bool contains( const uint32_t index ) const
 		{
-			size_t cnt = mFlags.count( index );
+			const size_t cnt = mForRandomAccess.count( index );
+#ifdef _DEBUG
 			if ( 1 < cnt )
 			{
-				return -1;
+				__debugbreak( );
 			}
-			else
-			{
-				return static_cast< int8_t >( cnt );
-			}
+#endif
+			return (1==cnt)? true: false;
 		}
 		inline uint32_t size( ) const
 		{
-			return static_cast< uint32_t >( mBody.size( ) );
+			return (uint32_t)mQueue.size();
 		}
 	private:
-		std::list< uint32_t > mBody;
-		// NOTE: 4 bytes for x86, 8 bytes for x64.
-		std::unordered_set< size_t > mFlags;
+		std::list< uint32_t > mQueue;
+		std::unordered_set< uint32_t > mForRandomAccess;
 	};
 }

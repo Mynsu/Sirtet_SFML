@@ -3,6 +3,7 @@
 #pragma comment (lib, "Ws2_32")
 #include <MSWSock.h>
 #pragma comment (lib, "mswsock")
+#include <forward_list>
 #include <string>
 #include <stdint.h>
 #include "EndPoint.h"
@@ -11,176 +12,91 @@
 
 using SOCKET_HANDLE = SOCKET;
 
+enum class IOType
+{
+	NONE,
+	RECEIVE,
+	SEND,
+	ACCEPT,
+	CONNECT,
+	DISCONNECT,
+};
+
+struct Work
+{
+public:
+	Work( ) = delete;
+	Work( const IOType ioType );
+	~Work( ) = default;
+	void reset( );
+	IOType ioType;
+	WSAOVERLAPPED overlapped;
+};
+
 class Socket
 {
 public:
 	enum class Type
 	{
-		TCP_LISTENER,
 		TCP,
 		UDP,
 	};
 
-	enum class CompletedWork
-	{
-		RECEIVE,
-		SEND,
-		DISCONNECT,
-		NONE,
-	};
-
 	static const uint32_t RCV_BUF_SIZ = 8192;
+	static const uint32_t BACKLOG_SIZ = 5000;
 
 	Socket( ) = delete;
 	// !IMPORTANT: When replacing an old socket by new one,
 	// after having failed disconnecting successfully,
 	// you should set the 2nd argument 'work' to Socket::CompletedWork::DISCONNECT.
 	// Otherwise, the new socket with the old but same index would act like the old socket did.
-	Socket( const ::Socket::Type type,
-		   const Socket::CompletedWork work = Socket::CompletedWork::NONE );
+	Socket( const ::Socket::Type type );
 	~Socket( );
-	int bind( const EndPoint& endpoint );
+	int bind( const EndPoint& selfEndPoint );
 	void listen( )
 	{
-		::listen( mhSocket, 5000 );
+		::listen( mhSocket, BACKLOG_SIZ );
 	}
-	int acceptOverlapped( Socket& candidateClientSocket )
-	{
-		if ( nullptr == AcceptEx )
-		{
-			DWORD bytes;
-			WSAIoctl( mhSocket, SIO_GET_EXTENSION_FUNCTION_POINTER,
-					  &UUID(WSAID_ACCEPTEX), sizeof(UUID),
-					  &AcceptEx, sizeof(AcceptEx),
-					  &bytes,
-					  NULL, NULL );
-			if ( nullptr == AcceptEx )
-			{
-				return -1;
-			}
-		}
-		char ignored[ 120 ];
-		DWORD ignored2 = 0;
-		if ( TRUE == AcceptEx( mhSocket, candidateClientSocket.mhSocket,
-								&ignored, 0, 50, 50, &ignored2,
-								&mOverlappedStruct) )
-		{
-			return 1;
-		}
-		else
-		{
-			return 0;
-		}
-	}
-	int updateAcceptContext( Socket& listener )
-	{
-		SOCKADDR_IN ignore1, ignore3;
-		INT ignore2, ignore4;
-		char ignore[ 120 ];
-		GetAcceptExSockaddrs( ignore, 0, 50, 50, (SOCKADDR**)&ignore1, &ignore2,
-			(SOCKADDR**)&ignore3, &ignore4 );
-		return setsockopt( mhSocket, SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT,
-			(char*)&listener.mhSocket, sizeof( listener.mhSocket ) );
-	}
-	int connect( const EndPoint& endpoint );
-	int disconnectOverlapped( )
-	{
-		if ( nullptr == DisconnectEx )
-		{
-			DWORD ignored;
-			WSAIoctl( mhSocket, SIO_GET_EXTENSION_FUNCTION_POINTER,
-					  &UUID( WSAID_DISCONNECTEX ), (DWORD)sizeof(UUID),
-					  &DisconnectEx, (DWORD)sizeof(DisconnectEx),
-					  &ignored, NULL, NULL );
-			if ( nullptr == DisconnectEx )
-			{
-				return -1;
-			}
-		}
-		mCompletedWork = CompletedWork::DISCONNECT;
-		return DisconnectEx( mhSocket, &mOverlappedStruct, TF_REUSE_SOCKET, 0 );
-	}
-	int receiveOverlapped( )
-	{
-		WSABUF b;
-		b.len = RCV_BUF_SIZ;
-		b.buf = mRcvBuffer;
-		DWORD flag = 0;
-		mCompletedWork = CompletedWork::RECEIVE;
-		const int res = WSARecv( mhSocket, &b, 1, NULL, &flag, &mOverlappedStruct, NULL );
-		const int err = WSAGetLastError();
-		return (-1==res&&ERROR_IO_PENDING==err)? -2: res;
-	}
-	int receiveBlock( );
-	int sendOverlapped( char* const data, const size_t size )
-	{
-		WSABUF b;
-		int res = -2;
-		b.buf = data;
-		b.len = (ULONG)size;
-		res = ::WSASend( mhSocket, &b, 1, NULL, 0, &mOverlappedStruct, NULL );
-		mCompletedWork = CompletedWork::SEND;
-		const int err = WSAGetLastError();
-		return (-1==res && ERROR_IO_PENDING==err)? -2: res;
-	}
-	int sendOverlapped( Packet& packet )
-	{
-		WSABUF b;
-		std::string& data = packet.data();
-		b.buf = data.data();
-		b.len = (ULONG)data.size();
-		int res = ::WSASend( mhSocket, &b, 1, NULL, 0, &mOverlappedStruct, NULL );
-		mCompletedWork = CompletedWork::SEND;
-		const int err = WSAGetLastError();
-		return (-1==res && ERROR_IO_PENDING==err)? -2: res;
-	}
-
+	int acceptOverlapped( Socket& candidateClientSocket );
+	int updateAcceptContext( Socket& listener );
+	int connect( const EndPoint& targetEndPoint );
+	int disconnectOverlapped( );
+	int receiveOverlapped( );
+	int receiveBlocking( );
+	int sendOverlapped( char* const data, const size_t size );
+	int sendOverlapped( Packet& packet );
 	void close( )
 	{
 		closesocket( mhSocket );
 	}
 	bool isPending( ) const
 	{
-		return mIsPending;
-	}
-//TODO
-	bool hasTicket( ) const
-	{
-		return mHasTicket;
-	}
-	CompletedWork completedWork( ) const
-	{
-		return mCompletedWork;
+		return (0 < mNumOfWorks_)? true: false;
 	}
 	SOCKET_HANDLE handle( ) const
 	{
 		return mhSocket;
 	}
+	// Returns which IO has been completed, makes the work reusable and releases reception lock.
+	IOType completedIO( const LPOVERLAPPED lpOverlapped );
 	char* const receivingBuffer( )
 	{
-		return mRcvBuffer;
-	}
-	// Set true while the socket gets ready or waiting for an event, I/O completion.
-	// Set false when you touch.
-	void pend( const bool isPending = true )
-	{
-		mIsPending = isPending;
-	}
-//TODO
-	void earnTicket( bool b = true )
-	{
-		mHasTicket = b;
+		return mReceivingBuffer;
 	}
 private:
-	bool mIsPending, mHasTicket;
-	CompletedWork mCompletedWork;
+	LPOVERLAPPED makeWork( const IOType ioType );
+	bool mIsReceiving_;
+	uint8_t mNumOfWorks_;
 	SOCKET_HANDLE mhSocket;
 	LPFN_ACCEPTEX AcceptEx;
 	LPFN_DISCONNECTEX DisconnectEx;
-	WSAOVERLAPPED mOverlappedStruct;
-	char mRcvBuffer[ RCV_BUF_SIZ ];
+	//궁금: heap보다 stack?
+	std::forward_list<Work> mWorks;
+	// 궁금: 수신을 쭉 걸어두기 위해서 수신버퍼를 Work에 둬야 하나?
+	char mReceivingBuffer[ RCV_BUF_SIZ ];
 };
 
 // Used as a salt in encrpyting the genuine client's version.
 // Recommended to be renewed periodically for security.
-const int ADDITIVE = 1246;
+#define VERSION 200106
+#define SALT 124816

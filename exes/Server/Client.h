@@ -19,18 +19,19 @@ public:
 	void operator=( const Client& ) = delete;
 	~Client( ) = default;
 
-	bool complete( std::vector<Client>& clientS,
-				  std::vector<ClientIndex>& lobby,
-				  std::unordered_map<HashedKey, Room>& roomS );
+	std::vector<ClientIndex> work( const IOType completedIOType,
+								std::vector<Client>& clientS,
+								std::vector<ClientIndex>& lobby,
+								std::unordered_map<HashedKey, Room>& roomS );
 	Client::State state( ) const;
 	void setState( const Client::State state );
 	void holdTicket( const Ticket ticket );
 	RoomID roomID( ) const;
 	void setRoomID( const RoomID roomID );
 	const std::string& nickname( ) const;
+	HashedKey nicknameHashed() const;
 	void setNickname( std::string& nickname );
 	Socket& socket( );
-	void setSocket( const Socket::Type type, const Socket::CompletedWork completedWork );
 	void reset( );
 private:
 	const ClientIndex mIndex;
@@ -38,7 +39,7 @@ private:
 	//궁금: 필요 있으려나?
 	Ticket mTicket;
 	RoomID mRoomID;
-	Request mRecentRequest;
+	HashedKey mNicknameHashed_;
 	std::string mNickname;
 	Socket mSocket;
 };

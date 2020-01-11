@@ -17,7 +17,7 @@ namespace util::script
 	// This throws std::runtime_error when failing to open the script file.
 	template < typename Value=std::variant<bool,int,float,std::string>, typename Cstr, typename... Cstrs,
 		std::enable_if_t<std::is_same_v<std::decay_t<Cstr>,const char*>>* = nullptr >
-		static const std::unordered_map< Cstr, Value > LoadFromScript( Cstr scriptPathNName, Cstrs... variables )//TODO: 패키지에 모은 후 암호화
+		static const std::unordered_map< Cstr, Value > LoadFromScript( Cstr scriptPathNName, Cstrs... variables )
 	{
 		lua_State* lua = luaL_newstate( );
 		// Exception handling

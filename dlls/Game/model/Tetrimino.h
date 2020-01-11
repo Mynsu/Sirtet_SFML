@@ -82,6 +82,11 @@ namespace model
 		// Rotates counter-clockwise.
 		void tryRotate( const ::model::stage::Grid& grid );
 		void land( ::model::stage::Grid& grid );
+		inline void move( const ::model::tetrimino::Rotation rotationID, const sf::Vector2<int8_t> position )
+		{
+			mRotationID = rotationID;
+			mPosition = position;
+		}
 		inline void setOrigin( const sf::Vector2f& origin )
 		{
 			mOrigin_ = origin;

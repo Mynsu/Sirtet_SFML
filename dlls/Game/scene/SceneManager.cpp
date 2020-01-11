@@ -74,6 +74,7 @@ void ::scene::SceneManager::setScene( const ::scene::ID nextScene )
 			mCurrentScene = std::make_unique< ::scene::MainMenu >( *mWindow );
 			break;
 		case ::scene::ID::SINGLE_PLAY:
+			//TODO: inPlay를 localPlay로 개명.
 			mCurrentScene = std::make_unique< ::scene::inPlay::InPlay >( *mWindow );
 			break;
 //TODO:싱글 플레이 하위 씬들도 여기에 추가.

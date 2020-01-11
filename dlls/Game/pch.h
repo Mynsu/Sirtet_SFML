@@ -25,6 +25,8 @@
 #include <Lib/Packet.h>
 #include <Lib/math/Vector.h>
 
+using Clock = std::chrono::high_resolution_clock;
+
 // !IMPORTANT: On delivery, make sure that this macro is canceled, or undefined for the security.
 #define _DEV
 

@@ -1,2 +1,2 @@
 BackgroundColor = 0x29cdb5ba --CYAN
-CountdownSprite = { path = "Images/Ready.png", width = 256, height = 256 }
+CountdownSprite = { path = "Images/Countdown.png", clipWidth = 256, clipHeight = 256 }

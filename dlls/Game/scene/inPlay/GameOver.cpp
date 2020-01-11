@@ -18,7 +18,7 @@ scene::inPlay::GameOver::GameOver( sf::RenderWindow& window, sf::Drawable& shape
 
 void scene::inPlay::GameOver::loadResources( )
 {
-	sf::Vector2f size( 512.f, 256.f );
+	sf::Vector2f imageSize( 512.f, 256.f );
 	bool isPathDefault = true;
 	bool isWDefault = true;
 	bool isHDefault = true;
@@ -87,7 +87,7 @@ void scene::inPlay::GameOver::loadResources( )
 				// When the value looks OK,
 				else
 				{
-					size.x = temp;
+					imageSize.x = temp;
 					isWDefault = false;
 				}
 			}
@@ -116,7 +116,7 @@ void scene::inPlay::GameOver::loadResources( )
 				// When the value looks OK,
 				else
 				{
-					size.y = temp;
+					imageSize.y = temp;
 					isHDefault = false;
 				}
 			}
@@ -150,8 +150,8 @@ void scene::inPlay::GameOver::loadResources( )
 	}
 
 	mSprite.setTexture( mTexture );
-	mSprite.setTextureRect( sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(size)) );
-	mSprite.setOrigin( size*0.5f );
+	mSprite.setTextureRect( sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(imageSize)) );
+	mSprite.setOrigin( imageSize*0.5f );
 	mSprite.setPosition( sf::Vector2f(mWindow_.getSize())*0.5f );
 }
 

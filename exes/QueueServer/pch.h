@@ -15,6 +15,7 @@
 #include <iostream>
 #include <sstream>
 #include <thread>
+#include <chrono>
 #include <intrin.h>
 #include <stdint.h>
 #include <Lib/IteratoredQueue.h>
@@ -22,5 +23,7 @@
 #include <Lib/EndPoint.h>
 #include <Lib/Hash.h>
 #include <Lib/Packet.h>
+
+using Clock = std::chrono::high_resolution_clock;
 
 #endif //PCH_H

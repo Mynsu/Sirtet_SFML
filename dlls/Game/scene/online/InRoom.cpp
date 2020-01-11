@@ -9,13 +9,15 @@
 bool scene::online::InRoom::IsInstantiated = false;
 
 scene::online::InRoom::InRoom( sf::RenderWindow& window, Online& net, const bool asHost )
-	: mAsHost( asHost ), mIsReceiving( false ), mHasCanceled( false ),
-	mWindow_( window ), mNet( net )
+	: mAsHost( asHost ), mIsReceiving( false ), mHasCanceled( false ), mIsPlaying_( false ),
+	mWindow_( window ), mNet( net ),
+	mCountdownSpriteClipSize_( 256, 256 ), mCountdownSpritePathNName_( "Images/Countdown.png" ),
+	mOtherPlayerSlots{ 0 }
 {
-	const std::string& nickname = mNet.myNickname( );
 	mParticipants.reserve( ROOM_CAPACITY );
-	mMyNicknameHash_ = ::util::hash::Digest( nickname.data(), (uint8_t)nickname.size() );
-	mParticipants.emplace( mMyNicknameHash_, ::ui::PlayView(mWindow_, mNet) );
+	const std::string& nickname = mNet.myNickname( );
+	mMyNicknameHashed_ = ::util::hash::Digest( nickname.data(), (uint8_t)nickname.size() );
+	mParticipants.emplace( mMyNicknameHashed_, ::ui::PlayView(mWindow_, mNet) );
 	loadResources( );
 #ifdef _DEBUG
 	gService( )->console( ).print( "Now in a room.", sf::Color::Green );
@@ -56,8 +58,7 @@ void scene::online::InRoom::loadResources( )
 	float stagePanelOutlineThickness = 11.0;
 	uint32_t stagePanelOutlineColor = 0x3f3f3f'7f;
 	uint32_t stageCellOutlineColor = 0x000000'7f;
-	sf::Vector2i countdownSpriteSize( 256, 256 );
-	sf::Vector2i vfxComboSize( 256, 256 );
+	sf::Vector2i vfxComboClipSize( 256, 256 );
 	sf::Vector2f nextTetPanelPos( 420.f, 30.f );
 	float nextTetPanelCellSize = 30.0;
 	uint32_t nextTetPanelColor = 0x000000'ff;
@@ -239,25 +240,7 @@ void scene::online::InRoom::loadResources( )
 			// Type check
 			if ( LUA_TSTRING == type )
 			{
-				if ( auto it = mParticipants.find(mMyNicknameHash_);
-					mParticipants.end() != it )
-				{
-					std::string filePathNName( lua_tostring(lua, TOP_IDX) );
-					if ( false == it->second.loadTexture(filePathNName) )
-					{
-						// File Not Found Exception
-						gService( )->console( ).printScriptError( ExceptionType::FILE_NOT_FOUND,
-							(tableName1+":"+field0).data(), scriptPathNName );
-					}
-					else
-					{
-						isDefault = false;
-					}
-				}
-				// Exception
-				else
-				{
-				}
+				mCountdownSpritePathNName_ = lua_tostring(lua, TOP_IDX);
 			}
 			// Type Check Exception
 			else
@@ -267,14 +250,14 @@ void scene::online::InRoom::loadResources( )
 			}
 			lua_pop( lua, 1 );
 
-			const char field1[ ] = "width";
+			const char field1[ ] = "clipWidth";
 			lua_pushstring( lua, field1 );
 			lua_gettable( lua, 1 );
 			type = lua_type( lua, TOP_IDX );
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				countdownSpriteSize.x = (int)lua_tointeger(lua, TOP_IDX);
+				mCountdownSpriteClipSize_.x = (int)lua_tointeger(lua, TOP_IDX);
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
@@ -284,14 +267,14 @@ void scene::online::InRoom::loadResources( )
 			}
 			lua_pop( lua, 1 );
 
-			const char field2[ ] = "height";
+			const char field2[ ] = "clipHeight";
 			lua_pushstring( lua, field2 );
 			lua_gettable( lua, 1 );
 			type = lua_type( lua, TOP_IDX );
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				countdownSpriteSize.y = (int)lua_tointeger(lua, TOP_IDX);
+				mCountdownSpriteClipSize_.y = (int)lua_tointeger(lua, TOP_IDX);
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
@@ -319,7 +302,7 @@ void scene::online::InRoom::loadResources( )
 			// Type check
 			if ( LUA_TSTRING == type )
 			{
-				if ( auto it = mParticipants.find(mMyNicknameHash_);
+				if ( auto it = mParticipants.find(mMyNicknameHashed_);
 					mParticipants.end() != it )
 				{
 					std::string filePathNName( lua_tostring(lua, TOP_IDX) );
@@ -334,10 +317,13 @@ void scene::online::InRoom::loadResources( )
 						isDefault = false;
 					}
 				}
+#ifdef _DEBUG
 				// Exception
 				else
 				{
+					__debugbreak( );
 				}
+#endif
 			}
 			// Type Check Exception
 			else
@@ -347,14 +333,14 @@ void scene::online::InRoom::loadResources( )
 			}
 			lua_pop( lua, 1 );
 
-			const char field1[ ] = "width";
+			const char field1[ ] = "clipWidth";
 			lua_pushstring( lua, field1 );
 			lua_gettable( lua, 1 );
 			type = lua_type( lua, TOP_IDX );
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				vfxComboSize.x = (int)lua_tointeger(lua, TOP_IDX);
+				vfxComboClipSize.x = (int)lua_tointeger(lua, TOP_IDX);
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
@@ -364,14 +350,14 @@ void scene::online::InRoom::loadResources( )
 			}
 			lua_pop( lua, 1 );
 
-			const char field2[ ] = "height";
+			const char field2[ ] = "clipHeight";
 			lua_pushstring( lua, field2 );
 			lua_gettable( lua, 1 );
 			type = lua_type( lua, TOP_IDX );
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				vfxComboSize.y = (int)lua_tointeger(lua, TOP_IDX);
+				vfxComboClipSize.y = (int)lua_tointeger(lua, TOP_IDX);
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
@@ -516,7 +502,7 @@ void scene::online::InRoom::loadResources( )
 
 	mBackgroundRect.setSize( sf::Vector2f(mWindow_.getSize()) );
 	mBackgroundRect.setFillColor( sf::Color(backgroundColor) );
-	if ( auto it = mParticipants.find(mMyNicknameHash_);
+	if ( auto it = mParticipants.find(mMyNicknameHashed_);
 		mParticipants.end() != it )
 	{
 		::ui::PlayView& playView = it->second;
@@ -526,12 +512,27 @@ void scene::online::InRoom::loadResources( )
 		stage.setBackgroundColor( sf::Color(stagePanelColor),
 								 stagePanelOutlineThickness, sf::Color(stagePanelOutlineColor),
 								 sf::Color(stageCellOutlineColor) );
-		playView.setCountdownSpriteDimension( stagePanelPos, stageCellSize, countdownSpriteSize );
+		if ( false == it->second.loadTexture(mCountdownSpritePathNName_) )
+		{
+			// File Not Found Exception
+			gService( )->console( ).printScriptError( ExceptionType::FILE_NOT_FOUND,
+				"Path:CountdownSprite", scriptPathNName );
+			std::string defaultPathNName( "Images/Countdown.png" );
+			if ( false == it->second.loadTexture(defaultPathNName) )
+			{
+				gService()->console().printFailure( FailureLevel::WARNING,
+												   "Can't find a countdown sprite image." );
+#ifdef _DEBUG
+				__debugbreak( );
+#endif
+			}
+		}
+		playView.setCountdownSpriteDimension( stagePanelPos, stageCellSize, mCountdownSpriteClipSize_ );
 		::model::Tetrimino& tetrimino =	playView.tetrimino();
 		tetrimino.setOrigin( stagePanelPos );
 		tetrimino.setSize( stageCellSize );
 		::vfx::Combo& vfxCombo = playView.vfxCombo();
-		vfxCombo.setOrigin( stagePanelPos, stageCellSize, vfxComboSize );
+		vfxCombo.setOrigin( stagePanelPos, stageCellSize, vfxComboClipSize );
 		::ui::NextTetriminoPanel& nextTetPanel = playView.nextTetriminoPanel();
 		nextTetPanel.setDimension( nextTetPanelPos, nextTetPanelCellSize );
 		nextTetPanel.setBackgroundColor( sf::Color(nextTetPanelColor),
@@ -552,110 +553,319 @@ void scene::online::InRoom::loadResources( )
 		}
 	}
 	// Exception
+#ifdef _DEBUG
 	else
 	{
-
+		__debugbreak( );
 	}
+#endif
 
-	sf::Vector2f otherStagePanelPos( 550.f, 300.f );
-	float otherStageCellSize = 10.f;
-	const sf::Vector2f size( ::model::stage::GRID_WIDTH*otherStageCellSize, ::model::stage::GRID_HEIGHT*otherStageCellSize );
-	sf::Vector2f diff( 0.f, otherStageCellSize*::model::stage::GRID_HEIGHT );
-	mEmptySlotsForOtherPlayers[ 0 ].setFillColor( sf::Color(0x0000007f) );
-	mEmptySlotsForOtherPlayers[ 0 ].setPosition( otherStagePanelPos - diff );
-	mEmptySlotsForOtherPlayers[ 0 ].setSize( size );
-	mEmptySlotsForOtherPlayers[ 0 ].setOutlineThickness( 5.f );
-	mEmptySlotsForOtherPlayers[ 0 ].setOutlineColor( sf::Color(0x000000ff) );
+	sf::Vector2f otherPlayerSlotPos( 600.f, 400.f );
+	mOtherPlayerStageCellSize_ = 5.f;
+	const sf::Vector2f size( ::model::stage::GRID_WIDTH*mOtherPlayerStageCellSize_,
+							::model::stage::GRID_HEIGHT*mOtherPlayerStageCellSize_ );
+	sf::Vector2f diff( 0.f, mOtherPlayerStageCellSize_*::model::stage::GRID_HEIGHT );
+	mOtherPlayerSlotBackgrounds[ 0 ].setFillColor( sf::Color(0x000000ff) );
+	mOtherPlayerSlotBackgrounds[ 0 ].setPosition( otherPlayerSlotPos - diff );
+	mOtherPlayerSlotBackgrounds[ 0 ].setSize( size );
+	mOtherPlayerSlotBackgrounds[ 0 ].setOutlineThickness( 5.f );
+	mOtherPlayerSlotBackgrounds[ 0 ].setOutlineColor( sf::Color(0x0f0f0fff) );
 
-	mEmptySlotsForOtherPlayers[ 1 ].setFillColor( sf::Color(0x0000007f) );
-	diff = sf::Vector2f( otherStageCellSize*::model::stage::GRID_WIDTH, 0.f	);
-	mEmptySlotsForOtherPlayers[ 1 ].setPosition( otherStagePanelPos - diff );
-	mEmptySlotsForOtherPlayers[ 1 ].setSize( size );
-	mEmptySlotsForOtherPlayers[ 1 ].setOutlineThickness( 5.f );
-	mEmptySlotsForOtherPlayers[ 1 ].setOutlineColor( sf::Color(0x000000ff) );
+	mOtherPlayerSlotBackgrounds[ 1 ].setFillColor( sf::Color(0x000000ff) );
+	diff = sf::Vector2f( mOtherPlayerStageCellSize_*::model::stage::GRID_WIDTH, 0.f	);
+	mOtherPlayerSlotBackgrounds[ 1 ].setPosition( otherPlayerSlotPos - diff );
+	mOtherPlayerSlotBackgrounds[ 1 ].setSize( size );
+	mOtherPlayerSlotBackgrounds[ 1 ].setOutlineThickness( 5.f );
+	mOtherPlayerSlotBackgrounds[ 1 ].setOutlineColor( sf::Color(0x0f0f0fff) );
 
-	mEmptySlotsForOtherPlayers[ 2 ].setFillColor( sf::Color(0x0000007f) );
-	mEmptySlotsForOtherPlayers[ 2 ].setPosition( otherStagePanelPos );
-	mEmptySlotsForOtherPlayers[ 2 ].setSize( size );
-	mEmptySlotsForOtherPlayers[ 2 ].setOutlineThickness( 5.f );
-	mEmptySlotsForOtherPlayers[ 2 ].setOutlineColor( sf::Color(0x000000ff) );
+	mOtherPlayerSlotBackgrounds[ 2 ].setFillColor( sf::Color(0x000000ff) );
+	mOtherPlayerSlotBackgrounds[ 2 ].setPosition( otherPlayerSlotPos );
+	mOtherPlayerSlotBackgrounds[ 2 ].setSize( size );
+	mOtherPlayerSlotBackgrounds[ 2 ].setOutlineThickness( 5.f );
+	mOtherPlayerSlotBackgrounds[ 2 ].setOutlineColor( sf::Color(0x0f0f0fff) );
 
 	::model::Tetrimino::LoadResources( );
 }
 
 ::scene::online::ID scene::online::InRoom::update( std::list<sf::Event>& eventQueue )
 {
-	bool hasToRespond = false;
+	::scene::online::ID nextSceneID = ::scene::online::ID::AS_IS;
 	if ( true == mNet.hasReceived() )
 	{
 		mIsReceiving = false;
-		if ( std::optional<std::string> response(mNet.getByTag(TAGGED_REQ_GET_READY,
-																Online::Option::RETURN_TAG_ATTACHED));
-			 std::nullopt != response )
-		{
-			for ( auto& it : mParticipants )
-			{
-				it.second.start( );
-			}
-		}
-
+		const HashedKey myNicknameHashed = mNet.myNicknameHashed();
 		if ( std::optional<std::string> userList(mNet.getByTag(TAGGED_NOTI_UPDATE_USER_LIST,
-															   Online::Option::INDETERMINATE_SIZE));
+															   Online::Option::INDETERMINATE_SIZE, NULL));
 			std::nullopt != userList )
 		{
 			const std::string& _userList( userList.value() );
 			const char* const ptr = _userList.data();
 			const uint32_t userListSize = (uint32_t)_userList.size();
-			std::vector< HashedKey > temp;
-			for ( auto& it : mParticipants )
-			{
-				temp.emplace_back( it.first );
-			}
+			// 궁금: 최적화할 여지
+			std::unordered_map< HashedKey, std::string > users;
 			uint32_t curPos = 0;
 			while ( userListSize != curPos )
 			{
-				uint32_t curSize = ::ntohl(*(uint32_t*)&ptr[curPos]);
-				curPos += sizeof(uint32_t);
+				const uint8_t curSize = ptr[curPos];
+				++curPos;
 				const std::string otherNickname( _userList.substr(curPos, curSize) );
 				const HashedKey otherNicknameHashed = ::util::hash::Digest( otherNickname.data(),
 																	(uint8_t)otherNickname.size() );
-				for ( auto it = temp.cbegin(); temp.cend() != it; ++it )
-				{
-					if ( otherNicknameHashed == *it )
-					{
-						temp.erase( it );
-						break;
-					}
-				}
-				if ( const auto it = mParticipants.find(otherNicknameHashed);
-					mParticipants.end() == it )
-				{
-					mParticipants.emplace( otherNicknameHashed, ::ui::PlayView(mWindow_,mNet) );
-					::model::Stage& stage =	mParticipants[ otherNicknameHashed ].stage();
-					stage.setBackgroundColor( sf::Color::Black, 5.f, sf::Color(0x0000007f), sf::Color(0x0000007f) );
-					sf::RectangleShape& r =	mEmptySlotsForOtherPlayers[mParticipants.size()-(ROOM_CAPACITY-2)];
-					const sf::Vector2f pos( r.getPosition() );
-					stage.setPosition( pos );
-					const float cellSize = r.getSize().x / ::model::stage::GRID_WIDTH;
-					stage.setSize( cellSize );
-					::model::Tetrimino& tet = mParticipants[ otherNicknameHashed ].tetrimino();
-					tet.setOrigin( pos );
-					tet.setSize( cellSize );
-				}
+				users.emplace( otherNicknameHashed, otherNickname );
 				curPos += curSize;
 			}
-			for ( const auto it : temp )
+			for ( const auto& it : mParticipants )
 			{
-				mParticipants.erase( it );
-				//TODO: 누가 종료했습니다.
+				if ( users.end() == users.find(it.first) )
+				{
+					if ( it.first == myNicknameHashed )
+					{
+						nextSceneID = ::scene::online::ID::IN_LOBBY;
+						return nextSceneID;
+					}
+					mParticipants.erase( it.first );
+					for ( HashedKey& nicknameHashed : mOtherPlayerSlots )
+					{
+						if ( it.first == nicknameHashed )
+						{
+							nicknameHashed = 0;
+							break;
+						}
+					}
+					//TODO: 누가 종료했습니다.
+				}
+				else
+				{
+					users.erase( it.first );
+				}
+			}
+			for ( const auto& pair : users )
+			{
+				mParticipants.emplace( pair.first, ::ui::PlayView(mWindow_,mNet) );
+				uint8_t slotIdx = 0;
+				while ( ROOM_CAPACITY-1 != slotIdx )
+				{
+					if ( 0 == mOtherPlayerSlots[slotIdx] )
+					{
+						mOtherPlayerSlots[slotIdx] = pair.first;
+						break;
+					}
+					++slotIdx;
+				}
+				::model::Stage& stage =	mParticipants[pair.first].stage();
+				sf::RectangleShape& bg = mOtherPlayerSlotBackgrounds[slotIdx];
+				// TODO: 닉네임 보여주기
+				const sf::Vector2f pos( bg.getPosition() );
+				stage.setPosition( pos );
+				stage.setSize( mOtherPlayerStageCellSize_ );
+				stage.setBackgroundColor( sf::Color::Black, 3.f, sf::Color(0x0f0f0fff),
+											sf::Color(0x0000007f) );
+				if ( false == mParticipants[pair.first].loadTexture(mCountdownSpritePathNName_) )
+				{
+					gService()->console().printFailure( FailureLevel::WARNING,
+														"Can't find a countdown sprite." );
+#ifdef _DEBUG
+					__debugbreak( );
+#endif
+				}
+				mParticipants[pair.first].setCountdownSpriteDimension( pos,
+																	mOtherPlayerStageCellSize_,
+																	mCountdownSpriteClipSize_ );
+				::model::Tetrimino& tet = mParticipants[pair.first].tetrimino();
+				tet.setOrigin( pos );
+				tet.setSize( mOtherPlayerStageCellSize_ );
 			}
 		}
-		hasToRespond = true;
-	}
 
-	for ( auto& it : mParticipants )
+		if ( false == mIsPlaying_ )
+		{
+			if ( std::optional<std::string> response(mNet.getByTag(TAGGED_REQ_GET_READY,
+																   Online::Option::RETURN_TAG_ATTACHED, NULL));
+				std::nullopt != response )
+			{
+				for ( auto& it : mParticipants )
+				{
+					it.second.start( );
+				}
+				mIsPlaying_ = true;
+			}
+		}
+		else if ( std::optional<std::string> allOver(mNet.getByTag(TAG_ALL_OVER,
+																   Online::Option::RETURN_TAG_ATTACHED, NULL));
+				 std::nullopt != allOver )
+		{
+			mIsPlaying_ = false;
+			mParticipants.clear( );
+			//TODO: 쌓이기 전 후 색깔이 다르다, 여기서 다 지울 거면 내 패널 빼고 지우자, 다른 플레이어 껀 잘 보이나?, 서버 FPS 뭘로?
+		}
+		else
+		{
+			if ( std::optional<std::string> newCurrentTetriminos(mNet.getByTag(TAG_NEW_CURRENT_TETRIMINOS,
+																					  Online::Option::INDETERMINATE_SIZE, NULL));
+				std::nullopt != newCurrentTetriminos )
+			{
+				const std::string& newCurTetTypes = newCurrentTetriminos.value();
+				const uint32_t totalSize = (uint32_t)newCurTetTypes.size();
+				const char* ptr = newCurTetTypes.data();
+				uint32_t curPos = 0;
+				while ( totalSize != curPos )
+				{
+					const HashedKey nicknameHashed = ::ntohl(*(HashedKey*)&ptr[curPos]);
+					if ( nicknameHashed == myNicknameHashed )
+					{
+						curPos += sizeof(HashedKey) + sizeof(uint8_t);
+						continue;
+					}
+					curPos += sizeof(HashedKey);
+					const ::model::tetrimino::Type newType = (::model::tetrimino::Type)ptr[curPos++];
+					if ( const auto it = mParticipants.find(nicknameHashed);
+						mParticipants.end() != it )
+					{
+						it->second.setNewCurrentTetrimino( newType );
+					}
+#ifdef _DEBUG
+					else
+					{
+						__debugbreak( );
+					}
+#endif
+				}
+			}
+
+			if ( std::optional<std::string> currentTetriminosMove( mNet.getByTag(TAG_CURRENT_TETRIMINOS_MOVE,
+																				 Online::Option::INDETERMINATE_SIZE, NULL) );
+				std::nullopt != currentTetriminosMove )
+			{
+				std::string& curTetsMove = currentTetriminosMove.value();
+				const char* ptr = curTetsMove.data();
+				const uint32_t totalSize = (uint32_t)curTetsMove.size();
+				uint32_t curPos = 0;
+				while ( totalSize != curPos )
+				{
+					const HashedKey nicknameHashed = ::ntohl(*(HashedKey*)&ptr[curPos]);
+					if ( nicknameHashed == myNicknameHashed )
+					{
+						curPos += sizeof(HashedKey) + sizeof(uint8_t) + sizeof(sf::Vector2<int8_t>);
+						continue;
+					}
+					curPos += sizeof(HashedKey);
+					const ::model::tetrimino::Rotation rotID = (::model::tetrimino::Rotation)ptr[curPos];
+					++curPos;
+					const sf::Vector2<int8_t> pos( *(sf::Vector2<int8_t>*)&ptr[curPos] );
+					curPos += sizeof(sf::Vector2<int8_t>);
+					if ( const auto it = mParticipants.find(nicknameHashed);
+						mParticipants.end() != it )
+					{
+						::model::Tetrimino& tet = it->second.tetrimino();
+						tet.move( rotID, pos );
+					}
+#ifdef _DEBUG
+					else
+					{
+						__debugbreak( );
+					}
+#endif
+				}
+			}
+
+			if ( std::optional<std::string> stages( mNet.getByTag(TAG_STAGES,
+																Online::Option::INDETERMINATE_SIZE, NULL) );
+				std::nullopt != stages )
+			{
+				std::string& _stages = stages.value();
+				const char* ptr = _stages.data();
+				const uint32_t totalSize = (uint32_t)_stages.size();
+				uint32_t curPos = 0;
+				while ( totalSize != curPos )
+				{
+					const HashedKey nicknameHashed = ::ntohl(*(HashedKey*)&ptr[curPos]);
+					if ( nicknameHashed == myNicknameHashed )
+					{
+						curPos += sizeof(HashedKey) + sizeof(::model::stage::Grid);
+						continue;
+					}
+					curPos += sizeof(HashedKey);
+					const ::model::stage::Grid* const grid = (::model::stage::Grid*)&ptr[curPos];
+					curPos += sizeof(::model::stage::Grid);
+					if ( const auto it = mParticipants.find(nicknameHashed);
+						mParticipants.end() != it )
+					{
+						::model::Stage& stage =	it->second.stage();
+						stage.deserialize( grid );
+					}
+#ifdef _DEBUG
+					else
+					{
+						__debugbreak( );
+					}
+#endif
+				}
+			}
+
+			if ( std::optional<std::string> numsOfLinesCleared( mNet.getByTag(TAG_NUMS_OF_LINES_CLEARED,
+																			Online::Option::INDETERMINATE_SIZE, NULL) );
+				std::nullopt != numsOfLinesCleared )
+			{
+				std::string& _numsOfLinesCleared = numsOfLinesCleared.value();
+				const char* ptr = _numsOfLinesCleared.data();
+				const uint32_t totalSize = (uint32_t)_numsOfLinesCleared.size();
+				uint32_t curPos = 0;
+				while ( totalSize != curPos )
+				{
+					const HashedKey nicknameHashed = ::ntohl(*(HashedKey*)&ptr[curPos]);
+					if ( nicknameHashed == myNicknameHashed )
+					{
+						curPos += sizeof(HashedKey) + sizeof(uint8_t);
+						continue;
+					}
+					curPos += sizeof(HashedKey);
+					const uint8_t numOfLinesCleared = (uint8_t)ptr[curPos];
+					++curPos;
+					if ( const auto it = mParticipants.find(nicknameHashed);
+						mParticipants.end() != it )
+					{
+						it->second.setNumOfLinesCleared( numOfLinesCleared );
+					}
+#ifdef _DEBUG
+					else
+					{
+						__debugbreak( );
+					}
+#endif
+				}
+			}
+
+			if ( std::optional<std::string> gamesOver( mNet.getByTag(TAG_GAMES_OVER,
+																	Online::Option::INDETERMINATE_SIZE, NULL) );
+				std::nullopt != gamesOver )
+			{
+				std::string& _gamesOver = gamesOver.value();
+				const char* ptr = _gamesOver.data();
+				const uint32_t totalSize = (uint32_t)_gamesOver.size();
+				uint32_t curPos = 0;
+				while ( totalSize != curPos )
+				{
+					const HashedKey nicknameHashed = ::ntohl(*(HashedKey*)&ptr[curPos]);
+					curPos += sizeof(HashedKey);
+					if ( const auto it = mParticipants.find(nicknameHashed);
+						mParticipants.end() != it )
+					{
+						it->second.gameOverOnServer();
+					}
+#ifdef _DEBUG
+					else
+					{
+						__debugbreak( );
+					}
+#endif
+				}
+			}
+		}
+	}
+	if ( auto it = mParticipants.find(mMyNicknameHashed_);
+		mParticipants.end() != it )
 	{
-		hasToRespond = it.second.update( eventQueue );
+		it->second.update( eventQueue );
 	}
 
 	if ( false == mIsReceiving )
@@ -664,30 +874,26 @@ void scene::online::InRoom::loadResources( )
 		mIsReceiving = true;
 	}
 
-	if ( true == hasToRespond )
-	{
-		mNet.sendZeroByte( );
-	}
-
-	::scene::online::ID retVal = ::scene::online::ID::AS_IS;
 	if ( true == mHasCanceled )
 	{
-		retVal = ::scene::online::ID::IN_LOBBY;
+		nextSceneID = ::scene::online::ID::IN_LOBBY;
 	}
 
-	return retVal;
+	return nextSceneID;
 }
 
 void scene::online::InRoom::draw( )
 {
 	mWindow_.draw( mBackgroundRect );
-	for ( size_t i = mParticipants.size()-1; ROOM_CAPACITY-1 != i; ++i )
-	{
-		mWindow_.draw( mEmptySlotsForOtherPlayers[i] );
-	}
+	uint8_t filled = 0;
 	for ( auto& it : mParticipants )
 	{
 		it.second.draw( );
+		++filled;
+	}
+	for ( size_t i = filled-1; ROOM_CAPACITY-1 != i; ++i )
+	{
+		mWindow_.draw( mOtherPlayerSlotBackgrounds[i] );
 	}
 }
 

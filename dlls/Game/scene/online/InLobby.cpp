@@ -5,12 +5,12 @@
 #include "Online.h"
 #include "../VaultKeyList.h"
 
-const uint32_t UPDATE_INTERVAL = 120;
+const uint32_t UPDATE_INTERVAL = 300;
 const float ERROR_RANGE = 5.f;
 const float SPEED = .5f;
 
 bool scene::online::InLobby::IsInstantiated = false;
-bool scene::online::InLobby::BinarySemaphore;
+bool scene::online::InLobby::BinarySemaphore = false;
 
 scene::online::InLobby::InLobby( sf::RenderWindow& window, ::scene::online::Online& net )
 	: mIsReceiving( false ), mHasCanceled( false ), mHasJoined( false ),
@@ -73,43 +73,40 @@ void scene::online::InLobby::loadResources( )
 ::scene::online::ID scene::online::InLobby::update( std::list<sf::Event>& eventQueue )
 {
 	::scene::online::ID retVal = ::scene::online::ID::AS_IS;
-	bool hasToRespond = false;
 	if ( true == mNet.hasReceived() )
 	{
-		hasToRespond = true;
+		mIsReceiving = false;
 		if ( std::optional<std::string> resultCreatingRoom(mNet.getByTag(TAGGED_REQ_CREATE_ROOM,
 															   Online::Option::RETURN_TAG_ATTACHED,
 															   sizeof(char)));
 			std::nullopt != resultCreatingRoom )
 		{
+			BinarySemaphore = false;
 			retVal = ::scene::online::ID::IN_ROOM_AS_HOST;
 		}
 		else if ( std::optional<std::string> resultJoiningRoom(mNet.getByTag(TAGGED_REQ_JOIN_ROOM,
 																			 Online::Option::SPECIFIED_SIZE,
-																			 sizeof(ResultJoiningRoom)));
+																			 sizeof(uint8_t)));
 				 std::nullopt != resultJoiningRoom )
 		{
-			const ResultJoiningRoom res = (ResultJoiningRoom)::ntohl(*(uint32_t*)resultJoiningRoom.value().data());
+			BinarySemaphore = false;
+			const ResultJoiningRoom res = (ResultJoiningRoom)*resultJoiningRoom.value().data();
 			switch( res )
 			{
 				case ResultJoiningRoom::FAILED_BY_SERVER_ERROR:
 					gService()->console().print( "Failed to join the room by an error.", sf::Color::Green );
-					BinarySemaphore = false;
 					break;
 				case ResultJoiningRoom::FAILED_BY_FULL_ROOM:
 					gService()->console().print( "Room is full.", sf::Color::Green );
-					BinarySemaphore = false;
 					break;
 				case ResultJoiningRoom::SUCCCEDED:
 					retVal = ::scene::online::ID::IN_ROOM;
 					break;
 				case ResultJoiningRoom::FAILED_DUE_TO_TARGET_NOT_CONNECTING:
 					gService()->console().print( "That nicknamed-user is not connecting.", sf::Color::Green );
-					BinarySemaphore = false;
 					break;
 				case ResultJoiningRoom::FAILED_DUE_TO_SELF_TARGET:
 					gService()->console().print( "It doesn't make any sense to join yourself.", sf::Color::Green );
-					BinarySemaphore = false;
 					break;
 				default:
 #ifdef _DEBUG
@@ -120,77 +117,72 @@ void scene::online::InLobby::loadResources( )
 					break;
 			}
 		}
-		else if ( std::optional<std::string> visitor(mNet.getByTag(TAGGED_NOTI_SOMEONE_VISITED,
-																   Online::Option::INDETERMINATE_SIZE));
-				 std::nullopt != visitor )
-		{
-			const std::string& otherNickname = visitor.value();
-			sf::Text tf( otherNickname, mFont_ );
-			const sf::Vector2f center( mWindow_.getSize() );
-			tf.setPosition(	center*.5f );
-			mUserList.emplace( otherNickname, std::make_pair(tf,0) );
-		}
-		else if ( std::optional<std::string> left(mNet.getByTag(TAGGED_NOTI_SOMEONE_LEFT,
-															   Online::Option::INDETERMINATE_SIZE));
-				 std::nullopt != left )
-		{
-#ifdef _DEBUG
-			if ( 1 != mUserList.erase(left.value()) )
-			{
-				__debugbreak( );
-			}
-#else
-			mUserList.erase( left.value() );
-#endif
-		}
-		else if ( std::optional<std::string> userList(mNet.getByTag(TAGGED_REQ_UPDATE_USER_LIST,
-															   Online::Option::INDETERMINATE_SIZE));
+		
+		if ( std::optional<std::string> userList(mNet.getByTag(TAGGED_REQ_USER_LIST_IN_LOBBY,
+															   Online::Option::INDETERMINATE_SIZE, NULL));
 			std::nullopt != userList )
 		{
-			BinarySemaphore = false;
 			const std::string& _userList( userList.value() );
 			const char* const ptr = _userList.data();
 			const uint32_t userListSize = (uint32_t)_userList.size();
 			uint32_t curPos = 0;
-			const sf::Vector2f offset( 20.f, 0.f );
-			float mul = 0.f;
+			// NOTE: Faster than std::set or std::unordered_set.
+			std::vector<std::string> curUsers;
 			while ( userListSize != curPos )
 			{
-				uint32_t curSize = ::ntohl(*(uint32_t*)&ptr[curPos]);
-				curPos += sizeof(uint32_t);
+				const uint8_t curSize = ptr[curPos];
+				++curPos;
 				const std::string otherNickname( _userList.substr(curPos, curSize) );
-				if ( otherNickname != mNet.myNickname() )
-				{
-					sf::Text tf( otherNickname, mFont_ );
-					const sf::Vector2f center( mWindow_.getSize() );
-					tf.setPosition( center*.5f + offset*mul );
-					mUserList.emplace( otherNickname, std::make_pair(tf, 0) );
-				}
+				curUsers.emplace_back( otherNickname );
 				curPos += curSize;
+			}
+			for ( auto it = mUserList.begin(); mUserList.end() != it; )
+			{
+				bool hasFound = false;
+				for ( auto it2 = curUsers.cbegin(); curUsers.cend() != it2; ++it2 )
+				{
+					if ( it->first == *it2 )
+					{
+						hasFound = true;
+						curUsers.erase( it2 );
+						break;
+					}
+				}
+				if ( false == hasFound )
+				{
+					it = mUserList.erase(it);
+				}
+				else
+				{
+					++it;
+				}
+			}
+			const sf::Vector2f center( mWindow_.getSize() );
+			const sf::Vector2f offset( 20.f, 0.f );
+			float mul = 0.f;
+			for ( const std::string& nickname : curUsers )
+			{
+				sf::Text tf( nickname, mFont_ );
+				tf.setPosition( center*.5f + offset*mul );
+				mUserList.emplace( nickname, std::make_pair(tf, 0) );
 				mul += 1.f;
 			}
 		}
-		mIsReceiving = false;
 	}
-
+	
 	if ( false == mIsReceiving )
 	{
 		mNet.receive( );
 		mIsReceiving = true;
 	}
 
-	if ( true == hasToRespond )
+	if ( UPDATE_INTERVAL <= mFrameCount_update )
 	{
-		mNet.sendZeroByte( );
-	}
-	else if ( UPDATE_INTERVAL <= mFrameCount_update && false == BinarySemaphore )
-	{
-		BinarySemaphore = true;
 		mFrameCount_update = 0;
-		std::string req( TAGGED_REQ_UPDATE_USER_LIST );
+		std::string req( TAGGED_REQ_USER_LIST_IN_LOBBY );
 		mNet.send( req.data(), (int)req.size() );
 	}
-
+	
 	if ( true == mHasCanceled )
 	{
 		retVal = ::scene::online::ID::MAIN_MENU;
@@ -283,9 +275,9 @@ void scene::online::InLobby::cancelConnection( const std::string_view& )
 
 void scene::online::InLobby::createRoom( const std::string_view& )
 {
-	if ( false != BinarySemaphore )
+	if ( true == BinarySemaphore )
 	{
-		gService()->console().print( "Please retry to create a room.", sf::Color::Green );
+		gService()->console().print( "Retry to create a room later.", sf::Color::Green );
 		return;
 	}
 	BinarySemaphore = true;
@@ -295,9 +287,9 @@ void scene::online::InLobby::createRoom( const std::string_view& )
 
 void scene::online::InLobby::joinRoom( const std::string_view& arg )
 {
-	if ( false != BinarySemaphore )
+	if ( true == BinarySemaphore )
 	{
-		gService()->console().print( "Please retry to join the room.", sf::Color::Green );
+		gService()->console().print( "Retry to join the room later.", sf::Color::Green );
 		return;
 	}
 	BinarySemaphore = true;

@@ -1,9 +1,7 @@
-//TODO: 솔트할까?
-
 #pragma once
 #include <stdint.h>
 
-using HashedKey = uint32_t; //궁금: 어떻게 uint32_t를 알지?
+using HashedKey = uint32_t;
 using Dword = int32_t;
 
 namespace util::hash

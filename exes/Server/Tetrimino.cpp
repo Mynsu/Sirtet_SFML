@@ -20,13 +20,13 @@ sf::Vector2<int8_t> model::Tetrimino::Test[ (int)::model::tetrimino::Rotation::N
 	retVal.mType = type;
 	switch ( type )
 	{
-		case ::model::tetrimino::Type::I://TODO
+		case ::model::tetrimino::Type::I:
 			retVal.mPossibleRotations[ 0 ] = 0b0100'0100'0100'0100;
 			retVal.mPossibleRotations[ 1 ] = 0b0000'0000'1111'0000;
 			retVal.mPossibleRotations[ 2 ] = 0b0010'0010'0010'0010;
 			retVal.mPossibleRotations[ 3 ] = 0b0000'1111'0000'0000;
 			retVal.mRotationID = (::model::tetrimino::Rotation)1;
-			retVal.mColor = sf::Color::Cyan;//TODO
+			retVal.mColor = sf::Color::Cyan;
 			break;
 		case ::model::tetrimino::Type::J:
 			retVal.mPossibleRotations[ 0 ] = 0b1000'1110'0000'0000;
@@ -34,7 +34,7 @@ sf::Vector2<int8_t> model::Tetrimino::Test[ (int)::model::tetrimino::Rotation::N
 			retVal.mPossibleRotations[ 2 ] = 0b0000'1110'0010'0000;
 			retVal.mPossibleRotations[ 3 ] = 0b0110'0100'0100'0000;
 			retVal.mRotationID = (::model::tetrimino::Rotation)0;
-			retVal.mColor = sf::Color::Blue;//TODO
+			retVal.mColor = sf::Color::Blue;
 			break;
 		case ::model::tetrimino::Type::L:
 			retVal.mPossibleRotations[ 0 ] = 0b0010'1110'0000'0000;
@@ -43,7 +43,7 @@ sf::Vector2<int8_t> model::Tetrimino::Test[ (int)::model::tetrimino::Rotation::N
 			retVal.mPossibleRotations[ 3 ] = 0b0100'0100'0110'0000;
 			retVal.mRotationID = (::model::tetrimino::Rotation)0;
 			// Orange
-			retVal.mColor = sf::Color( 0xff7f00ff );//TODO
+			retVal.mColor = sf::Color( 0xff7f00ff );
 			break;
 		case ::model::tetrimino::Type::N:
 			retVal.mPossibleRotations[ 0 ] = 0b1100'0110'0000'0000;
@@ -51,7 +51,7 @@ sf::Vector2<int8_t> model::Tetrimino::Test[ (int)::model::tetrimino::Rotation::N
 			retVal.mPossibleRotations[ 2 ] = 0b0000'1100'0110'0000;
 			retVal.mPossibleRotations[ 3 ] = 0b0010'0110'0100'0000;
 			retVal.mRotationID = (::model::tetrimino::Rotation)0;
-			retVal.mColor = sf::Color::Red;//TODO
+			retVal.mColor = sf::Color::Red;
 			break;
 		case ::model::tetrimino::Type::S:
 			retVal.mPossibleRotations[ 0 ] = 0b0110'1100'0000'0000;
@@ -59,7 +59,7 @@ sf::Vector2<int8_t> model::Tetrimino::Test[ (int)::model::tetrimino::Rotation::N
 			retVal.mPossibleRotations[ 2 ] = 0b0000'0110'1100'0000;
 			retVal.mPossibleRotations[ 3 ] = 0b1000'1100'0100'0000;
 			retVal.mRotationID = (::model::tetrimino::Rotation)0;
-			retVal.mColor = sf::Color::Green;//TODO
+			retVal.mColor = sf::Color::Green;
 			break;
 		case ::model::tetrimino::Type::T:
 			retVal.mPossibleRotations[ 0 ] = 0b0100'1110'0000'0000;
@@ -68,16 +68,19 @@ sf::Vector2<int8_t> model::Tetrimino::Test[ (int)::model::tetrimino::Rotation::N
 			retVal.mPossibleRotations[ 3 ] = 0b0100'0110'0100'0000;
 			retVal.mRotationID = (::model::tetrimino::Rotation)0;
 			// Purple - Old Citadel
-			retVal.mColor = sf::Color( 0x562f72ff );//TODO
+			retVal.mColor = sf::Color( 0x562f72ff );
 			break;
 		case ::model::tetrimino::Type::O:
-			retVal.mPossibleRotations[ 0 ] = 0b0000'0110'0110'0000;
-			retVal.mPossibleRotations[ 1 ] = retVal.mPossibleRotations[ 0 ];//TODO
-			retVal.mPossibleRotations[ 2 ] = retVal.mPossibleRotations[ 0 ];//TODO
-			retVal.mPossibleRotations[ 3 ] = retVal.mPossibleRotations[ 0 ];//TODO
+		{
+			const uint16_t SQUARE = 0b0000'0110'0110'0000;
+			retVal.mPossibleRotations[ 0 ] = SQUARE;
+			retVal.mPossibleRotations[ 1 ] = SQUARE;
+			retVal.mPossibleRotations[ 2 ] = SQUARE;
+			retVal.mPossibleRotations[ 3 ] = SQUARE;
 			retVal.mRotationID = (::model::tetrimino::Rotation)0;
-			retVal.mColor = sf::Color::Yellow;//TODO
+			retVal.mColor = sf::Color::Yellow;
 			break;
+		}
 		default:
 #ifdef _DEBUG
 			__debugbreak( );

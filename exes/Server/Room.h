@@ -14,6 +14,7 @@ public:
 		STARTED,
 		READY,
 		PLAYING,
+		ALL_OVER,
 	};
 
 	// !IMPORTANT: DO NOT USE!  Defined to use std::unordered_map.
@@ -24,11 +25,11 @@ public:
 	~Room( ) = default;
 
 	void start( );
-	bool leave( const ClientIndex index );
+	int leave( const ClientIndex index );
 	void perceive( const ClientIndex index, const ::model::tetrimino::Move move );
 	void perceive( const ClientIndex index, const bool hasTetriminoCollidedInClient = true );
-	std::forward_list<ClientIndex> update( );
-	std::forward_list<ClientIndex> notify( std::vector<Client>& clientS );
+	std::vector<ClientIndex> update( std::vector<Client>& clientS );
+	std::vector<ClientIndex> notify( std::vector<Client>& clientS );
 	// MUST destruct this room when returning false, which means having kicked out the last one.
 	ClientIndex hostIndex( ) const;
 	bool tryAccept( const ClientIndex index );
@@ -54,7 +55,7 @@ private:
 	}
 	ClientIndex mHostIndex;
 	Room::State mState;
-	std::vector< ClientIndex > mCandidateGuestS;
+	std::vector<ClientIndex> mCandidateParticipants;
 	Clock::time_point mAlarms[(int)AlarmIndex::NONE_MAX];
-	std::unordered_map< ClientIndex, Playing > mGuestS;
+	std::unordered_map< ClientIndex, Playing > mParticipants;
 };

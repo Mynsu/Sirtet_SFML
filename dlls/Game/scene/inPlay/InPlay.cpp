@@ -73,7 +73,7 @@ void ::scene::inPlay::InPlay::draw( )
 #ifdef _DEV
 ::scene::ID scene::inPlay::InPlay::currentScene( ) const
 {
-	return ::scene::ID::SINGLE_PLAY; //TODO: 멀티일수도
+	return ::scene::ID::SINGLE_PLAY;
 }
 #endif
 

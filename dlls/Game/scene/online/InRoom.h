@@ -23,12 +23,16 @@ namespace scene::online
 		void startGame( const std::string_view& arg );
 		void leaveRoom( const std::string_view& arg );
 		static bool IsInstantiated;
-		bool mAsHost, mIsReceiving, mHasCanceled;
-		HashedKey mMyNicknameHash_;
+		bool mAsHost, mIsReceiving, mHasCanceled, mIsPlaying_;
+		HashedKey mMyNicknameHashed_;
+		float mOtherPlayerStageCellSize_;
 		sf::RenderWindow& mWindow_;
 		Online& mNet;
+		sf::Vector2i mCountdownSpriteClipSize_;
+		std::string mCountdownSpritePathNName_;
+		HashedKey mOtherPlayerSlots[ ROOM_CAPACITY-1 ];
 		std::unordered_map< HashedKey, ::ui::PlayView > mParticipants;
 		sf::RectangleShape mBackgroundRect;
-		sf::RectangleShape mEmptySlotsForOtherPlayers[ ROOM_CAPACITY-1 ];
+		sf::RectangleShape mOtherPlayerSlotBackgrounds[ ROOM_CAPACITY-1 ];
 	};
 }

@@ -27,16 +27,15 @@ namespace model
 			mCellShape.setOutlineThickness( 1.f );
 			mCellShape.setOutlineColor( cellOutlineColor );
 		}
-		inline void updateOnNet( const std::string& data )
+		inline void deserialize( const ::model::stage::Grid* const ptr )
 		{
-			::model::stage::Grid* const ptr = (::model::stage::Grid*)data.data();
 			mGrid = *ptr;
 		}
 		uint8_t tryClearRow( );
 		inline bool isOver( ) const
 		{
 			bool retVal = false;
-			for ( const auto& it : mGrid[ 1 ] )
+			for ( const auto& it : mGrid[1] )
 			{
 				if ( true == it.blocked )
 				{
@@ -82,13 +81,13 @@ namespace model
 			mWindow_->draw( mPanel );
 			// NOTE: The failure regarding OpenGL occurs.
 			///#pragma omp parallel
-			for ( uint8_t i = 0u; i != ::model::stage::GRID_HEIGHT; ++i )
+			for ( uint8_t i = 0; i != ::model::stage::GRID_HEIGHT; ++i )
 			{
-				for ( uint8_t k = 0u; k != ::model::stage::GRID_WIDTH; ++k )
+				for ( uint8_t k = 0; k != ::model::stage::GRID_WIDTH; ++k )
 				{
-					if ( true == mGrid[ i ][ k ].blocked )
+					if ( true == mGrid[i][k].blocked )
 					{
-						mCellShape.setFillColor( mGrid[ i ][ k ].color );
+						mCellShape.setFillColor( mGrid[i][k].color );
 						mCellShape.setPosition( mPosition_ + sf::Vector2f(k, i)*mCellSize_ );
 						mWindow_->draw( mCellShape );
 					}

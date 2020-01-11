@@ -7,8 +7,6 @@
 #pragma once
 #include <Lib/Hash.h>
 
-// Key to the current version used for matching the engine(.exe) with the game(.dll) and also verifying a client.
-constexpr HashedKey HK_VERSION = ::util::hash::Digest( "version", 7 );
 // Key to frames per second while the window gains focus.
 constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
 // Key to frames per second while the window loses focus.

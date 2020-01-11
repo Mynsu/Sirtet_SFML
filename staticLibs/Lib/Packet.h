@@ -11,11 +11,14 @@ public:
 	{ }
 	~Packet( ) = default;
 
-	inline void pack( const Tag tag, std::string& data )
+	inline void pack( const Tag tag, std::string& data, const bool isSizeSpecified = true )
 	{
 		mData += tag;
-		const uint32_t size = ::htonl((uint32_t)data.size());
-		mData.append( (char*)&size, sizeof(size) );
+		if ( true == isSizeSpecified )
+		{
+			const uint32_t size = ::htonl((uint32_t)data.size());
+			mData.append( (char*)&size, sizeof(size) );
+		}
 		mData += data;
 		mHasSomethingToSend = true;
 	}
@@ -26,21 +29,20 @@ public:
 		switch ( sizeof(T) )
 		{
 			case 1:
-				mData += (char)data;
 				break;
 			case 2:
 			{
-				data = (T)::htons(data);
+				data = (T)::htons((uint16_t)data);
 				break;
 			}
 			case 4:
 			{
-				data = (T)::htonl(data);
+				data = (T)::htonl((uint32_t)data);
 				break;
 			}
 			case 8:
 			{
-				data = (T)::htonll(data);
+				data = (T)::htonll((uint64_t)data);
 				break;
 			}
 			default:

@@ -6,9 +6,9 @@
 
 struct IOCPEvent
 {
-	static const unsigned MAX_EVENTS = 1000u;
-	OVERLAPPED_ENTRY events[ MAX_EVENTS ];
-	int eventCount;
+	static const uint32_t MAX_EVENTS = 1000u;
+	OVERLAPPED_ENTRY events[MAX_EVENTS];
+	uint32_t eventCount;
 };
 
 class IOCP
@@ -21,9 +21,9 @@ public:
 	{ }
 	~IOCP( ) = default;
 
-	inline int add( Socket& socket, ULONG_PTR id )
+	inline int add( const SOCKET_HANDLE handle, const ULONG_PTR id )
 	{
-		if ( NULL == CreateIoCompletionPort( reinterpret_cast<HANDLE>(socket.handle( )),
+		if ( NULL == CreateIoCompletionPort( (HANDLE)handle,
 									  mhIOCP,
 									  id,
 									  mNumOfThreads ) )
@@ -37,13 +37,22 @@ public:
 	}
 	inline void wait( IOCPEvent& event, int timeoutMs )
 	{
-		if ( 0 == GetQueuedCompletionStatusEx( mhIOCP, event.events, IOCPEvent::MAX_EVENTS,
-											   reinterpret_cast<PULONG>(&event.eventCount),
+		if ( FALSE == GetQueuedCompletionStatusEx( mhIOCP, event.events, IOCPEvent::MAX_EVENTS,
+											   (PULONG)&event.eventCount,
 											   timeoutMs,
 											   FALSE ) ) //±Ã±Ý: ¹¹Áö?
 		{
-			// When it does nothing,
-			event.eventCount = 0;
+			const int err = WSAGetLastError();
+			if ( WSA_WAIT_TIMEOUT == err )
+			{
+				event.eventCount = 0;
+			}
+#ifdef _DEBUG
+			else
+			{
+				__debugbreak( );
+			}
+#endif
 		}
 	}
 private:

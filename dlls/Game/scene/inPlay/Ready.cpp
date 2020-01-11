@@ -89,7 +89,7 @@ void ::scene::inPlay::Ready::loadResources( )
 			}
 			lua_pop( lua, 1 );
 
-			const char field1[ ] = "width";
+			const char field1[ ] = "clipWidth";
 			lua_pushstring( lua, field1 );
 			lua_gettable( lua, 1 );
 			type = lua_type( lua, TOP_IDX );
@@ -118,7 +118,7 @@ void ::scene::inPlay::Ready::loadResources( )
 			}
 			lua_pop( lua, 1 );
 
-			const char field2[ ] = "height";
+			const char field2[ ] = "clipHeight";
 			lua_pushstring( lua, field2 );
 			lua_gettable( lua, 1 );
 			type = lua_type( lua, TOP_IDX );
@@ -152,7 +152,7 @@ void ::scene::inPlay::Ready::loadResources( )
 
 	if ( true == isPathDefault )
 	{
-		const char defaultFilePathNName[ ] = "Images/Ready.png";
+		const char defaultFilePathNName[ ] = "Images/Countdown.png";
 		if ( false == mTexture.loadFromFile(defaultFilePathNName) )
 		{
 			// Exception: When there's not even the default file,

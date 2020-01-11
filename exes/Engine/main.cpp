@@ -4,10 +4,9 @@
 
 //TODO: 개발 완료 후 auto 쓰는 대신 타입 명시, 브랜치에 커밋
 //TODO: https://tetris.fandom.com/wiki/Tetris_Guideline
-//TODO: DDoS 방지, 보냈으면 응답을 받아서 성공 여부 결정
+//TODO: WSAGetOverlappedResult로 보내기 성공 여부 알아내기, 암호화, 몇몇 it은 pair로, 패키징, 함수의 전제.
 
-const uint32_t VERSION = 8191015;
-const uint32_t DEFAULT_FOREGROUND_FPS = 60u;
+const uint32_t DEFAULT_FOREGROUND_FPS = 60;
 const uint32_t DEFAULT_BACKGROUND_FPS = 30u;
 
 int main( int argc, char* argv[] )
@@ -92,7 +91,6 @@ Initialization
 =====
 */
 	auto& variableTable = gService.vault( );
-	variableTable.emplace( HK_VERSION, VERSION );
 	variableTable.emplace( HK_FORE_FPS, DEFAULT_FOREGROUND_FPS );
 	variableTable.emplace( HK_BACK_FPS, DEFAULT_BACKGROUND_FPS );
 	gService._console( ).setPosition( {winWidth, winHeight} );
@@ -131,6 +129,7 @@ Main Loop
 	gService.vault( ).emplace( HK_HAS_GAINED_FOCUS, 1 );
 	while ( 0 != gService.vault()[HK_IS_RUNNING] )
 	{
+		//궁금: 이건 std::list가 std::vector보다 더 빠르려나?
 		std::list< sf::Event > subEventQueue;
 		sf::Event event;
 		while ( true == window.pollEvent(event) )

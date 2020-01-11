@@ -4,13 +4,12 @@
 #include "Tetrimino.h"
 
 //TODO: 접속 종료한 지 얼마 안 되었을 때 바로 접속 가능하게
-
 //DOING: 로직
 
-const uint32_t CLIENT_CAPACITY = 10u;
-const uint32_t ROOM_CAPACITY = 100u;
-const uint32_t LOBBY_CAPACITY = 100u;
-const uint16_t LISTENER_PORT = MAIN_SERVER_PORT;
+const uint32_t CLIENT_CAPACITY = 10;
+const uint32_t ROOM_CAPACITY = 100;
+const uint32_t LOBBY_CAPACITY = 100;
+const ClientIndex LISTENER_IDX = CLIENT_CAPACITY;
 
 volatile bool IsWorking = true;
 void ProcessSignal( int signal )
@@ -25,165 +24,204 @@ int main()
 {
 	signal( SIGINT, &ProcessSignal );
 
-	WSAData w;
-	WSAStartup( MAKEWORD(2,2), &w );
+	{
+		WSAData w;
+		WSAStartup( MAKEWORD(2,2), &w );
+	}
 
 	SYSTEM_INFO sysInfo;
 	GetSystemInfo( &sysInfo );
 	IOCP iocp( 2*sysInfo.dwNumberOfProcessors + 2 );
 
-	Socket listener( Socket::Type::TCP_LISTENER );
+	////
+	//
+	////
+
+	Socket listener( Socket::Type::TCP );
 	{
-		char ipAddress[] = "192.168.219.102";
-		if ( -1 == listener.bind(EndPoint(ipAddress, LISTENER_PORT)) )
+		bool result = true;
+		if ( -1 == listener.bind(EndPoint(MAIN_SERVER_IP_ADDRESS, MAIN_SERVER_PORT)) )
 		{
 			// Exception
 			std::cerr << "FATAL: Failed to bind listener.\n";
+			result = false;
+		}
+		//궁금: 항상 받기 걸어두기가 가능하면 이게 필요하다.
+		//else if ( const DWORD rcvBufSize = 0;
+		//	0 != ::setsockopt(listener.handle(), SOL_SOCKET, SO_RCVBUF, (char*)&rcvBufSize, sizeof(DWORD)) )
+		//{
+		//	// Exception
+		//	std::cerr << "Failed to set receiving buffer size to zero for the listener.\n";
+		//}
+		else if ( const DWORD SND_BUF_SIZ = 0;
+				0 != ::setsockopt(listener.handle(), SOL_SOCKET, SO_SNDBUF, (char*)&SND_BUF_SIZ, sizeof(DWORD)) )
+		{
+			// Exception
+			std::cerr << "FATAL: Failed to set sending buffer size to zero for the listener.\n";
+			result = false;
+		}
+		else if ( -1 == iocp.add(listener.handle(), LISTENER_IDX) )
+		{
+			// Exception
+			std::cerr << "FATAL: Failed to add listener into IOCP.\n";
+			result = false;
+		}
+		else
+		{
+			listener.listen( );
+		}
+
+		if ( false == result )
+		{
 			listener.close( );
 			WSACleanup( );
 			return -1;
 		}
 	}
-	listener.listen( );
-	const ClientIndex LISTENER_IDX = CLIENT_CAPACITY;
-	if ( -1 == iocp.add(listener, LISTENER_IDX) )
-	{
-		// Exception
-		std::cerr << "FATAL: Failed to add listener into IOCP.\n";
-		listener.close( );
-		WSACleanup( );
-		return -1;
-	}
-	std::vector< Client > clientS;
-	clientS.reserve( CLIENT_CAPACITY );
-	// Must use push_back(or emplace_back), front and pop_front only, like std::queue.
-	container::IteratoredQueue< ClientIndex > candidatesIndices;
-	candidatesIndices.reserve( CLIENT_CAPACITY );
+
+	////
+	//
+	////
+
+	std::vector<Client> clients;
+	clients.reserve( CLIENT_CAPACITY );
+	container::IteratoredQueue<ClientIndex> candidates;
+	candidates.reserve( CLIENT_CAPACITY );
 	for ( uint32_t i = 0; i != CLIENT_CAPACITY; ++i )
 	{
-		clientS.emplace_back( Socket::Type::TCP, i );
-		if ( -1 == iocp.add(clientS.at(i).socket(), i) )
+		Client& client = clients.emplace_back(Socket::Type::TCP, i);
+		const Socket& socket = client.socket();
+		if ( -1 == iocp.add(socket.handle(), i) )
 		{
 			std::cerr << "FATAL: Failed to add Client " << i << " into IOCP.\n";
 			listener.close( );
 			WSACleanup( );
-			clientS.clear( );
+			clients.clear( );
 			return -1;
 		}
-		candidatesIndices.emplace_back( i );
+		candidates.emplace_back( i );
 	}
-	const int result = listener.acceptOverlapped( clientS.at(candidatesIndices.front()).socket() );
-	if ( 0 == result && ERROR_IO_PENDING != WSAGetLastError() )
 	{
-		// Exception
-		listener.close( );
-		clientS.clear( );
-		WSACleanup( );
-		std::cerr << "FATAL: Failed to accept.\n";
-		return -1;
-	}
-	else if ( -1 == result )
-	{
-		// Exception
-		listener.close( );
-		clientS.clear( );
-		WSACleanup( );
-		std::cerr << "FATAL: Failed to get AcceptEx(...).\n";
-		return -1;
-	}
-	listener.pend( );
-	std::unordered_map< HashedKey, Room > roomS;
-	roomS.reserve( ROOM_CAPACITY );
-	std::vector< ClientIndex > lobby;
-	lobby.reserve( LOBBY_CAPACITY );
-	auto forceDisconnection = [ &clientS, &iocp, &candidatesIndices, &roomS, &lobby ]( const ClientIndex idx )->int
-	{
-		Client& client = clientS[ idx ];
-		client.setSocket( Socket::Type::TCP, Socket::CompletedWork::DISCONNECT );
-		candidatesIndices.emplace_back( idx );
-		std::cout << "Forced to disconnect Client " << idx << ". (Now "
-			<< CLIENT_CAPACITY-candidatesIndices.size() << "/" << CLIENT_CAPACITY << " connections.)\n";
-		if ( -1 == iocp.add(client.socket(), idx) )
+		const int result = listener.acceptOverlapped(clients.at(candidates.front()).socket());
+		if ( FALSE == result )
 		{
 			// Exception
-			std::cerr << "FATAL: Failed to add Client " << idx << " into IOCP.\n";
+			std::cerr << "FATAL: Failed to accept.\n";
+			listener.close( );
+			clients.clear( );
+			WSACleanup( );
 			return -1;
 		}
+		else if ( -1 == result )
+		{
+			// Exception
+			std::cerr << "FATAL: Failed to get AcceptEx(...).\n";
+			listener.close( );
+			clients.clear( );
+			WSACleanup( );
+			return -1;
+		}
+	}
 
+	////
+	//
+	////
+
+	// NOTE: std::vector with cache runs faster than std::list.
+	std::vector<ClientIndex> lobby;
+	lobby.reserve( LOBBY_CAPACITY );
+	std::unordered_map<HashedKey, Room> rooms;
+	rooms.reserve( ROOM_CAPACITY );
+	auto forceDisconnection = [ &clients, &iocp, &candidates, &lobby, &rooms ]( const ClientIndex index ) -> bool
+	{
+		bool result = true;
+		Client& client = clients[index];
 		if ( Client::State::IN_LOBBY == client.state() )
 		{
 			for ( auto it = lobby.cbegin(); lobby.cend() != it; ++it )
 			{
-				if ( idx == *it )
+				if ( index == *it )
 				{
 					lobby.erase( it );
 					break;
 				}
 			}
-			for ( const ClientIndex otherIdx : lobby )
+		}
+		else if ( const auto it = rooms.find(client.roomID());
+				 rooms.end() != it )
+		{
+			if ( 0 == it->second.leave(index) )
 			{
-				Socket& _socket = clientS[otherIdx].socket();
-				Packet packet;
-				std::string nickname( client.nickname() );
-				packet.pack( TAGGED_NOTI_SOMEONE_LEFT, nickname );
-				if ( -1 == _socket.sendOverlapped(packet) )
-				{
-					// Exception
-					std::cerr << "Failed to notify to Client "
-						<< otherIdx << " that " << idx << " left the lobby.\n";
 #ifdef _DEBUG
-					__debugbreak( );
+				std::cout << "Room "
+					<< it->first << " has been destructed.\n";
 #endif
-					continue;
-				}
-				_socket.pend( );
+				rooms.erase( it );
 			}
 		}
-		else if ( const auto it = roomS.find(client.roomID()); roomS.end() != it )
-		{
-			it->second.leave( idx );
-		}
 		client.reset( );
-		return 0;
+		const Socket& socket = client.socket();
+		if ( -1 == iocp.add(socket.handle(), index) )
+		{
+			// Exception
+			std::cerr << "FATAL: Failed to add Client " << index << " into IOCP.\n";
+			result = false;
+			return result;
+		}
+		candidates.emplace_back( index );
+		std::cout << "Forced to disconnect Client " << index << ". (Now "
+			<< CLIENT_CAPACITY-candidates.size() << "/" << CLIENT_CAPACITY << " connections.)\n";
+		return result;
 	};
-
-	std::cout << "##########\n### MAIN SERVER\n##########\n\nWhat is today's salt, Sir?" << std::endl;
-	std::string todaysSalt;
-	std::cin >> todaysSalt;
-	std::cout << "Ready.\n";
-	const HashedKey encryptedSalt = ::util::hash::Digest( todaysSalt.data(), (uint8_t)todaysSalt.size() );
 	bool wasBoatful = false;
 	ClientIndex queueServerIdx = -1;
-	std::vector< Ticket > ticketS;
+	std::cout << "###############\n### MAIN SERVER\n###############\n\nWhat would the queue server say?" << std::endl;
+	std::string sign;
+	std::cin >> sign;
+	const HashedKey encryptedSign = ::util::hash::Digest( sign.data(), (uint8_t)sign.size() );
+	std::cout << "Ready.\n";
+	std::vector<Ticket> tickets;
 	IOCPEvent event;
+
+	////
+	//
+	////
+
 	while ( true == IsWorking )
 	{
 		iocp.wait( event, 100 );
 		for ( uint32_t i = 0u; i != event.eventCount; ++i )
 		{
-			const OVERLAPPED_ENTRY& ev = event.events[ i ];
+			const OVERLAPPED_ENTRY& ev = event.events[i];
 			////
 			// When event comes from listener,
 			////
-			if ( LISTENER_IDX == (ClientIndex)ev.lpCompletionKey && 0 < candidatesIndices.size() )
+			if ( LISTENER_IDX == (ClientIndex)ev.lpCompletionKey )
 			{
-				listener.pend( false );
-				const ClientIndex candidateClientIdx = candidatesIndices.front( );
-				Socket& candidateClientSocket = clientS[ candidateClientIdx ].socket( );
+				const IOType cmpl = listener.completedIO(ev.lpOverlapped);
+#ifdef _DEBUG
+				if ( IOType::ACCEPT != cmpl )
+				{
+					__debugbreak( );
+				}
+#endif
+				const ClientIndex candidate = candidates.front();
+				Socket& candidateClientSocket = clients[candidate].socket();
 				if ( -1 == candidateClientSocket.updateAcceptContext(listener) )
 				{
 					// Exception
+					std::cerr << "FATAL: Failed to update acception context of Candidate " << candidate << ".\n";
 					// Break twice
 					goto cleanUp;
 				}
-				// When acception is successful,
+				// When accepting successfully,
 				Socket& clientSocket = candidateClientSocket;
-				const ClientIndex clientIdx = candidateClientIdx;
+				const ClientIndex clientIdx = candidate;
 				if ( -1 == clientSocket.receiveOverlapped() )
 				{
 					// Exception
-					std::cerr << "Failed to pend reception from a new client " << clientIdx << ".\n";
-					if ( -1 == forceDisconnection(clientIdx) )
+					std::cerr << "WARNING: Failed to receive from a new client " << clientIdx << ".\n";
+					if ( false == forceDisconnection(clientIdx) )
 					{
 						// Break twice
 						goto cleanUp;
@@ -191,32 +229,29 @@ int main()
 				}
 				else
 				{
-					candidatesIndices.pop_front( );
-					clientSocket.pend( );
+					candidates.pop_front( );
 #ifdef _DEBUG
 					std::cout << "A new client " << clientIdx << " joined. (Now "
-						<< CLIENT_CAPACITY-candidatesIndices.size() << "/" << CLIENT_CAPACITY << " connections.)\n";
+						<< CLIENT_CAPACITY-candidates.size() << "/" << CLIENT_CAPACITY << " connections.)\n";
 #endif
 				}
 
 				// Reloading the next candidate.
-				if ( 0 < candidatesIndices.size() )
+				if ( 0 < candidates.size() )
 				{
-					const ClientIndex nextCandidateIdx = candidatesIndices.front( );
-					if ( 0 == listener.acceptOverlapped(clientS[nextCandidateIdx].socket())
-						 && ERROR_IO_PENDING != WSAGetLastError() )
+					const ClientIndex nextCandidate = candidates.front();
+					if ( FALSE == listener.acceptOverlapped(clients[nextCandidate].socket()) )
 					{
 						// Exception
-						std::cerr << "Failed to accept.\n";
+						std::cerr << "FATAL: Failed to accept.\n";
 						goto cleanUp;
-					}
-					else
-					{
-						listener.pend( );
 					}
 				}
 				else
 				{
+#ifdef _DEBUG
+					std::cout << "Boatful!\n";
+#endif
 					wasBoatful = true;
 				}
 			}
@@ -225,40 +260,34 @@ int main()
 			////
 			else if ( queueServerIdx == (ClientIndex)ev.lpCompletionKey )
 			{
-				Socket& socketToQueueServer = clientS[ queueServerIdx ].socket( );
-				socketToQueueServer.pend( false );
-				if ( Socket::CompletedWork::DISCONNECT == socketToQueueServer.completedWork() )
+				Socket& socketToQueueServer = clients[queueServerIdx].socket();
+				const IOType cmpl = socketToQueueServer.completedIO(ev.lpOverlapped);
+				if ( IOType::DISCONNECT == cmpl )
 				{
-					const int res = candidatesIndices.contains( queueServerIdx );
-					if ( -1 == res )
+					const bool isAlreadyCandidate = candidates.contains(queueServerIdx);
+					if ( true == isAlreadyCandidate )
 					{
 						std::cerr << "WARNING: Client " << queueServerIdx << " is already candidate.\n";
 					}
-					else if ( 0 == res )
+					else 
 					{
-						candidatesIndices.emplace_back( queueServerIdx );
+						candidates.emplace_back( queueServerIdx );
 						// Reset
 						queueServerIdx = -1;
 #ifdef _DEBUG
 						std::cerr << "WARNING: The queue server disconnected. (Now "
-							<< CLIENT_CAPACITY-candidatesIndices.size( ) << '/' << CLIENT_CAPACITY << " connections.)\n";
+							<< CLIENT_CAPACITY-candidates.size( ) << '/' << CLIENT_CAPACITY << " connections.)\n";
 #endif
 					}
 				}
-				// 0 in disconnection, <0 in error.
-				else if ( ev.dwNumberOfBytesTransferred <= 0 )
+				else if ( 0 == ev.dwNumberOfBytesTransferred )
 				{
-					if ( ev.dwNumberOfBytesTransferred < 0 )
-					{
-						std::cerr << "WARNING: Failed to send to/receive from the queue server.\n";
-					}
-
-					const int res = socketToQueueServer.disconnectOverlapped( );
-					if ( 0 == res && ERROR_IO_PENDING != WSAGetLastError() )
+					const int result = socketToQueueServer.disconnectOverlapped();
+					if ( FALSE == result )
 					{
 						// Exception
-						std::cerr << "Failed to disconnect the queue server.\n";
-						if ( -1 == forceDisconnection(queueServerIdx) )
+						std::cerr << "WARNING: Failed to disconnect the queue server.\n";
+						if ( false == forceDisconnection(queueServerIdx) )
 						{
 							// Break twice
 							goto cleanUp;
@@ -266,63 +295,77 @@ int main()
 						// Reset
 						queueServerIdx = -1;
 					}
-					else if ( -1 == res )
+					else if ( -1 == result )
 					{
 						std::cerr << "FATAL: Failed to get DisconnectEx(...) for the queue server, Client "
 							<< queueServerIdx << ".\n";
 						// Break twice
 						goto cleanUp;
 					}
-					else
-					{
-						socketToQueueServer.pend( );
-					}
 				}
 				else
 				{
-					const Socket::CompletedWork cmpl = socketToQueueServer.completedWork( );
-					if ( Socket::CompletedWork::RECEIVE == cmpl )
+					switch ( cmpl )
 					{
+						case IOType::RECEIVE:
+						{
 // TODO: getline
-						const char* const rcvBuf = socketToQueueServer.receivingBuffer();
-						const std::string_view strView( rcvBuf );
-						// When the queue server asked how many clients keep connecting,
-						if ( const size_t pos = strView.find(TAG_POPULATION);
-							std::string_view::npos != pos )
-						{
-#ifdef _DEBUG
-							std::cout << "Population has been asked by the queue server.\n";
-#endif
-							const uint32_t pop = CLIENT_CAPACITY-candidatesIndices.size();
-							Packet packet;
-							packet.pack( TAG_POPULATION, pop );
-							if ( -1 == socketToQueueServer.sendOverlapped(packet) )
+							const char* const rcvBuf = socketToQueueServer.receivingBuffer();
+							const std::string_view strView( rcvBuf );
+							// When the queue server asked how many clients keep connecting,
+// 궁금: receive 쪼개서 받을 수 있으면 이렇게 안 해도 될텐데.
+							if ( const size_t pos = strView.find(TAG_POPULATION);
+								std::string_view::npos != pos )
 							{
-								// Exception
-								std::cerr << "Failed to pend sending population\n";
-								if ( -1 == forceDisconnection(queueServerIdx) )
+#ifdef _DEBUG
+								std::cout << "Population has been asked by the queue server.\n";
+#endif
+								const uint32_t pop = CLIENT_CAPACITY-candidates.size();
+								Packet packet;
+								packet.pack( TAG_POPULATION, pop );
+								if ( -1 == socketToQueueServer.sendOverlapped(packet) )
 								{
-									// Break twice
-									goto cleanUp;
+									// Exception
+									std::cerr << "WARNING: Failed to receive population\n";
+									if ( false == forceDisconnection(queueServerIdx) )
+									{
+										// Break twice
+										goto cleanUp;
+									}
+									// Reset
+									queueServerIdx = -1;
 								}
-								// Reset
-								queueServerIdx = -1;
-							}
-							else
-							{
-								socketToQueueServer.pend( );
+								else
+								{
 #ifdef _DEBUG
-								std::cout << "Population has been told: " << pop << ".\n";
+									std::cout << "Population has been told: " << pop << ".\n";
+#endif
+								}
+							}
+							uint32_t off = 0;
+							// When having received copies of the issued ticket,
+							constexpr uint8_t TAG_TICKET_LEN = ::util::hash::Measure(TAG_TICKET);
+							while ( true )
+							{
+								const size_t tagPos = strView.find( TAG_TICKET, off );
+								if ( std::string_view::npos == tagPos )
+								{
+									break;
+								}
+ 								const uint32_t beginPos = (uint32_t)tagPos + TAG_TICKET_LEN;
+								off += sizeof(Ticket);
+								const Ticket id = ::ntohl(*(Ticket*)&rcvBuf[beginPos]);
+								tickets.emplace_back( id );
+#ifdef _DEBUG
+								std::cout << "A copy of the issued ticket arrived: " << id << ".\n";
 #endif
 							}
-						}
-						else
-						{
+							//TODO: 끊임없이 받기 걸어두고 싶다.
 							if ( -1 == socketToQueueServer.receiveOverlapped() )
 							{
 								// Exception
-								std::cerr << "Failed to pend reception from the queue server\n";
-								if ( -1 == forceDisconnection(queueServerIdx) )
+								std::cerr << "WARNING: Failed to receive from the queue server.\n";
+								if ( false == forceDisconnection(queueServerIdx) )
 								{
 									// Break twice
 									goto cleanUp;
@@ -330,58 +373,32 @@ int main()
 								// Reset
 								queueServerIdx = -1;
 							}
-							else
-							{
-								socketToQueueServer.pend( );
-							}
+							break;
 						}
-						
-						size_t off = 0u;
-						// When having received copies of the issued ticket,
-						while ( true )
-						{
-							const size_t tagPos = strView.find( TAG_TICKET, off );
-							if ( std::string_view::npos == tagPos )
-							{
-								break;
-							}
-							constexpr uint8_t TAG_TICKET_LEN = ::util::hash::Measure( TAG_TICKET );
- 							const uint32_t beginPos = (uint32_t)tagPos + TAG_TICKET_LEN;
-							off += sizeof(Ticket);
-							const Ticket id = ::ntohl(*(Ticket*)&rcvBuf[beginPos]);
-							ticketS.emplace_back( id );
-#ifdef _DEBUG
-							std::cout << "A copy of the issued ticket arrived: " << id << ".\n";
-#endif
-						}
-					}
-					else if ( Socket::CompletedWork::SEND == cmpl )
-					{
+						case IOType::SEND:
 // NOTE: Here is BLACK SPOT.
 // Frequently-happening error: 10053, 10054.
-						if ( -1 == socketToQueueServer.receiveOverlapped() )
-						{
-							// Exception
-							std::cerr << "Failed to pend reception from the queue server\n";
-							if ( -1 == forceDisconnection(queueServerIdx) )
+							if ( -1 == socketToQueueServer.receiveOverlapped() )
 							{
-								// Break twice
-								goto cleanUp;
+								// Exception
+								std::cerr << "WARNING: Failed to receive from the queue server\n";
+								if ( false == forceDisconnection(queueServerIdx) )
+								{
+									// Break twice
+									goto cleanUp;
+								}
+								// Reset
+								queueServerIdx = -1;
+								continue;
 							}
-							// Reset
-							queueServerIdx = -1;
-							continue;
-						}
-						socketToQueueServer.pend( );
-					}
-					// Exception
-					else
-					{
+							break;
+						default:
 #ifdef _DEBUG
 							__debugbreak( );
 #else
 							__assume(0);
 #endif
+							break;
 					}
 				}
 			}
@@ -391,18 +408,17 @@ int main()
 			else
 			{
 				const ClientIndex clientIdx = (ClientIndex)ev.lpCompletionKey;
-				Client& client = clientS[ clientIdx ];
-				Socket& clientSocket = client.socket( );
-				clientSocket.pend( false );
-				const Socket::CompletedWork cmpl = clientSocket.completedWork( );
-				if ( Socket::CompletedWork::DISCONNECT == cmpl )
+				Client& client = clients[clientIdx];
+				Socket& clientSocket = client.socket();
+				const IOType cmpl =	clientSocket.completedIO(ev.lpOverlapped);
+				if ( IOType::DISCONNECT == cmpl )
 				{
-					const int res = candidatesIndices.contains( clientIdx );
-					if ( -1 == res )
+					const bool isAlreadyCandidate = candidates.contains(clientIdx);
+					if ( true == isAlreadyCandidate )
 					{
 						std::cerr << "WARNING: Client " << clientIdx << " is already candidate.\n";
 					}
-					else if ( 0 == res )
+					else
 					{
 						if ( Client::State::IN_LOBBY == client.state() )
 						{
@@ -414,53 +430,35 @@ int main()
 									break;
 								}
 							}
-							for ( const ClientIndex idx : lobby )
+						}
+						else if ( const auto it = rooms.find(client.roomID());
+								 rooms.end() != it )
+						{
+							if ( 0 == it->second.leave(clientIdx) )
 							{
-								Socket& _socket = clientS[idx].socket();
-								Packet packet;
-								std::string nickname( client.nickname() );
-								packet.pack( TAGGED_NOTI_SOMEONE_LEFT, nickname );
-								if ( -1 == _socket.sendOverlapped(packet) )
-								{
-									// Exception
-									std::cerr << "Failed to notify to Client "
-										<< idx << " that " << clientIdx << " left the lobby.\n";
-									if ( -1 == forceDisconnection(clientIdx) )
-									{
-										// Break twice
-										goto cleanUp;
-									}
-									continue;
-								}
-								_socket.pend( );
+#ifdef _DEBUG
+								std::cout << "Room "
+									<< it->first << " has been destructed.\n";
+#endif
+								rooms.erase( it );
 							}
 						}
-						else if ( const auto it = roomS.find(client.roomID()); roomS.end() != it )
-						{
-							it->second.leave( clientIdx );
-						}
 						client.reset( );
-						candidatesIndices.emplace_back( clientIdx );
+						candidates.emplace_back( clientIdx );
 #ifdef _DEBUG
 						std::cout << "Client " << clientIdx << " left. (Now "
-							<< CLIENT_CAPACITY-candidatesIndices.size( ) << "/" << CLIENT_CAPACITY << " connections.)\n";
+							<< CLIENT_CAPACITY-candidates.size( ) << "/" << CLIENT_CAPACITY << " connections.)\n";
 #endif
 					}
 				}
-				// 0 in disconnection, <0 in error.
-				else if ( ev.dwNumberOfBytesTransferred <= 0 )
+				else if ( 0 == ev.dwNumberOfBytesTransferred )
 				{
-					if ( ev.dwNumberOfBytesTransferred < 0 )
-					{
-						std::cerr << "WARNING: Failed to send to/receive from Client " << clientIdx << ".\n";
-					}
-
 					const int res = clientSocket.disconnectOverlapped( );
-					if ( 0 == res && ERROR_IO_PENDING != WSAGetLastError() )
+					if ( FALSE == res )
 					{
 						// Exception
-						std::cerr << "Failed to disconnect Client " << clientIdx << ".\n";
-						if ( -1 == forceDisconnection(clientIdx) )
+						std::cerr << "WARNING: Failed to disconnect Client " << clientIdx << ".\n";
+						if ( false == forceDisconnection(clientIdx) )
 						{
 							// Break twice
 							goto cleanUp;
@@ -472,179 +470,135 @@ int main()
 						// Break twice
 						goto cleanUp;
 					}
-					else
-					{
-						clientSocket.pend( );
-					}
 				}
 				else
 				{
 					if ( Client::State::UNVERIFIED == client.state() )
 					{
-						if ( Socket::CompletedWork::RECEIVE == cmpl )
+						if ( IOType::RECEIVE == cmpl )
 						{
-							const char* const rcvBuf = clientSocket.receivingBuffer( );
-							// When having a copy of the ticket received from this client,
-							constexpr uint8_t TAG_TICKET_LEN = ::util::hash::Measure( TAG_TICKET );
-							{
-								const Ticket ticket = ::ntohl(*(Ticket*)&rcvBuf[TAG_TICKET_LEN]);
-								auto it = ticketS.cbegin();
-								while ( ticketS.cend() != it )
-								{
-									if ( ticket == *it )
-									{
-										break;
-									}
-									else
-									{
-										++it;
-									}
-								}
-								if ( ticketS.cend() != it )
-								{
-									client.holdTicket( ticket );
-									ticketS.erase( it );
-//TODO: 닉네임
-									std::string nickname( "nickname" );
-									nickname += std::to_string( clientIdx );
-									client.setNickname( nickname );
-
-									Packet packet;
-									packet.pack( TAG_MY_NICKNAME, nickname );
-									if ( -1 == clientSocket.sendOverlapped(packet) )
-									{
-										// Exception
-										std::cerr << "Failed to acknowledge Client " << clientIdx << ".\n";
-										if ( -1 == forceDisconnection(clientIdx) )
-										{
-											// Break twice
-											goto cleanUp;
-										}
-										continue;
-									}
-									clientSocket.pend( );
-									continue;
-								}
-							}
-							// When the queue server as a client asked how many clients keep connecting,
-							if ( encryptedSalt == ::ntohl(*(HashedKey*)rcvBuf) )
-							{
-								queueServerIdx = clientIdx;
-#ifdef _DEBUG
-								std::cout << "Population has been asked by the queue server.\n";
-#endif
-								// Letting the queue server know the population here
-								// makes the queue server possible
-								// to scale up/down the virtual capacity of the main server elastically and independently.
-								Packet packet;
-								const uint32_t pop = CLIENT_CAPACITY-candidatesIndices.size();
-								packet.pack( TAG_POPULATION, pop );
-								Socket& queueServerSocket = clientSocket;
-								if ( -1 == queueServerSocket.sendOverlapped(packet) )
-								{
-									// Exception
-									std::cerr << "Failed to pend sending population.\n";
-									if ( -1 == forceDisconnection(queueServerIdx) )
-									{
-										// Break twice
-										goto cleanUp;
-									}
-									continue;
-								}
-								queueServerSocket.pend( );
-#ifdef _DEBUG
-								std::cout << "Population has been told: " << pop << ".\n";
-#endif
-							}
-							// When not having a copy of the ticket received from this client or
-							// receiving the unmatching salt from the queue server,
-							else
-							{
-								if ( -1 == queueServerIdx )
-								{
-									std::cerr << "WARNING: Unmatching salt from the queue server.\n";
-								}
-								else
-								{
-									std::cerr << "WARNING: Tried to disconnect Client " << clientIdx << " with an invalid ticket.\n";
-								}
-
-								const int res = clientSocket.disconnectOverlapped( );
-								if ( 0==res && ERROR_IO_PENDING!=WSAGetLastError() )
-								{
-									// Exception
-									std::cerr << "Failed to disconnect Client " << clientIdx << ".\n";
-									if ( -1 == forceDisconnection(clientIdx) )
-									{
-										// Break twice
-										goto cleanUp;
-									}
-								}
-								else if ( -1 == res )
-								{
-									std::cerr << "FATAL: Failed to get DisconnectEx(...) for Client " << clientIdx << ".\n";
-									// Break twice
-									goto cleanUp;
-								}
-								else
-								{
-									clientSocket.pend( );
-								}
-							}
-						}
-						else if ( Socket::CompletedWork::SEND == cmpl )
-						{
-							client.setState( Client::State::IN_LOBBY );
-							for ( const ClientIndex idx : lobby )
-							{
-								Client& clientInLobby = clientS[idx];
-								std::string nickname( client.nickname() );
-								Packet packet;
-								packet.pack( TAGGED_NOTI_SOMEONE_VISITED, nickname );
-								Socket& _socket = clientInLobby.socket();
-								if ( -1 == _socket.sendOverlapped(packet) )
-								{
-									// Exception
-									std::cerr << "Failed to pend notifying that a visitor came into the lobby.\n";
-									if ( -1 == forceDisconnection(idx) )
-									{
-										// Break twice
-										goto cleanUp;
-									}
-									continue;
-								}
-							}
-							lobby.emplace_back( clientIdx );
+							const char* const rcvBuf = clientSocket.receivingBuffer();
+							constexpr uint8_t TAG_TICKET_LEN = ::util::hash::Measure(TAG_TICKET);
+							const Ticket ticket = ::ntohl(*(Ticket*)&rcvBuf[TAG_TICKET_LEN]);
 							if ( -1 == clientSocket.receiveOverlapped() )
 							{
 								// Exception
-								std::cerr << "Failed to pend reception from Client " << clientIdx << ".\n";
-								if ( -1 == forceDisconnection(clientIdx) )
+								std::cerr << "WARNING: Failed to receive from Client " << clientIdx << ".\n";
+								if ( false == forceDisconnection(clientIdx) )
 								{
 									// Break twice
 									goto cleanUp;
 								}
 								continue;
 							}
-							clientSocket.pend( );
-						}
-						// Exception
-						else
-						{
+							auto it = tickets.cbegin();
+							while ( tickets.cend() != it )
+							{
+								// When having a copy of the ticket received from this client,
+								if ( ticket == *it )
+								{
+									break;
+								}
+								else
+								{
+									++it;
+								}
+							}
+							if ( tickets.cend() != it )
+							{
+								client.holdTicket( ticket );
+								tickets.erase( it );
+//TODO: 닉네임
+								std::string nickname( "nickname" );
+								nickname += std::to_string( clientIdx );
+								{
+									Packet packet;
+									packet.pack( TAG_MY_NICKNAME, nickname );
+									if ( -1 == clientSocket.sendOverlapped(packet) )
+									{
+										// Exception
+										std::cerr << "Failed to acknowledge Client " << clientIdx << ".\n";
+										if ( false == forceDisconnection(clientIdx) )
+										{
+											// Break twice
+											goto cleanUp;
+										}
+										continue;
+									}
+								}
+								client.setNickname( nickname );
+								client.setState( Client::State::IN_LOBBY );
+								lobby.emplace_back( clientIdx );
+								
+							}
+							// When the queue server(now as a client) asked how many clients keep connecting,
+							else if ( encryptedSign == ::ntohl(*(HashedKey*)rcvBuf) )
+							{
+								queueServerIdx = clientIdx;
 #ifdef _DEBUG
-								__debugbreak( );
-#else
-								__assume(0);
+								std::cout << "Population has been asked by the queue server.\n";
 #endif
+								Packet packet;
+								const uint32_t pop = CLIENT_CAPACITY-candidates.size();
+								packet.pack( TAG_POPULATION, pop );
+								Socket& queueServerSocket = clientSocket;
+								if ( -1 == queueServerSocket.sendOverlapped(packet) )
+								{
+									// Exception
+									std::cerr << "WARNING: Failed to send population.\n";
+									if ( false == forceDisconnection(queueServerIdx) )
+									{
+										// Break twice
+										goto cleanUp;
+									}
+									continue;
+								}
+#ifdef _DEBUG
+								std::cout << "Population has been told: " << pop << ".\n";
+#endif
+							}
+							// Exception
+							// When not having the copy of the ticket or
+							// the sign doesn't match the one from the queue server,
+							else
+							{
+								if ( -1 == queueServerIdx )
+								{
+									std::cerr << "WARNING: The sign doesn't match the one from the queue server.\n";
+								}
+								else
+								{
+									std::cerr << "WARNING: Tried to disconnect Client " << clientIdx << " with an invalid ticket.\n";
+								}
+
+								const int result = clientSocket.disconnectOverlapped( );
+								if ( FALSE == result )
+								{
+									// Exception
+									std::cerr << "WARNING: Failed to disconnect Client " << clientIdx << ".\n";
+									if ( false == forceDisconnection(clientIdx) )
+									{
+										// Break twice
+										goto cleanUp;
+									}
+								}
+								else if ( -1 == result )
+								{
+									std::cerr << "FATAL: Failed to get DisconnectEx(...) for Client " << clientIdx << ".\n";
+									// Break twice
+									goto cleanUp;
+								}
+							}
 						}
 					}
 					else
 					{
-						if ( false == client.complete(clientS, lobby, roomS) )
+						std::vector<ClientIndex> failedIndices( client.work(cmpl, clients, lobby, rooms) );
+						for ( const ClientIndex idx : failedIndices )
 						{
-							if ( -1 == forceDisconnection(clientIdx) )
+							if ( false == forceDisconnection(idx) )
 							{
-								// Break twice
+								// Break three times
 								goto cleanUp;
 							}
 						}
@@ -653,79 +607,96 @@ int main()
 			}
 		}
 
-		for ( auto& it : roomS )
+		if ( 0 < rooms.size() )
 		{
-			std::forward_list< ClientIndex > failedIndices( it.second.update() );
-			for ( const ClientIndex index : failedIndices )
+			auto it = rooms.begin();
+			auto it2 = rooms.begin();
+			++it2;
+			while ( true )
 			{
-				if ( -1 == forceDisconnection(index) )
+				const HashedKey roomID = it->first;
+				std::vector<ClientIndex> failedIndices( it->second.update(clients) );
+				for ( const ClientIndex index : failedIndices )
 				{
-					// Break three times
-					goto cleanUp;
+					if ( false == forceDisconnection(index) )
+					{
+						// Break three times
+						goto cleanUp;
+					}
 				}
-			}
-
-			failedIndices = it.second.notify( clientS );
-			for ( const ClientIndex index : failedIndices )
-			{
-				if ( -1 == forceDisconnection(index) )
+				if ( rooms.end() != rooms.find(roomID) )
 				{
-					// Break three times
-					goto cleanUp;
+					failedIndices = it->second.notify(clients);
+					for ( const ClientIndex index : failedIndices )
+					{
+						if ( false == forceDisconnection(index) )
+						{
+							// Break three times
+							goto cleanUp;
+						}
+					}
 				}
+				it = it2;
+				if ( rooms.end() == it )
+				{
+					break;
+				}
+				++it2;
 			}
 		}
 
-		if ( true == wasBoatful && 0 < candidatesIndices.size() )
+		if ( true == wasBoatful && 0 < candidates.size() )
 		{
 			wasBoatful = false;
-			const ClientIndex nextCandidateClientIdx = candidatesIndices.front( );
-			if ( 0 == listener.acceptOverlapped(clientS[nextCandidateClientIdx].socket())
-				 && ERROR_IO_PENDING != WSAGetLastError() )
+			const ClientIndex nextCandidateClientIdx = candidates.front();
+			if ( FALSE == listener.acceptOverlapped(clients[nextCandidateClientIdx].socket()) )
 			{
 				// Exception
-				std::cerr << "Overlapped acceptEx failed.\n";
+				std::cerr << "FATAL: Overlapped acceptEx failed.\n";
 				break;
 			}
-			listener.pend( );
 		}
 	}
+
 cleanUp:
-	//!IMPORTANT: Must release all the overlapped I/O resources in hand before closing the server.
-	//	 		  Otherwise, overlapped I/O still runs on O/S background.
+	//!IMPORTANT: Must release all the overlapped I/O in hand before closing the server.
+	//	 		  Otherwise overlapped I/O still runs on O/S background.
+	std::cout << "Server gets closed.\n";
 	listener.close( );
-	uint32_t pendingYet = 0u;
-	for ( auto& client : clientS )
+	uint32_t areClientsPending = 0;
+	for ( auto& client : clients )
 	{
-		Socket& socket = client.socket( );
+		Socket& socket = client.socket();
 		socket.close( );
-		if ( true == socket.isPending( ) )
+		if ( true == socket.isPending() )
 		{
-			++pendingYet;
+			++areClientsPending;
 		}
 	}
-	std::cout << "Server gets closed.\n";
-	while ( 0 < pendingYet || true == listener.isPending( ) )
+	while ( 0 < areClientsPending ||
+		   true == listener.isPending() )
 	{
 		IOCPEvent event;
 		iocp.wait( event, 100 );
 		for ( uint32_t i = 0; i != event.eventCount; ++i )
 		{
-			const ClientIndex evIdx = (ClientIndex)event.events[ i ].lpCompletionKey;
+			const OVERLAPPED_ENTRY& ev = event.events[i];
+			const ClientIndex evIdx = (ClientIndex)ev.lpCompletionKey;
 			// When event comes from listener,
 			if ( LISTENER_IDX == evIdx )
 			{
-				listener.pend( false );
+				listener.completedIO( ev.lpOverlapped );
 			}
 			// When event comes from TCP,
 			else
 			{
-				clientS[ evIdx ].socket( ).pend( false );
-				--pendingYet;
+				Socket& socket = clients[evIdx].socket();
+				socket.completedIO( ev.lpOverlapped );
+				--areClientsPending;
 			}
 		}
 	}
-	clientS.clear( );
+	clients.clear( );
 	std::cout << "Server has been closed successfully." << std::endl;
 
 	WSACleanup( );

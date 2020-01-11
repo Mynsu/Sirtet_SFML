@@ -7,6 +7,18 @@ namespace scene::online
 	class Online final : public ::scene::IScene
 	{
 	public:
+		enum class Option
+		{
+			// MUST specify size.
+			SPECIFIED_SIZE = 0b0,
+			// MUST NOT specify size.
+			INDETERMINATE_SIZE = 0b1,
+			// With Option::SPECIFIED_SIZE by default.
+			FIND_END_TO_BEGIN = 0b10,
+			// With Option::SPECIFIED_SIZE by default.
+			RETURN_TAG_ATTACHED = 0b100,
+		};
+
 		Online( ) = delete;
 		Online( sf::RenderWindow& window );
 		~Online( );
@@ -15,34 +27,20 @@ namespace scene::online
 		::scene::ID update( std::list<sf::Event>& eventQueue ) override;
 		void draw( ) override;
 
-		bool connectToMainServer( );
 		void disconnect( );
+		// Stop receiving and disconnect from the queue server, and connect to the main server.
+		bool connectToMainServer( );
 		void send( char* const data, const int size );
 		void send( Packet& packet );
-		void sendZeroByte( );
-		// Reset and resume reception.
-		void receive( ) const;
+		// Ignore received stuff and resume reception.
+		void receive( );
 		bool hasReceived( );
-		enum class Option
-		{
-			SPECIFIED_SIZE = 0b0,
-			INDETERMINATE_SIZE = 0b1,
-
-			FIND_END_TO_BEGIN = 0b10,
-			RETURN_TAG_ATTACHED = 0b100,
-		};
 		std::optional< std::string > getByTag( const Tag tag,
 											  const Online::Option option,
-											  const uint32_t size = 0 ) const;
-		void stopReceivingFromQueueServer( ) const;
-		void setMyNickname( std::string& myNickname )
-		{
-			mMyNickname = myNickname;
-		}
-		const std::string& myNickname( ) const
-		{
-			return mMyNickname;
-		}
+											  const uint32_t size ) const;
+		void setMyNickname( std::string& myNickname );
+		const std::string& myNickname( ) const;
+		HashedKey myNicknameHashed() const;
 #ifdef _DEV
 		::scene::ID currentScene( ) const override;
 #endif
@@ -52,9 +50,10 @@ namespace scene::online
 		// When 0 frame counters don't increase, while 1 or more they increase.
 		// In other words, setting the value 0 to 1( or any number except 0 ) acts like a trigger.
 		uint32_t mFPS_, mFrameCount_disconnection;
+		HashedKey mMyNicknameHashed_;
 		sf::Vector2f mSpriteClipSize_;
 		sf::RenderWindow& mWindow_;
-		std::unique_ptr< ::scene::online::IScene > mCurrentScene;
+		std::unique_ptr<::scene::online::IScene> mCurrentScene;
 		std::string mMyNickname;
 		sf::Texture mTexture;
 		sf::Sprite mSprite;
