@@ -1,11 +1,10 @@
 #include "pch.h"
 #include "Playing.h"
 
-const uint32_t FPS = 60;
-const uint8_t MS_PER_FRAME = 1000/FPS;
+const uint8_t DELTA_TIME_MS = 17;
 const uint8_t FALLING_DIFF = 3;
-const uint8_t TEMPO_DIFF_MS = 20;
-const uint32_t ASYNC_TOLERANCE_MS = 1000000;
+const uint8_t TEMPO_DECREASE_MS = 20;
+const uint32_t ASYNC_TOLERANCE_MS = 10000;
 const uint32_t GAME_OVER_CHK_INTERVAL_MS = 250;
 
 Playing::Playing()
@@ -15,7 +14,7 @@ Playing::Playing()
 	mNumOfLinesCleared( 0 ), mTempoMs( 1000 ),
 	mMoveToUpdate( ::model::tetrimino::Move::NONE_MAX )
 {	
-	for ( auto& it : mPast )
+	for ( auto& it : mAlarms )
 	{
 		it = Clock::now( );
 	}
@@ -71,9 +70,9 @@ bool Playing::update( )
 	bool hasCollidedOnServer = false;
 	if ( true == mCurrentTetrimino.isFallingDown() )
 	{
-		if ( true == alarmAfter(MS_PER_FRAME, AlarmIndex::TETRIMINO_FALLDOWN) )
+		if ( true == alarmAfter(DELTA_TIME_MS, AlarmIndex::TETRIMINO_DOWN) )
 		{
-			resetAlarm( AlarmIndex::TETRIMINO_FALLDOWN );
+			resetAlarm( AlarmIndex::TETRIMINO_DOWN );
 			// TODO: delta 줄여가면서 logarithm으로.
 			for ( uint8_t i = 0; FALLING_DIFF != i; ++i )
 			{
@@ -97,7 +96,7 @@ bool Playing::update( )
 				[[ fallthrough ]];
 			case ::model::tetrimino::Move::DOWN:
 				hasCollidedOnServer = mCurrentTetrimino.moveDown( mStage.cgrid() );
-				mPast[(int)AlarmIndex::TETRIMINO_FALLDOWN] = Clock::now();
+				mAlarms[(int)AlarmIndex::TETRIMINO_DOWN] = Clock::now();
 				mUpdateResult = Playing::UpdateResult::TETRIMINO_MOVED;
 				break;
 			case ::model::tetrimino::Move::LEFT:
@@ -123,9 +122,9 @@ bool Playing::update( )
 #endif
 				break;
 		}
-		if ( true == alarmAfter(mTempoMs, AlarmIndex::TETRIMINO_FALLDOWN) )
+		if ( true == alarmAfter(mTempoMs, AlarmIndex::TETRIMINO_DOWN) )
 		{
-			resetAlarm( AlarmIndex::TETRIMINO_FALLDOWN );
+			resetAlarm( AlarmIndex::TETRIMINO_DOWN );
 			hasCollidedOnServer = mCurrentTetrimino.moveDown( mStage.cgrid() );
 			mUpdateResult = Playing::UpdateResult::TETRIMINO_MOVED;
 		}
@@ -150,7 +149,7 @@ bool Playing::update( )
 			std::cout << numOfLinesCleared << " lines were cleared.\n";
 #endif
 			mNumOfLinesCleared = numOfLinesCleared;
-			mTempoMs -= TEMPO_DIFF_MS;
+			mTempoMs -= TEMPO_DECREASE_MS;
 			mUpdateResult = Playing::UpdateResult::LINE_CLEARED;
 		}
 	}
@@ -171,7 +170,7 @@ bool Playing::update( )
 		if ( false == mHasTetriminoCollidedOnClient )
 		{
 			mHasTetriminoCollidedOnServer = true;
-			mPast[(int)AlarmIndex::ASYNC_TOLERANCE] = Clock::now();
+			mAlarms[(int)AlarmIndex::ASYNC_TOLERANCE] = Clock::now();
 		}
 		else
 		{
@@ -189,13 +188,7 @@ Playing::UpdateResult Playing::updateResult( ) const
 
 ::model::tetrimino::Type Playing::currentTetriminoType() const
 {
-#ifdef _DEBUG
-	const auto type = mCurrentTetrimino.type();
-	std::cout << "curTet: " << (int)type << "\n";
-	return type;
-#else
 	return mCurrentTetrimino.type();
-#endif
 }
 
 ::model::tetrimino::Rotation Playing::currentTetriminoRotationID() const
@@ -210,13 +203,7 @@ sf::Vector2<int8_t> Playing::currentTetriminoPosition() const
 
 ::model::tetrimino::Type Playing::nextTetriminoType() const
 {
-#ifdef _DEBUG
-	const auto type = mNextTetriminos.front().type();
-	std::cout << "nextTet: " << (int)type << "\n";
-	return type;
-#else
 	return mNextTetriminos.front().type();
-#endif
 }
 
 uint32_t Playing::tempoMs() const

@@ -285,7 +285,6 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 						packet.pack( TAG_MY_NEXT_TETRIMINO, (uint8_t)nextTetType );
 						packet.pack( TAG_MY_STAGE, serializedStage, false );
 						packet.pack( TAG_MY_TEMPO_MS, tempoMs );
-						packet.pack( TAG_MY_NUM_OF_LINES_CLEARED, numOfLinesCleared );
 						Socket& socket = clients[pair.first].socket();
 						if ( -1 == socket.sendOverlapped(packet) )
 						{
@@ -308,8 +307,6 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 						std::string serializedStage( playing.serializedStage() );
 						Packet packet;
 						packet.pack( TAG_MY_STAGE, serializedStage, false );
-						const uint8_t ignored = 1;
-						packet.pack( TAG_MY_GAME_OVER, ignored );
 						Socket& socket = clients[pair.first].socket();
 						if ( -1 == socket.sendOverlapped(packet) )
 						{
@@ -405,8 +402,8 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 				std::cerr << "WARNING: Failed to send the list of users in the room to Client " <<
 					idx << ".\n";
 				failedIndices.emplace_back( idx );
+			}
 		}
-	}
 	}
 
 	return failedIndices;
@@ -419,15 +416,15 @@ ClientIndex Room::hostIndex( ) const
 
 bool Room::tryAccept( const ClientIndex index )
 {
-	bool isFull = false;
+	bool isSuccessful = true;
 	const uint8_t pop = (uint8_t)(mCandidateParticipants.size() + mParticipants.size());
 	if ( PARTICIPANT_CAPACITY == pop )
 	{
-		isFull = true;
+		isSuccessful = false;
 	}
 	else
 	{
 		mCandidateParticipants.emplace_back( index );
 	}
-	return isFull;
+	return isSuccessful;
 }

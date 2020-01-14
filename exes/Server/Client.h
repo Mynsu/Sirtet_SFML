@@ -11,6 +11,7 @@ public:
 		IN_LOBBY,
 		WAITING_IN_ROOM,
 		PLAYING_IN_ROOM,
+		AS_QUEUE_SERVER,
 	};
 
 	Client( ) = delete;
@@ -32,7 +33,7 @@ public:
 	HashedKey nicknameHashed() const;
 	void setNickname( std::string& nickname );
 	Socket& socket( );
-	void reset( );
+	void reset( const bool isSocketReusable = true );
 private:
 	const ClientIndex mIndex;
 	Client::State mState;

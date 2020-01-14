@@ -40,18 +40,17 @@ private:
 		UPDATE_USER_LIST,
 		NONE_MAX,
 	};
+	// Auto reset
 	inline bool alarmAfter( const uint32_t milliseconds, const AlarmIndex index )
 	{
+		bool elapsed = false;
 		const Clock::time_point now = Clock::now();
-		if ( std::chrono::milliseconds(milliseconds) < (now-mAlarms[(int)index]) )
+		if ( std::chrono::milliseconds(milliseconds) < now-mAlarms[(int)index] )
 		{
 			mAlarms[(int)index] = now;
-			return true;
+			elapsed = true;
 		}
-		else
-		{
-			return false;
-		}
+		return elapsed;
 	}
 	ClientIndex mHostIndex;
 	Room::State mState;

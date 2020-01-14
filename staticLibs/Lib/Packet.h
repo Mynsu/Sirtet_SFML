@@ -11,10 +11,10 @@ public:
 	{ }
 	~Packet( ) = default;
 
-	inline void pack( const Tag tag, std::string& data, const bool isSizeSpecified = true )
+	inline void pack( const Tag tag, std::string& data, const bool includingTotalSize = true )
 	{
 		mData += tag;
-		if ( true == isSizeSpecified )
+		if ( true == includingTotalSize )
 		{
 			const uint32_t size = ::htonl((uint32_t)data.size());
 			mData.append( (char*)&size, sizeof(size) );

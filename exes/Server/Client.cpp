@@ -52,10 +52,6 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 							userList.reserve( lobby.size()*10 );
 							for ( const ClientIndex idx : lobby )
 							{
-								if ( idx == mIndex )
-								{
-									continue;
-								}
 								const std::string& nickname = clients[idx].nickname();
 								const uint8_t nicknameLen = (uint8_t)nickname.size();
 								userList += (char)nicknameLen;
@@ -85,6 +81,15 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 								failedIndices.emplace_back( mIndex );
 								return failedIndices;
 							}
+							for ( auto it = lobby.cbegin(); lobby.cend() != it; ++it )
+							{
+								if ( mIndex == *it )
+								{
+									lobby.erase( it );
+									break;
+								}
+							}
+							mState = Client::State::WAITING_IN_ROOM;
 							////
 							// Generating random room ID
 							////
@@ -135,6 +140,15 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 											res = (ResultJoiningRoom)rit->second.tryAccept(mIndex);
 											if ( ResultJoiningRoom::SUCCCEDED == res )
 											{
+												for ( auto it = lobby.cbegin(); lobby.cend() != it; ++it )
+												{
+													if ( mIndex == *it )
+													{
+														lobby.erase( it );
+														break;
+													}
+												}
+												mState = Client::State::WAITING_IN_ROOM;
 												mRoomID = roomID;
 											}
 										}
@@ -142,9 +156,7 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 										// Failure
 										else
 										{
-											res = ResultJoiningRoom::FAILED_BY_SERVER_ERROR;
-											std::cerr << "Failed to help Client " << mIndex
-												<< " join Room " << roomID << ", which doesn't exist at all.\n";
+											__debugbreak( );
 										}
 #endif
 										break;
@@ -157,7 +169,7 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 								}
 #ifdef _DEBUG
 								// Failure
-								if ( ResultJoiningRoom::NONE == res )
+								else if ( ResultJoiningRoom::NONE == res )
 								{
 									__debugbreak( );
 								}
@@ -173,6 +185,13 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 								failedIndices.emplace_back( mIndex );
 								return failedIndices;
 							}
+#ifdef _DEBUG
+							else
+							{
+								std::cout << "Client " << mIndex << " tried to join the room where " <<
+									targetNickname << " is and got the result(" << (int)res << ").\n";
+							}
+#endif
 							break;
 						}
 						// Exception
@@ -187,20 +206,6 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 								return failedIndices;
 							}
 							break;
-					}
-
-					if ( Request::CREATE_ROOM == req ||
-						Request::JOIN_ROOM == req )
-					{
-						for ( auto it = lobby.cbegin(); lobby.cend() != it; ++it )
-						{
-							if ( mIndex == *it )
-							{
-								lobby.erase( it );
-								break;
-							}
-						}
-						mState = Client::State::WAITING_IN_ROOM;
 					}
 				}
 				// Exception
@@ -488,13 +493,16 @@ Socket& Client::socket( )
 	return mSocket;
 }
 
-void Client::reset()
+void Client::reset( const bool isSocketReusable )
 {
 	mState = Client::State::UNVERIFIED;
 	mTicket = 0u;
 	mRoomID = -1;
 	mNicknameHashed_ = 0;
 	mNickname.clear( );
-	mSocket.close( );
-	mSocket = Socket( Socket::Type::TCP );
+	if ( false == isSocketReusable )
+	{
+		mSocket.close( );
+		mSocket = Socket(Socket::Type::TCP);
+	}
 }

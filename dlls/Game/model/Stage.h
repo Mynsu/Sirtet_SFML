@@ -58,6 +58,16 @@ namespace model
 				}
 			}
 		}
+		inline void clear( )
+		{
+			for ( auto& row : mGrid )
+			{
+				for ( auto& cell : row )
+				{
+					cell.blocked = false;
+				}
+			}
+		}
 		inline sf::Vector2f position( ) const
 		{
 			return mPosition_;

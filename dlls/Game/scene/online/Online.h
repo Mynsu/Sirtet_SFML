@@ -9,14 +9,9 @@ namespace scene::online
 	public:
 		enum class Option
 		{
-			// MUST specify size.
-			SPECIFIED_SIZE = 0b0,
-			// MUST NOT specify size.
-			INDETERMINATE_SIZE = 0b1,
-			// With Option::SPECIFIED_SIZE by default.
-			FIND_END_TO_BEGIN = 0b10,
-			// With Option::SPECIFIED_SIZE by default.
-			RETURN_TAG_ATTACHED = 0b100,
+			DEFAULT,
+			FIND_END_TO_BEGIN,
+			RETURN_TAG_ATTACHED,
 		};
 
 		Online( ) = delete;
@@ -37,7 +32,7 @@ namespace scene::online
 		bool hasReceived( );
 		std::optional< std::string > getByTag( const Tag tag,
 											  const Online::Option option,
-											  const uint32_t size ) const;
+											  uint32_t bodySize ) const;
 		void setMyNickname( std::string& myNickname );
 		const std::string& myNickname( ) const;
 		HashedKey myNicknameHashed() const;

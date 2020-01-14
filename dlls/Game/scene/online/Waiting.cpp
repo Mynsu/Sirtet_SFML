@@ -46,9 +46,9 @@ void scene::online::Waiting::loadResources( )
 		case State::TICKETING:
 			if ( true == mNet.hasReceived() )
 			{
-				if ( std::optional<std::string> ticket = mNet.getByTag(TAG_TICKET,
+				if ( std::optional<std::string> ticket( mNet.getByTag(TAG_TICKET,
 																	   Online::Option::RETURN_TAG_ATTACHED,
-																	   sizeof(uint32_t));
+																	   sizeof(uint32_t)) );
 					 std::nullopt != ticket )
 				{
 					std::string& _ticket = ticket.value();
@@ -65,9 +65,9 @@ void scene::online::Waiting::loadResources( )
 						mState = State::SUBMITTING_TICKET;
 					}
 				}
-				else if ( std::optional<std::string> order = mNet.getByTag(TAG_ORDER_IN_QUEUE,
+				else if ( std::optional<std::string> order( mNet.getByTag(TAG_ORDER_IN_QUEUE,
 																		 Online::Option::FIND_END_TO_BEGIN,
-																		   sizeof(uint32_t));
+																		   sizeof(uint32_t)) );
 						  std::nullopt != order )
 				{
 					mOrder = ::ntohl(*(uint32_t*)order.value().data());
@@ -90,7 +90,8 @@ void scene::online::Waiting::loadResources( )
 			if ( true == mNet.hasReceived() )
 			{
 				if ( std::optional<std::string> nickname( mNet.getByTag(TAG_MY_NICKNAME,
-																		Online::Option::INDETERMINATE_SIZE, NULL) );
+																		Online::Option::DEFAULT,
+																		-1) );
 					 std::nullopt != nickname )
 				{
 #ifdef _DEBUG

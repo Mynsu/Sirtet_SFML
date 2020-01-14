@@ -24,9 +24,9 @@ namespace scene::online
 		void cancelConnection( const std::string_view& );
 		void createRoom( const std::string_view& );
 		void joinRoom( const std::string_view& arg );
-		static bool IsInstantiated, BinarySemaphore;
+		static bool IsInstantiated;
 		bool mIsReceiving, mHasCanceled, mHasJoined;
-		uint32_t mFrameCount_update;
+		uint32_t mFrameCount_update, mFrameCount_delay;
 		::scene::online::Online& mNet;
 		sf::RenderWindow& mWindow_;
 		std::array< sf::Vector2f, MOVING_POINT_NUM > mMovingPoint;

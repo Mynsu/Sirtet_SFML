@@ -59,7 +59,7 @@ void scene::online::InRoom::loadResources( )
 	uint32_t stagePanelOutlineColor = 0x3f3f3f'7f;
 	uint32_t stageCellOutlineColor = 0x000000'7f;
 	sf::Vector2i vfxComboClipSize( 256, 256 );
-	sf::Vector2f nextTetPanelPos( 420.f, 30.f );
+	sf::Vector2f nextTetPanelPos( 520.f, 30.f );
 	float nextTetPanelCellSize = 30.0;
 	uint32_t nextTetPanelColor = 0x000000'ff;
 	float nextTetPanelOutlineThickness = 5.0;
@@ -512,13 +512,13 @@ void scene::online::InRoom::loadResources( )
 		stage.setBackgroundColor( sf::Color(stagePanelColor),
 								 stagePanelOutlineThickness, sf::Color(stagePanelOutlineColor),
 								 sf::Color(stageCellOutlineColor) );
-		if ( false == it->second.loadTexture(mCountdownSpritePathNName_) )
+		if ( false == it->second.loadCountdownSprite(mCountdownSpritePathNName_) )
 		{
 			// File Not Found Exception
 			gService( )->console( ).printScriptError( ExceptionType::FILE_NOT_FOUND,
 				"Path:CountdownSprite", scriptPathNName );
 			std::string defaultPathNName( "Images/Countdown.png" );
-			if ( false == it->second.loadTexture(defaultPathNName) )
+			if ( false == it->second.loadCountdownSprite(defaultPathNName) )
 			{
 				gService()->console().printFailure( FailureLevel::WARNING,
 												   "Can't find a countdown sprite image." );
@@ -528,7 +528,7 @@ void scene::online::InRoom::loadResources( )
 			}
 		}
 		playView.setCountdownSpriteDimension( stagePanelPos, stageCellSize, mCountdownSpriteClipSize_ );
-		::model::Tetrimino& tetrimino =	playView.tetrimino();
+		::model::Tetrimino& tetrimino =	playView.currentTetrimino();
 		tetrimino.setOrigin( stagePanelPos );
 		tetrimino.setSize( stageCellSize );
 		::vfx::Combo& vfxCombo = playView.vfxCombo();
@@ -561,28 +561,28 @@ void scene::online::InRoom::loadResources( )
 #endif
 
 	sf::Vector2f otherPlayerSlotPos( 600.f, 400.f );
-	mOtherPlayerStageCellSize_ = 5.f;
+	mOtherPlayerStageCellSize_ = 8.f;
 	const sf::Vector2f size( ::model::stage::GRID_WIDTH*mOtherPlayerStageCellSize_,
 							::model::stage::GRID_HEIGHT*mOtherPlayerStageCellSize_ );
-	sf::Vector2f diff( 0.f, mOtherPlayerStageCellSize_*::model::stage::GRID_HEIGHT );
-	mOtherPlayerSlotBackgrounds[ 0 ].setFillColor( sf::Color(0x000000ff) );
+	sf::Vector2f diff( 0.f, mOtherPlayerStageCellSize_*::model::stage::GRID_HEIGHT+10.f );
+	mOtherPlayerSlotBackgrounds[ 0 ].setFillColor( sf::Color(stagePanelColor) );
 	mOtherPlayerSlotBackgrounds[ 0 ].setPosition( otherPlayerSlotPos - diff );
 	mOtherPlayerSlotBackgrounds[ 0 ].setSize( size );
-	mOtherPlayerSlotBackgrounds[ 0 ].setOutlineThickness( 5.f );
-	mOtherPlayerSlotBackgrounds[ 0 ].setOutlineColor( sf::Color(0x0f0f0fff) );
+	mOtherPlayerSlotBackgrounds[ 0 ].setOutlineThickness( 1.f );
+	mOtherPlayerSlotBackgrounds[ 0 ].setOutlineColor( sf::Color(stagePanelOutlineColor) );
 
-	mOtherPlayerSlotBackgrounds[ 1 ].setFillColor( sf::Color(0x000000ff) );
-	diff = sf::Vector2f( mOtherPlayerStageCellSize_*::model::stage::GRID_WIDTH, 0.f	);
+	mOtherPlayerSlotBackgrounds[ 1 ].setFillColor( sf::Color(stagePanelColor) );
+	diff = sf::Vector2f( mOtherPlayerStageCellSize_*::model::stage::GRID_WIDTH+10.f, 0.f );
 	mOtherPlayerSlotBackgrounds[ 1 ].setPosition( otherPlayerSlotPos - diff );
 	mOtherPlayerSlotBackgrounds[ 1 ].setSize( size );
-	mOtherPlayerSlotBackgrounds[ 1 ].setOutlineThickness( 5.f );
-	mOtherPlayerSlotBackgrounds[ 1 ].setOutlineColor( sf::Color(0x0f0f0fff) );
+	mOtherPlayerSlotBackgrounds[ 1 ].setOutlineThickness( 1.f );
+	mOtherPlayerSlotBackgrounds[ 1 ].setOutlineColor( sf::Color(stagePanelOutlineColor) );
 
-	mOtherPlayerSlotBackgrounds[ 2 ].setFillColor( sf::Color(0x000000ff) );
+	mOtherPlayerSlotBackgrounds[ 2 ].setFillColor( sf::Color(stagePanelColor) );
 	mOtherPlayerSlotBackgrounds[ 2 ].setPosition( otherPlayerSlotPos );
 	mOtherPlayerSlotBackgrounds[ 2 ].setSize( size );
-	mOtherPlayerSlotBackgrounds[ 2 ].setOutlineThickness( 5.f );
-	mOtherPlayerSlotBackgrounds[ 2 ].setOutlineColor( sf::Color(0x0f0f0fff) );
+	mOtherPlayerSlotBackgrounds[ 2 ].setOutlineThickness( 1.f );
+	mOtherPlayerSlotBackgrounds[ 2 ].setOutlineColor( sf::Color(stagePanelOutlineColor) );
 
 	::model::Tetrimino::LoadResources( );
 }
@@ -594,13 +594,14 @@ void scene::online::InRoom::loadResources( )
 	{
 		mIsReceiving = false;
 		const HashedKey myNicknameHashed = mNet.myNicknameHashed();
-		if ( std::optional<std::string> userList(mNet.getByTag(TAGGED_NOTI_UPDATE_USER_LIST,
-															   Online::Option::INDETERMINATE_SIZE, NULL));
+		if ( std::optional<std::string> userList( mNet.getByTag(TAGGED_NOTI_UPDATE_USER_LIST,
+															   Online::Option::DEFAULT,
+															   -1) );
 			std::nullopt != userList )
 		{
 			const std::string& _userList( userList.value() );
-			const char* const ptr = _userList.data();
 			const uint32_t userListSize = (uint32_t)_userList.size();
+			const char* const ptr = _userList.data();
 			// 궁금: 최적화할 여지
 			std::unordered_map< HashedKey, std::string > users;
 			uint32_t curPos = 0;
@@ -614,34 +615,36 @@ void scene::online::InRoom::loadResources( )
 				users.emplace( otherNicknameHashed, otherNickname );
 				curPos += curSize;
 			}
-			for ( const auto& it : mParticipants )
+			for ( auto it = mParticipants.begin(); mParticipants.end() != it; )
 			{
-				if ( users.end() == users.find(it.first) )
+				if ( users.end() == users.find(it->first) )
 				{
-					if ( it.first == myNicknameHashed )
+#ifdef _DEBUG
+					if ( it->first == myNicknameHashed )
 					{
-						nextSceneID = ::scene::online::ID::IN_LOBBY;
-						return nextSceneID;
+						__debugbreak( );
 					}
-					mParticipants.erase( it.first );
+#endif
 					for ( HashedKey& nicknameHashed : mOtherPlayerSlots )
 					{
-						if ( it.first == nicknameHashed )
+						if ( it->first == nicknameHashed )
 						{
 							nicknameHashed = 0;
 							break;
 						}
 					}
-					//TODO: 누가 종료했습니다.
+					it = mParticipants.erase(it);
+					//TODO: 누가 종료했다고 알리기.
 				}
 				else
 				{
-					users.erase( it.first );
+					users.erase( it->first );
+					++it;
 				}
 			}
 			for ( const auto& pair : users )
 			{
-				mParticipants.emplace( pair.first, ::ui::PlayView(mWindow_,mNet) );
+				mParticipants.emplace( pair.first, ::ui::PlayView(mWindow_, mNet, false) );
 				uint8_t slotIdx = 0;
 				while ( ROOM_CAPACITY-1 != slotIdx )
 				{
@@ -652,15 +655,28 @@ void scene::online::InRoom::loadResources( )
 					}
 					++slotIdx;
 				}
+#ifdef _DEBUG
+				if ( ROOM_CAPACITY-1 == slotIdx )
+				{
+					__debugbreak( );
+				}
+#endif
 				::model::Stage& stage =	mParticipants[pair.first].stage();
-				sf::RectangleShape& bg = mOtherPlayerSlotBackgrounds[slotIdx];
+				sf::RectangleShape& slotBg = mOtherPlayerSlotBackgrounds[slotIdx];
 				// TODO: 닉네임 보여주기
-				const sf::Vector2f pos( bg.getPosition() );
-				stage.setPosition( pos );
+				const sf::Vector2f otherPStagePos( slotBg.getPosition() );
+				stage.setPosition( otherPStagePos );
 				stage.setSize( mOtherPlayerStageCellSize_ );
-				stage.setBackgroundColor( sf::Color::Black, 3.f, sf::Color(0x0f0f0fff),
-											sf::Color(0x0000007f) );
-				if ( false == mParticipants[pair.first].loadTexture(mCountdownSpritePathNName_) )
+				const sf::Color otherPStageColor = slotBg.getFillColor();
+				const float otherPStageOutlineThickness = 5.f;
+				const sf::Color otherPStageOutlineColor = slotBg.getOutlineColor();
+				const sf::Color otherPStageCellOutlineColor( 0x000000'7f );
+				stage.setBackgroundColor( otherPStageColor, otherPStageOutlineThickness, otherPStageOutlineColor,
+										 otherPStageCellOutlineColor );
+				::model::Tetrimino& curTet = mParticipants[pair.first].currentTetrimino();
+				curTet.setOrigin( otherPStagePos );
+				curTet.setSize( mOtherPlayerStageCellSize_ );
+				if ( false == mParticipants[pair.first].loadCountdownSprite(mCountdownSpritePathNName_) )
 				{
 					gService()->console().printFailure( FailureLevel::WARNING,
 														"Can't find a countdown sprite." );
@@ -668,19 +684,17 @@ void scene::online::InRoom::loadResources( )
 					__debugbreak( );
 #endif
 				}
-				mParticipants[pair.first].setCountdownSpriteDimension( pos,
+				mParticipants[pair.first].setCountdownSpriteDimension( otherPStagePos,
 																	mOtherPlayerStageCellSize_,
 																	mCountdownSpriteClipSize_ );
-				::model::Tetrimino& tet = mParticipants[pair.first].tetrimino();
-				tet.setOrigin( pos );
-				tet.setSize( mOtherPlayerStageCellSize_ );
 			}
 		}
 
 		if ( false == mIsPlaying_ )
 		{
-			if ( std::optional<std::string> response(mNet.getByTag(TAGGED_REQ_GET_READY,
-																   Online::Option::RETURN_TAG_ATTACHED, NULL));
+			if ( std::optional<std::string> response( mNet.getByTag(TAGGED_REQ_GET_READY,
+																   Online::Option::RETURN_TAG_ATTACHED,
+																   NULL) );
 				std::nullopt != response )
 			{
 				for ( auto& it : mParticipants )
@@ -690,23 +704,28 @@ void scene::online::InRoom::loadResources( )
 				mIsPlaying_ = true;
 			}
 		}
-		else if ( std::optional<std::string> allOver(mNet.getByTag(TAG_ALL_OVER,
-																   Online::Option::RETURN_TAG_ATTACHED, NULL));
+		else if ( std::optional<std::string> allOver( mNet.getByTag(TAG_ALL_OVER,
+																   Online::Option::RETURN_TAG_ATTACHED,
+																   NULL) );
 				 std::nullopt != allOver )
 		{
 			mIsPlaying_ = false;
-			mParticipants.clear( );
-			//TODO: 쌓이기 전 후 색깔이 다르다, 여기서 다 지울 거면 내 패널 빼고 지우자, 다른 플레이어 껀 잘 보이나?, 서버 FPS 뭘로?
+			for ( auto& pair : mParticipants )
+			{
+				pair.second.gameOver( );
+			}
+			//TODO: 다른 플레이어 껀 잘 보이나?, 서버 FPS 뭘로?
 		}
 		else
 		{
-			if ( std::optional<std::string> newCurrentTetriminos(mNet.getByTag(TAG_NEW_CURRENT_TETRIMINOS,
-																					  Online::Option::INDETERMINATE_SIZE, NULL));
+			if ( std::optional<std::string> newCurrentTetriminos( mNet.getByTag(TAG_NEW_CURRENT_TETRIMINOS,
+																			Online::Option::DEFAULT,
+																			   -1) );
 				std::nullopt != newCurrentTetriminos )
 			{
 				const std::string& newCurTetTypes = newCurrentTetriminos.value();
-				const uint32_t totalSize = (uint32_t)newCurTetTypes.size();
 				const char* ptr = newCurTetTypes.data();
+				const uint32_t totalSize = (uint32_t)newCurTetTypes.size();
 				uint32_t curPos = 0;
 				while ( totalSize != curPos )
 				{
@@ -733,7 +752,8 @@ void scene::online::InRoom::loadResources( )
 			}
 
 			if ( std::optional<std::string> currentTetriminosMove( mNet.getByTag(TAG_CURRENT_TETRIMINOS_MOVE,
-																				 Online::Option::INDETERMINATE_SIZE, NULL) );
+																				 Online::Option::DEFAULT,
+																				 -1) );
 				std::nullopt != currentTetriminosMove )
 			{
 				std::string& curTetsMove = currentTetriminosMove.value();
@@ -756,7 +776,7 @@ void scene::online::InRoom::loadResources( )
 					if ( const auto it = mParticipants.find(nicknameHashed);
 						mParticipants.end() != it )
 					{
-						::model::Tetrimino& tet = it->second.tetrimino();
+						::model::Tetrimino& tet = it->second.currentTetrimino();
 						tet.move( rotID, pos );
 					}
 #ifdef _DEBUG
@@ -769,7 +789,8 @@ void scene::online::InRoom::loadResources( )
 			}
 
 			if ( std::optional<std::string> stages( mNet.getByTag(TAG_STAGES,
-																Online::Option::INDETERMINATE_SIZE, NULL) );
+																Online::Option::DEFAULT,
+																  -1) );
 				std::nullopt != stages )
 			{
 				std::string& _stages = stages.value();
@@ -803,7 +824,8 @@ void scene::online::InRoom::loadResources( )
 			}
 
 			if ( std::optional<std::string> numsOfLinesCleared( mNet.getByTag(TAG_NUMS_OF_LINES_CLEARED,
-																			Online::Option::INDETERMINATE_SIZE, NULL) );
+																			Online::Option::DEFAULT,
+																			  -1) );
 				std::nullopt != numsOfLinesCleared )
 			{
 				std::string& _numsOfLinesCleared = numsOfLinesCleared.value();
@@ -813,11 +835,6 @@ void scene::online::InRoom::loadResources( )
 				while ( totalSize != curPos )
 				{
 					const HashedKey nicknameHashed = ::ntohl(*(HashedKey*)&ptr[curPos]);
-					if ( nicknameHashed == myNicknameHashed )
-					{
-						curPos += sizeof(HashedKey) + sizeof(uint8_t);
-						continue;
-					}
 					curPos += sizeof(HashedKey);
 					const uint8_t numOfLinesCleared = (uint8_t)ptr[curPos];
 					++curPos;
@@ -836,12 +853,13 @@ void scene::online::InRoom::loadResources( )
 			}
 
 			if ( std::optional<std::string> gamesOver( mNet.getByTag(TAG_GAMES_OVER,
-																	Online::Option::INDETERMINATE_SIZE, NULL) );
+																	Online::Option::DEFAULT,
+																	 -1) );
 				std::nullopt != gamesOver )
 			{
 				std::string& _gamesOver = gamesOver.value();
-				const char* ptr = _gamesOver.data();
 				const uint32_t totalSize = (uint32_t)_gamesOver.size();
+				const char* ptr = _gamesOver.data();
 				uint32_t curPos = 0;
 				while ( totalSize != curPos )
 				{
@@ -850,7 +868,7 @@ void scene::online::InRoom::loadResources( )
 					if ( const auto it = mParticipants.find(nicknameHashed);
 						mParticipants.end() != it )
 					{
-						it->second.gameOverOnServer();
+						it->second.gameOver();
 					}
 #ifdef _DEBUG
 					else

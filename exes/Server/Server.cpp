@@ -159,7 +159,7 @@ int main()
 				rooms.erase( it );
 			}
 		}
-		client.reset( );
+		client.reset( false );
 		const Socket& socket = client.socket();
 		if ( -1 == iocp.add(socket.handle(), index) )
 		{
@@ -260,25 +260,23 @@ int main()
 			////
 			else if ( queueServerIdx == (ClientIndex)ev.lpCompletionKey )
 			{
-				Socket& socketToQueueServer = clients[queueServerIdx].socket();
+				if ( true == candidates.contains(queueServerIdx) )
+				{
+					continue;
+				}
+				Client& queueServer = clients[queueServerIdx];
+				Socket& socketToQueueServer = queueServer.socket();
 				const IOType cmpl = socketToQueueServer.completedIO(ev.lpOverlapped);
 				if ( IOType::DISCONNECT == cmpl )
 				{
-					const bool isAlreadyCandidate = candidates.contains(queueServerIdx);
-					if ( true == isAlreadyCandidate )
-					{
-						std::cerr << "WARNING: Client " << queueServerIdx << " is already candidate.\n";
-					}
-					else 
-					{
-						candidates.emplace_back( queueServerIdx );
-						// Reset
-						queueServerIdx = -1;
+					queueServer.reset( );
+					candidates.emplace_back( queueServerIdx );
+					// Reset
+					queueServerIdx = -1;
 #ifdef _DEBUG
-						std::cerr << "WARNING: The queue server disconnected. (Now "
-							<< CLIENT_CAPACITY-candidates.size( ) << '/' << CLIENT_CAPACITY << " connections.)\n";
+					std::cerr << "WARNING: The queue server disconnected. (Now "
+						<< CLIENT_CAPACITY-candidates.size( ) << '/' << CLIENT_CAPACITY << " connections.)\n";
 #endif
-					}
 				}
 				else if ( 0 == ev.dwNumberOfBytesTransferred )
 				{
@@ -376,8 +374,6 @@ int main()
 							break;
 						}
 						case IOType::SEND:
-// NOTE: Here is BLACK SPOT.
-// Frequently-happening error: 10053, 10054.
 							if ( -1 == socketToQueueServer.receiveOverlapped() )
 							{
 								// Exception
@@ -408,48 +404,44 @@ int main()
 			else
 			{
 				const ClientIndex clientIdx = (ClientIndex)ev.lpCompletionKey;
+				if ( true == candidates.contains(clientIdx) )
+				{
+					continue;
+				}
 				Client& client = clients[clientIdx];
 				Socket& clientSocket = client.socket();
 				const IOType cmpl =	clientSocket.completedIO(ev.lpOverlapped);
 				if ( IOType::DISCONNECT == cmpl )
 				{
-					const bool isAlreadyCandidate = candidates.contains(clientIdx);
-					if ( true == isAlreadyCandidate )
+					if ( Client::State::IN_LOBBY == client.state() )
 					{
-						std::cerr << "WARNING: Client " << clientIdx << " is already candidate.\n";
-					}
-					else
-					{
-						if ( Client::State::IN_LOBBY == client.state() )
+						for ( auto it = lobby.cbegin(); lobby.cend() != it; ++it )
 						{
-							for ( auto it = lobby.cbegin(); lobby.cend() != it; ++it )
+							if ( clientIdx == *it )
 							{
-								if ( clientIdx == *it )
-								{
-									lobby.erase( it );
-									break;
-								}
+								lobby.erase( it );
+								break;
 							}
 						}
-						else if ( const auto it = rooms.find(client.roomID());
-								 rooms.end() != it )
-						{
-							if ( 0 == it->second.leave(clientIdx) )
-							{
-#ifdef _DEBUG
-								std::cout << "Room "
-									<< it->first << " has been destructed.\n";
-#endif
-								rooms.erase( it );
-							}
-						}
-						client.reset( );
-						candidates.emplace_back( clientIdx );
-#ifdef _DEBUG
-						std::cout << "Client " << clientIdx << " left. (Now "
-							<< CLIENT_CAPACITY-candidates.size( ) << "/" << CLIENT_CAPACITY << " connections.)\n";
-#endif
 					}
+					else if ( const auto it = rooms.find(client.roomID());
+								rooms.end() != it )
+					{
+						if ( 0 == it->second.leave(clientIdx) )
+						{
+#ifdef _DEBUG
+							std::cout << "Room "
+								<< it->first << " has been destructed.\n";
+#endif
+							rooms.erase( it );
+						}
+					}
+					client.reset( );
+					candidates.emplace_back( clientIdx );
+#ifdef _DEBUG
+					std::cout << "Client " << clientIdx << " left. (Now "
+						<< CLIENT_CAPACITY-candidates.size( ) << "/" << CLIENT_CAPACITY << " connections.)\n";
+#endif
 				}
 				else if ( 0 == ev.dwNumberOfBytesTransferred )
 				{
@@ -535,6 +527,7 @@ int main()
 							else if ( encryptedSign == ::ntohl(*(HashedKey*)rcvBuf) )
 							{
 								queueServerIdx = clientIdx;
+								client.setState( Client::State::AS_QUEUE_SERVER );
 #ifdef _DEBUG
 								std::cout << "Population has been asked by the queue server.\n";
 #endif

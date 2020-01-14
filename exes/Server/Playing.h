@@ -41,49 +41,32 @@ private:
 	}
 	enum class AlarmIndex
 	{
-		TETRIMINO_FALLDOWN,
+		TETRIMINO_DOWN,
 		ASYNC_TOLERANCE,
 		GAME_OVER,
 		NONE_MAX,
 	};
+	// This function doesn't reset the alarm.
 	inline bool alarmAfter( const uint32_t milliseconds, const AlarmIndex index )
 	{
-		if ( std::chrono::milliseconds(milliseconds) < Clock::now()-mPast[(int)index] )
+		bool elapsed = false;
+		if ( std::chrono::milliseconds(milliseconds) < Clock::now()-mAlarms[(int)index] )
 		{
-			return true;
+			elapsed = true;
 		}
-		else
-		{
-			return false;
-		}
+		return elapsed;
 	}
 	inline void resetAlarm( const AlarmIndex index )
 	{
-		mPast[(int)index] = Clock::now( );
+		mAlarms[(int)index] = Clock::now( );
 	}
 	bool mHasTetriminoCollidedOnClient, mHasTetriminoCollidedOnServer, mIsGameOver_;
 	uint8_t mNumOfLinesCleared;
 	uint32_t mTempoMs;
-	Clock::time_point mPast[ (int)AlarmIndex::NONE_MAX ];
+	Clock::time_point mAlarms[ (int)AlarmIndex::NONE_MAX ];
 	::model::tetrimino::Move mMoveToUpdate;
 	UpdateResult mUpdateResult;
 	::model::Tetrimino mCurrentTetrimino;
 	std::queue< ::model::Tetrimino > mNextTetriminos;
 	::model::Stage mStage;
 };
-
-
-//inline Playing::UpdateResult operator|( const Playing::UpdateResult lh, const Playing::UpdateResult rh )
-//{
-//	return (Playing::UpdateResult)((uint32_t)lh | (uint32_t)rh);
-//}
-//
-//inline Playing::UpdateResult& operator|=( Playing::UpdateResult& lh, const Playing::UpdateResult rh )
-//{
-//	return lh = lh | rh;
-//}
-//
-//inline bool operator&( const Playing::UpdateResult lh, const Playing::UpdateResult rh )
-//{
-//	return (bool)((uint32_t)lh & (uint32_t)rh);
-//}

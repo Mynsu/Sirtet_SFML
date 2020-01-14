@@ -13,6 +13,7 @@ namespace ui
 		inline NextTetriminoPanel( sf::RenderWindow& window )
 			: mWindow_( window )
 		{
+			clearTetrimino( );
 		}
 
 		inline void setBackgroundColor( const sf::Color color,
@@ -22,10 +23,10 @@ namespace ui
 			mPanel.setFillColor( color );
 			mPanel.setOutlineThickness( outlineThickness );
 			mPanel.setOutlineColor( outlineColor );
-			for ( uint8_t i = 0; ::model::tetrimino::BLOCKS_A_TETRIMINO != i; ++i )
+			for ( sf::RectangleShape& block : mBlocks )
 			{
-				mBlocks[i].setOutlineThickness( 1.0f );
-				mBlocks[i].setOutlineColor( cellOutlineColor );
+				block.setOutlineThickness( 1.0f );
+				block.setOutlineColor( cellOutlineColor );
 			}
 		}
 		inline void setDimension( const sf::Vector2f position, const float cellSize )
@@ -36,13 +37,22 @@ namespace ui
 				sf::Vector2f(::model::tetrimino::BLOCKS_A_TETRIMINO+2,
 							 ::model::tetrimino::BLOCKS_A_TETRIMINO+2)*cellSize );
 			const sf::Vector2f size(cellSize, cellSize);
-			for ( uint8_t i = 0; ::model::tetrimino::BLOCKS_A_TETRIMINO != i; ++i )
+			const sf::Vector2f margin( 10.f, 10.f );
+			for ( sf::RectangleShape& block : mBlocks )
 			{
-				mBlocks[i].setSize( size );
+				block.setPosition( position+margin );
+				block.setSize( size );
 			}
 			mCellSize_ = cellSize;
 		}
 		void setTetrimino( const ::model::Tetrimino& next );
+		void clearTetrimino( )
+		{
+			for ( sf::RectangleShape& block : mBlocks )
+			{
+				block.setFillColor( sf::Color::Transparent );
+			}
+		}
 		void draw( );
 	private:
 		float mCellSize_;

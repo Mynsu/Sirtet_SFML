@@ -416,12 +416,9 @@ bool scene::online::Online::hasReceived( )
 
 std::optional<std::string> scene::online::Online::getByTag( const Tag tag,
 														   const Online::Option option,
-														   const uint32_t size ) const
+														   uint32_t bodySize ) const
 {
 	ASSERT_TRUE( 0 < ReceivingResult );
-	// TODO: 컴파일 타임에 판단하고 싶다.
-	ASSERT_FALSE( Online::Option::INDETERMINATE_SIZE == option && 0 != size );
-	ASSERT_FALSE( Online::Option::SPECIFIED_SIZE == option && 0 == size );
 
 	const char* const rcvBuf = SocketToServer->receivingBuffer( );
 	std::string_view strView( rcvBuf, ReceivingResult );
@@ -431,7 +428,7 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag,
 		uint32_t off = 0;
 		while ( true )
 		{
-			size_t pos = strView.find( tag, off );
+			size_t pos = strView.find(tag, off);
 			if ( std::string_view::npos != pos )
 			{
 				beginPos = (uint32_t)pos;
@@ -457,20 +454,13 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag,
 		return std::nullopt;
 	}
 
-	uint32_t endPos = -1;
 	uint32_t dataPos = beginPos + (uint32_t)std::strlen(tag);
-	if ( option & Option::INDETERMINATE_SIZE )
+	if ( -1 == bodySize )
 	{
-		const uint32_t _size = ::ntohl(*(uint32_t*)&rcvBuf[dataPos]);
-		dataPos += sizeof(_size);
-		endPos = dataPos + _size;
+		bodySize = ::ntohl(*(uint32_t*)&rcvBuf[dataPos]);
+		dataPos += sizeof(uint32_t);
 	}
-	else
-	{
-		endPos = dataPos + size;
-	}
-
-	ASSERT_TRUE( -1 != endPos );
+	const uint32_t endPos = dataPos + bodySize;
 
 	if ( !(option & Option::RETURN_TAG_ATTACHED) )
 	{

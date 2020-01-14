@@ -6,15 +6,15 @@
 #include "../VaultKeyList.h"
 
 const uint32_t UPDATE_INTERVAL = 300;
+const uint32_t REQUEST_DELAY = 60;
 const float ERROR_RANGE = 5.f;
 const float SPEED = .5f;
 
 bool scene::online::InLobby::IsInstantiated = false;
-bool scene::online::InLobby::BinarySemaphore = false;
 
 scene::online::InLobby::InLobby( sf::RenderWindow& window, ::scene::online::Online& net )
 	: mIsReceiving( false ), mHasCanceled( false ), mHasJoined( false ),
-	mFrameCount_update( 30 ),
+	mFrameCount_update( 30 ), mFrameCount_delay( 0 ),
 	mWindow_( window ), mNet( net )
 {
 #ifdef _DEBUG
@@ -35,7 +35,6 @@ scene::online::InLobby::InLobby( sf::RenderWindow& window, ::scene::online::Onli
 	tf.setFillColor( sf::Color(0xffa500ff) ); // Orange
 	mUserList.emplace( mNet.myNickname(), std::make_pair(tf,0) );
 	loadResources( );
-	BinarySemaphore = false;
 	IsInstantiated = true;
 }
 
@@ -56,7 +55,7 @@ void scene::online::InLobby::loadResources( )
 {
 	const sf::Vector2f winSize( mWindow_.getSize() );
 	mBackground.setSize( winSize );
-	mBackground.setFillColor( sf::Color::Cyan );
+	mBackground.setFillColor( sf::Color(0x29cdb5fa) ); // Cyan
 	mUserNicknamesBox.setSize( winSize*.8f );
 	mUserNicknamesBox.setOrigin( winSize*.4f );
 	mUserNicknamesBox.setPosition( winSize*.5f );
@@ -76,20 +75,18 @@ void scene::online::InLobby::loadResources( )
 	if ( true == mNet.hasReceived() )
 	{
 		mIsReceiving = false;
-		if ( std::optional<std::string> resultCreatingRoom(mNet.getByTag(TAGGED_REQ_CREATE_ROOM,
+		if ( std::optional<std::string> resultCreatingRoom( mNet.getByTag(TAGGED_REQ_CREATE_ROOM,
 															   Online::Option::RETURN_TAG_ATTACHED,
-															   sizeof(char)));
+															   -1) );
 			std::nullopt != resultCreatingRoom )
 		{
-			BinarySemaphore = false;
 			retVal = ::scene::online::ID::IN_ROOM_AS_HOST;
 		}
-		else if ( std::optional<std::string> resultJoiningRoom(mNet.getByTag(TAGGED_REQ_JOIN_ROOM,
-																			 Online::Option::SPECIFIED_SIZE,
-																			 sizeof(uint8_t)));
+		else if ( std::optional<std::string> resultJoiningRoom( mNet.getByTag(TAGGED_REQ_JOIN_ROOM,
+																			 Online::Option::DEFAULT,
+																			 sizeof(uint8_t)) );
 				 std::nullopt != resultJoiningRoom )
 		{
-			BinarySemaphore = false;
 			const ResultJoiningRoom res = (ResultJoiningRoom)*resultJoiningRoom.value().data();
 			switch( res )
 			{
@@ -118,8 +115,9 @@ void scene::online::InLobby::loadResources( )
 			}
 		}
 		
-		if ( std::optional<std::string> userList(mNet.getByTag(TAGGED_REQ_USER_LIST_IN_LOBBY,
-															   Online::Option::INDETERMINATE_SIZE, NULL));
+		if ( std::optional<std::string> userList( mNet.getByTag(TAGGED_REQ_USER_LIST_IN_LOBBY,
+															   Online::Option::DEFAULT,
+																-1) );
 			std::nullopt != userList )
 		{
 			const std::string& _userList( userList.value() );
@@ -138,17 +136,17 @@ void scene::online::InLobby::loadResources( )
 			}
 			for ( auto it = mUserList.begin(); mUserList.end() != it; )
 			{
-				bool hasFound = false;
+				bool isAlive = false;
 				for ( auto it2 = curUsers.cbegin(); curUsers.cend() != it2; ++it2 )
 				{
 					if ( it->first == *it2 )
 					{
-						hasFound = true;
+						isAlive = true;
 						curUsers.erase( it2 );
 						break;
 					}
 				}
-				if ( false == hasFound )
+				if ( false == isAlive )
 				{
 					it = mUserList.erase(it);
 				}
@@ -181,6 +179,11 @@ void scene::online::InLobby::loadResources( )
 		mFrameCount_update = 0;
 		std::string req( TAGGED_REQ_USER_LIST_IN_LOBBY );
 		mNet.send( req.data(), (int)req.size() );
+	}
+
+	if ( REQUEST_DELAY <= mFrameCount_delay )
+	{
+		mFrameCount_delay = 0;
 	}
 	
 	if ( true == mHasCanceled )
@@ -266,6 +269,10 @@ void scene::online::InLobby::draw( )
 		}
 	}
 	++mFrameCount_update;
+	if ( 0 != mFrameCount_delay )
+	{
+		++mFrameCount_delay;
+	}
 }
 
 void scene::online::InLobby::cancelConnection( const std::string_view& )
@@ -275,36 +282,38 @@ void scene::online::InLobby::cancelConnection( const std::string_view& )
 
 void scene::online::InLobby::createRoom( const std::string_view& )
 {
-	if ( true == BinarySemaphore )
+	if ( 0 != mFrameCount_delay )
 	{
 		gService()->console().print( "Retry to create a room later.", sf::Color::Green );
 		return;
 	}
-	BinarySemaphore = true;
+	// Triggering
+	mFrameCount_delay = 1;
 	std::string request( TAGGED_REQ_CREATE_ROOM );
 	mNet.send( request.data(), (int)request.size() );
 }
 
 void scene::online::InLobby::joinRoom( const std::string_view& arg )
 {
-	if ( true == BinarySemaphore )
+	if ( 0 != mFrameCount_delay )
 	{
 		gService()->console().print( "Retry to join the room later.", sf::Color::Green );
 		return;
 	}
-	BinarySemaphore = true;
 	// Exception
 	if ( const size_t pos = arg.find_first_of(' ');
 		arg.npos != pos	)
 	{
-		gService()->console().print( "User's nickname shouldn't have a space." );
+		gService()->console().print( "User's nickname shouldn't have a space.", sf::Color::Green );
 		return;
 	}
-	else if ( arg == mNet.myNickname() )
+	if ( arg == mNet.myNickname() )
 	{
-		gService()->console().print( "It doesn't make any sense to join yourself." );
+		gService()->console().print( "It doesn't make any sense to join yourself.", sf::Color::Green );
 		return;
 	}
+	// Triggering
+	mFrameCount_delay = 1;
 	Packet packet;
 	std::string otherNickname( arg );
 	packet.pack( TAGGED_REQ_JOIN_ROOM, otherNickname );
