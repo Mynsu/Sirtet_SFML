@@ -57,7 +57,8 @@ namespace ui
 		{
 			mAlarms[(int)index] = Clock::now();
 		}
-		bool mHasTetriminoCollidedOnClient, mHasTetriminoCollidedOnServer, mIsPlayable;
+		bool mHasTetriminoCollidedOnClient, mHasTetriminoCollidedOnServer,
+			mIsPlayable, mHasCurrentTetrimino;
 		uint8_t mCountDownSec, mNumOfLinesCleared;
 		uint32_t mFrameCount_input, mFrameCount_clearingVFX, mFrameCount_reset, mFPS_;
 		uint32_t mTempoMs;

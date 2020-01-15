@@ -6,7 +6,7 @@
 #include "../VaultKeyList.h"
 
 const float TEMPO_DIFF_RATIO = 0.02f;
-const uint8_t FALLING_DIFF = 3u;
+const uint8_t FALLING_DOWN_SPEED = 3u;
 const uint32_t LINE_CLEAR_CHK_INTERVAL_MS = 100;
 
 ::scene::inPlay::Playing::Playing( sf::RenderWindow& window,
@@ -454,7 +454,7 @@ void ::scene::inPlay::Playing::loadResources( )
 	bool hasCollidedAtThisFrame = false;
 	if ( true == mCurrentTetrimino.isFallingDown( ) )
 	{
-		for ( uint8_t i = 0u; i != FALLING_DIFF; ++i )
+		for ( uint8_t i = 0u; i != FALLING_DOWN_SPEED; ++i )
 		{
 			hasCollidedAtThisFrame = mCurrentTetrimino.moveDown(mStage.cgrid());
 			if ( true == hasCollidedAtThisFrame )

@@ -599,6 +599,7 @@ void scene::online::InRoom::loadResources( )
 															   -1) );
 			std::nullopt != userList )
 		{
+			// 궁금: 왜 8KB 버퍼가 다 차지?
 			const std::string& _userList( userList.value() );
 			const uint32_t userListSize = (uint32_t)_userList.size();
 			const char* const ptr = _userList.data();
@@ -689,7 +690,7 @@ void scene::online::InRoom::loadResources( )
 																	mCountdownSpriteClipSize_ );
 			}
 		}
-
+		// TODO: 이거 없애거나 이름 바꾸기.
 		if ( false == mIsPlaying_ )
 		{
 			if ( std::optional<std::string> response( mNet.getByTag(TAGGED_REQ_GET_READY,
@@ -703,18 +704,6 @@ void scene::online::InRoom::loadResources( )
 				}
 				mIsPlaying_ = true;
 			}
-		}
-		else if ( std::optional<std::string> allOver( mNet.getByTag(TAG_ALL_OVER,
-																   Online::Option::RETURN_TAG_ATTACHED,
-																   NULL) );
-				 std::nullopt != allOver )
-		{
-			mIsPlaying_ = false;
-			for ( auto& pair : mParticipants )
-			{
-				pair.second.gameOver( );
-			}
-			//TODO: 다른 플레이어 껀 잘 보이나?, 서버 FPS 뭘로?
 		}
 		else
 		{
@@ -878,12 +867,24 @@ void scene::online::InRoom::loadResources( )
 #endif
 				}
 			}
+
+			if ( std::optional<std::string> allOver( mNet.getByTag(TAG_ALL_OVER,
+																	Online::Option::RETURN_TAG_ATTACHED,
+																	NULL) );
+					 std::nullopt != allOver )
+			{
+				for ( auto& pair : mParticipants )
+				{
+					pair.second.gameOver( );
+				}
+				mIsPlaying_ = false;
+			}
 		}
 	}
-	if ( auto it = mParticipants.find(mMyNicknameHashed_);
-		mParticipants.end() != it )
+	
+	for ( auto& pair : mParticipants )
 	{
-		it->second.update( eventQueue );
+		pair.second.update( eventQueue );
 	}
 
 	if ( false == mIsReceiving )

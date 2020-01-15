@@ -197,13 +197,26 @@ int Socket::sendOverlapped( char* const data, const size_t size )
 	b.buf = data;
 	b.len = (ULONG)size;
 	LPOVERLAPPED lpOverlapped = makeWork( IOType::SEND );
-	int res = ::WSASend( mhSocket, &b, 1, NULL, 0, lpOverlapped, NULL );
+	int result = ::WSASend( mhSocket, &b, 1, NULL, 0, lpOverlapped, NULL );
 	const int err = WSAGetLastError();
-	if ( -1==res && WSA_IO_PENDING==err )
+	if ( -1 == result &&
+		WSA_IO_PENDING == err )
 	{
-		res = -2;
+		result = -2;
 	}
-	return res;
+	else
+	{
+		for ( Work& w : mWorks )
+		{
+			if ( lpOverlapped == &w.overlapped )
+			{
+				w.reset( );
+				--mNumOfWorks_;
+				break;
+			}
+		}
+	}
+	return result;
 }
 
 int Socket::sendOverlapped( Packet& packet )
@@ -220,21 +233,33 @@ int Socket::sendOverlapped( Packet& packet )
 	{
 		result = -2;
 	}
+	else
+	{
+		for ( Work& w : mWorks )
+		{
+			if ( lpOverlapped == &w.overlapped )
+			{
+				w.reset( );
+				--mNumOfWorks_;
+				break;
+			}
+		}
+	}
 	return result;
 }
 
 IOType Socket::completedIO( const LPOVERLAPPED lpOverlapped )
 {
-	IOType cmpl = IOType::NONE;
+	IOType retVal = IOType::NONE;
 	for ( Work& w : mWorks )
 	{
 		if ( lpOverlapped == &w.overlapped )
 		{
-			cmpl = w.ioType;
+			retVal = w.ioType;
 			w.reset( );
 			//
 			--mNumOfWorks_;
-			if ( IOType::RECEIVE == cmpl )
+			if ( IOType::RECEIVE == retVal )
 			{
 				mIsReceiving_ = false;
 			}
@@ -242,12 +267,12 @@ IOType Socket::completedIO( const LPOVERLAPPED lpOverlapped )
 		}
 	}
 #ifdef _DEBUG
-	if ( IOType::NONE == cmpl )
+	if ( IOType::NONE == retVal )
 	{
 		__debugbreak( );
 	}
 #endif
-	return cmpl;
+	return retVal;
 }
 
 LPOVERLAPPED Socket::makeWork( const IOType ioType )

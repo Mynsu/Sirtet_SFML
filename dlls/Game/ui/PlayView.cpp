@@ -4,9 +4,9 @@
 #include "../ServiceLocatorMirror.h"
 #include "../VaultKeyList.h"
 
-const uint8_t FALLING_DIFF = 3;
+const uint8_t FALLING_DOWN_SPEED = 3;
 const uint32_t INPUT_DELAY_MS = 40;
-const uint32_t ASYNC_TOLERANCE_MS = 1000;
+const uint32_t ASYNC_TOLERANCE_MS = 2500;
 const uint32_t ALL_OVER_DURATION = 120;
  
 ui::PlayView::PlayView( )
@@ -15,7 +15,8 @@ ui::PlayView::PlayView( )
 }
 
 ui::PlayView::PlayView( sf::RenderWindow& window, ::scene::online::Online& net, const bool isPlayable )
-	: mHasTetriminoCollidedOnClient( false ), mHasTetriminoCollidedOnServer( false ), mIsPlayable( isPlayable ),
+	: mHasTetriminoCollidedOnClient( false ), mHasTetriminoCollidedOnServer( false ),
+	mIsPlayable( isPlayable ), mHasCurrentTetrimino( false ),
 	mCountDownSec( 3 ), mNumOfLinesCleared( 0 ),
 	mFrameCount_input( 0 ), mFrameCount_clearingVFX( 0 ), mFrameCount_reset( 0 ),
 	mState_( PlayView::State::WAITING_OR_OVER ),
@@ -63,6 +64,100 @@ void ui::PlayView::start()
 
 void ui::PlayView::update( std::list<sf::Event>& eventQueue )
 {
+	if ( ALL_OVER_DURATION < mFrameCount_reset )
+	{
+		mStage.clear( );
+		mFrameCount_reset = 0;
+		return;
+	}
+	
+	if ( PlayView::State::ON_START == mState_ &&
+		0 == mCountDownSec &&
+		true == mHasCurrentTetrimino )
+	{
+		mState_ = PlayView::State::PLAYING;
+	}
+	// TODO: 이름 바꾸기
+	if ( false == mIsPlayable )
+	{
+		return;
+	}
+
+	// Exception
+	if ( true == mHasTetriminoCollidedOnServer &&
+		true == alarmAfter(ASYNC_TOLERANCE_MS, AlarmIndex::COLLIDED_ON_SERVER) )
+	{
+		gService()->console().printFailure( FailureLevel::FATAL, "Over asynchronization." );
+		mNet->disconnect( );
+		return;
+	}
+	// 궁금: InRoom하고 합칠까?
+	if ( true == mNet->hasReceived() )
+	{
+		if ( std::optional<std::string> nextTet( mNet->getByTag(TAG_MY_NEXT_TETRIMINO,
+															   ::scene::online::Online::Option::DEFAULT,
+																   sizeof(uint8_t)) );
+			std::nullopt != nextTet	)
+		{
+			const ::model::tetrimino::Type type =
+				(::model::tetrimino::Type)*nextTet.value().data();
+			mNextTetriminos.emplace( ::model::Tetrimino::Spawn(type) );
+			if ( true == mHasTetriminoCollidedOnClient )
+			{
+				mCurrentTetrimino = mNextTetriminos.front();
+				mNextTetriminos.pop( );
+				mNextTetriminoPanel.setTetrimino( mNextTetriminos.front() );
+			}
+			else if ( PlayView::State::ON_START == mState_ )
+			{
+				mNextTetriminoPanel.setTetrimino( mNextTetriminos.front() );
+			}
+		}
+
+		if ( std::optional<std::string> newCurTet( mNet->getByTag(TAG_MY_NEW_CURRENT_TETRIMINO,
+																  ::scene::online::Online::Option::DEFAULT,
+																  sizeof(uint8_t)) );
+			std::nullopt != newCurTet )
+		{
+			const ::model::tetrimino::Type type = (::model::tetrimino::Type)*newCurTet.value().data();
+			setNewCurrentTetrimino( type );
+		}
+
+		if ( std::optional<std::string> tempoMs( mNet->getByTag(TAG_MY_TEMPO_MS,
+																 ::scene::online::Online::Option::DEFAULT,
+															   sizeof(uint32_t)) );
+			std::nullopt != tempoMs )
+		{
+			const uint32_t tempo = *(uint32_t*)tempoMs.value().data();
+			mTempoMs = ::ntohl(tempo);
+		}
+
+		if ( std::optional<std::string> stage( mNet->getByTag(TAG_MY_STAGE,
+															 ::scene::online::Online::Option::DEFAULT,
+															 sizeof(::model::stage::Grid)) );
+			std::nullopt != stage )
+		{
+			if ( true == mHasTetriminoCollidedOnClient ||
+				PlayView::State::WAITING_OR_OVER == mState_ )
+			{
+ 				mStage.deserialize( (::model::stage::Grid*)stage.value().data() );
+				mHasTetriminoCollidedOnClient = false;
+			}
+			else
+			{
+				mNextStageSerialized = std::move(stage.value());
+				mHasTetriminoCollidedOnServer = true;
+				resetAlarm( AlarmIndex::COLLIDED_ON_SERVER );
+			}
+		}
+	}
+
+	if ( true == mHasTetriminoCollidedOnClient ||
+		PlayView::State::PLAYING != mState_ )
+	{
+		return;
+	}
+	
 	auto& vault = gService()->vault();
 	if ( const auto it = vault.find(HK_HAS_GAINED_FOCUS);
 		vault.end() != it )
@@ -102,91 +197,12 @@ void ui::PlayView::update( std::list<sf::Event>& eventQueue )
 		__debugbreak( );
 	}
 #endif
-
 	Packet packet;
-	if ( ALL_OVER_DURATION < mFrameCount_reset )
+	if ( true == mCurrentTetrimino.isFallingDown() )
 	{
-		mStage.clear( );
-		mFrameCount_reset = 0;
-	}
-	// Exception
-	else if ( true == mHasTetriminoCollidedOnServer &&
-			 true == alarmAfter(ASYNC_TOLERANCE_MS, AlarmIndex::COLLIDED_ON_SERVER) )
-	{
-		gService()->console().printFailure( FailureLevel::FATAL, "Over asynchronization." );
-		mNet->disconnect( );
-		return;
-	}
-	else if ( true == mNet->hasReceived() )
-	{
-		if ( std::optional<std::string> nextTet( mNet->getByTag(TAG_MY_NEXT_TETRIMINO,
-															   ::scene::online::Online::Option::DEFAULT,
-																   sizeof(uint8_t)) );
-			std::nullopt != nextTet	)
+		for ( uint8_t i = 0; FALLING_DOWN_SPEED != i; ++i )
 		{
-			const ::model::tetrimino::Type type =
-				(::model::tetrimino::Type)*nextTet.value().data();
-			mNextTetriminos.emplace( ::model::Tetrimino::Spawn(type) );
-			if ( true == mHasTetriminoCollidedOnClient )
-			{
-				mCurrentTetrimino = mNextTetriminos.front();
-				mNextTetriminos.pop( );
-				mNextTetriminoPanel.setTetrimino( mNextTetriminos.front() );
-			}
-			else if ( PlayView::State::ON_START == mState_ )
-			{
-				mNextTetriminoPanel.setTetrimino( mNextTetriminos.front() );
-			}
-		}
-
-		if ( std::optional<std::string> newCurTet( mNet->getByTag(TAG_MY_NEW_CURRENT_TETRIMINO,
-																  ::scene::online::Online::Option::DEFAULT,
-																  sizeof(uint8_t)) );
-			std::nullopt != newCurTet )
-		{
-			const ::model::tetrimino::Type type = (::model::tetrimino::Type)*newCurTet.value().data();
-			setNewCurrentTetrimino( type );
-		}
-
-		if ( std::optional<std::string> tempoMs( mNet->getByTag(TAG_MY_TEMPO_MS,
-																 ::scene::online::Online::Option::DEFAULT,
-															   sizeof(uint32_t)) );
-			std::nullopt != tempoMs )
-		{
-			
-			const uint32_t tempo = *(uint32_t*)tempoMs.value().data();
-			mTempoMs = ::ntohl(tempo);
-		}
-
-		if ( std::optional<std::string> stage( mNet->getByTag(TAG_MY_STAGE,
-															 ::scene::online::Online::Option::DEFAULT,
-															 sizeof(::model::stage::Grid)) );
-			std::nullopt != stage )
-		{
-			if ( true == mHasTetriminoCollidedOnClient ||
-				PlayView::State::WAITING_OR_OVER == mState_ )
-			{
- 				mStage.deserialize( (::model::stage::Grid*)stage.value().data() );
-				mHasTetriminoCollidedOnClient = false;
-			}
-			else
-			{
-				mNextStageSerialized = std::move(stage.value());
-				mHasTetriminoCollidedOnServer = true;
-				resetAlarm( AlarmIndex::COLLIDED_ON_SERVER );
-			}
-		}
-	}
-	
-	if ( true == mHasTetriminoCollidedOnClient ||
-		PlayView::State::PLAYING != mState_ )
-	{
-		return;
-	}
-	else if ( true == mCurrentTetrimino.isFallingDown() )
-	{
-		for ( uint8_t i = 0; FALLING_DIFF != i; ++i )
-		{
+			//TODO: 시간이 많이 지난 만큼 더 이동할까?
 			mHasTetriminoCollidedOnClient = mCurrentTetrimino.moveDown(mStage.cgrid());
 			if ( true == mHasTetriminoCollidedOnClient )
 			{
@@ -284,6 +300,7 @@ void ui::PlayView::update( std::list<sf::Event>& eventQueue )
 		if ( false == mHasTetriminoCollidedOnClient &&
 			alarmAfter(mTempoMs, AlarmIndex::TETRIMINO_DOWN) )
 		{
+			//TODO: 시간이 많이 지난 만큼 더 이동할까?
 			mHasTetriminoCollidedOnClient = mCurrentTetrimino.moveDown( mStage.cgrid() );
 			resetAlarm( AlarmIndex::TETRIMINO_DOWN );
 		}
@@ -322,7 +339,7 @@ void ui::PlayView::update( std::list<sf::Event>& eventQueue )
 void ui::PlayView::setNewCurrentTetrimino( const::model::tetrimino::Type newCurrentType )
 {
 	mCurrentTetrimino = ::model::Tetrimino::Spawn(newCurrentType);
-	mState_ = PlayView::State::PLAYING;
+	mHasCurrentTetrimino = true;
 }
 
 void ui::PlayView::setNumOfLinesCleared( const uint8_t numOfLinesCleared )
@@ -341,12 +358,13 @@ void ui::PlayView::gameOver()
 	else
 	{
 		mState_ = PlayView::State::WAITING_OR_OVER;
-		mTempoMs = 1000;
+		mHasCurrentTetrimino = false;
 		while ( false == mNextTetriminos.empty() )
 		{
 			mNextTetriminos.pop( );
 		}
 		mNextTetriminoPanel.clearTetrimino( );
+		mTempoMs = 1000;
 	}
 }
 

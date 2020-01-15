@@ -1,10 +1,10 @@
 #include "pch.h"
 #include "Playing.h"
 
-const uint8_t DELTA_TIME_MS = 17;
-const uint8_t FALLING_DIFF = 3;
+const uint8_t FALLING_DOWN_INTERVAL_MS = 17;
+const uint8_t FALLING_DOWN_SPEED = 3;
 const uint8_t TEMPO_DECREASE_MS = 20;
-const uint32_t ASYNC_TOLERANCE_MS = 10000;
+const uint32_t ASYNC_TOLERANCE_MS = 2500;
 const uint32_t GAME_OVER_CHK_INTERVAL_MS = 250;
 
 Playing::Playing()
@@ -70,11 +70,11 @@ bool Playing::update( )
 	bool hasCollidedOnServer = false;
 	if ( true == mCurrentTetrimino.isFallingDown() )
 	{
-		if ( true == alarmAfter(DELTA_TIME_MS, AlarmIndex::TETRIMINO_DOWN) )
+		if ( true == alarmAfter(FALLING_DOWN_INTERVAL_MS, AlarmIndex::TETRIMINO_DOWN) )
 		{
 			resetAlarm( AlarmIndex::TETRIMINO_DOWN );
-			// TODO: delta 줄여가면서 logarithm으로.
-			for ( uint8_t i = 0; FALLING_DIFF != i; ++i )
+			//TODO: 시간이 많이 지난 만큼 더 이동할까?
+			for ( uint8_t i = 0; FALLING_DOWN_SPEED != i; ++i )
 			{
 				hasCollidedOnServer = mCurrentTetrimino.moveDown( mStage.cgrid() );
 				if ( true == hasCollidedOnServer )
@@ -124,6 +124,7 @@ bool Playing::update( )
 		}
 		if ( true == alarmAfter(mTempoMs, AlarmIndex::TETRIMINO_DOWN) )
 		{
+			//TODO: 시간이 많이 지난 만큼 더 이동할까?
 			resetAlarm( AlarmIndex::TETRIMINO_DOWN );
 			hasCollidedOnServer = mCurrentTetrimino.moveDown( mStage.cgrid() );
 			mUpdateResult = Playing::UpdateResult::TETRIMINO_MOVED;
@@ -135,9 +136,6 @@ bool Playing::update( )
 	last:
 	if ( true == hasCollidedOnServer )
 	{
-#ifdef _DEBUG
-		std::cout << (int)mCurrentTetrimino.type() << " landed.\n";
-#endif
 		mCurrentTetrimino.land( mStage.grid() );
 		reloadTetrimino( );
 		mUpdateResult = Playing::UpdateResult::TETRIMINO_LANDED;
@@ -145,9 +143,6 @@ bool Playing::update( )
 		const uint8_t numOfLinesCleared = mStage.tryClearRow();
 		if ( 0 != numOfLinesCleared )
 		{
-#ifdef _DEBUG
-			std::cout << numOfLinesCleared << " lines were cleared.\n";
-#endif
 			mNumOfLinesCleared = numOfLinesCleared;
 			mTempoMs -= TEMPO_DECREASE_MS;
 			mUpdateResult = Playing::UpdateResult::LINE_CLEARED;

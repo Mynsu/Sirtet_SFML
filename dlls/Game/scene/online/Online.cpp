@@ -260,7 +260,7 @@ void ::scene::online::Online::loadResources( )
 ::scene::ID scene::online::Online::update( std::list<sf::Event>& eventQueue )
 {
 	::scene::ID retVal = ::scene::ID::AS_IS;
-	if ( 0u == mFrameCount_disconnection )
+	if ( 0 == mFrameCount_disconnection )
 	{
 		const ::scene::online::ID nextSceneID = mCurrentScene->update( eventQueue );
 		if ( ::scene::online::ID::AS_IS < nextSceneID )

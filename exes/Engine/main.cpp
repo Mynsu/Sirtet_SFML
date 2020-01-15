@@ -4,7 +4,7 @@
 
 //TODO: 개발 완료 후 auto 쓰는 대신 타입 명시, 브랜치에 커밋
 //TODO: https://tetris.fandom.com/wiki/Tetris_Guideline
-//TODO: 암호화, 몇몇 it은 pair로, 패키징, 함수의 전제.
+//TODO: 암호화, 몇몇 it은 pair로, 패키징, 함수의 전제, 이상한 걸 받았을 경우 중단하지 말고 어떻게든 살라기
 
 const uint32_t DEFAULT_FOREGROUND_FPS = 60;
 const uint32_t DEFAULT_BACKGROUND_FPS = 30;
