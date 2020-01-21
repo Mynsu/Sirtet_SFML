@@ -1,5 +1,6 @@
 #include "../../pch.h"
 #include "Waiting.h"
+#include <Lib/ScriptLoader.h>
 #include "Online.h"
 #include "../../ServiceLocatorMirror.h"
 #include "../VaultKeyList.h"
@@ -10,32 +11,316 @@
 bool scene::online::Waiting::IsInstantiated = false;
 
 scene::online::Waiting::Waiting( sf::RenderWindow& window, Online& net )
-	: mHasCanceled( false ), mOrder( 0 ),
+	: mOrder( 0 ),
 	mState( ::scene::online::Waiting::State::TICKETING ),
 	mWindow_( window ), mNet( net )
 {
-#ifdef _DEV
-	gService( )->console( ).addCommand( CMD_CANCEL_CONNECTION,
-									   std::bind(&::scene::online::Waiting::cancelConnection,
-										this, std::placeholders::_1) );
-#endif
+	ASSERT_TRUE( false == IsInstantiated );
+
+	net.connectToQueueServer( );
+	net.receive( );
+	using WallClock = std::chrono::system_clock;
+	const WallClock::time_point now = WallClock::now();
+	const WallClock::duration tillNow = now.time_since_epoch();
+	const std::chrono::minutes atMin = std::chrono::duration_cast<std::chrono::minutes>(tillNow);
+	const HashedKey invitation = ::util::hash::Digest(VERSION + atMin.count() + SALT);
+	Packet packet;
+	packet.pack( TAG_INVITATION, invitation );
+	net.send( packet );
+
 	IsInstantiated = true;
 }
 
 scene::online::Waiting::~Waiting( )
 {
 #ifdef _DEV
-	if ( nullptr != gService() )
-	{
-		gService( )->console( ).removeCommand( CMD_CANCEL_CONNECTION );
-	}
+	gService( )->console( ).removeCommand( CMD_CANCEL_CONNECTION );
 #endif
 	IsInstantiated = false;
 }
 
 void scene::online::Waiting::loadResources( )
 {
-	//TODO
+	std::string font( "Fonts/AGENCYB.TTF" );
+	sf::Vector2f centerPos( sf::Vector2f(mWindow_.getSize())*.5f );
+	std::string label0Text( "Waiting" );
+	uint32_t label0FontSize = 16;
+	sf::Vector2f label0Position( centerPos.x, centerPos.y+50.f );
+	uint32_t label1FontSize = 20;
+	sf::Vector2f label1Position( centerPos.x-50.f, centerPos.y );
+	std::string label2Text( "before me." );
+	uint32_t label2FontSize = 16;
+	sf::Vector2f label2Position( centerPos.x+50.f, centerPos.y );
+
+	lua_State* lua = luaL_newstate();
+	const std::string scriptPathNName( "Scripts/Waiting.lua" );
+	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
+	{
+		// File Not Found Exception
+		gService( )->console( ).printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
+		lua_close( lua );
+	}
+	else
+	{
+		luaL_openlibs( lua );
+		const int TOP_IDX = -1;
+
+		std::string varName( "Font" );
+		lua_getglobal( lua, varName.data() );
+		int type = lua_type(lua, TOP_IDX);
+		if ( LUA_TSTRING == type )
+		{
+			font = lua_tostring(lua, TOP_IDX);
+		}
+		else
+		{
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+													 varName, scriptPathNName );
+		}
+		lua_pop( lua, 1 );
+
+		std::string tableName( "Label0" );
+		lua_getglobal( lua, tableName.data() );
+		if ( false == lua_istable(lua, TOP_IDX) )
+		{
+			// Type Check Exception
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+													 tableName, scriptPathNName );
+		}
+		else
+		{
+			std::string field( "msg" );
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			// Type check
+			if ( LUA_TSTRING == type )
+			{
+				label0Text = lua_tostring(lua, TOP_IDX);
+			}
+			// Type Check Exception
+			else if ( LUA_TNIL != type )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			field = "fontSize";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			// Type check
+			if ( LUA_TNUMBER == type )
+			{
+				label0FontSize = (uint32_t)lua_tointeger(lua, TOP_IDX);
+			}
+			// Type Check Exception
+			else if ( LUA_TNIL != type )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			field = "x";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			// Type check
+			if ( LUA_TNUMBER == type )
+			{
+				label0Position.x = (float)lua_tonumber(lua, TOP_IDX);
+			}
+			// Type Check Exception
+			else if ( LUA_TNIL != type )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			field = "y";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			// Type check
+			if ( LUA_TNUMBER == type )
+			{
+				label0Position.y = (float)lua_tonumber(lua, TOP_IDX);
+			}
+			// Type Check Exception
+			else if ( LUA_TNIL != type )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+		}
+		lua_pop( lua, 1 );
+
+		tableName = "Label1";
+		lua_getglobal( lua, tableName.data() );
+		// Type Check Exception
+		if ( false == lua_istable(lua, TOP_IDX) )
+		{
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+													 tableName, scriptPathNName );
+		}
+		else
+		{
+			std::string field( "fontSize" );
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			// Type check
+			if ( LUA_TNUMBER == type )
+			{
+				label1FontSize = (uint32_t)lua_tointeger(lua, TOP_IDX);
+			}
+			// Type Check Exception
+			else
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			field = "x";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			// Type check
+			if ( LUA_TNUMBER == type )
+			{
+				label1Position.x = (float)lua_tonumber(lua, TOP_IDX);
+			}
+			// Type Check Exception
+			else if ( LUA_TNIL != type )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			field = "y";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			// Type check
+			if ( LUA_TNUMBER == type )
+			{
+				label1Position.y = (float)lua_tonumber(lua, TOP_IDX);
+			}
+			// Type Check Exception
+			else if ( LUA_TNIL != type )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					tableName+":"+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+		}
+		lua_pop( lua, 1 );
+
+		tableName = "Label2";
+		lua_getglobal( lua, tableName.data() );
+		// Type Check Exception
+		if ( false == lua_istable(lua, TOP_IDX) )
+		{
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+													 tableName, scriptPathNName );
+		}
+		else
+		{
+			std::string field( "msg" );
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			// Type check
+			if ( LUA_TSTRING == type )
+			{
+				label2Text = lua_tostring(lua, TOP_IDX);
+			}
+			// Type Check Exception
+			else
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			field = "fontSize";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			// Type check
+			if ( LUA_TNUMBER == type )
+			{
+				label2FontSize = (uint32_t)lua_tointeger(lua, TOP_IDX);
+			}
+			// Type Check Exception
+			else if ( LUA_TNIL != type )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			field = "x";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			// Type check
+			if ( LUA_TNUMBER == type )
+			{
+				label2Position.x = (float)lua_tonumber(lua, TOP_IDX);
+			}
+			// Type Check Exception
+			else if ( LUA_TNIL != type )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			field = "y";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			// Type check
+			if ( LUA_TNUMBER == type )
+			{
+				label2Position.y = (float)lua_tonumber(lua, TOP_IDX);
+			}
+			// Type Check Exception
+			else if ( LUA_TNIL != type )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+		}
+		lua_pop( lua, 1 );
+		
+		lua_close( lua );
+	}
+
+	mFont.loadFromFile( font );
+	mTextLabels[0].setFont( mFont );
+	mTextLabels[0].setString( label0Text );
+	mTextLabels[0].setCharacterSize( label0FontSize );
+	const sf::FloatRect bound0 = mTextLabels[0].getLocalBounds();
+	mTextLabels[0].setPosition( label0Position );
+	mTextLabels[1].setFont( mFont );
+	mTextLabels[1].setString( std::to_string(mOrder) );
+	mTextLabels[1].setCharacterSize( label1FontSize );
+	const sf::FloatRect bound1 = mTextLabels[1].getLocalBounds();
+	mTextLabels[1].setPosition( label1Position );
+	mTextLabels[2].setFont( mFont );
+	mTextLabels[2].setCharacterSize( label2FontSize );
+	mTextLabels[2].setString( label2Text );
+	const sf::FloatRect bound2 = mTextLabels[2].getLocalBounds();
+	mTextLabels[2].setPosition( label2Position );
 }
 
 ::scene::online::ID scene::online::Waiting::update( std::list<sf::Event>& eventQueue )
@@ -71,10 +356,8 @@ void scene::online::Waiting::loadResources( )
 						  std::nullopt != order )
 				{
 					mOrder = ::ntohl(*(uint32_t*)order.value().data());
-#ifdef _DEBUG
-					std::string msg( "My order in the queue line: " );
-					gService( )->console( ).print( msg+std::to_string(mOrder), sf::Color::Green );
-#endif
+					const std::string _order( std::to_string(mOrder) );
+					mTextLabels[1].setString( _order );
 				}
 				else
 				{
@@ -114,21 +397,26 @@ void scene::online::Waiting::loadResources( )
 #endif
 			break;
 	}
-
-	if ( true == mHasCanceled )
+	for ( auto it = eventQueue.cbegin(); eventQueue.cend() !=it; )
 	{
-		retVal = ::scene::online::ID::MAIN_MENU;
+		if ( sf::Event::KeyPressed == it->type &&
+			sf::Keyboard::Escape == it->key.code )
+		{
+			retVal = ::scene::online::ID::MAIN_MENU;
+			it = eventQueue.erase(it);
+		}
+		else
+		{
+			++it;
+		}
 	}
-
 	return retVal;
 }
 
 void scene::online::Waiting::draw( )
 {
-	//TODO
-}
-
-void scene::online::Waiting::cancelConnection( const std::string_view& )
-{
-	mHasCanceled = true;
+	for ( sf::Text& textLabel : mTextLabels )
+	{
+		mWindow_.draw( textLabel );
+	}
 }

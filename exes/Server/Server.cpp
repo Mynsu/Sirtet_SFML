@@ -3,11 +3,10 @@
 #include "Client.h"
 #include "Tetrimino.h"
 
-//TODO: 접속 종료한 지 얼마 안 되었을 때 바로 접속 가능하게
-//DOING: 로직
+//TODO: 접속 종료한 지 얼마 안 되었을 때 바로 접속 가능하게, NoSQL
 
-const uint32_t CLIENT_CAPACITY = 10;
-const uint32_t ROOM_CAPACITY = 100;
+const uint32_t CLIENT_CAPACITY = 100;
+const uint32_t ROOM_CAPACITY = 25;
 const uint32_t LOBBY_CAPACITY = 100;
 const ClientIndex LISTENER_IDX = CLIENT_CAPACITY;
 

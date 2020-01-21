@@ -20,13 +20,12 @@ namespace scene::online
 			TICKETING,
 			SUBMITTING_TICKET,
 		};
-
-		void cancelConnection( const std::string_view& );
 		static bool IsInstantiated;
-		bool mHasCanceled;
 		uint32_t mOrder;
 		::scene::online::Waiting::State mState;
 		sf::RenderWindow& mWindow_;
 		Online& mNet;
+		sf::Font mFont;
+		sf::Text mTextLabels[3];
 	};
 }

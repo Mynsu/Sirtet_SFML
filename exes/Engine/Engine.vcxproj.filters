@@ -88,5 +88,8 @@
     <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\InLobby.lua">
       <Filter>리소스 파일\scripts</Filter>
     </None>
+    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\Waiting.lua">
+      <Filter>리소스 파일\scripts</Filter>
+    </None>
   </ItemGroup>
 </Project>

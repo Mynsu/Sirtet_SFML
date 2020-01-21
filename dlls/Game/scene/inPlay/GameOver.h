@@ -3,7 +3,7 @@
 
 namespace scene::inPlay
 {
-	class GameOver : public ::scene::inPlay::IScene
+	class GameOver final : public ::scene::inPlay::IScene
 	{
 	public:
 		GameOver( ) = delete;

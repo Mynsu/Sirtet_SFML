@@ -195,7 +195,6 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 					const ::model::tetrimino::Type nextTetType = playing.nextTetriminoType();
 					const uint32_t tempoMs = playing.tempoMs();
 					Packet packet;
-					packet.pack( TAG_MY_NEW_CURRENT_TETRIMINO, (uint8_t)curTetType );
 					packet.pack( TAG_MY_NEXT_TETRIMINO, (uint8_t)nextTetType );
 					packet.pack( TAG_MY_TEMPO_MS, tempoMs );
 					Socket& socket = clients[pair.first].socket();

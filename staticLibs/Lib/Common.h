@@ -96,7 +96,6 @@ enum class _Tag
 	// Inplay
 	////
 	//TODO: ÇÑ Ãþ ´õ µÑ±î?
-	MY_NEW_CURRENT_TETRIMINO,
 	MY_NEXT_TETRIMINO,
 	MY_TEMPO_MS,
 	MY_STAGE,
@@ -194,8 +193,6 @@ constexpr Tag TAGGED_NOTI_UPDATE_USER_LIST = { (char)_Tag::NOTIFICATION, ':', (c
 // Inplay
 ////
 
-// Attached to uint8_t(for ::model::tetrimino::Type).
-constexpr Tag TAG_MY_NEW_CURRENT_TETRIMINO = { (char)_Tag::MY_NEW_CURRENT_TETRIMINO, ':', '\0' };
 // Attached to uint8_t(for ::model::tetrimino::Type).
 constexpr Tag TAG_MY_NEXT_TETRIMINO = { (char)_Tag::MY_NEXT_TETRIMINO, ':', '\0' };
 // Attached to uint32_t(for milliseconds).

@@ -111,6 +111,9 @@
     <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\ui\NextTetriminoPanel.cpp">
       <Filter>소스 파일\ui</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\ui\TextInputBox.cpp">
+      <Filter>소스 파일\ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\Intro.h">
@@ -183,6 +186,9 @@
       <Filter>헤더 파일\ui</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\ui\NextTetriminoPanel.h">
+      <Filter>헤더 파일\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\ui\TextInputBox.h">
       <Filter>헤더 파일\ui</Filter>
     </ClInclude>
   </ItemGroup>

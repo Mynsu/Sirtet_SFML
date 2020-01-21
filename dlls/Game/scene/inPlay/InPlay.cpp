@@ -28,7 +28,7 @@ bool ::scene::inPlay::InPlay::IsInstantiated = false;
 
 void scene::inPlay::InPlay::loadResources( )
 {
-	mBackgroundRect.setSize( sf::Vector2f(mWindow_.getSize()) );
+	mBackground.setSize( sf::Vector2f(mWindow_.getSize()) );
 	mCurrentScene->loadResources( );
 }
 
@@ -82,13 +82,13 @@ void scene::inPlay::InPlay::setScene( const ::scene::inPlay::ID nextInPlaySceneI
 	switch ( nextInPlaySceneID )
 	{
 		case ::scene::inPlay::ID::READY:
-			mCurrentScene = std::make_unique< ::scene::inPlay::Ready >( mWindow_, mBackgroundRect );
+			mCurrentScene = std::make_unique< ::scene::inPlay::Ready >( mWindow_, mBackground );
 			break;
 		case ::scene::inPlay::ID::PLAYING:
-			mCurrentScene = std::make_unique< ::scene::inPlay::Playing >( mWindow_, mBackgroundRect, mOverlappedScene );
+			mCurrentScene = std::make_unique< ::scene::inPlay::Playing >( mWindow_, mBackground, mOverlappedScene );
 			break;
 		case ::scene::inPlay::ID::GAME_OVER:
-			mCurrentScene = std::make_unique< ::scene::inPlay::GameOver >( mWindow_, mBackgroundRect, mOverlappedScene );
+			mCurrentScene = std::make_unique< ::scene::inPlay::GameOver >( mWindow_, mBackground, mOverlappedScene );
 			break;
 		case ::scene::inPlay::ID::ASSERTION:
 			mOverlappedScene = std::make_unique< ::scene::inPlay::Assertion >( mWindow_ );

@@ -1,7 +1,6 @@
 #pragma once
 #include "IScene.h"
-
-const uint8_t MOVING_POINT_NUM = 4;
+#include "../../ui/TextInputBox.h"
 
 namespace scene::online
 {
@@ -21,18 +20,23 @@ namespace scene::online
 		::scene::online::ID update( std::list<sf::Event>& eventQueue ) override;
 		void draw( ) override;
 	private:
-		void cancelConnection( const std::string_view& );
-		void createRoom( const std::string_view& );
+		void createRoom( );
+		void _createRoom( const std::string_view& );
 		void joinRoom( const std::string_view& arg );
 		static bool IsInstantiated;
-		bool mIsReceiving, mHasCanceled, mHasJoined;
-		uint32_t mFrameCount_update, mFrameCount_delay;
-		::scene::online::Online& mNet;
+		bool mIsReceiving, mHasJoined;
+		uint8_t mGuideTextIndex;
+		uint32_t mFrameCount_update, mFrameCount_requestDelay, enteringRoom;
+		math::Vector<2> mAcceleration_, mDestination_;
 		sf::RenderWindow& mWindow_;
-		std::array< sf::Vector2f, MOVING_POINT_NUM > mMovingPoint;
+		::scene::online::Online& mNet;
+		std::vector<sf::Vector2f> mMovingPoints;
+		std::vector<std::string> mGuideTexts;
+		::ui::TextInputBox mTextInputBox;
 		// NOTE: std::pair<sf::Text, target point to move>.
 		std::unordered_map< std::string, std::pair<sf::Text, uint8_t> > mUserList;
 		sf::Font mFont_;
+		sf::Text mGuideTextLabel;
 		sf::RectangleShape mBackground;
 		sf::RectangleShape mUserNicknamesBox;
 	};

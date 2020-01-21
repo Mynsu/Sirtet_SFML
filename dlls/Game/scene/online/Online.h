@@ -22,6 +22,7 @@ namespace scene::online
 		::scene::ID update( std::list<sf::Event>& eventQueue ) override;
 		void draw( ) override;
 
+		void connectToQueueServer( );
 		void disconnect( );
 		// Stop receiving and disconnect from the queue server, and connect to the main server.
 		bool connectToMainServer( );

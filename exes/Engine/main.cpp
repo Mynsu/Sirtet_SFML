@@ -4,7 +4,8 @@
 
 //TODO: 개발 완료 후 auto 쓰는 대신 타입 명시, 브랜치에 커밋
 //TODO: https://tetris.fandom.com/wiki/Tetris_Guideline
-//TODO: 암호화, 몇몇 it은 pair로, 패키징, 함수의 전제, 이상한 걸 받았을 경우 중단하지 말고 어떻게든 살라기
+//TODO: 암호화, 몇몇 it은 pair로, 패키징, 함수의 전제, 이상한 걸 받았을 경우 중단하지 말고 어떻게든 살라기, 루아 파기,
+//		루아는 일단 파일을 메모리로 불러올까? SFML은?
 
 const uint32_t DEFAULT_FOREGROUND_FPS = 60;
 const uint32_t DEFAULT_BACKGROUND_FPS = 30;
@@ -90,10 +91,11 @@ Handling parameters on excution
 Initialization
 =====
 */
-	auto& variableTable = gService.vault( );
-	variableTable.emplace( HK_FORE_FPS, DEFAULT_FOREGROUND_FPS );
-	variableTable.emplace( HK_BACK_FPS, DEFAULT_BACKGROUND_FPS );
-	gService._console( ).setPosition( {winWidth, winHeight} );
+	auto& vault = gService.vault( );
+	vault.emplace( HK_FORE_FPS, DEFAULT_FOREGROUND_FPS );
+	vault.emplace( HK_BACK_FPS, DEFAULT_BACKGROUND_FPS );
+	Console& console = gService._console( );
+	console.initialize( );
 
 	HMODULE hGameDLL = LoadLibraryA( "game.dll" );
 	// File Not Found Exception
@@ -125,9 +127,9 @@ Initialization
 Main Loop
 =====
 */
-	gService.vault( ).emplace( HK_IS_RUNNING, 1 );
-	gService.vault( ).emplace( HK_HAS_GAINED_FOCUS, 1 );
-	while ( 0 != gService.vault()[HK_IS_RUNNING] )
+	vault.emplace( HK_IS_RUNNING, 1 );
+	vault.emplace( HK_HAS_GAINED_FOCUS, 1 );
+	while ( 0 != vault[HK_IS_RUNNING] )
 	{
 		//궁금: 이건 std::list가 std::vector보다 더 빠르려나?
 		std::list< sf::Event > subEventQueue;
@@ -136,20 +138,20 @@ Main Loop
 		{
 			if ( sf::Event::Closed == event.type )
 			{
-				gService.vault( )[ HK_IS_RUNNING ] = 0;
+				vault[ HK_IS_RUNNING ] = 0;
 				break;
 			}
 			else if ( sf::Event::LostFocus == event.type )
 			{
-				window.setFramerateLimit( variableTable.find(HK_BACK_FPS)->second );
+				window.setFramerateLimit( vault.find(HK_BACK_FPS)->second );
 				gService.vault( )[ HK_HAS_GAINED_FOCUS ] = 0;
 			}
 			else if ( sf::Event::GainedFocus == event.type )
 			{
-				window.setFramerateLimit( variableTable.find(HK_FORE_FPS)->second );
+				window.setFramerateLimit( vault.find(HK_FORE_FPS)->second );
 				gService.vault( )[ HK_HAS_GAINED_FOCUS ] = 1;
 			}
-			else if ( 0 == gService.vault()[HK_HAS_GAINED_FOCUS] )
+			else if ( 0 == vault[HK_HAS_GAINED_FOCUS] )
 			{
 				break;
 			}
@@ -159,7 +161,7 @@ Main Loop
 			}
 					
 			// Console
-			gService._console( ).handleEvent( subEventQueue );
+			console.handleEvent( subEventQueue );
 		}
 
 		gameComponents.game->update( subEventQueue );
@@ -169,9 +171,9 @@ Main Loop
 		
 		window.clear( );
 		gameComponents.game->draw( );
-		if ( true == gService._console().isVisible() )
+		if ( true == console.isVisible() )
 		{
-			window.draw( gService._console() );
+			console.draw( window );
 		}
 		window.display( );
 	}

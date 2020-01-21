@@ -16,12 +16,6 @@ constexpr HashedKey CMD_CHANGE_SCENE = ::util::hash::Digest( _CMD_CHANGE_SCENE, 
 constexpr char _CMD_RELOAD[ ] = "refresh";
 constexpr HashedKey CMD_RELOAD = ::util::hash::Digest( _CMD_RELOAD, ::util::hash::Measure(_CMD_RELOAD) );
 
-// e.g. "exit"
-// Break the game loop and close the window.
-// Added in ::scene::SceneManager.cpp.
-constexpr char _CMD_EXIT[ ] = "exit";
-constexpr HashedKey CMD_EXIT = ::util::hash::Digest( _CMD_EXIT, ::util::hash::Measure(_CMD_EXIT) );
-
 // e.g. "crtRoom"
 // Request room creation to the main server.
 // Added in ::scene::online::InLobby.cpp.

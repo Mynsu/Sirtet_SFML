@@ -42,6 +42,10 @@
     <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\ui\PlayView.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../pch.h</PrecompiledHeaderFile>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\ui\TextInputBox.cpp">
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../pch.h</PrecompiledHeaderFile>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="scene\online\InLobby.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../../pch.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -99,6 +103,7 @@
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\online\IScene.h" />
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\ui\NextTetriminoPanel.h" />
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\ui\PlayView.h" />
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\ui\TextInputBox.h" />
     <ClInclude Include="scene\online\InLobby.h" />
     <ClInclude Include="scene\online\InRoom.h" />
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\online\Waiting.h" />

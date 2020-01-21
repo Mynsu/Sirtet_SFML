@@ -32,28 +32,28 @@ const uint32_t LINE_CLEAR_CHK_INTERVAL_MS = 100;
 void ::scene::inPlay::Playing::loadResources( )
 {
 	uint32_t backgroundColor = 0x29cdb5'fa;
-	sf::Vector2f stagePanelPos( 130.0, 0.0 );
+	sf::Vector2f stagePanelPosition( 130.0, 0.0 );
 	float stageCellSize = 30.0;
 	uint32_t stagePanelColor = 0x3f3f3f'ff;
 	float stagePanelOutlineThickness = 11.0;
 	uint32_t stagePanelOutlineColor = 0x3f3f3f'7f;
 	uint32_t stageCellOutlineColor = 0x000000'7f;
+	std::string vfxComboSpritePathNName( "Vfxs/Combo.png" );
 	sf::Vector2i vfxComboClipSize( 256, 256 );
-	sf::Vector2f nextTetPanelPos( 525.0, 70.0 );
+	sf::Vector2f nextTetPanelPosition( 525.0, 70.0 );
 	float nextTetPanelCellSize = 30.0;
 	uint32_t nextTetPanelColor = 0x000000'ff;
 	float nextTetPanelOutlineThickness = 5.0;
 	uint32_t nextTetPanelOutlineColor = 0x000000'7f;
 	uint32_t nextTetPanelCellOutlineColor = 0x000000'7f;
-	bool isDefault = true;
 
 	lua_State* lua = luaL_newstate( );
-	const char scriptPathNName[] = "Scripts/Playing.lua";
-	if ( true == luaL_dofile(lua, scriptPathNName) )
+	const std::string scriptPathNName( "Scripts/Playing.lua" );
+	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
 	{
 		// File Not Found Exception
 		gService( )->console( ).printFailure( FailureLevel::FATAL,
-											 std::string("File Not Found: ")+scriptPathNName );
+											 "File Not Found: "+scriptPathNName );
 		lua_close( lua );
 	}
 	else
@@ -61,68 +61,66 @@ void ::scene::inPlay::Playing::loadResources( )
 		luaL_openlibs( lua );
 		const int TOP_IDX = -1;
 
-		const std::string valName0( "BackgroundColor" );
-		lua_getglobal( lua, valName0.data() );
-		if ( false == lua_isinteger(lua, TOP_IDX) )
-		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-													 valName0.data( ), scriptPathNName );
-		}
-		else
+		std::string varName( "BackgroundColor" );
+		lua_getglobal( lua, varName.data() );
+		int type = lua_type(lua, TOP_IDX);
+		if ( LUA_TNUMBER == type )
 		{
 			backgroundColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
 		}
+		else
+		{
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+													 varName, scriptPathNName );
+		}
 		lua_pop( lua, 1 );
 
-		const std::string tableName0( "PlayerPanel" );
-		lua_getglobal( lua, tableName0.data( ) );
+		std::string tableName( "PlayerPanel" );
+		lua_getglobal( lua, tableName.data( ) );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
 			// Type Check Exception
 			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-													 tableName0.data(), scriptPathNName );
+													 tableName, scriptPathNName );
 		}
 		else
 		{
-			const char field0[ ] = "x";
-			lua_pushstring( lua, field0 );
+			std::string field( "x" );
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			int type = lua_type( lua, TOP_IDX );
-			// Type check
+			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				stagePanelPos.x = (float)lua_tonumber(lua, TOP_IDX);
+				stagePanelPosition.x = (float)lua_tonumber(lua, TOP_IDX);
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-														(tableName0+":"+field0).data(), scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			const char field1[ ] = "y";
-			lua_pushstring( lua, field1 );
+			field = "y";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type( lua, TOP_IDX );
-			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				stagePanelPos.y = (float)lua_tonumber(lua, TOP_IDX);
+				stagePanelPosition.y = (float)lua_tonumber(lua, TOP_IDX);
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-														(tableName0+":"+field1).data(), scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			const char field2[ ] = "cellSize";
-			lua_pushstring( lua, field2 );
+			field = "cellSize";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type( lua, TOP_IDX );
-			// Type check
 			if ( LUA_TNUMBER == type )
 			{
 				stageCellSize = (float)lua_tonumber(lua, TOP_IDX);
@@ -131,15 +129,14 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-														(tableName0+":"+field2).data(), scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			const char field3[ ] = "color";
-			lua_pushstring( lua, field3 );
+			field = "color";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type( lua, TOP_IDX );
-			// Type check
 			if ( LUA_TNUMBER == type )
 			{
 				stagePanelColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
@@ -148,15 +145,14 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					(tableName0+":"+field3).data(), scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			const char field4[ ] = "outlineThickness";
-			lua_pushstring( lua, field4 );
+			field = "outlineThickness";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type( lua, TOP_IDX );
-			// Type check
 			if ( LUA_TNUMBER == type )
 			{
 				stagePanelOutlineThickness = (float)lua_tonumber(lua, TOP_IDX);
@@ -165,15 +161,14 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					(tableName0+":"+field4).data(), scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			const char field5[ ] = "outlineColor";
-			lua_pushstring( lua, field5 );
+			field = "outlineColor";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type( lua, TOP_IDX );
-			// Type check
 			if ( LUA_TNUMBER == type )
 			{
 				stagePanelOutlineColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
@@ -182,15 +177,14 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					(tableName0+":"+field5).data(), scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			const char field6[ ] = "cellOutlineColor";
-			lua_pushstring( lua, field6 );
+			field = "cellOutlineColor";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type( lua, TOP_IDX );
-			// Type check
 			if ( LUA_TNUMBER == type )
 			{
 				stageCellOutlineColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
@@ -199,52 +193,42 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					(tableName0+":"+field6).data(), scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
-			lua_pop( lua, 2 );
+			lua_pop( lua, 1 );
 		}
+		lua_pop( lua, 1 );
 
-		const std::string tableName1( "VfxCombo" );
-		lua_getglobal( lua, tableName1.data( ) );
+		tableName = "VfxCombo";
+		lua_getglobal( lua, tableName.data() );
 		// Type Check Exception
 		if ( false == lua_istable( lua, TOP_IDX ) )
 		{
 			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-													tableName1.data(), scriptPathNName );
+													tableName, scriptPathNName );
 		}
 		else
 		{
-			const char field0[ ] = "path";
-			lua_pushstring( lua, field0 );
+			std::string field( "path" );
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			int type = lua_type( lua, TOP_IDX );
-			// Type check
-			if ( LUA_TSTRING == type )
-			{
-				if ( false == mVfxCombo.loadResources(lua_tostring(lua, TOP_IDX)) )
-				{
-					// File Not Found Exception
-					gService( )->console( ).printScriptError( ExceptionType::FILE_NOT_FOUND,
-															(tableName1+":"+field0).data(), scriptPathNName );
-				}
-				else
-				{
-					isDefault = false;
-				}
-			}
+			type = lua_type( lua, TOP_IDX );
 			// Type Check Exception
-			else
+			if ( LUA_TSTRING != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-														(tableName1+":"+field0).data(), scriptPathNName );
+														 tableName+':'+field, scriptPathNName );
+			}
+			else
+			{
+				vfxComboSpritePathNName = lua_tostring(lua, TOP_IDX);
 			}
 			lua_pop( lua, 1 );
 
-			const char field1[ ] = "clipWidth";
-			lua_pushstring( lua, field1 );
+			field = "clipWidth";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type( lua, TOP_IDX );
-			// Type check
 			if ( LUA_TNUMBER == type )
 			{
 				vfxComboClipSize.x = (int)lua_tointeger(lua, TOP_IDX);
@@ -253,15 +237,14 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-														(tableName1+":"+field1).data(), scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			const char field2[ ] = "clipHeight";
-			lua_pushstring( lua, field2 );
+			field = "clipHeight";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type( lua, TOP_IDX );
-			// Type check
 			if ( LUA_TNUMBER == type )
 			{
 				vfxComboClipSize.y = (int)lua_tointeger(lua, TOP_IDX);
@@ -270,60 +253,59 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-														(tableName1+":"+field1).data(), scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
-			lua_pop( lua, 2 );
+			lua_pop( lua, 1 );
 		}
+		lua_pop( lua, 1 );
 
-		const std::string tableName2( "NextTetriminoPanel" );
-		lua_getglobal( lua, tableName2.data( ) );
+		tableName = "NextTetriminoPanel";
+		lua_getglobal( lua, tableName.data() );
 		// Type Check Exception
 		if ( false == lua_istable( lua, TOP_IDX ) )
 		{
 			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-													 tableName2.data(), scriptPathNName );
+													 tableName, scriptPathNName );
 		}
 		else
 		{
-			const char field0[ ] = "x";
-			lua_pushstring( lua, field0 );
-			lua_gettable( lua, 1 );
-			int type = lua_type( lua, TOP_IDX );
-			// Type check
-			if ( LUA_TNUMBER == type )
-			{
-				nextTetPanelPos.x = (float)lua_tonumber(lua, TOP_IDX);
-			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
-			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-														(tableName2+":"+field0).data(), scriptPathNName );
-			}
-			lua_pop( lua, 1 );
-
-			const char field1[ ] = "y";
-			lua_pushstring( lua, field1 );
+			std::string field( "x" );
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type( lua, TOP_IDX );
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				nextTetPanelPos.y = (float)lua_tonumber(lua, TOP_IDX);
+				nextTetPanelPosition.x = (float)lua_tonumber(lua, TOP_IDX);
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-														(tableName2+":"+field1).data(), scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			const char field2[ ] = "cellSize";
-			lua_pushstring( lua, field2 );
+			field = "y";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type( lua, TOP_IDX );
-			// Type check
+			if ( LUA_TNUMBER == type )
+			{
+				nextTetPanelPosition.y = (float)lua_tonumber(lua, TOP_IDX);
+			}
+			// Type Check Exception
+			else if ( LUA_TNIL != type )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			field = "cellSize";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type( lua, TOP_IDX );
 			if ( LUA_TNUMBER == type )
 			{
 				nextTetPanelCellSize = (float)lua_tonumber(lua, TOP_IDX);
@@ -332,32 +314,30 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					(tableName2+":"+field2).data(), scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			const char field3[ ] = "color";
-			lua_pushstring( lua, field3 );
+			field = "color";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type( lua, TOP_IDX );
-			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				nextTetPanelColor = (uint32_t)lua_tonumber(lua, TOP_IDX);
+				nextTetPanelColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					(tableName2+":"+field3).data(), scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			const char field4[ ] = "outlineThickness";
-			lua_pushstring( lua, field4 );
+			field = "outlineThickness";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type( lua, TOP_IDX );
-			// Type check
 			if ( LUA_TNUMBER == type )
 			{
 				nextTetPanelOutlineThickness = (float)lua_tonumber(lua, TOP_IDX);
@@ -366,15 +346,14 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					(tableName2+":"+field4).data(), scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			const char field5[ ] = "outlineColor";
-			lua_pushstring( lua, field5 );
+			field = "outlineColor";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type( lua, TOP_IDX );
-			// Type check
 			if ( LUA_TNUMBER == type )
 			{
 				nextTetPanelOutlineColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
@@ -383,15 +362,14 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					(tableName2+":"+field5).data(), scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			const char field6[ ] = "cellOutlineColor";
-			lua_pushstring( lua, field6 );
+			field = "cellOutlineColor";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type( lua, TOP_IDX );
-			// Type check
 			if ( LUA_TNUMBER == type )
 			{
 				nextTetPanelCellOutlineColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
@@ -400,40 +378,39 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					(tableName2+":"+field6).data(), scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
-			lua_pop( lua, 2 );
+			lua_pop( lua, 1 );
 		}
+		lua_pop( lua, 1 );
 		lua_close( lua );
 	}
 
-	if ( true == isDefault )
+	if ( false == mVfxCombo.loadResources( vfxComboSpritePathNName ) )
 	{
-		const char defaultFilePathNName[] = "Vfxs/Combo.png";
-		if ( false == mVfxCombo.loadResources( defaultFilePathNName ) )
-		{
-			// Exception: When there's not even the default file,
-			gService( )->console( ).printFailure( FailureLevel::FATAL,
-												 std::string("File Not Found: ")+defaultFilePathNName );
+		gService( )->console( ).printFailure( FailureLevel::FATAL,
+												"File Not Found: "+vfxComboSpritePathNName );
 #ifdef _DEBUG
-			__debugbreak( );
+		__debugbreak( );
 #endif
-		}
 	}
-
 	mBackgroundRect_.setFillColor( sf::Color(backgroundColor) );
-	mCurrentTetrimino.setOrigin( stagePanelPos );
+	mCurrentTetrimino.setOrigin( stagePanelPosition );
 	mCurrentTetrimino.setSize( stageCellSize );
-	mStage.setPosition( stagePanelPos );
+	mStage.setPosition( stagePanelPosition );
 	mStage.setSize( stageCellSize );
 	mStage.setBackgroundColor( sf::Color(stagePanelColor),
 							  stagePanelOutlineThickness, sf::Color(stagePanelOutlineColor),
 							  sf::Color(stageCellOutlineColor) );
-	mVfxCombo.setOrigin( stagePanelPos, stageCellSize, vfxComboClipSize );
-	mNextTetriminoPanel.setDimension( nextTetPanelPos, nextTetPanelCellSize );
+	mVfxCombo.setOrigin( stagePanelPosition, stageCellSize, vfxComboClipSize );
+	mNextTetriminoPanel.setDimension( nextTetPanelPosition, nextTetPanelCellSize );
 	mNextTetriminoPanel.setBackgroundColor( sf::Color(nextTetPanelColor),
 										   nextTetPanelOutlineThickness, sf::Color(nextTetPanelOutlineColor),
 										   sf::Color(nextTetPanelCellOutlineColor) );
+	if ( false == mNextTetriminos.empty() )
+	{
+		mNextTetriminoPanel.setTetrimino( mNextTetriminos.front() );
+	}
 	mCellSize_ = stageCellSize;
 	::model::Tetrimino::LoadResources( );
 }
@@ -569,7 +546,7 @@ void ::scene::inPlay::Playing::draw( )
 	mStage.draw( );
 	mCurrentTetrimino.draw( mWindow_ );
 	mNextTetriminoPanel.draw( );
-	if ( 0u != mFrameCount_clearingVfx_ )
+	if ( 0 != mFrameCount_clearingVfx_ )
 	{
 		mVfxCombo.draw( mNumOfLinesCleared );
 		++mFrameCount_clearingVfx_;
@@ -578,11 +555,11 @@ void ::scene::inPlay::Playing::draw( )
 	const uint32_t fps = (uint32_t)gService( )->vault( )[ HK_FORE_FPS ];
 	if ( fps <= mFrameCount_clearingVfx_ )
 	{
-		mFrameCount_clearingVfx_ = 0u;
+		mFrameCount_clearingVfx_ = 0;
 	}
 	++mFrameCount_fallDown;
 	++mFrameCount_clearingInterval_;
-	if ( 0u != mFrameCount_gameOver )
+	if ( 0 != mFrameCount_gameOver )
 	{
 		++mFrameCount_gameOver;
 	}

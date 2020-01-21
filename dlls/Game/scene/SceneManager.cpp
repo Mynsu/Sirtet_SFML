@@ -10,13 +10,6 @@
 #include "online/Online.h"
 
 bool ::scene::SceneManager::IsInstantiated = false;
-namespace
-{
-	void Exit( const std::string_view& )
-	{
-		gService( )->vault( )[ HK_IS_RUNNING ] = 0;
-	}
-}
 
 void ::scene::SceneManager::lastInit( sf::RenderWindow* const window )
 {
@@ -25,7 +18,6 @@ void ::scene::SceneManager::lastInit( sf::RenderWindow* const window )
 	//
 	// Registering commands
 	///
-	gService( )->console( ).addCommand( CMD_EXIT, &::Exit );
 #ifdef _DEV
 	gService( )->console( ).addCommand( CMD_CHANGE_SCENE, std::bind(&SceneManager::chscnto, this, std::placeholders::_1) );
 	gService( )->console( ).addCommand( CMD_RELOAD, std::bind(&SceneManager::refresh, this, std::placeholders::_1) );
@@ -34,21 +26,21 @@ void ::scene::SceneManager::lastInit( sf::RenderWindow* const window )
 	// Starting scene
 	///
 	::scene::ID startScene = ::scene::ID::INTRO;
-	const char scriptPathNName[] = "Scripts/_OnlyDuringDev.lua";
-	const char varName[] = "StartScene";
-	const auto result = ::util::script::LoadFromScript( scriptPathNName, varName );
-	// When there's the variable 'StartScene' in the script,
-	if ( const auto it = result.find(varName); result.cend() != it )
+	const std::string scriptPathNName( "Scripts/_OnlyDuringDev.lua" );
+	const std::string varName( "StartScene" );
+	const auto result = ::util::script::LoadFromScript(scriptPathNName, varName);
+	if ( const auto it = result.find(varName);
+		result.cend() != it )
 	{
 		// When its type is interger which can be cast to enum type,
 		if ( true == std::holds_alternative<int>(it->second) )
 		{
-			startScene = (::scene::ID)std::get< int >( it->second );
+			startScene = (::scene::ID)std::get<int>(it->second);
 		}
 		// Type Check Exception
 		else
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, varName, scriptPathNName );
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, varName, scriptPathNName );
 		}
 	}
 	/// Variable Not Found Exception

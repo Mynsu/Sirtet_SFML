@@ -44,7 +44,7 @@ void model::Tetrimino::LoadResources( )
 		if ( false == lua_isinteger(lua, TOP_IDX) )
 		{
 			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-													 valName0.data( ), scriptPathNName );
+													 valName0, scriptPathNName );
 		}
 		else
 		{
@@ -58,7 +58,7 @@ void model::Tetrimino::LoadResources( )
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
 			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-													 tableName0.data(), scriptPathNName );
+													 tableName0, scriptPathNName );
 		}
 		else
 		{
@@ -75,7 +75,7 @@ void model::Tetrimino::LoadResources( )
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					(tableName0+":"+field0).data(), scriptPathNName );
+					tableName0+':'+field0, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -92,7 +92,7 @@ void model::Tetrimino::LoadResources( )
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					(tableName0+":"+field1).data(), scriptPathNName );
+					tableName0+':'+field1, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -109,7 +109,7 @@ void model::Tetrimino::LoadResources( )
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					(tableName0+":"+field2).data(), scriptPathNName );
+					tableName0+':'+field2, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -126,7 +126,7 @@ void model::Tetrimino::LoadResources( )
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					(tableName0+":"+field3).data(), scriptPathNName );
+					tableName0+':'+field3, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -143,7 +143,7 @@ void model::Tetrimino::LoadResources( )
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					(tableName0+":"+field4).data(), scriptPathNName );
+					tableName0+':'+field4, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -160,7 +160,7 @@ void model::Tetrimino::LoadResources( )
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					(tableName0+":"+field5).data(), scriptPathNName );
+					tableName0+':'+field5, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -177,7 +177,7 @@ void model::Tetrimino::LoadResources( )
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					(tableName0+":"+field6).data(), scriptPathNName );
+					tableName0+':'+field6, scriptPathNName );
 			}
 			lua_pop( lua, 2 );
 		}

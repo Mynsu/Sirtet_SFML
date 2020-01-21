@@ -24,6 +24,6 @@ namespace scene::inPlay
 		sf::RenderWindow& mWindow_;
 		std::unique_ptr< ::scene::inPlay::IScene > mCurrentScene;
 		std::unique_ptr< ::scene::inPlay::IScene > mOverlappedScene;
-		sf::RectangleShape mBackgroundRect;
+		sf::RectangleShape mBackground;
 	};
 }

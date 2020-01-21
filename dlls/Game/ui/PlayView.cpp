@@ -16,7 +16,7 @@ ui::PlayView::PlayView( )
 
 ui::PlayView::PlayView( sf::RenderWindow& window, ::scene::online::Online& net, const bool isPlayable )
 	: mHasTetriminoCollidedOnClient( false ), mHasTetriminoCollidedOnServer( false ),
-	mIsPlayable( isPlayable ), mHasCurrentTetrimino( false ),
+	mIsForThisPlayer( isPlayable ), mHasCurrentTetrimino( false ),
 	mCountDownSec( 3 ), mNumOfLinesCleared( 0 ),
 	mFrameCount_input( 0 ), mFrameCount_clearingVFX( 0 ), mFrameCount_reset( 0 ),
 	mState_( PlayView::State::WAITING_OR_OVER ),
@@ -77,8 +77,8 @@ void ui::PlayView::update( std::list<sf::Event>& eventQueue )
 	{
 		mState_ = PlayView::State::PLAYING;
 	}
-	// TODO: 이름 바꾸기
-	if ( false == mIsPlayable )
+
+	if ( false == mIsForThisPlayer )
 	{
 		return;
 	}
@@ -91,7 +91,7 @@ void ui::PlayView::update( std::list<sf::Event>& eventQueue )
 		mNet->disconnect( );
 		return;
 	}
-	// 궁금: InRoom하고 합칠까?
+	// TODO: InRoom.cpp에 있는 걸 여기로 옮기기
 	if ( true == mNet->hasReceived() )
 	{
 		if ( std::optional<std::string> nextTet( mNet->getByTag(TAG_MY_NEXT_TETRIMINO,
@@ -112,15 +112,6 @@ void ui::PlayView::update( std::list<sf::Event>& eventQueue )
 			{
 				mNextTetriminoPanel.setTetrimino( mNextTetriminos.front() );
 			}
-		}
-
-		if ( std::optional<std::string> newCurTet( mNet->getByTag(TAG_MY_NEW_CURRENT_TETRIMINO,
-																  ::scene::online::Online::Option::DEFAULT,
-																  sizeof(uint8_t)) );
-			std::nullopt != newCurTet )
-		{
-			const ::model::tetrimino::Type type = (::model::tetrimino::Type)*newCurTet.value().data();
-			setNewCurrentTetrimino( type );
 		}
 
 		if ( std::optional<std::string> tempoMs( mNet->getByTag(TAG_MY_TEMPO_MS,
@@ -371,14 +362,14 @@ void ui::PlayView::gameOver()
 void ui::PlayView::draw()
 {
 	mStage.draw( );
-	if ( true == mIsPlayable )
+	if ( true == mIsForThisPlayer )
 	{
 		mNextTetriminoPanel.draw( );
 	}
 	if ( PlayView::State::PLAYING == mState_ )
 	{
 		mCurrentTetrimino.draw( *mWindow_ );
-		if ( true == mIsPlayable )
+		if ( true == mIsForThisPlayer )
 		{
 			if ( 0 < mFrameCount_clearingVFX )
 			{

@@ -21,18 +21,16 @@
 
 void ::scene::inPlay::Ready::loadResources( )
 {
-	bool isPathDefault = true;
-	bool isWDefault = true;
-	bool isHDefault = true;
 	uint32_t backgroundColor = 0x29cdb5'7fu;
+	std::string countdownSpritePathNName( "Images/Countdown.png" );
 
 	lua_State* lua = luaL_newstate( );
-	const char scriptPathNName[ ] = "Scripts/Ready.lua";
-	if ( true == luaL_dofile(lua, scriptPathNName) )
+	const std::string scriptPathNName( "Scripts/Ready.lua" );
+	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
 	{
 		// File Not Found Exception
 		gService( )->console( ).printFailure( FailureLevel::FATAL,
-											 std::string("File Not Found: ")+scriptPathNName );
+											 "File Not Found: "+scriptPathNName );
 		lua_close( lua );
 	}
 	else
@@ -40,60 +38,51 @@ void ::scene::inPlay::Ready::loadResources( )
 		luaL_openlibs( lua );
 		const int TOP_IDX = -1;
 
-		const std::string valName0( "BackgroundColor" );
-		lua_getglobal( lua, valName0.data() );
-		if ( false == lua_isinteger(lua, TOP_IDX) )
-		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-													 valName0.data( ), scriptPathNName );
-		}
-		else
+		std::string varName( "BackgroundColor" );
+		lua_getglobal( lua, varName.data() );
+		int type = lua_type(lua, TOP_IDX);
+		if ( LUA_TNUMBER == type )
 		{
 			backgroundColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
 		}
+		// Type Check Exception
+		else
+		{
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+													 varName, scriptPathNName );
+		}
 		lua_pop( lua, 1 );
 
-		const std::string tableName0( "CountdownSprite" );
-		lua_getglobal( lua, tableName0.data( ) );
+		std::string tableName( "CountdownSprite" );
+		lua_getglobal( lua, tableName.data() );
 		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
 			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-													 tableName0.data( ), scriptPathNName );
+													 tableName, scriptPathNName );
 		}
 		else
 		{
-			const char field0[ ] = "path";
-			lua_pushstring( lua, field0 );
+			std::string field( "path" );
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			int type = lua_type( lua, TOP_IDX );
-			// Type check
-			if ( LUA_TSTRING == type )
-			{
-				if ( false == mTexture.loadFromFile(lua_tostring(lua, TOP_IDX)) )
-				{
-					// File Not Found Exception
-					gService( )->console( ).printScriptError( ExceptionType::FILE_NOT_FOUND,
-															(tableName0+":"+field0).data( ), scriptPathNName );
-				}
-				else
-				{
-					isPathDefault = false;
-				}
-			}
+			type = lua_type(lua, TOP_IDX);
 			// Type Check Exception
-			else
+			if ( LUA_TSTRING != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-														(tableName0+":"+field0).data( ), scriptPathNName );
+														 tableName+':'+field, scriptPathNName );
+			}
+			else
+			{
+				countdownSpritePathNName = lua_tostring(lua, TOP_IDX);
 			}
 			lua_pop( lua, 1 );
 
-			const char field1[ ] = "clipWidth";
-			lua_pushstring( lua, field1 );
+			field = "clipWidth";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			type = lua_type( lua, TOP_IDX );
-			// Type check
+			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
 				const float temp = (float)lua_tointeger(lua, TOP_IDX);
@@ -101,72 +90,60 @@ void ::scene::inPlay::Ready::loadResources( )
 				if ( 0 > temp )
 				{
 					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
-															(tableName0+":"+field1).data( ), scriptPathNName );
+															tableName+':'+field, scriptPathNName );
 				}
-				// When the value looks OK,
 				else
 				{
 					mSpriteClipSize_.x = temp;
-					isWDefault = false;
 				}
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-														(tableName0+":"+field1).data( ), scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			const char field2[ ] = "clipHeight";
-			lua_pushstring( lua, field2 );
+			field = "clipHeight";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			type = lua_type( lua, TOP_IDX );
+			type = lua_type(lua, TOP_IDX);
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				const float temp = (float)lua_tointeger(lua, TOP_IDX);
+				const float temp = (float)lua_tonumber(lua, TOP_IDX);
 				// Range Check Exception
 				if ( 0 > temp )
 				{
 					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
-															(tableName0+":"+field2).data( ), scriptPathNName );
+															tableName+':'+field, scriptPathNName );
 				}
-				// When the value looks OK,
 				else
 				{
 					mSpriteClipSize_.y = temp;
-					isHDefault = false;
 				}
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-														(tableName0+":"+field2).data( ), scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
-			lua_pop( lua, 2 );
+			lua_pop( lua, 1 );
 		}
+		lua_pop( lua, 1 );
 		lua_close( lua );
 	}
 
-	if ( true == isPathDefault )
+	if ( false == mTexture.loadFromFile(countdownSpritePathNName) )
 	{
-		const char defaultFilePathNName[ ] = "Images/Countdown.png";
-		if ( false == mTexture.loadFromFile(defaultFilePathNName) )
-		{
-			// Exception: When there's not even the default file,
-			gService( )->console( ).printFailure( FailureLevel::FATAL,
-												 std::string("File Not Found: ")+defaultFilePathNName );
+		// Exception: When there's not even the default file,
+		gService( )->console( ).printFailure( FailureLevel::FATAL,
+												"File Not Found: "+countdownSpritePathNName );
 #ifdef _DEBUG
-			__debugbreak( );
+		__debugbreak( );
 #endif
-		}
-	}
-
-	if ( true == isWDefault || true == isHDefault )
-	{
-		gService( )->console( ).print( "Default: width 256, height 256" );
 	}
 
 	mBackgroundRect_.setFillColor( sf::Color(backgroundColor) );

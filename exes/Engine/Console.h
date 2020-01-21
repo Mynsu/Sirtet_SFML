@@ -1,20 +1,20 @@
 #pragma once
 #include "Command.h"
 
-class Console final : public IConsole, public sf::Drawable
+class Console final : public IConsole
 {
 public:
 	Console( );
 	~Console( ) = default;
 	
-	void print( const std::string& message, sf::Color color = sf::Color::White ) override;
+	void print( const std::string& message, const sf::Color color = sf::Color::White ) override;
 	void printFailure( const FailureLevel failureLevel, const std::string& message ) override;
-	void printScriptError( const ExceptionType exceptionType, const char* variableName, const char* scriptName ) override;
+	void printScriptError( const ExceptionType exceptionType, const std::string& variableName, const std::string& scriptName ) override;
 	void addCommand( const HashedKey command, const Func& functional ) override;
 	void removeCommand( const HashedKey command ) override;
 	bool isVisible( ) const override;
 	
-	void draw( sf::RenderTarget& target, sf::RenderStates states ) const override;
+	void draw( sf::RenderWindow& window );
 	void handleEvent( std::list< sf::Event >& eventQueue );
 	inline void processCommand( const std::string& commandLine )
 	{
@@ -24,16 +24,19 @@ public:
 	{
 		mCommand.release( );
 	}
-	// Tell how big the window size is, which decides the position and the size of the console.
-	// 800*600 assumed by default.
-	void setPosition( const sf::Vector2u& windowSize );
+	void initialize( );
 private:
+	inline void refresh( const std::string_view& )
+	{
+		initialize( );
+	}
 	bool mVisible;
-	Command mCommand;
+	uint32_t mFontSize, mLinesShown;
 	std::string mCurrentInput;
+	Command mCommand;
 	sf::Font mFont;
-	sf::RectangleShape mConsoleWindow;
-	sf::Text mCurrentInputTextField;
-	std::array< std::string, static_cast< size_t >( ExceptionType::_MAX )> mExceptionTypes;
-	std::array< sf::Text, 9 > mHistoryTextFields;
+	sf::RectangleShape mConsoleBackground;
+	std::array<std::string, (int)ExceptionType::_MAX> mExceptionTypes;
+	sf::Text mCurrentInputTextField, mHistoryTextLabel;
+	std::vector<std::pair<std::string, sf::Color>> mHistory;
 };

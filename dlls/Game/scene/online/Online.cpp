@@ -51,51 +51,8 @@ scene::online::Online::Online( sf::RenderWindow& window )
 {
 	ASSERT_FALSE( IsInstantiated );
 
-	mFPS_ = (uint32_t)gService()->vault()[HK_FORE_FPS];
 	ReceivingResult = -2;
-	SocketToServer = std::make_unique<Socket>(Socket::Type::TCP);
-	//궁금: 여기가 Any가 아니면 서버에서 IP 들여다볼 수 있을까?
-	if ( -1 == SocketToServer->bind(EndPoint::Any) )
-	{
-		// Exception
-		gService( )->console( ).printFailure( FailureLevel::WARNING, "Failed to bind a to-queue-server socket.\n" );
-		// Triggering
-		mFrameCount_disconnection = 1;
-	}
-	// NOTE: Socket option should be set after binding it.
-	else if ( const DWORD timeout = RECEIVING_WAIT_MS;
-		0 != setsockopt(SocketToServer->handle(), SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(DWORD)) )
-	{
-		// Exception
-		std::string msg( "setsockopt error: " );
-		gService( )->console( ).printFailure( FailureLevel::WARNING, msg+std::to_string(WSAGetLastError()) );
-		// Triggering
-		mFrameCount_disconnection = 1;
-	}
-	else if ( -1 == SocketToServer->connect(EndPoint(QUEUE_SERVER_IP_ADDRESS, QUEUE_SERVER_PORT)) )
-	{
-		// Exception
-		gService( )->console( ).printFailure( FailureLevel::WARNING, "Failed to connect to the queue server.\n" );
-		// Triggering
-		mFrameCount_disconnection = 1;
-	}
-	else
-	{
-		gService( )->console( ).print( "Succeeded to connect to the queue server.", sf::Color::Green );
-		ThreadToReceive = std::make_unique<std::thread>(&Receive, std::ref(*SocketToServer));
-		using WallClock = std::chrono::system_clock;
-		const WallClock::time_point now = WallClock::now();
-		const WallClock::duration tillNow = now.time_since_epoch();
-		const std::chrono::minutes atMin = std::chrono::duration_cast<std::chrono::minutes>(tillNow);
-		const HashedKey invitation = ::util::hash::Digest(VERSION + atMin.count() + SALT);
-#ifdef _DEBUG
-		const std::string msg( "minutes: " + std::to_string(atMin.count()) + " / invitation: " + std::to_string(invitation) );
-		gService()->console().print( msg, sf::Color::Red );
-#endif
-		Packet packet;
-		packet.pack( TAG_INVITATION, invitation );
-		send( packet );
-	}
+	mFPS_ = (uint32_t)gService()->vault()[HK_FORE_FPS];
 	setScene( ::scene::online::ID::WAITING );
 	loadResources( );
 
@@ -142,7 +99,7 @@ void ::scene::online::Online::loadResources( )
 		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName0.data(), scriptPathNName );
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName0, scriptPathNName );
 		}
 		else
 		{
@@ -157,7 +114,7 @@ void ::scene::online::Online::loadResources( )
 				{
 					// File Not Found Exception
 					gService( )->console( ).printScriptError( ExceptionType::FILE_NOT_FOUND,
-						(tableName0+":"+field0).data(), scriptPathNName );
+						tableName0+':'+field0, scriptPathNName );
 				}
 				else
 				{
@@ -168,7 +125,7 @@ void ::scene::online::Online::loadResources( )
 			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					(tableName0+":"+field0).data(), scriptPathNName );
+					tableName0+':'+field0, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -184,7 +141,7 @@ void ::scene::online::Online::loadResources( )
 				if ( 0 > temp )
 				{
 					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
-						(tableName0+":"+field1).data(), scriptPathNName );
+						tableName0+':'+field1, scriptPathNName );
 				}
 				// When the value looks OK,
 				else
@@ -197,7 +154,7 @@ void ::scene::online::Online::loadResources( )
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					(tableName0+":"+field1).data(), scriptPathNName );
+					tableName0+':'+field1, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -213,7 +170,7 @@ void ::scene::online::Online::loadResources( )
 				if ( 0 > temp )
 				{
 					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
-						(tableName0+":"+field2).data(), scriptPathNName );
+						tableName0+':'+field2, scriptPathNName );
 				}
 				// When the value looks OK,
 				else
@@ -226,7 +183,7 @@ void ::scene::online::Online::loadResources( )
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					(tableName0+":"+field2).data(), scriptPathNName );
+					tableName0+':'+field2, scriptPathNName );
 			}
 			lua_pop( lua, 2 );
 		}
@@ -281,7 +238,7 @@ void ::scene::online::Online::loadResources( )
 
 void ::scene::online::Online::draw( )
 {
-	if ( 0u == mFrameCount_disconnection )
+	if ( 0 == mFrameCount_disconnection )
 	{
 		mCurrentScene->draw( );
 	}
@@ -292,10 +249,44 @@ void ::scene::online::Online::draw( )
 	}
 }
 
+void scene::online::Online::connectToQueueServer()
+{
+	SocketToServer = std::make_unique<Socket>(Socket::Type::TCP);
+	//궁금: 여기가 Any가 아니면 서버에서 IP 들여다볼 수 있을까?
+	if ( -1 == SocketToServer->bind(EndPoint::Any) )
+	{
+		// Exception
+		gService( )->console( ).printFailure( FailureLevel::WARNING, "Failed to bind a to-queue-server socket.\n" );
+		// Triggering
+		mFrameCount_disconnection = 1;
+		return;
+	}
+	// NOTE: Socket option should be set after binding it.
+	if ( const DWORD timeout = RECEIVING_WAIT_MS;
+			 0 != setsockopt(SocketToServer->handle(), SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(DWORD)) )
+	{
+		// Exception
+		std::string msg( "setsockopt error: " );
+		gService( )->console( ).printFailure( FailureLevel::WARNING, msg+std::to_string(WSAGetLastError()) );
+		// Triggering
+		mFrameCount_disconnection = 1;
+		return;
+	}
+	if ( -1 == SocketToServer->connect(EndPoint(QUEUE_SERVER_IP_ADDRESS, QUEUE_SERVER_PORT)) )
+	{
+		// Exception
+		gService( )->console( ).printFailure( FailureLevel::WARNING, "Failed to connect to the queue server.\n" );
+		// Triggering
+		mFrameCount_disconnection = 1;
+		return;
+	}
+	gService( )->console( ).print( "Succeeded to connect to the queue server.", sf::Color::Green );
+}
+
 void scene::online::Online::disconnect( )
 {
 	// Triggering
-	++mFrameCount_disconnection;
+	mFrameCount_disconnection = 1;
 }
 
 bool scene::online::Online::connectToMainServer( )
@@ -408,7 +399,7 @@ bool scene::online::Online::hasReceived( )
 		{
 			gService( )->console( ).printFailure( FailureLevel::FATAL, "Failed to receive." );
 			// Triggering
-			++mFrameCount_disconnection;
+			mFrameCount_disconnection = 1;
 		}
 		return false;
 	}

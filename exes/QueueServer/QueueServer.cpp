@@ -4,11 +4,11 @@
 
 using Ticket = HashedKey;
 using ClientIndex = uint32_t;
-const uint32_t CAPACITY = 4;
+const uint32_t CAPACITY = 100;
 // Capacity in the main server defaults to 10000u.
 // You can resize it indirectly here without re-compliing or rescaling the main server.
 // !IMPORTANT: This must be less than the real capacity of the server.
-const uint32_t MAIN_SERVER_CAPACITY = 10;
+const uint32_t MAIN_SERVER_CAPACITY = 5;
 const ClientIndex MAIN_SERVER_INDEX = CAPACITY;
 const ClientIndex LISTENER_IDX = CAPACITY + 1;
 const Clock::duration NOTIFYING_QUEUE_INTERVAL_MS = std::chrono::milliseconds(1000);
@@ -388,7 +388,7 @@ int main( )
 									}
 									statusAgainstMainServer.set( Status::WAITING_FOR_POPULATION, 1 );
 #ifdef _DEBUG
-									std::cout << "Asking again the main server how many clients are there.\n";
+									std::cout << "Asked again the main server how many clients are there.\n";
 #endif
 								}
 								else
@@ -509,11 +509,6 @@ int main( )
 							const char* const rcvBuf = clientSocket.receivingBuffer();
 							constexpr uint8_t TAG_INVITATION_LEN = ::util::hash::Measure(TAG_INVITATION);
 							const HashedKey submittedInvitation = ::ntohl(*(HashedKey*)&rcvBuf[TAG_INVITATION_LEN]);
-#ifdef _DEBUG
-							std::cout << "minutes: " << atMin.count() <<
-								" / invitations: " << invitations[0] << "," << invitations[1] << "," << invitations[2] <<
-								" / submitted: " << submittedInvitation << std::endl;
-#endif
 							bool isIdentified = false;
 							for ( const HashedKey inv : invitations	)
 							{
@@ -698,9 +693,21 @@ int main( )
 			const uint8_t ignored = 1;
 			Packet packet;
 			packet.pack( TAG_POPULATION, ignored );
+			if ( -1 == socketToMainServer->sendOverlapped(packet) )
+			{
+				// Exception
+				std::cerr << "WARNING: Failed to ask the main server how many clients are there.\n";
+				if ( false == ResetAndReconnectToMainServer(socketToMainServer, iocp) )
+				{
+					// Exception
+					// Break twice.
+					goto cleanUp;
+				}
+				statusAgainstMainServer.set( Status::WAITING_FOR_IDENTIFICATION, 1 );
+			}
 			statusAgainstMainServer.set( Status::WAITING_FOR_POPULATION, 1 );
 #ifdef _DEBUG
-			std::cout << "Asking the main server how many clients are there.\n";
+			std::cout << "Asked the main server how many clients are there.\n";
 #endif
 		}
 

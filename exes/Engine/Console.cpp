@@ -2,130 +2,232 @@
 #include "Console.h"
 #include <Lib/ScriptLoader.h>
 
-Console::Console( ) : mVisible( false ),
-								mCurrentInput( "_" )
+Console::Console( ) :
+	mVisible( false ), mFontSize( 30 ), mLinesShown( 9 )
 {
-	//
-	// Mapping Exception Type to String
-	//
-	mExceptionTypes[ static_cast< int >( ExceptionType::VARIABLE_NOT_FOUND ) ]
+	mExceptionTypes[(int)ExceptionType::VARIABLE_NOT_FOUND]
 		= "Variable Not Found: ";
-	mExceptionTypes[ static_cast< int >( ExceptionType::TYPE_CHECK ) ]
+	mExceptionTypes[(int)ExceptionType::TYPE_CHECK]
 		= "Type Check: ";
-	mExceptionTypes[ static_cast< int >( ExceptionType::FILE_NOT_FOUND ) ]
+	mExceptionTypes[(int)ExceptionType::FILE_NOT_FOUND]
 		= "File Not Found: ";
-	mExceptionTypes[ static_cast< int >( ExceptionType::RANGE_CHECK ) ]
+	mExceptionTypes[(int)ExceptionType::RANGE_CHECK]
 		= "Range Check: ";
 
-#ifndef _DEBUG
-	try
-#endif
-	{
-		const char scriptPathNName[ ] = "Scripts/Console.lua";
-		const char varName0[] = "Font";
-		const char varName1[] = "VisibleOnStart";
-		const auto result = ::util::script::LoadFromScript( scriptPathNName, varName0, varName1 );
-		bool isDefault = false;
-		// When there's the variable 'Font' in the script,
-		if ( const auto it = result.find( varName0 ); result.cend( ) != it )
-		{
-			// Type check
-			if ( true == std::holds_alternative< std::string >( it->second ) )
-			{
-				if ( false == mFont.loadFromFile( std::get< std::string >( it->second ) ) )
-				{
-					// File Not Found Exception
-					printScriptError( ExceptionType::FILE_NOT_FOUND, varName0, scriptPathNName );
-					isDefault = true;
-				}
-			}
-			// Type Check Exception
-			else
-			{
-				printScriptError( ExceptionType::TYPE_CHECK, varName0, scriptPathNName );
-				isDefault = true;
-			}
-		}
-		// Variable Not Found Exception
-		else
-		{
-			printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName0, scriptPathNName );
-			isDefault = true;
-		}
-
-		if ( true == isDefault )
-		{
-			const std::string defaultFilePathNName( "Fonts/AGENCYB.TTF" );
-			if ( false == mFont.loadFromFile( defaultFilePathNName ) )
-			{
-				// Exception: When there's not even the default file,
-				printFailure( FailureLevel::FATAL,
-							  mExceptionTypes[ static_cast<int>( ExceptionType::FILE_NOT_FOUND ) ] + defaultFilePathNName );
-#ifdef _DEBUG
-				__debugbreak( );
-#endif
-			}
-		}
-
-		// When there's the variable 'VisibleOnStart' in the script,
-		if ( const auto it = result.find( varName1 ); result.cend( ) != it )
-		{
-			// Type check
-			if ( true == std::holds_alternative< bool >( it->second ) )
-			{
-				mVisible = std::get< bool >( it->second );
-			}
-			// Type Check Exception
-			else
-			{
-				printScriptError( ExceptionType::TYPE_CHECK, varName1, scriptPathNName );
-			}
-		}
-		/// Variable Not Found Exception
-		/// else { // Nothing to do }
-	}
-#ifndef _DEBUG
-	catch ( std::runtime_error& )
-	{
-		// Nothing to do
-	}
-#endif
-	mCurrentInputTextField.setFont( mFont );
-	mCurrentInputTextField.setString( mCurrentInput );
-	for ( auto& it : mHistoryTextFields )
-	{
-		it.setFont( mFont );
-	}
-
-	mConsoleWindow.setOutlineColor( sf::Color::White );
-	mConsoleWindow.setOutlineThickness( 0.2f );
-	mConsoleWindow.setFillColor( sf::Color::Blue );
-	setPosition( sf::Vector2u( 800u, 600u ) );
+	addCommand( ::util::hash::Digest("refreshcon", 10), std::bind(&Console::refresh, this, std::placeholders::_1) );
 }
 
-
-void Console::print( const std::string& message, sf::Color color )
+void Console::initialize( )
 {
-	// Push up the past messages
-	for ( size_t i = mHistoryTextFields.size( )-1; i != 0; --i )
+	uint32_t color = 0x0000ffff;
+	std::string fontPathNName( "Fonts/AGENCYB.TTF" );
+	mFontSize = 30;
+	uint32_t currentInputFontColor = 0xffffffff;
+	sf::Vector2u winSize( 800, 600 );
+	mLinesShown = 9;
+
+	const std::string scriptPathNName( "Scripts/Console.lua" );
+	const std::string varName0( "VisibleOnStart" );
+	const std::string varName1( "Color" );
+	const std::string varName2( "Font" );
+	const std::string varName3( "FontSize" );
+	const std::string varName4( "CurrentInputFontColor" );
+	const std::string varName5( "WinWidth" );
+	const std::string varName6( "WinHeight" );
+	const std::string varName7( "LinesShown" );
+	const auto result = ::util::script::LoadFromScript( scriptPathNName, varName0,
+													   varName1,
+													   varName2, varName3,	varName4,
+													   varName5, varName6,
+													   varName7 );
+	if ( const auto it = result.find(varName0);
+		result.cend() != it )
 	{
-		const auto& str = mHistoryTextFields[ i-1 ].getString( );
-		const sf::Color _color = mHistoryTextFields[ i-1 ].getFillColor( );
-		mHistoryTextFields[ i ].setString( str );
-		mHistoryTextFields[ i ].setFillColor( _color );
+		// Type check
+		if ( true == std::holds_alternative<bool>(it->second) )
+		{
+			mVisible = std::get<bool>(it->second);
+		}
+		// Type Check Exception
+		else
+		{
+			printScriptError( ExceptionType::TYPE_CHECK, varName0, scriptPathNName );
+		}
 	}
-	// Print the current message.
-	mHistoryTextFields[ 0 ].setString( message );
-	// Set font color suitable for an normal, non-error message
-	if ( color != mHistoryTextFields[ 0 ].getFillColor( ) )
+	// Variable Not Found Exception
+	else
 	{
-		mHistoryTextFields[ 0 ].setFillColor( color );
+		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName0, scriptPathNName );
 	}
+
+	if ( const auto it = result.find(varName1);
+		result.cend() != it )
+	{
+		// Type check
+		if ( true == std::holds_alternative<int>(it->second) )
+		{
+			color = std::get<int>(it->second);
+		}
+		// Type Check Exception
+		else
+		{
+			printScriptError( ExceptionType::TYPE_CHECK, varName1, scriptPathNName );
+		}
+	}
+	// Variable Not Found Exception
+	else
+	{
+		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName1, scriptPathNName );
+	}
+
+	if ( const auto it = result.find(varName2);
+		result.cend() != it )
+	{
+		// Type check
+		if ( true == std::holds_alternative<std::string>(it->second) )
+		{
+			fontPathNName = std::get<std::string>(it->second);
+		}
+		// Type Check Exception
+		else
+		{
+			printScriptError( ExceptionType::TYPE_CHECK, varName2, scriptPathNName );
+		}
+	}
+	// Variable Not Found Exception
+	else
+	{
+		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName2, scriptPathNName );
+	}
+
+	if ( const auto it = result.find(varName3);
+		result.cend() != it )
+	{
+		// Type check
+		if ( true == std::holds_alternative<int>(it->second) )
+		{
+			mFontSize = std::get<int>(it->second);
+		}
+		// Type Check Exception
+		else
+		{
+			printScriptError( ExceptionType::TYPE_CHECK, varName3, scriptPathNName );
+		}
+	}
+	// Variable Not Found Exception
+	else
+	{
+		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName3, scriptPathNName );
+	}
+
+	if ( const auto it = result.find(varName4);
+		result.cend() != it )
+	{
+		// Type check
+		if ( true == std::holds_alternative<int>(it->second) )
+		{
+			currentInputFontColor = std::get<int>(it->second);
+		}
+		// Type Check Exception
+		else
+		{
+			printScriptError( ExceptionType::TYPE_CHECK, varName4, scriptPathNName );
+		}
+	}
+	// Variable Not Found Exception
+	else
+	{
+		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName4, scriptPathNName );
+	}
+
+	if ( const auto it = result.find(varName5);
+		result.cend() != it )
+	{
+		// Type check
+		if ( true == std::holds_alternative<int>(it->second) )
+		{
+			winSize.x = std::get<int>(it->second);
+		}
+		// Type Check Exception
+		else
+		{
+			printScriptError( ExceptionType::TYPE_CHECK, varName5, scriptPathNName );
+		}
+	}
+	// Variable Not Found Exception
+	else
+	{
+		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName5, scriptPathNName );
+	}
+
+	if ( const auto it = result.find(varName6);
+		result.cend() != it )
+	{
+		// Type check
+		if ( true == std::holds_alternative<int>(it->second) )
+		{
+			winSize.y = std::get<int>(it->second);
+		}
+		// Type Check Exception
+		else
+		{
+			printScriptError( ExceptionType::TYPE_CHECK, varName6, scriptPathNName );
+		}
+	}
+	// Variable Not Found Exception
+	else
+	{
+		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName6, scriptPathNName );
+	}
+
+	if ( const auto it = result.find(varName7);
+		result.cend() != it )
+	{
+		// Type check
+		if ( true == std::holds_alternative<int>(it->second) )
+		{
+			mLinesShown = (uint8_t)std::get<int>(it->second);
+		}
+		// Type Check Exception
+		else
+		{
+			printScriptError( ExceptionType::TYPE_CHECK, varName7, scriptPathNName );
+		}
+	}
+	// Variable Not Found Exception
+	else
+	{
+		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName7, scriptPathNName );
+	}
+
+	mConsoleBackground.setFillColor( sf::Color(color) );
+	if ( false == mFont.loadFromFile(fontPathNName) )
+	{
+		// File Not Found Exception
+		printScriptError( ExceptionType::FILE_NOT_FOUND, varName2, scriptPathNName );
+	}
+	mCurrentInputTextField.setFont( mFont );
+	mCurrentInputTextField.setCharacterSize( mFontSize );
+	mCurrentInputTextField.setFillColor( sf::Color(currentInputFontColor) );
+	mCurrentInputTextField.setString( mCurrentInput );
+	mHistoryTextLabel.setFont( mFont );
+	mHistoryTextLabel.setCharacterSize( mFontSize );
+
+	const float margin = 30.f;
+	const float consoleHeight =	(float)(mFontSize*(mLinesShown+1));
+	mConsoleBackground.setPosition( sf::Vector2f(margin, winSize.y-consoleHeight-margin) );
+	mConsoleBackground.setSize( sf::Vector2f(winSize.x-margin*2, consoleHeight+margin) );
+	const sf::Vector2f curTfPos( margin+5.f, winSize.y-margin-(float)mFontSize-5.f );
+	mCurrentInputTextField.setPosition( curTfPos );
+}
+
+void Console::print( const std::string& message, const sf::Color color )
+{
+	mHistory.emplace_back( std::make_pair(message, color) );
 }
 
 void Console::printFailure( const FailureLevel failureLevel, const std::string& message )
 {
-	// Concatenate error level onNet with message
 	std::stringstream ss;
 	switch ( failureLevel )
 	{
@@ -143,13 +245,15 @@ void Console::printFailure( const FailureLevel failureLevel, const std::string& 
 			break;
 #endif
 	}
-	print( ss.str( ), sf::Color::Red );
+	print( ss.str(), sf::Color::Red );
 }
 
-void Console::printScriptError( const ExceptionType exceptionType, const char* variableName, const char* scriptName )
+void Console::printScriptError( const ExceptionType exceptionType,
+							   const std::string& variableName,
+							   const std::string& scriptName )
 {
 	printFailure( FailureLevel::WARNING,
-				  mExceptionTypes[ static_cast<int>(exceptionType) ]+"["+variableName+":"+scriptName+"]" );
+				  mExceptionTypes[(int)exceptionType]+'['+variableName+':'+scriptName+']' );
 }
 
 void Console::addCommand( const HashedKey command, const Func& functional )
@@ -162,14 +266,23 @@ void Console::removeCommand( const HashedKey command )
 	mCommand.removeCommand( command );
 }
 
-void Console::draw( sf::RenderTarget& target, sf::RenderStates states ) const
+void Console::draw( sf::RenderWindow& window )
 {
-	target.draw( mConsoleWindow );
-	target.draw( mCurrentInputTextField );
-	#pragma omp parallel
-	for ( const auto& it : mHistoryTextFields )
+	window.draw( mConsoleBackground );
+	window.draw( mCurrentInputTextField );
+	sf::Vector2f textFieldPos( mCurrentInputTextField.getPosition() );
+	uint32_t count = 0;
+	for ( auto crit = mHistory.crbegin(); mHistory.crend() != crit; ++crit )
 	{
-		target.draw( it );
+		textFieldPos -= sf::Vector2f(sf::Vector2u(0, mFontSize));
+		mHistoryTextLabel.setPosition( textFieldPos );
+		mHistoryTextLabel.setString( crit->first );
+		mHistoryTextLabel.setFillColor( crit->second );
+		window.draw( mHistoryTextLabel );
+		if ( mLinesShown <= ++count )
+		{
+			break;
+		}
 	}
 }
 
@@ -177,7 +290,6 @@ void Console::handleEvent( std::list< sf::Event >& eventQueue )
 {
 	for ( auto it = eventQueue.cbegin(); eventQueue.cend() != it; )
 	{
-		// When Tab is pressed down whether the console is visible or not,
 		if ( sf::Event::KeyPressed == it->type && sf::Keyboard::Tab == it->key.code )
 		{
 			// Toggling console on/off
@@ -186,46 +298,48 @@ void Console::handleEvent( std::list< sf::Event >& eventQueue )
 			return;
 		}
 
-		// Only while the console is visible,
 		if ( true == mVisible )
 		{
 			if ( sf::Event::TextEntered == it->type )
 			{
-				if ( auto input = it->text.unicode;
+				if ( uint32_t input = (uint32_t)it->text.unicode;
 					 input > 0x1f && input < 0x7f )
 				{
-					mCurrentInput.pop_back( );
 					mCurrentInput += (char)input;
-					mCurrentInput += '_';
-					mCurrentInputTextField.setString( mCurrentInput );
+					mCurrentInputTextField.setString( mCurrentInput + '_' );
 				}
 			}
 			else if ( sf::Event::KeyPressed == it->type )
 			{
-				if ( sf::Keyboard::Enter == it->key.code )
+				switch ( it->key.code )
 				{
-					mCurrentInput.pop_back( );
-					print( mCurrentInput );
-					mCommand.processCommand( mCurrentInput );
-					mCurrentInput.clear( );
-					mCurrentInput += '_';
-					mCurrentInputTextField.setString( mCurrentInput );
+					case sf::Keyboard::Escape:
+						mVisible = false;
+						break;
+					case sf::Keyboard::Enter:
+						print( mCurrentInput );
+						mCommand.processCommand( mCurrentInput );
+						mCurrentInput.clear( );
+						mCurrentInputTextField.setString( mCurrentInput + '_' );
+						break;
+					case sf::Keyboard::Backspace:
+						if ( false == mCurrentInput.empty() )
+						{
+							mCurrentInput.pop_back( );
+							mCurrentInputTextField.setString( mCurrentInput + '_' );
+						}
+						break;
+					case sf::Keyboard::Up:
+						mCurrentInput = mHistory.back().first;
+						mCurrentInputTextField.setString( mCurrentInput + '_' );
+						break;
+					case sf::Keyboard::Down:
+						mCurrentInput.clear( );
+						mCurrentInputTextField.setString( mCurrentInput + '_' );
+						break;
+					default:
+						break;
 				}
-				else if ( sf::Keyboard::Escape == it->key.code )
-				{
-					mVisible = false;
-				}
-				else if ( sf::Keyboard::Backspace == it->key.code )
-				{
-					if ( 1 != mCurrentInput.size( ) )
-					{
-						mCurrentInput.pop_back( );
-						mCurrentInput.pop_back( );
-						mCurrentInput += '_';
-						mCurrentInputTextField.setString( mCurrentInput );
-					}
-				}
-//TODO: 위 방향키 누르면 최근 내역 불러오기
 			}
 			it = eventQueue.erase( it );
 		}
@@ -239,21 +353,4 @@ void Console::handleEvent( std::list< sf::Event >& eventQueue )
 bool Console::isVisible( ) const
 {
 	return mVisible;
-}
-
-void Console::setPosition( const sf::Vector2u& winSize )
-{
-	const sf::Vector2f _winSize( winSize );
-	const float margin = 30.f;
-	const float consoleRatio = 0.5f;
-	mConsoleWindow.setPosition( sf::Vector2f( margin, _winSize.y*consoleRatio-margin ) );
-	mConsoleWindow.setSize( sf::Vector2f( _winSize.x-margin*2, _winSize.y*consoleRatio ) );
-	const auto fontSize = mCurrentInputTextField.getCharacterSize( );
-	sf::Vector2f textFieldPos( margin+5.f, _winSize.y-margin-(float)fontSize-5.f );
-	mCurrentInputTextField.setPosition( textFieldPos );
-	for ( auto& it : mHistoryTextFields )
-	{
-		textFieldPos -= sf::Vector2f( sf::Vector2u( 0u, fontSize ) );
-		it.setPosition( textFieldPos );
-	}
 }

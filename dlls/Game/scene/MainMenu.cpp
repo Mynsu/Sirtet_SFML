@@ -25,350 +25,299 @@ bool ::scene::MainMenu::IsInstantiated = false;
 
 void scene::MainMenu::loadResources( )
 {
-	bool isPathDefault = true;
-	bool isSprWDefault = true;
-	bool isSprHDefault = true;
-	bool isMargXDefault = true;
-	bool isMargYDefault = true;
-	bool isButtXDefault = true;
-	bool isButtYDefault = true;
+	std::string spritePathNName( "Images/MainMenu.png" );
 
 	lua_State* lua = luaL_newstate( );
-	const char scriptPathNName[] = "Scripts/MainMenu.lua";
-	if ( true == luaL_dofile(lua, scriptPathNName) )
+	const std::string scriptPathNName( "Scripts/MainMenu.lua" );
+	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
 	{
 		// File Not Found Exception
-		gService( )->console( ).printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
+		gService( )->console( ).printFailure( FailureLevel::FATAL, "File Not Found: "+scriptPathNName );
 		lua_close( lua );
 	}
 	else
 	{
 		luaL_openlibs( lua );
 		const int TOP_IDX = -1;
-		const std::string tableName0( "Sprite" );
-		lua_getglobal( lua, tableName0.data( ) );
+		std::string tableName( "Sprite" );
+		lua_getglobal( lua, tableName.data() );
 		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName0.data( ), scriptPathNName );
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
 		}
 		else
 		{
-			const char field0[ ] = "path";
-			lua_pushstring( lua, field0 );
+			std::string field( "path" );
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			int type = lua_type( lua, TOP_IDX );
-			// Type check
-			if ( LUA_TSTRING == type )
+			int type = lua_type(lua, TOP_IDX);
+			if ( LUA_TSTRING != type )
 			{
-				if ( false == mTexture.loadFromFile(lua_tostring(lua, TOP_IDX)) )
-				{
-					// File Not Found Exception
-					gService( )->console( ).printScriptError( ExceptionType::FILE_NOT_FOUND,
-																		(tableName0+":"+field0).data( ), scriptPathNName );
-				}
-				else
-				{
-					isPathDefault = false;
-				}
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+field, scriptPathNName );
 			}
 			// Type Check Exception
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-																	(tableName0+":"+field0).data( ), scriptPathNName );
+				spritePathNName = lua_tostring(lua, TOP_IDX);
 			}
 			lua_pop( lua, 1 );
 
-			const char field1[ ] = "clipWidth";
-			lua_pushstring( lua, field1 );
+			field = "clipWidth";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			type = lua_type( lua, TOP_IDX );
-			// Type check
+			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				const float temp = (float)lua_tointeger(lua, TOP_IDX);
+				const float temp = (float)lua_tonumber(lua, TOP_IDX);
 				// Range Check Exception
 				if ( 0 > temp )
 				{
 					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
-																		(tableName0+":"+field1).data( ), scriptPathNName );
+																		tableName+':'+field, scriptPathNName );
 				}
-				// When the value looks OK,
 				else
 				{
 					mSpriteClipSize_.x = temp;
-					isSprWDefault = false;
 				}
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-																	(tableName0+":"+field1).data( ), scriptPathNName );
+																	tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			const char field2[ ] = "clipHeight";
-			lua_pushstring( lua, field2 );
+			field = "clipHeight";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			type = lua_type( lua, TOP_IDX );
-			// Type check
+			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				const float temp = (float)lua_tointeger(lua, TOP_IDX);
+				const float temp = (float)lua_tonumber(lua, TOP_IDX);
 				// Range Check Exception
 				if ( 0 > temp )
 				{
 					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
-																		(tableName0+":"+field2).data( ), scriptPathNName );
+																		tableName+':'+field, scriptPathNName );
 				}
-				// When the value looks OK,
 				else
 				{
 					mSpriteClipSize_.y = temp;
-					isSprHDefault = false;
 				}
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-																	(tableName0+":"+field2).data( ), scriptPathNName );
+																	tableName+':'+field, scriptPathNName );
 			}
-			lua_pop( lua, 2 );
+			lua_pop( lua, 1 );
 		}
+		lua_pop( lua, 1 );
 
-		const std::string tableName1( "LogoMargin" );
-		lua_getglobal( lua, tableName1.data( ) );
+		tableName = "LogoMargin";
+		lua_getglobal( lua, tableName.data() );
 		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName1.data( ), scriptPathNName );
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
 		}
 		else
 		{
-			const char field0[ ] = "x";
-			lua_pushstring( lua, field0 );
+			std::string field( "x" );
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			int type = lua_type( lua, TOP_IDX );
+			int type = lua_type(lua, TOP_IDX);
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				const float temp = (float)lua_tointeger(lua, TOP_IDX);
+				const float temp = (float)lua_tonumber(lua, TOP_IDX);
 				// Range Check Exception
 				if ( 0 > temp )
 				{
 					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
-																		(tableName1+":"+field0).data( ), scriptPathNName );
+																		tableName+':'+field, scriptPathNName );
 				}
-				// When the value looks OK,
 				else
 				{
 					mLogoMargin_.x = temp;
-					isMargXDefault = false;
 				}
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-																	(tableName1+":"+field0).data( ), scriptPathNName );
+																	tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			const char field1[ ] = "y";
-			lua_pushstring( lua, field1 );
+			field = "y";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type( lua, TOP_IDX );
-			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				const float temp = (float)lua_tointeger(lua, TOP_IDX);
+				const float temp = (float)lua_tonumber(lua, TOP_IDX);
 				// Range Check Exception
 				if ( 0 > temp )
 				{
 					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
-																		(tableName1+":"+field1).data( ), scriptPathNName );
+																		tableName+':'+field, scriptPathNName );
 				}
-				// When the value looks OK,
 				else
 				{
 					mLogoMargin_.y = temp;
-					isMargYDefault = false;
 				}
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-																	(tableName1+":"+field1).data( ), scriptPathNName );
+																	tableName+':'+field, scriptPathNName );
 			}
-			lua_pop( lua, 2 );
+			lua_pop( lua, 1 );
 		}
+		lua_pop( lua, 1 );
 
-		const std::string tableName2( "ButtonSingle" );
-		lua_getglobal( lua, tableName2.data( ) );
+		tableName = "ButtonSingle";
+		lua_getglobal( lua, tableName.data() );
 		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName2.data( ), scriptPathNName );
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
 		}
 		else
 		{
-			const char field0[ ] = "x";
-			lua_pushstring( lua, field0 );
+			std::string field( "x" );
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			int type = lua_type( lua, TOP_IDX );
-			// Type check
+			int type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				const float temp = (float)lua_tointeger(lua, TOP_IDX);
+				const float temp = (float)lua_tonumber(lua, TOP_IDX);
 				// Range Check Exception
 				if ( 0 > temp )
 				{
 					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
-																		(tableName2+":"+field0).data( ), scriptPathNName );
+																		tableName+':'+field, scriptPathNName );
 				}
-				// When the value looks OK,
 				else
 				{
 					mButtonSinglePosition_.x = temp;
-					isButtXDefault = false;
 				}
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-																	(tableName2+":"+field0).data( ), scriptPathNName );
+																	tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			const char field1[ ] = "y";
-			lua_pushstring( lua, field1 );
+			field = "y";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			type = lua_type( lua, TOP_IDX );
-			// Type check
+			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				const float temp = (float)lua_tointeger(lua, TOP_IDX);
+				const float temp = (float)lua_tonumber(lua, TOP_IDX);
 				// Range Check Exception
 				if ( 0 > temp )
 				{
 					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
-																		(tableName2+":"+field1).data( ), scriptPathNName );
+																		tableName+':'+field, scriptPathNName );
 				}
-				// When the value looks OK,
 				else
 				{
 					mButtonSinglePosition_.y = temp;
-					isButtYDefault = false;
 				}
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-																	(tableName2+":"+field1).data( ), scriptPathNName );
+																	tableName+':'+field, scriptPathNName );
 			}
-			lua_pop( lua, 2 );
+			lua_pop( lua, 1 );
 		}
+		lua_pop( lua, 1 );
 
-		const std::string tableName3( "ButtonOnline" );
-		lua_getglobal( lua, tableName3.data( ) );
+		tableName = "ButtonOnline";
+		lua_getglobal( lua, tableName.data() );
 		// Type Check Exception
-		if ( false == lua_istable( lua, TOP_IDX ) )
+		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName3.data( ), scriptPathNName );
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
 		}
 		else
 		{
-			const char field0[ ] = "x";
-			lua_pushstring( lua, field0 );
+			std::string field( "x" );
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			int type = lua_type( lua, TOP_IDX );
-			// Type check
+			int type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				const float temp = (float)lua_tointeger( lua, TOP_IDX );
+				const float temp = (float)lua_tonumber( lua, TOP_IDX );
 				// Range Check Exception
 				if ( 0 > temp )
 				{
 					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
-						(tableName3+":"+field0).data( ), scriptPathNName );
+						tableName+':'+field, scriptPathNName );
 				}
-				// When the value looks OK,
 				else
 				{
 					mButtonOnlinePosition_.x = temp;
-					isButtXDefault = false;
 				}
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					(tableName3+":"+field0).data( ), scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			const char field1[ ] = "y";
-			lua_pushstring( lua, field1 );
+			field = "y";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			type = lua_type( lua, TOP_IDX );
-			// Type check
+			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				const float temp = (float)lua_tointeger( lua, TOP_IDX );
+				const float temp = (float)lua_tonumber(lua, TOP_IDX);
 				// Range Check Exception
 				if ( 0 > temp )
 				{
 					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
-						(tableName3+":"+field1).data( ), scriptPathNName );
+															tableName+':'+field, scriptPathNName );
 				}
-				// When the value looks OK,
 				else
 				{
 					mButtonOnlinePosition_.y = temp;
-					isButtYDefault = false;
 				}
 			}
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					(tableName3+":"+field1).data( ), scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
-			lua_pop( lua, 2 );
+			lua_pop( lua, 1 );
 		}
+		lua_pop( lua, 1 );
+
 		lua_close( lua );
 	}
 
-	if ( true == isPathDefault )
+	if ( false == mTexture.loadFromFile(spritePathNName) )
 	{
-		const char defaultFilePathNName[ ] = "Images/MainMenu.png";
-		if ( false == mTexture.loadFromFile(defaultFilePathNName) )
-		{
-			// Exception: When there's not even the default file,
-			gService( )->console( ).printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+defaultFilePathNName );
+		// Exception: When there's not even the default file,
+		gService( )->console( ).printFailure( FailureLevel::FATAL, "File Not Found: "+spritePathNName );
 #ifdef _DEBUG
-			__debugbreak( );
+		__debugbreak( );
 #endif
-		}
-	}
-
-	if ( true == isSprWDefault || true == isSprHDefault )
-	{
-		gService( )->console( ).print( "Default: clip width 256, clip height 128" );
-	}
-	if ( true == isMargXDefault || true == isMargYDefault )
-	{
-		gService( )->console( ).print( "Default: margin x 70, margin y 70" );
-	}
-	if ( true == isButtXDefault || true == isButtYDefault )
-	{
-		gService( )->console( ).print( "Default: button x 150, button y 150" );
 	}
 
 	mSprite.setTexture( mTexture );
