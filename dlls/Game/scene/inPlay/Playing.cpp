@@ -54,7 +54,6 @@ void ::scene::inPlay::Playing::loadResources( )
 		// File Not Found Exception
 		gService( )->console( ).printFailure( FailureLevel::FATAL,
 											 "File Not Found: "+scriptPathNName );
-		lua_close( lua );
 	}
 	else
 	{
@@ -68,6 +67,11 @@ void ::scene::inPlay::Playing::loadResources( )
 		{
 			backgroundColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
 		}
+		else if ( LUA_TNIL == type )
+		{
+			gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+												   varName, scriptPathNName );
+		}
 		else
 		{
 			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
@@ -79,7 +83,6 @@ void ::scene::inPlay::Playing::loadResources( )
 		lua_getglobal( lua, tableName.data( ) );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			// Type Check Exception
 			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 													 tableName, scriptPathNName );
 		}
@@ -93,8 +96,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			{
 				stagePanelPosition.x = (float)lua_tonumber(lua, TOP_IDX);
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
@@ -109,8 +116,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			{
 				stagePanelPosition.y = (float)lua_tonumber(lua, TOP_IDX);
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
@@ -125,8 +136,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			{
 				stageCellSize = (float)lua_tonumber(lua, TOP_IDX);
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
@@ -141,8 +156,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			{
 				stagePanelColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
@@ -157,8 +176,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			{
 				stagePanelOutlineThickness = (float)lua_tonumber(lua, TOP_IDX);
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
@@ -173,8 +196,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			{
 				stagePanelOutlineColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
@@ -189,8 +216,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			{
 				stageCellOutlineColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
@@ -213,15 +244,19 @@ void ::scene::inPlay::Playing::loadResources( )
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type( lua, TOP_IDX );
-			// Type Check Exception
-			if ( LUA_TSTRING != type )
+			if ( LUA_TSTRING == type )
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+				vfxComboSpritePathNName = lua_tostring(lua, TOP_IDX);
+			}
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
 			}
 			else
 			{
-				vfxComboSpritePathNName = lua_tostring(lua, TOP_IDX);
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -233,8 +268,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			{
 				vfxComboClipSize.x = (int)lua_tointeger(lua, TOP_IDX);
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
@@ -249,8 +288,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			{
 				vfxComboClipSize.y = (int)lua_tointeger(lua, TOP_IDX);
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
@@ -273,13 +316,16 @@ void ::scene::inPlay::Playing::loadResources( )
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type( lua, TOP_IDX );
-			// Type check
 			if ( LUA_TNUMBER == type )
 			{
 				nextTetPanelPosition.x = (float)lua_tonumber(lua, TOP_IDX);
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
@@ -294,8 +340,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			{
 				nextTetPanelPosition.y = (float)lua_tonumber(lua, TOP_IDX);
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
@@ -310,8 +360,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			{
 				nextTetPanelCellSize = (float)lua_tonumber(lua, TOP_IDX);
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
@@ -326,8 +380,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			{
 				nextTetPanelColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
@@ -342,8 +400,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			{
 				nextTetPanelOutlineThickness = (float)lua_tonumber(lua, TOP_IDX);
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
@@ -358,8 +420,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			{
 				nextTetPanelOutlineColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
@@ -374,8 +440,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			{
 				nextTetPanelCellOutlineColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
@@ -383,8 +453,8 @@ void ::scene::inPlay::Playing::loadResources( )
 			lua_pop( lua, 1 );
 		}
 		lua_pop( lua, 1 );
-		lua_close( lua );
 	}
+	lua_close( lua );
 
 	if ( false == mVfxCombo.loadResources( vfxComboSpritePathNName ) )
 	{

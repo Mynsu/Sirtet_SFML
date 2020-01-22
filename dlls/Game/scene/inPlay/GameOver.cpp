@@ -27,7 +27,6 @@ void scene::inPlay::GameOver::loadResources( )
 	{
 		// File Not Found Exception
 		gService( )->console( ).printFailure( FailureLevel::FATAL, "File Not Found: "+scriptPathNName );
-		lua_close( lua );
 	}
 	else
 	{
@@ -35,7 +34,6 @@ void scene::inPlay::GameOver::loadResources( )
 		const int TOP_IDX = -1;
 		std::string tableName( "Image" );
 		lua_getglobal( lua, tableName.data() );
-		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
 			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
@@ -46,15 +44,19 @@ void scene::inPlay::GameOver::loadResources( )
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			int type = lua_type( lua, TOP_IDX );
-			// Type Check Exception
-			if ( LUA_TSTRING != type )
+			if ( LUA_TSTRING == type )
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+				imagePathNName = lua_tostring(lua, TOP_IDX);
+			}
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
 			}
 			else
 			{
-				imagePathNName = lua_tostring(lua, TOP_IDX);
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -65,22 +67,25 @@ void scene::inPlay::GameOver::loadResources( )
 			if ( LUA_TNUMBER == type )
 			{
 				const float temp = (float)lua_tonumber(lua, TOP_IDX);
-				// Range Check Exception
 				if ( 0 > temp )
 				{
 					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
-																		tableName+':'+field, scriptPathNName );
+															tableName+':'+field, scriptPathNName );
 				}
 				else
 				{
 					imageSize.x = temp;
 				}
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-																	tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -91,28 +96,31 @@ void scene::inPlay::GameOver::loadResources( )
 			if ( LUA_TNUMBER == type )
 			{
 				const float temp = (float)lua_tonumber(lua, TOP_IDX);
-				// Range Check Exception
 				if ( 0 > temp )
 				{
 					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
-																		tableName+':'+field, scriptPathNName );
+															tableName+':'+field, scriptPathNName );
 				}
 				else
 				{
 					imageSize.y = temp;
 				}
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-																	tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 		}
 		lua_pop( lua, 1 );
-		lua_close( lua );
 	}
+	lua_close( lua );
 
 	if ( false == mTexture.loadFromFile(imagePathNName) )
 	{

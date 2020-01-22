@@ -58,7 +58,6 @@ void scene::online::Waiting::loadResources( )
 	{
 		// File Not Found Exception
 		gService( )->console( ).printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
-		lua_close( lua );
 	}
 	else
 	{
@@ -71,6 +70,11 @@ void scene::online::Waiting::loadResources( )
 		if ( LUA_TSTRING == type )
 		{
 			font = lua_tostring(lua, TOP_IDX);
+		}
+		else if ( LUA_TNIL == type )
+		{
+			gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+												   varName, scriptPathNName );
 		}
 		else
 		{
@@ -93,16 +97,19 @@ void scene::online::Waiting::loadResources( )
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type(lua, TOP_IDX);
-			// Type check
 			if ( LUA_TSTRING == type )
 			{
 				label0Text = lua_tostring(lua, TOP_IDX);
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -110,16 +117,19 @@ void scene::online::Waiting::loadResources( )
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type(lua, TOP_IDX);
-			// Type check
 			if ( LUA_TNUMBER == type )
 			{
 				label0FontSize = (uint32_t)lua_tointeger(lua, TOP_IDX);
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -127,16 +137,19 @@ void scene::online::Waiting::loadResources( )
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type(lua, TOP_IDX);
-			// Type check
 			if ( LUA_TNUMBER == type )
 			{
 				label0Position.x = (float)lua_tonumber(lua, TOP_IDX);
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -144,16 +157,19 @@ void scene::online::Waiting::loadResources( )
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type(lua, TOP_IDX);
-			// Type check
 			if ( LUA_TNUMBER == type )
 			{
 				label0Position.y = (float)lua_tonumber(lua, TOP_IDX);
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 		}
@@ -161,7 +177,6 @@ void scene::online::Waiting::loadResources( )
 
 		tableName = "Label1";
 		lua_getglobal( lua, tableName.data() );
-		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
 			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
@@ -173,16 +188,19 @@ void scene::online::Waiting::loadResources( )
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type(lua, TOP_IDX);
-			// Type check
 			if ( LUA_TNUMBER == type )
 			{
 				label1FontSize = (uint32_t)lua_tointeger(lua, TOP_IDX);
 			}
-			// Type Check Exception
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
 			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -190,16 +208,19 @@ void scene::online::Waiting::loadResources( )
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type(lua, TOP_IDX);
-			// Type check
 			if ( LUA_TNUMBER == type )
 			{
 				label1Position.x = (float)lua_tonumber(lua, TOP_IDX);
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -207,16 +228,19 @@ void scene::online::Waiting::loadResources( )
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type(lua, TOP_IDX);
-			// Type check
 			if ( LUA_TNUMBER == type )
 			{
 				label1Position.y = (float)lua_tonumber(lua, TOP_IDX);
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					tableName+":"+field, scriptPathNName );
+														tableName+":"+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 		}
@@ -224,7 +248,6 @@ void scene::online::Waiting::loadResources( )
 
 		tableName = "Label2";
 		lua_getglobal( lua, tableName.data() );
-		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
 			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
@@ -236,16 +259,19 @@ void scene::online::Waiting::loadResources( )
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type(lua, TOP_IDX);
-			// Type check
 			if ( LUA_TSTRING == type )
 			{
 				label2Text = lua_tostring(lua, TOP_IDX);
 			}
-			// Type Check Exception
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
 			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -253,16 +279,19 @@ void scene::online::Waiting::loadResources( )
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type(lua, TOP_IDX);
-			// Type check
 			if ( LUA_TNUMBER == type )
 			{
 				label2FontSize = (uint32_t)lua_tointeger(lua, TOP_IDX);
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					tableName+':'+field, scriptPathNName );
+													tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -270,16 +299,19 @@ void scene::online::Waiting::loadResources( )
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type(lua, TOP_IDX);
-			// Type check
 			if ( LUA_TNUMBER == type )
 			{
 				label2Position.x = (float)lua_tonumber(lua, TOP_IDX);
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -287,23 +319,25 @@ void scene::online::Waiting::loadResources( )
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type(lua, TOP_IDX);
-			// Type check
 			if ( LUA_TNUMBER == type )
 			{
 				label2Position.y = (float)lua_tonumber(lua, TOP_IDX);
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 		}
 		lua_pop( lua, 1 );
-		
-		lua_close( lua );
 	}
+	lua_close( lua );
 
 	mFont.loadFromFile( font );
 	mTextLabels[0].setFont( mFont );

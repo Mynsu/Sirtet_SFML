@@ -15,6 +15,8 @@ namespace scene::inPlay
 	private:
 		uint32_t mFPS_, mFrameCount;
 		sf::RenderWindow& mWindow_;
-		sf::RectangleShape mRect;
+		sf::Font mFont;
+		sf::Text mGuideTextLabel;
+		sf::RectangleShape mBackground;
 	};
 }
