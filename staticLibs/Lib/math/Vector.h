@@ -6,18 +6,17 @@
 
 namespace math
 {
-	template < int N, typename T = float,
-		std::enable_if_t<std::is_floating_point_v<T>>* = nullptr >
+	template <int N, typename T = float,
+		std::enable_if_t<std::is_floating_point_v<T>>* = nullptr>
 	class Vector final
 	{
 	public:
 		Vector( )
-			: mMagnitude( 0.0 ), mComponents{ 0.0 }
+			: mComponents{ 0.0 }
 		{
 		}
 		template < typename... Ts >
 		Vector( const Ts... components )
-			: mMagnitude( 0.0 )
 		{
 			uint8_t i = 0;
 			T expansion[] = { components... };
@@ -32,41 +31,48 @@ namespace math
 		}
 		~Vector( ) = default;
 
-		T magnitude( )
+		T magnitude( ) const
 		{
-			if ( 0.0 == mMagnitude )
+			T magnitude = 0.f;
+			for ( const T c : mComponents )
 			{
-				T magnitudeSquare = 0.f;
-				for ( const auto it : mComponents )
-				{
-					magnitudeSquare += it*it;
-				}
-				mMagnitude = std::sqrt(magnitudeSquare);
+				magnitude += c*c;
 			}
-			return mMagnitude;
+			magnitude = std::sqrt(magnitude);
+			return magnitude;
 		}
 
 		Vector normalize( ) const
 		{
 			Vector retVal( *this );
+			const float mag = magnitude();
 			for ( auto& it : retVal.mComponents )
 			{
-				it /= mMagnitude;
+				it /= mag;
 			}
 			return retVal;
 		}
 		T mComponents[N];
-	private:
-		T mMagnitude;
 	};
 
-	template < int N >
+	template <int N>
 	Vector<N> operator*( const Vector<N> v, const float s )
 	{
 		Vector<N> retVal;
 		for ( uint8_t i = 0; N != i; ++i )
 		{
 			retVal.mComponents[i] = v.mComponents[i]*s;
+		}
+		return retVal;
+	}
+
+	template <int N>
+	Vector<N> operator-( const Vector<N> lh, const Vector<N> rh )
+	{
+		Vector<N> retVal;
+		for ( uint8_t i = 0; N != i; ++i )
+		{
+			retVal.mComponents[i] = lh.mComponents[i] - rh.mComponents[i];
 		}
 		return retVal;
 	}

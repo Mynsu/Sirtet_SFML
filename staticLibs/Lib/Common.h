@@ -1,20 +1,22 @@
 #pragma once
 #include <array>
+#include <chrono>
 #include <SFML/System.hpp>
 #include <SFML/Graphics/Color.hpp>
+#include "math/Vector.h"
 #include "Hash.h"
 
 static const char* QUEUE_SERVER_IP_ADDRESS = "192.168.219.102";
 static const char* MAIN_SERVER_IP_ADDRESS = "192.168.219.102";
-const uint16_t QUEUE_SERVER_PORT = 10000u;
-const uint16_t MAIN_SERVER_PORT = 54321u;
+const uint16_t QUEUE_SERVER_PORT = 10000;
+const uint16_t MAIN_SERVER_PORT = 54321;
 
 namespace model
 {
 	namespace stage
 	{
-		const uint8_t GRID_WIDTH = 10u;
-		const uint8_t GRID_HEIGHT = 20u;
+		const uint8_t GRID_WIDTH = 10;
+		const uint8_t GRID_HEIGHT = 20;
 
 		// A stage consists of cells as a tetrimino consists of blocks.
 		// Strictly, cell isn't block and vice versa, but they match up each other.
@@ -64,7 +66,7 @@ namespace model
 			NONE_MAX,
 		};
 
-		const uint8_t BLOCKS_A_TETRIMINO = 4u;
+		const uint8_t BLOCKS_A_TETRIMINO = 4;
 		const uint8_t LOCAL_SPACE_SIZE = BLOCKS_A_TETRIMINO*BLOCKS_A_TETRIMINO;
 
 		using LocalSpace = uint16_t;
@@ -219,3 +221,9 @@ constexpr Tag TAG_NUMS_OF_LINES_CLEARED = { (char)_Tag::NUMS_OF_LINES_CLEARED, '
 constexpr Tag TAG_GAMES_OVER = { (char)_Tag::GAMES_OVER, ':', '\0' };
 // Attached to nothing.
 constexpr Tag TAG_ALL_OVER = { (char)_Tag::ALL_OVER, ':', '\0' };
+
+struct MouseEvent
+{
+	std::chrono::high_resolution_clock::time_point latestClickTime;
+	math::Vector<2> clickPosition;
+};

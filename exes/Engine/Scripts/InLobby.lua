@@ -1,4 +1,6 @@
 BackgroundColor = 0x29cdb5fa
+BoxAnimationSpeed = 3
+BoxAnimationSpeed2 = 11
 Box = { x = 0, y = 100, 
 		width = 800, height = 400,
 		color = 0x0f0f0fff,
