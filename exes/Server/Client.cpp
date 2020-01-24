@@ -283,6 +283,16 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 									rooms.erase( it );
 								}
 								lobby.emplace_back( mIndex );
+								Packet packet;
+								const uint8_t ignored = 1;
+								packet.pack(TAGGED_REQ_LEAVE_ROOM, ignored );
+								if ( -1 == mSocket.sendOverlapped(packet) )
+								{
+									std::cerr << "Failed to tell Client " <<
+										mIndex << " leaved the room.\n";
+									failedIndices.emplace_back( mIndex );
+									return failedIndices;
+								}
 							}
 #ifdef _DEBUG
 							else
@@ -358,6 +368,16 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 									rooms.erase( it );
 								}
 								lobby.emplace_back( mIndex );
+								Packet packet;
+								const uint8_t ignored = 1;
+								packet.pack(TAGGED_REQ_LEAVE_ROOM, ignored );
+								if ( -1 == mSocket.sendOverlapped(packet) )
+								{
+									std::cerr << "Failed to tell Client " <<
+										mIndex << " leaved the room.\n";
+									failedIndices.emplace_back( mIndex );
+									return failedIndices;
+								}
 							}
 #ifdef _DEBUG
 							else

@@ -26,25 +26,23 @@ sf::Color model::Tetrimino::BlockOutlineColor(0x000000'ff);
 void model::Tetrimino::LoadResources( )
 {
 	lua_State* lua = luaL_newstate( );
-	const char scriptPathNName[] = "Scripts/Tetrimino.lua";
-	if ( true == luaL_dofile(lua, scriptPathNName) )
+	const std::string scriptPathNName( "Scripts/Tetrimino.lua" );
+	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
 	{
-		// File Not Found Exception
 		gService( )->console( ).printFailure( FailureLevel::FATAL,
-											 std::string("File Not Found: ")+scriptPathNName );
-		lua_close( lua );
+											 "File Not Found: "+scriptPathNName );
 	}
 	else
 	{
 		luaL_openlibs( lua );
 		const int TOP_IDX = -1;
 
-		const std::string valName0( "BlockOutlineColor" );
-		lua_getglobal( lua, valName0.data() );
+		std::string varName( "BlockOutlineColor" );
+		lua_getglobal( lua, varName.data() );
 		if ( false == lua_isinteger(lua, TOP_IDX) )
 		{
 			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-													 valName0, scriptPathNName );
+													 varName, scriptPathNName );
 		}
 		else
 		{
@@ -52,137 +50,158 @@ void model::Tetrimino::LoadResources( )
 		}
 		lua_pop( lua, 1 );
 
-		const std::string tableName0( "Color" );
-		lua_getglobal( lua, tableName0.data( ) );
-		// Type Check Exception
+		std::string tableName( "Color" );
+		lua_getglobal( lua, tableName.data( ) );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
 			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-													 tableName0, scriptPathNName );
+													 tableName, scriptPathNName );
 		}
 		else
 		{
-			const char field0[ ] = "I";
-			lua_pushstring( lua, field0 );
+			std::string field( "I" );
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			int type = lua_type( lua, TOP_IDX );
-			// Type check
+			int type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
 				Colors[(int)Type::I] = sf::Color((uint32_t)lua_tointeger(lua, TOP_IDX));
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					tableName0+':'+field0, scriptPathNName );
+														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			const char field1[ ] = "J";
-			lua_pushstring( lua, field1 );
+			field = "J";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			type = lua_type( lua, TOP_IDX );
-			// Type check
+			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
 				Colors[(int)Type::J] = sf::Color((uint32_t)lua_tointeger(lua, TOP_IDX));
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					tableName0+':'+field1, scriptPathNName );
+														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			const char field2[ ] = "L";
-			lua_pushstring( lua, field2 );
+			field = "L";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			type = lua_type( lua, TOP_IDX );
-			// Type check
+			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
 				Colors[(int)Type::L] = sf::Color((uint32_t)lua_tonumber(lua, TOP_IDX));
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					tableName0+':'+field2, scriptPathNName );
+														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			const char field3[ ] = "N";
-			lua_pushstring( lua, field3 );
+			field = "N";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			type = lua_type( lua, TOP_IDX );
-			// Type check
+			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
 				Colors[(int)Type::N] = sf::Color((uint32_t)lua_tonumber(lua, TOP_IDX));
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					tableName0+':'+field3, scriptPathNName );
+														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			const char field4[ ] = "S";
-			lua_pushstring( lua, field4 );
+			field = "S";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			type = lua_type( lua, TOP_IDX );
-			// Type check
+			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
 				Colors[(int)Type::S] = sf::Color((uint32_t)lua_tointeger(lua, TOP_IDX));
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					tableName0+':'+field4, scriptPathNName );
+														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			const char field5[ ] = "T";
-			lua_pushstring( lua, field5 );
+			field = "T";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			type = lua_type( lua, TOP_IDX );
-			// Type check
+			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
 				Colors[(int)Type::T] = sf::Color((uint32_t)lua_tointeger(lua, TOP_IDX));
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					tableName0+':'+field5, scriptPathNName );
+														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			const char field6[ ] = "O";
-			lua_pushstring( lua, field6 );
+			field = "O";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			type = lua_type( lua, TOP_IDX );
-			// Type check
+			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
 				Colors[(int)Type::O] = sf::Color((uint32_t)lua_tointeger(lua, TOP_IDX));
 			}
-			// Type Check Exception
-			else if ( LUA_TNIL != type )
+			else if ( LUA_TNIL == type )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														tableName+':'+field, scriptPathNName );
+			}
+			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					tableName0+':'+field6, scriptPathNName );
+														 tableName+':'+field, scriptPathNName );
 			}
-			lua_pop( lua, 2 );
+			lua_pop( lua, 1 );
 		}
-		lua_close( lua );
+		lua_pop( lua, 1 );
 	}
+	lua_close( lua );
 }
 
 ::model::Tetrimino model::Tetrimino::Spawn( ::model::tetrimino::Type type )

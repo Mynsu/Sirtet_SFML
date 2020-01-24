@@ -32,26 +32,29 @@ namespace scene::online
 		::scene::online::ID update( std::list<sf::Event>& eventQueue ) override;
 		void draw( ) override;
 	private:
-		struct DrawingInfo
+		struct
 		{
-			float cellSize, outlineThickness_on;
-			uint32_t panelColor, outlineColor_on;
+			float cellSize, outlineThickness_on, theta_degree, scaleFactor;
+			uint32_t panelColor_on, outlineColor_on, framesRotationInterval;
 			sf::Vector2f position;
 			sf::Vector2f positionDifferences[ROOM_CAPACITY-1];
 			sf::Vector2i countdownSpriteClipSize;
 			std::string countdownSpritePathNName;
-			sf::Text nicknameLabel_;
-		};
-		void startGame( const std::string_view& arg );
-		void leaveRoom( const std::string_view& arg );
+		} mDrawingInfo;
+		void startGame( );
+		void _startGame( const std::string_view& );
+		void leaveRoom( );
+		void _leaveRoom( const std::string_view& );
 		static bool IsInstantiated;
-		bool mIsReceiving, mHasCanceled, mIsPlaying_, mAsHost_;
+		bool mIsReceiving, mAsHost, mIsPlaying_, mIsMouseOverStartButton_, mIsStartButtonPressed_;
 		sf::RenderWindow& mWindow_;
+		uint32_t mFrameCount_rotationInterval;
 		Online& mNet;
-		// When empty, this contains 0 == EMPTY_SLOT.
+		sf::FloatRect mNextTetriminoPanelBound;
+		// When empty, the value should be 0 == EMPTY_SLOT.
 		HashedKey mOtherPlayerSlots[ROOM_CAPACITY-1];
-		DrawingInfo mDrawingInfo;
 		sf::Font mFont;
+		sf::Text mStartingGuide, mNicknameLabel;
 		std::unordered_map<HashedKey, ::scene::online::Participant> mParticipants;
 		sf::RectangleShape mBackground;
 		sf::RectangleShape mOtherPlayerSlotBackground;

@@ -381,8 +381,16 @@ void scene::MainMenu::touchButton( )
 	const sf::Vector2f mouseGlobalPos( sf::Mouse::getPosition( ) );
 	const sf::Vector2i cast( mSpriteClipSize_ );
 	const sf::Vector2f titlebarHeight( 0.f, 20.f );
-		 
-	if ( 1 == gService()->vault()[HK_HAS_GAINED_FOCUS] && false == gService()->console( ).isVisible() )
+		
+	bool hasGainedFocus = false;
+	auto& vault = gService()->vault();
+	if ( const auto it = vault.find(HK_HAS_GAINED_FOCUS);
+		vault.end() != it )
+	{
+		hasGainedFocus = (bool)it->second;
+	}
+		
+	if ( true == hasGainedFocus && false == gService()->console( ).isVisible() )
 	{
 		if ( const sf::Vector2f btSingleGlobalPos( sf::Vector2f(mWindow_.getPosition())+titlebarHeight+mButtonSinglePosition_ ); 
 			 btSingleGlobalPos.x < mouseGlobalPos.x && mouseGlobalPos.x < btSingleGlobalPos.x+mSpriteClipSize_.x

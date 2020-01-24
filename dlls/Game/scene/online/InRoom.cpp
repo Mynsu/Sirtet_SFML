@@ -7,11 +7,14 @@
 #include <utility>
 
 const uint32_t EMPTY_SLOT = 0;
+const uint32_t ROTATION_INTERVAL_THRESHOLD_MS = 1000;
 
 bool scene::online::InRoom::IsInstantiated = false;
 
 scene::online::InRoom::InRoom( sf::RenderWindow& window, Online& net, const bool asHost )
-	: mIsReceiving( false ), mHasCanceled( false ), mIsPlaying_( false ), mAsHost_( asHost ),
+	: mIsReceiving( false ), mAsHost( asHost ),
+	mIsPlaying_( false ), mIsMouseOverStartButton_( false ), mIsStartButtonPressed_( false ),
+	mFrameCount_rotationInterval( 0 ),
 	mWindow_( window ), mNet( net ),
 	mOtherPlayerSlots{ EMPTY_SLOT }
 {
@@ -19,34 +22,30 @@ scene::online::InRoom::InRoom( sf::RenderWindow& window, Online& net, const bool
 
 	mParticipants.reserve( ROOM_CAPACITY );
 	mParticipants.emplace( mNet.myNicknameHashed(), Participant(mNet.myNickname(), ::ui::PlayView(mWindow_, mNet)) );
-	loadResources( );
-#ifdef _DEV
 	IServiceLocator* const service = gService();
 	ASSERT_NOT_NULL( service );
-	service->console( ).addCommand( CMD_LEAVE_ROOM, std::bind( &scene::online::InRoom::leaveRoom,
-																 this, std::placeholders::_1 ) );
+	service->console( ).addCommand( CMD_LEAVE_ROOM, std::bind( &scene::online::InRoom::_leaveRoom,
+															  this, std::placeholders::_1 ) );
 	if ( true == asHost )
 	{
-		service->console( ).addCommand( CMD_START_GAME, std::bind( &scene::online::InRoom::startGame,
+		service->console( ).addCommand( CMD_START_GAME, std::bind( &scene::online::InRoom::_startGame,
 																	 this, std::placeholders::_1 ) );
 	}
-#endif
+	loadResources( );
 
 	IsInstantiated = true;
 }
 
 scene::online::InRoom::~InRoom( )
 {
-#ifdef _DEV
 	if ( nullptr != gService() )
 	{
 		gService( )->console( ).removeCommand( CMD_LEAVE_ROOM );
-		if ( true == mAsHost_ )
+		if ( true == mAsHost )
 		{
 			gService( )->console( ).removeCommand( CMD_START_GAME );
 		}
 	}
-#endif
 
 	IsInstantiated = false;
 }
@@ -56,7 +55,7 @@ void scene::online::InRoom::loadResources( )
 	uint32_t backgroundColor = 0x8ae5ff'ff;
 	std::string fontPathNName( "Fonts/AGENCYR.TTF" );
 	sf::Vector2f myPanelPosition( 100.0, 0.0 );
-	mDrawingInfo.panelColor = 0x3f3f3f'ff;
+	uint32_t myPanelColor = 0x3f3f3f'ff;
 	float myPanelOutlineThickness = 11.0;
 	uint32_t myPanelOutlineColor = 0x3f3f3f'7f;
 	float myStageCellSize = 30.0;
@@ -67,8 +66,13 @@ void scene::online::InRoom::loadResources( )
 	uint32_t nextTetriminoPanelColor = 0x000000'ff;
 	float nextTetriminoPanelOutlineThickness = 5.0;
 	uint32_t nextTetriminoPanelOutlineColor = 0x000000'7f;
+	mDrawingInfo.theta_degree = 1.5f;
+	mDrawingInfo.scaleFactor = 0.9f;
+	mDrawingInfo.framesRotationInterval = 60;
 	mDrawingInfo.position = sf::Vector2f(600.f, 400.f);
 	mDrawingInfo.cellSize = 8.f;
+	uint32_t otherPlayerPanelColor = 0x3f3f3f'ff;
+	mDrawingInfo.panelColor_on = 0x3f3f3f'ff;
 	float otherPlayerSlotMargin = 10.f;
 	float otherPlayerPanelOutlineThickness = 1.f;
 	uint32_t otherPlayerPanelOutlineColor = 0x0000007f;
@@ -78,6 +82,9 @@ void scene::online::InRoom::loadResources( )
 	mDrawingInfo.countdownSpriteClipSize = sf::Vector2i(256, 256);
 	uint32_t nicknameFontSize = 10;
 	uint32_t nicknameFontColor = 0xffffffff;
+	sf::Vector2f startingGuidePosition( 550.f, 60.f );
+	uint32_t startingGuideFontSize = 30;
+	uint32_t startingGuideFontColor = 0xffffffff;
 
 	lua_State* lua = luaL_newstate( );
 	const std::string scriptPathNName( "Scripts/InRoom.lua" );
@@ -204,7 +211,7 @@ void scene::online::InRoom::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				mDrawingInfo.panelColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
+				myPanelColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -532,6 +539,79 @@ void scene::online::InRoom::loadResources( )
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
+
+			field = "theta_degree";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			if ( LUA_TNUMBER == type )
+			{
+				mDrawingInfo.theta_degree = (float)lua_tonumber(lua, TOP_IDX);
+			}
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			field = "rotationIntervalMs";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			if ( LUA_TNUMBER == type )
+			{
+				auto& vault = gService()->vault();
+				if ( const auto it = vault.find(HK_FORE_FPS);
+					vault.end() != it )
+				{
+					const uint32_t fps = it->second;
+					const uint32_t rotationIntervalMs =	(uint32_t)lua_tointeger(lua, TOP_IDX);
+					mDrawingInfo.framesRotationInterval = fps*rotationIntervalMs/1000;
+				}
+#ifdef _DEBUG
+				else
+				{
+					__debugbreak( );
+				}
+#endif
+			}
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			field = "scaleFactor";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			if ( LUA_TNUMBER == type )
+			{
+				mDrawingInfo.scaleFactor = (float)lua_tonumber(lua, TOP_IDX);
+			}
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
 		}
 		lua_pop( lua, 1 );
 
@@ -613,6 +693,46 @@ void scene::online::InRoom::loadResources( )
 			if ( LUA_TNUMBER == type )
 			{
 				otherPlayerSlotMargin = (float)lua_tonumber(lua, TOP_IDX);
+			}
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			field = "color";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			if ( LUA_TNUMBER == type )
+			{
+				otherPlayerPanelColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
+			}
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			field = "color_on";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			if ( LUA_TNUMBER == type )
+			{
+				mDrawingInfo.panelColor_on = (uint32_t)lua_tointeger(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -726,13 +846,104 @@ void scene::online::InRoom::loadResources( )
 			}
 			lua_pop( lua, 1 );
 
-			field = "nicnameFontColor";
+			field = "nicknameFontColor";
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
 				nicknameFontColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
+			}
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+		}
+		lua_pop( lua, 1 );
+
+		tableName = "StartingGuide";
+		lua_getglobal( lua, tableName.data() );
+		if ( false == lua_istable(lua, TOP_IDX) )
+		{
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+													 tableName, scriptPathNName );
+		}
+		else
+		{
+			std::string field( "x" );
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			if ( LUA_TNUMBER == type )
+			{
+				startingGuidePosition.x = (float)lua_tonumber(lua, TOP_IDX);
+			}
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			field = "y";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			if ( LUA_TNUMBER == type )
+			{
+				startingGuidePosition.y = (float)lua_tonumber(lua, TOP_IDX);
+			}
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			field = "fontSize";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			if ( LUA_TNUMBER == type )
+			{
+				startingGuideFontSize = (uint32_t)lua_tointeger(lua, TOP_IDX);
+			}
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			field = "fontColor";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			if ( LUA_TNUMBER == type )
+			{
+				startingGuideFontColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -760,7 +971,7 @@ void scene::online::InRoom::loadResources( )
 		::model::Stage& stage = playView.stage();
 		stage.setPosition( myPanelPosition );
 		stage.setSize( myStageCellSize );
-		stage.setBackgroundColor( sf::Color(mDrawingInfo.panelColor),
+		stage.setBackgroundColor( sf::Color(myPanelColor),
 								 myPanelOutlineThickness, sf::Color(myPanelOutlineColor),
 								 sf::Color(cellOutlineColor) );
 		if ( false == playView.loadCountdownSprite(mDrawingInfo.countdownSpritePathNName) )
@@ -780,6 +991,9 @@ void scene::online::InRoom::loadResources( )
 		vfxCombo.setOrigin( myPanelPosition, myStageCellSize, vfxComboClipSize );
 		::ui::NextTetriminoPanel& nextTetPanel = playView.nextTetriminoPanel();
 		nextTetPanel.setDimension( nextTetriminoPanelPosition, nextTetriminoPanelCellSize );
+		mNextTetriminoPanelBound = nextTetPanel.globalBounds();
+		mNextTetriminoPanelBound.width += 5.f;
+		mNextTetriminoPanelBound.height += 5.f;
 		nextTetPanel.setBackgroundColor( sf::Color(nextTetriminoPanelColor),
 										nextTetriminoPanelOutlineThickness, sf::Color(nextTetriminoPanelOutlineColor),
 										sf::Color(cellOutlineColor) );
@@ -808,16 +1022,25 @@ void scene::online::InRoom::loadResources( )
 	const sf::Vector2f stageSize( ::model::stage::GRID_WIDTH*mDrawingInfo.cellSize,
 							::model::stage::GRID_HEIGHT*mDrawingInfo.cellSize );
 	mOtherPlayerSlotBackground.setSize( stageSize );
+	mOtherPlayerSlotBackground.setFillColor( sf::Color(otherPlayerPanelColor) );
 	mOtherPlayerSlotBackground.setOutlineThickness( otherPlayerPanelOutlineThickness );
 	mOtherPlayerSlotBackground.setOutlineColor( sf::Color(otherPlayerPanelOutlineColor) );
-	mDrawingInfo.nicknameLabel_.setCharacterSize( nicknameFontSize );
-	mDrawingInfo.nicknameLabel_.setFillColor( sf::Color(nicknameFontColor) );
+	mNicknameLabel.setCharacterSize( nicknameFontSize );
+	mNicknameLabel.setFillColor( sf::Color(nicknameFontColor) );
 	if ( false == mFont.loadFromFile(fontPathNName) )
 	{
 		gService( )->console( ).printFailure( FailureLevel::FATAL,
 											 "File Not Found: "+fontPathNName );
 	}
-	mDrawingInfo.nicknameLabel_.setFont(mFont);
+	mNicknameLabel.setFont( mFont );
+	mStartingGuide.setString( "Start" );
+	mStartingGuide.setFont( mFont );
+	mStartingGuide.setCharacterSize( startingGuideFontSize );
+	const sf::FloatRect bound( mStartingGuide.getLocalBounds() );
+	const sf::Vector2f center( bound.width*0.5f, bound.height*0.5f );
+	mStartingGuide.setOrigin( center );
+	mStartingGuide.setPosition( startingGuidePosition );
+	mStartingGuide.setFillColor( sf::Color(startingGuideFontColor) );
 
 	::model::Tetrimino::LoadResources( );
 }
@@ -825,10 +1048,10 @@ void scene::online::InRoom::loadResources( )
 ::scene::online::ID scene::online::InRoom::update( std::list<sf::Event>& eventQueue )
 {
 	::scene::online::ID nextSceneID = ::scene::online::ID::AS_IS;
+	const HashedKey myNicknameHashed = mNet.myNicknameHashed();
 	if ( true == mNet.hasReceived() )
 	{
 		mIsReceiving = false;
-		const HashedKey myNicknameHashed = mNet.myNicknameHashed();
 		if ( std::optional<std::string> userList( mNet.getByTag(TAGGED_NOTI_UPDATE_USER_LIST,
 															   Online::Option::DEFAULT,
 															   -1) );
@@ -905,7 +1128,7 @@ void scene::online::InRoom::loadResources( )
 				stage.setSize( mDrawingInfo.cellSize );
 				const sf::Color cellOutlineColor( 0x000000'7f );
 				// TODO: parameter 줄이기
-				stage.setBackgroundColor( sf::Color(mDrawingInfo.panelColor),
+				stage.setBackgroundColor( sf::Color(mDrawingInfo.panelColor_on),
 										 mDrawingInfo.outlineThickness_on, sf::Color(mDrawingInfo.outlineColor_on),
 										 cellOutlineColor );
 				::model::Tetrimino& curTet = playView.currentTetrimino();
@@ -923,6 +1146,14 @@ void scene::online::InRoom::loadResources( )
 													mDrawingInfo.cellSize,
 													 mDrawingInfo.countdownSpriteClipSize );
 			}
+		}
+		if ( const std::optional<std::string> response( mNet.getByTag(TAGGED_REQ_LEAVE_ROOM,
+																	  Online::Option::RETURN_TAG_ATTACHED,
+																	  NULL) );
+			std::nullopt != response )
+		{
+			nextSceneID = ::scene::online::ID::IN_LOBBY;
+			return nextSceneID;
 		}
 		// TODO: 이거 없애거나 이름 바꾸기.
 		if ( false == mIsPlaying_ )
@@ -1122,9 +1353,34 @@ void scene::online::InRoom::loadResources( )
 		mIsReceiving = true;
 	}
 
-	if ( true == mHasCanceled )
+	for ( auto it = eventQueue.cbegin(); eventQueue.cend() != it; )
 	{
-		nextSceneID = ::scene::online::ID::IN_LOBBY;
+		//궁금: 계속 눌러도 인식하나?
+		if ( sf::Event::EventType::MouseButtonPressed == it->type &&
+			sf::Mouse::Button::Left == it->mouseButton.button &&
+			true == mIsMouseOverStartButton_ )
+		{
+			mIsStartButtonPressed_ = true;
+			it = eventQueue.erase(it);
+		}
+		else if ( sf::Event::EventType::MouseButtonReleased == it->type &&
+			sf::Mouse::Button::Left == it->mouseButton.button &&
+			true == mIsMouseOverStartButton_ )
+		{
+			startGame( );
+			mIsStartButtonPressed_ = false;
+			it = eventQueue.erase(it);
+		}
+		else if ( sf::Event::EventType::KeyPressed == it->type &&
+				 sf::Keyboard::Escape == it->key.code )
+		{
+			leaveRoom( );
+			it = eventQueue.erase(it);
+		}
+		else
+		{
+			++it;
+		}
 	}
 
 	return nextSceneID;
@@ -1133,10 +1389,71 @@ void scene::online::InRoom::loadResources( )
 void scene::online::InRoom::draw( )
 {
 	mWindow_.draw( mBackground );
-	if ( const auto it = mParticipants.find(mNet.myNicknameHashed());
+	const HashedKey myNicknameHashed = mNet.myNicknameHashed();
+	if ( const auto it = mParticipants.find(myNicknameHashed);
 		mParticipants.end() != it )
 	{
+		if ( true == mAsHost )
+		{
+			::ui::NextTetriminoPanel& nextTetPanel = it->second.playView.nextTetriminoPanel();
+			const sf::Vector2f mousePos( sf::Mouse::getPosition()-mWindow_.getPosition() );
+			if ( true == mNextTetriminoPanelBound.contains(mousePos) )
+			{
+				if ( false == mIsMouseOverStartButton_ )
+				{
+					mStartingGuide.setString( "!" );
+					const sf::FloatRect bound( mStartingGuide.getLocalBounds() );
+					const sf::Vector2f center( bound.width*0.5f, bound.height*0.5f );
+					mStartingGuide.setOrigin( center );
+				}
+				mIsMouseOverStartButton_ = true;
+				if ( 0 == mFrameCount_rotationInterval )
+				{
+					nextTetPanel.rotate( mDrawingInfo.theta_degree );
+					float degree = nextTetPanel.rotation();
+					while ( 90.f <= degree )
+					{
+						degree -= 90.f;
+					}
+					if ( degree < mDrawingInfo.theta_degree/2.f )
+					{
+						mFrameCount_rotationInterval = 1;
+					}
+				}
+				else if ( mDrawingInfo.framesRotationInterval < ++mFrameCount_rotationInterval )
+				{
+					mFrameCount_rotationInterval = 0;
+				}
+				if ( true == mIsStartButtonPressed_ )
+				{
+					nextTetPanel.scale( mDrawingInfo.scaleFactor );
+					mIsStartButtonPressed_ = false;
+				}
+			}
+			else
+			{
+				if ( true == mIsMouseOverStartButton_ )
+				{
+					mStartingGuide.setString( "Start" );
+					const sf::FloatRect bound( mStartingGuide.getLocalBounds() );
+					const sf::Vector2f center( bound.width*0.5f, bound.height*0.5f );
+					mStartingGuide.setOrigin( center );
+					nextTetPanel.resetScale( );
+					nextTetPanel.resetRotation( );
+					mFrameCount_rotationInterval = 0;
+				}
+				mIsMouseOverStartButton_ = false;
+			}
+		}
 		it->second.playView.draw();
+		if ( false == mIsPlaying_ )
+		{
+			mWindow_.draw( mStartingGuide );
+		}
+		const sf::Vector2f margin( 5.f, 0.f );
+		mNicknameLabel.setPosition( it->second.playView.stage().position() + margin );
+		mNicknameLabel.setString( mNet.myNickname() );
+		mWindow_.draw( mNicknameLabel );
 	}
 #ifdef _DEBUG
 	else
@@ -1145,7 +1462,6 @@ void scene::online::InRoom::draw( )
 	}
 #endif
 	
-	sf::Text nicknameLabel;
 	for ( uint8_t i = 0; ROOM_CAPACITY-1 != i; ++i )
 	{
 		const sf::Vector2f pos( mDrawingInfo.position-mDrawingInfo.positionDifferences[i] );
@@ -1161,10 +1477,9 @@ void scene::online::InRoom::draw( )
 				mParticipants.end() != it )
 			{
 				it->second.playView.draw( );
-				nicknameLabel.setPosition( pos + margin );
-				nicknameLabel.setString( it->second.nickname );
-				mWindow_.draw( nicknameLabel );
-
+				mNicknameLabel.setPosition( pos + margin );
+				mNicknameLabel.setString( it->second.nickname );
+				mWindow_.draw( mNicknameLabel );
 			}
 #ifdef _DEBUG
 			else
@@ -1176,16 +1491,24 @@ void scene::online::InRoom::draw( )
 	}
 }
 
-void scene::online::InRoom::startGame( const std::string_view& arg )
+void scene::online::InRoom::startGame()
 {
 	std::string request( TAGGED_REQ_START_GAME );
 	mNet.send( request.data(), (int)request.size() );
 }
 
-void scene::online::InRoom::leaveRoom( const std::string_view& arg )
+void scene::online::InRoom::_startGame( const std::string_view& arg )
+{
+	startGame( );
+}
+
+void scene::online::InRoom::leaveRoom()
 {
 	std::string request( TAGGED_REQ_LEAVE_ROOM );
 	mNet.send( request.data(), (int)request.size() );
-	mHasCanceled = true;
 }
 
+void scene::online::InRoom::_leaveRoom( const std::string_view& )
+{
+	leaveRoom( );
+}

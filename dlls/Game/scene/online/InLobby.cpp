@@ -1045,6 +1045,7 @@ void scene::online::InLobby::loadResources( )
 			std::nullopt != resultCreatingRoom )
 		{
 			mEnteringRoom = -1;
+			mUserList.clear( );
 		}
 		else if ( std::optional<std::string> resultJoiningRoom( mNet.getByTag(TAGGED_REQ_JOIN_ROOM,
 																			 Online::Option::DEFAULT,
@@ -1062,6 +1063,7 @@ void scene::online::InLobby::loadResources( )
 					break;
 				case ResultJoiningRoom::SUCCCEDED:
 					mEnteringRoom = 1;
+					mUserList.clear( );
 					break;
 				case ResultJoiningRoom::FAILED_DUE_TO_TARGET_NOT_CONNECTING:
 					gService()->console().print( "That nicknamed-user is not connecting.", sf::Color::Green );

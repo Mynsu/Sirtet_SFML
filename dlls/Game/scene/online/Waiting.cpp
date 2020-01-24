@@ -33,9 +33,6 @@ scene::online::Waiting::Waiting( sf::RenderWindow& window, Online& net )
 
 scene::online::Waiting::~Waiting( )
 {
-#ifdef _DEV
-	gService( )->console( ).removeCommand( CMD_CANCEL_CONNECTION );
-#endif
 	IsInstantiated = false;
 }
 
@@ -374,7 +371,7 @@ void scene::online::Waiting::loadResources( )
 #ifdef _DEBUG
 					const char* const ptr = _ticket.data();
 
-					std::string ticketID( std::to_string(::ntohl(*(HashedKey*)&ptr[std::strlen(TAG_TICKET)])) );
+					std::string ticketID( "ticket: "+std::to_string(::ntohl(*(HashedKey*)&ptr[std::strlen(TAG_TICKET)])) );
 					gService( )->console( ).print( ticketID, sf::Color::Green );
 #endif
 					if ( true == mNet.connectToMainServer() )

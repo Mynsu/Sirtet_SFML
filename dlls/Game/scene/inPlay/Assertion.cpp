@@ -54,7 +54,7 @@ void scene::inPlay::Assertion::loadResources( )
 		}
 		lua_pop( lua, 1 );
 
-		std::string tableName( "GuideText" );
+		std::string tableName( "GuideTextLabel" );
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
