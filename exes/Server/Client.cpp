@@ -46,7 +46,8 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 								return failedIndices;
 							}
 #ifdef _DEBUG
-							std::cout << "Client " << mIndex << " requested the list of users in the lobby.\n";
+							std::cout << "Client " << mIndex <<
+								"wants the list of users in the lobby.\n";
 #endif
 							std::string userList;
 							userList.reserve( lobby.size()*10 );
@@ -81,6 +82,11 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 								failedIndices.emplace_back( mIndex );
 								return failedIndices;
 							}
+							// NOTE: Not checking out ...
+							// ... if there's memory space enough to create one more room.
+#ifdef _DEBUG
+							std::cout << "Client " << mIndex << " created a room.\n";
+#endif
 							for ( auto it = lobby.cbegin(); lobby.cend() != it; ++it )
 							{
 								if ( mIndex == *it )
@@ -112,8 +118,10 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 						}
 						case Request::JOIN_ROOM:
 						{
-							const uint32_t size	= ::ntohl(*(uint32_t*)&rcvBuf[TAGGED_REQ_JOIN_ROOM_LEN]);
-							const std::string targetNickname( &rcvBuf[TAGGED_REQ_JOIN_ROOM_LEN+sizeof(uint32_t)], size );
+							const uint32_t size	= ::ntohl(
+								*(uint32_t*)&rcvBuf[TAGGED_REQ_JOIN_ROOM_LEN]);
+							const std::string targetNickname(
+								&rcvBuf[TAGGED_REQ_JOIN_ROOM_LEN+sizeof(uint32_t)], size );
 							if ( -1 == mSocket.receiveOverlapped() )
 							{
 								std::cerr << "Failed to receive from Client " <<
@@ -137,10 +145,12 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 										if ( auto rit = rooms.find(roomID);
 											rit != rooms.end() )
 										{
-											res = (ResultJoiningRoom)rit->second.tryAccept(mIndex);
+											res = (ResultJoiningRoom)rit->
+												second.tryAccept(mIndex);
 											if ( ResultJoiningRoom::SUCCCEDED == res )
 											{
-												for ( auto it = lobby.cbegin(); lobby.cend() != it; ++it )
+												for ( auto it = lobby.cbegin();
+													 lobby.cend() != it; ++it )
 												{
 													if ( mIndex == *it )
 													{
@@ -188,8 +198,9 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 #ifdef _DEBUG
 							else
 							{
-								std::cout << "Client " << mIndex << " tried to join the room where " <<
-									targetNickname << " is and got the result(" << (int)res << ").\n";
+								std::cout << "Client " << mIndex <<
+									" tried to join the room where " << targetNickname <<
+									" is and got the result(" << (int)res << ").\n";
 							}
 #endif
 							break;
@@ -246,7 +257,7 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 							{
 #ifdef _DEBUG
 								std::cout << "Client "
-									<< mIndex << " requested to create a room.\n";
+									<< mIndex << " starts the game.\n";
 #endif
 								it->second.start( );
 							}

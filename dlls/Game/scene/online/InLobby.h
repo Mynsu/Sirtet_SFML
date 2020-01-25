@@ -24,21 +24,25 @@ namespace scene::online
 		void _createRoom( const std::string_view& );
 		void joinRoom( const std::string_view& arg );
 		static bool IsInstantiated;
+		struct
+		{
+			uint32_t nicknameFontSize, nicknameColor;
+			float distanceUsersBox0, distanceUsersBox,
+				usersBoxAnimationSpeed,
+				usersBoxOutlineThickness0, usersBoxOutlineThickness1;
+			sf::Color usersBoxColor0, usersBoxColor1,
+				usersBoxOutlineColor0, usersBoxOutlineColor1;
+			math::Vector<2> acceleration_boxLeftTop, destination_boxLeftTop,
+				relativeAcceleration_boxRightBottom, relativeDestination_boxRightBottom;
+			std::vector<sf::Vector2f> movingPoints;
+		} mDrawingInfo;
 		bool mIsReceiving, mHasJoined;
 		int8_t mEnteringRoom;
 		uint8_t mGuideTextIndex;
 		uint32_t mFrameCount_update, mFrameCount_requestDelay;
-		float mDistanceUsersBox0, mDistanceUsersBox,
-			mUsersBoxAnimationSpeed,
-			mUsersBoxOutlineThickness0, mUsersBoxOutlineThickness1;
-		sf::Color mUsersBoxColor0, mUsersBoxColor1,
-			mUsersBoxOutlineColor0, mUsersBoxOutlineColor1;
-		math::Vector<2> mAcceleration_boxLeftTop, mDestination_boxLeftTop,
-			mRelativeAcceleration_boxRightBottom, mRelativeDestination_boxRightBottom;
 		sf::RenderWindow& mWindow_;
 		::scene::online::Online& mNet;
 		MouseEvent mLatestMouseEvent;
-		std::vector<sf::Vector2f> mMovingPoints;
 		std::vector<std::string> mGuideTexts;
 		::ui::TextInputBox mTextInputBox;
 		// NOTE: std::pair<sf::Text, target point to move>.

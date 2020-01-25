@@ -16,18 +16,7 @@ namespace model
 		}
 		~Stage( ) = default;
 
-		inline void setBackgroundColor( const sf::Color color,
-									   const float outlineThickness,
-									   const sf::Color outlineColor,
-									   const sf::Color cellOutlineColor )
-		{
-			mPanel.setFillColor( color );
-			mPanel.setOutlineThickness( outlineThickness );
-			mPanel.setOutlineColor( outlineColor );
-			mCellShape.setOutlineThickness( 1.f );
-			mCellShape.setOutlineColor( cellOutlineColor );
-		}
-		inline void deserialize( const ::model::stage::Grid* const ptr )
+		void deserialize( const ::model::stage::Grid* const ptr )
 		{
 			mGrid = *ptr;
 		}
@@ -68,6 +57,14 @@ namespace model
 				}
 			}
 		}
+		inline ::model::stage::Grid& grid( )
+		{
+			return mGrid;
+		}
+		inline const ::model::stage::Grid& cgrid( ) const
+		{
+			return mGrid;
+		}
 		inline sf::Vector2f position( ) const
 		{
 			return mPosition_;
@@ -78,13 +75,16 @@ namespace model
 			mPosition_ = position;
 		}
 		void setSize( const float cellSize );
-		inline ::model::stage::Grid& grid( )
+		inline void setColor( const sf::Color background, const sf::Color cellOutlineColor )
 		{
-			return mGrid;
+			mPanel.setFillColor( background );
+			mCellShape.setOutlineThickness( 1.f );
+			mCellShape.setOutlineColor( cellOutlineColor );
 		}
-		inline const ::model::stage::Grid& cgrid( ) const
+		inline void setOutline( const float thickness, const sf::Color color )
 		{
-			return mGrid;
+			mPanel.setOutlineThickness( thickness );
+			mPanel.setOutlineColor( color );
 		}
 		inline void draw( )
 		{

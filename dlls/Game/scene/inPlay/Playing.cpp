@@ -469,14 +469,12 @@ void ::scene::inPlay::Playing::loadResources( )
 	mCurrentTetrimino.setSize( stageCellSize );
 	mStage.setPosition( stagePanelPosition );
 	mStage.setSize( stageCellSize );
-	mStage.setBackgroundColor( sf::Color(stagePanelColor),
-							  stagePanelOutlineThickness, sf::Color(stagePanelOutlineColor),
-							  sf::Color(stageCellOutlineColor) );
+	mStage.setColor( sf::Color(stagePanelColor), sf::Color(stageCellOutlineColor) );
+	mStage.setOutline( stagePanelOutlineThickness, sf::Color(stagePanelOutlineColor) );
 	mVfxCombo.setOrigin( stagePanelPosition, stageCellSize, vfxComboClipSize );
 	mNextTetriminoPanel.setDimension( nextTetPanelPosition, nextTetPanelCellSize );
-	mNextTetriminoPanel.setBackgroundColor( sf::Color(nextTetPanelColor),
-										   nextTetPanelOutlineThickness, sf::Color(nextTetPanelOutlineColor),
-										   sf::Color(nextTetPanelCellOutlineColor) );
+	mNextTetriminoPanel.setColor( sf::Color(nextTetPanelColor), sf::Color(nextTetPanelCellOutlineColor) );
+	mNextTetriminoPanel.setOutline( nextTetPanelOutlineThickness, sf::Color(nextTetPanelOutlineColor) );
 	if ( false == mNextTetriminos.empty() )
 	{
 		mNextTetriminoPanel.setTetrimino( mNextTetriminos.front() );

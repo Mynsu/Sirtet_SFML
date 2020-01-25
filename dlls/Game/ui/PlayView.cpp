@@ -308,7 +308,15 @@ void ui::PlayView::update( std::list<sf::Event>& eventQueue )
 			mNextTetriminos.pop( );
 			mStage.deserialize( (::model::stage::Grid*)mNextStageSerialized.data() );
 			mNextStageSerialized.clear( );
-			mNextTetriminoPanel.setTetrimino( mNextTetriminos.front() );
+			if ( false == mNextTetriminos.empty() )
+			{
+				mNextTetriminoPanel.setTetrimino( mNextTetriminos.front() );
+			}
+			// Probably the game is over,
+			else
+			{
+				mNextTetriminoPanel.clearTetrimino( );
+			}
 		}
 #ifdef _DEBUG
 		else

@@ -9,7 +9,7 @@ const uint32_t UPDATE_USER_LIST_INTERVAL = 300;
 const uint32_t REQUEST_DELAY = 60;
 const float ERROR_RANGE = 5.f;
 const float SPEED_NICKNAME_MOVE = .5f;
-std::mutex MutexForGuideText;
+std::mutex MutexForGuideText, MutexForMovingPoints;
 
 bool scene::online::InLobby::IsInstantiated = false;
 
@@ -17,11 +17,6 @@ scene::online::InLobby::InLobby( sf::RenderWindow& window, ::scene::online::Onli
 	: mIsReceiving( false ), mHasJoined( false ),
 	mGuideTextIndex( 0 ), mEnteringRoom( 0 ),
 	mFrameCount_update( 30 ), mFrameCount_requestDelay( 0 ),
-	mDistanceUsersBox0( 0.f ), mDistanceUsersBox( 0.f ),
-	mUsersBoxAnimationSpeed( 0.f ),
-	mUsersBoxOutlineThickness0( 0.f ), mUsersBoxOutlineThickness1( 0.f ),
-	mUsersBoxColor0( 0x0 ), mUsersBoxColor1( 0x0 ),
-	mUsersBoxOutlineColor0( 0x0 ), mUsersBoxOutlineColor1( 0x0 ),
 	mWindow_( window ), mNet( net ),
 	mTextInputBox( window )
 {
@@ -61,16 +56,23 @@ scene::online::InLobby::~InLobby( )
 void scene::online::InLobby::loadResources( )
 {
 	uint32_t backgroundColor = 0x29cdb5fa; // Cyan
-	mUsersBoxAnimationSpeed = 3.f;
+	mDrawingInfo.usersBoxAnimationSpeed = 3.f;
 	float boxAnimationSpeed2 = 4.f;
+	uint32_t myNicknameColor = 0xffa500ff;
+	mDrawingInfo.nicknameFontSize = 30;
+	mDrawingInfo.nicknameColor = 0xffffffff;
 	sf::Vector2f boxPosition( 0.f, 100.f );
 	sf::Vector2f boxSize( 800.f, 400.f );
-	mUsersBoxColor0 = sf::Color(0x000000ff);
-	mUsersBoxOutlineThickness0 = 5.f;
-	mUsersBoxOutlineThickness1 = 11.f;
-	mUsersBoxOutlineColor0 = sf::Color(0x0000007f);
-	mUsersBoxOutlineColor1 = sf::Color(0x3f3f3f7f);
-	mMovingPoints = { {0.f, 490.f}, {0.f, 110.f}, {600.f, 110.f}, {600.f, 490.f} };
+	mDrawingInfo.usersBoxColor0 = sf::Color(0x000000ff);
+	mDrawingInfo.usersBoxOutlineThickness0 = 5.f;
+	mDrawingInfo.usersBoxOutlineThickness1 = 11.f;
+	mDrawingInfo.usersBoxOutlineColor0 = sf::Color(0x0000007f);
+	mDrawingInfo.usersBoxOutlineColor1 = sf::Color(0x3f3f3f7f);
+	mDrawingInfo.movingPoints.clear( );
+	mDrawingInfo.movingPoints.emplace_back( 0.f, 490.f );
+	mDrawingInfo.movingPoints.emplace_back( 0.f, 110.f );
+	mDrawingInfo.movingPoints.emplace_back( 600.f, 110.f );
+	mDrawingInfo.movingPoints.emplace_back( 600.f, 490.f );
 	sf::Vector2f guideTextLabelPosition( 400.f, 200.f );
 	uint32_t guideTextColor = 0xffffff7f;
 	mGuideTexts.clear( );
@@ -90,7 +92,9 @@ void scene::online::InLobby::loadResources( )
 	uint32_t subWindowInputTextFieldFontSize = 25;
 	uint32_t subWindowInputTextFieldFontColor = 0xffffffff;
 	float cellSize = 30.f;
-	mUsersBoxColor1 = sf::Color(0x3f3f3fff);
+	mDrawingInfo.usersBoxColor1 = sf::Color(0x3f3f3fff);
+	mDrawingInfo.distanceUsersBox0 = 0.f;
+	mDrawingInfo.distanceUsersBox = 0.f;
 
 	lua_State* lua = luaL_newstate( );
 	std::string scriptPathNName( "Scripts/InLobby.lua" );
@@ -128,7 +132,7 @@ void scene::online::InLobby::loadResources( )
 		type = lua_type(lua, TOP_IDX);
 		if ( LUA_TNUMBER == type )
 		{
-			mUsersBoxAnimationSpeed = (float)lua_tonumber(lua, TOP_IDX);
+			mDrawingInfo.usersBoxAnimationSpeed = (float)lua_tonumber(lua, TOP_IDX);
 		}
 		else if ( LUA_TNIL == type )
 		{
@@ -161,11 +165,81 @@ void scene::online::InLobby::loadResources( )
 		}
 		lua_pop( lua, 1 );
 
-		std::string tableName( "Box" );
+		std::string tableName( "Nickname" );
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			// Type Check Exception
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+													 tableName, scriptPathNName );
+		}
+		else
+		{
+			std::string field( "fontSize" );
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			if ( LUA_TNUMBER == type )
+			{
+				mDrawingInfo.nicknameFontSize = (uint32_t)lua_tointeger(lua, TOP_IDX);
+			}
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			field = "colorForMine";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			if ( LUA_TNUMBER == type )
+			{
+				myNicknameColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
+			}
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			field = "colorForOthers";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			if ( LUA_TNUMBER == type )
+			{
+				mDrawingInfo.nicknameColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
+			}
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+		}
+		lua_pop( lua, 1 );
+
+		tableName = "Box";
+		lua_getglobal( lua, tableName.data() );
+		if ( false == lua_istable(lua, TOP_IDX) )
+		{
 			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 													 tableName, scriptPathNName );
 		}
@@ -257,7 +331,7 @@ void scene::online::InLobby::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				mUsersBoxColor0 = sf::Color((uint32_t)lua_tointeger(lua, TOP_IDX));
+				mDrawingInfo.usersBoxColor0 = sf::Color((uint32_t)lua_tointeger(lua, TOP_IDX));
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -277,7 +351,7 @@ void scene::online::InLobby::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				mUsersBoxOutlineThickness0 = (float)lua_tonumber(lua, TOP_IDX);
+				mDrawingInfo.usersBoxOutlineThickness0 = (float)lua_tonumber(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -297,7 +371,7 @@ void scene::online::InLobby::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				mUsersBoxOutlineColor0 = sf::Color((uint32_t)lua_tointeger(lua, TOP_IDX));
+				mDrawingInfo.usersBoxOutlineColor0 = sf::Color((uint32_t)lua_tointeger(lua, TOP_IDX));
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -322,7 +396,8 @@ void scene::online::InLobby::loadResources( )
 		}
 		else
 		{
-			mMovingPoints.clear();
+			std::scoped_lock lock( MutexForMovingPoints );
+			mDrawingInfo.movingPoints.clear();
 			uint8_t i = 1;
 			while ( true )
 			{
@@ -369,7 +444,7 @@ void scene::online::InLobby::loadResources( )
 						gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 																 tableName+":...", scriptPathNName );
 					}
-					mMovingPoints.emplace_back( point );
+					mDrawingInfo.movingPoints.emplace_back( point );
 					++i;
 					lua_pop( lua, 2 );
 				}
@@ -842,12 +917,22 @@ void scene::online::InLobby::loadResources( )
 	lua_close( lua );
 
 	mBackground.setFillColor( sf::Color(backgroundColor) );
+	if ( auto it = mUserList.find(mNet.myNickname());
+		mUserList.end() != it )
+	{
+		it->second.first.setFillColor( sf::Color(myNicknameColor) );
+	}
+#ifdef _DEBUG
+	else
+	{
+		__debugbreak( );
+	}
+#endif
 	mUsersBox.setPosition( boxPosition );
 	mUsersBox.setSize( boxSize );
-	mUsersBoxColor0 = sf::Color(mUsersBoxColor0);
-	mUsersBox.setFillColor( mUsersBoxColor0 );
-	mUsersBox.setOutlineThickness( mUsersBoxOutlineThickness0 );
-	mUsersBox.setOutlineColor( sf::Color(mUsersBoxOutlineColor0) );
+	mUsersBox.setFillColor( mDrawingInfo.usersBoxColor0 );
+	mUsersBox.setOutlineThickness( mDrawingInfo.usersBoxOutlineThickness0 );
+	mUsersBox.setOutlineColor( mDrawingInfo.usersBoxOutlineColor0 );
 	mFont.loadFromFile( guideTextFont );
 	mGuideTextLabel.setPosition( guideTextLabelPosition );
 	mGuideTextLabel.setFillColor( sf::Color(guideTextColor) );
@@ -857,15 +942,23 @@ void scene::online::InLobby::loadResources( )
 	mTextInputBox.setPosition( subWindowPosition );
 	mTextInputBox.setSize( subWindowSize );
 	mTextInputBox.setColor( sf::Color(subWindowColor) );
-	mTextInputBox.loadFont( subWindowTitleFont );
+	if ( false == mTextInputBox.loadFont(subWindowTitleFont) )
+	{
+		gService()->console().printScriptError(ExceptionType::FILE_NOT_FOUND,
+											   subWindowTitleFont, scriptPathNName );
+	}
 	mTextInputBox.setTitleDimension( subWindowTitleRelativePosition, subWindowTitleFontSize );
 	mTextInputBox.setTitleColor( sf::Color(subWindowTitleFontColor) );
 	mTextInputBox.setInputTextFieldDimension( subWindowInputTextFieldRelativePosition,
 											 subWindowInputTextFieldFontSize );
 	mTextInputBox.setInputTextFieldColor( sf::Color(subWindowInputTextFieldFontColor) );
 
-	mDestination_boxLeftTop.mComponents[0] = 100.f;
-	mDestination_boxLeftTop.mComponents[1] = 0.f;
+	////
+	//
+	////
+
+	mDrawingInfo.destination_boxLeftTop.mComponents[0] = 100.f;
+	mDrawingInfo.destination_boxLeftTop.mComponents[1] = 0.f;
 	scriptPathNName = "Scripts/InRoom.lua";
 	lua = luaL_newstate( );
 	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
@@ -893,7 +986,7 @@ void scene::online::InLobby::loadResources( )
 			int type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				mDestination_boxLeftTop.mComponents[0] = (float)lua_tonumber(lua, TOP_IDX);
+				mDrawingInfo.destination_boxLeftTop.mComponents[0] = (float)lua_tonumber(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -913,7 +1006,7 @@ void scene::online::InLobby::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				mDestination_boxLeftTop.mComponents[1] = (float)lua_tonumber(lua, TOP_IDX);
+				mDrawingInfo.destination_boxLeftTop.mComponents[1] = (float)lua_tonumber(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -953,7 +1046,7 @@ void scene::online::InLobby::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				mUsersBoxColor1 = sf::Color((uint32_t)lua_tointeger(lua, TOP_IDX));
+				mDrawingInfo.usersBoxColor1 = sf::Color((uint32_t)lua_tointeger(lua, TOP_IDX));
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -972,7 +1065,7 @@ void scene::online::InLobby::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				mUsersBoxOutlineThickness1 = (float)lua_tonumber(lua, TOP_IDX);
+				mDrawingInfo.usersBoxOutlineThickness1 = (float)lua_tonumber(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -992,7 +1085,7 @@ void scene::online::InLobby::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				mUsersBoxOutlineColor1 = sf::Color((uint32_t)lua_tointeger(lua, TOP_IDX));
+				mDrawingInfo.usersBoxOutlineColor1 = sf::Color((uint32_t)lua_tointeger(lua, TOP_IDX));
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -1010,16 +1103,16 @@ void scene::online::InLobby::loadResources( )
 	}
 	lua_pop( lua, 1 );
 	lua_close( lua );
-	math::Vector<2> dir( mDestination_boxLeftTop.mComponents[0]-boxPosition.x,
-						mDestination_boxLeftTop.mComponents[1]-boxPosition.y );
-	mAcceleration_boxLeftTop = dir.normalize()*mUsersBoxAnimationSpeed;
-	mDistanceUsersBox0 = dir.magnitude();
-	mDistanceUsersBox = mDistanceUsersBox0;
-	mRelativeDestination_boxRightBottom =
+	math::Vector<2> dir( mDrawingInfo.destination_boxLeftTop.mComponents[0]-boxPosition.x,
+						mDrawingInfo.destination_boxLeftTop.mComponents[1]-boxPosition.y );
+	mDrawingInfo.acceleration_boxLeftTop = dir.normalize()*mDrawingInfo.usersBoxAnimationSpeed;
+	mDrawingInfo.distanceUsersBox0 = dir.magnitude();
+	mDrawingInfo.distanceUsersBox = mDrawingInfo.distanceUsersBox0;
+	mDrawingInfo.relativeDestination_boxRightBottom =
 		math::Vector<2>(::model::stage::GRID_WIDTH*cellSize, ::model::stage::GRID_HEIGHT*cellSize);
 	const sf::Vector2f size( mUsersBox.getSize() );
-	dir = mRelativeDestination_boxRightBottom - math::Vector<2>(size.x, size.y);
-	mRelativeAcceleration_boxRightBottom = dir.normalize()*boxAnimationSpeed2;
+	dir = mDrawingInfo.relativeDestination_boxRightBottom - math::Vector<2>(size.x, size.y);
+	mDrawingInfo.relativeAcceleration_boxRightBottom = dir.normalize()*boxAnimationSpeed2;
 }
 
 ::scene::online::ID scene::online::InLobby::update( std::list<sf::Event>& eventQueue )
@@ -1127,6 +1220,7 @@ void scene::online::InLobby::loadResources( )
 			for ( const std::string& nickname : curUsers )
 			{
 				sf::Text tf( nickname, mFont );
+				tf.setFillColor( sf::Color(mDrawingInfo.nicknameColor) );
 				tf.setPosition( center*.5f + offset*mul );
 				mUserList.emplace( nickname, std::make_pair(tf, 0) );
 				mul += 1.f;
@@ -1201,32 +1295,40 @@ void scene::online::InLobby::draw( )
 	if ( 0 != mEnteringRoom )
 	{
 		sf::Vector2f boxPos( mUsersBox.getPosition() );
-		boxPos += sf::Vector2f(mAcceleration_boxLeftTop.mComponents[0],
-							   mAcceleration_boxLeftTop.mComponents[1]);
+		boxPos += sf::Vector2f(mDrawingInfo.acceleration_boxLeftTop.mComponents[0],
+							   mDrawingInfo.acceleration_boxLeftTop.mComponents[1]);
 		mUsersBox.setPosition( boxPos );
-		mDistanceUsersBox -= mUsersBoxAnimationSpeed;
+		mDrawingInfo.distanceUsersBox -= mDrawingInfo.usersBoxAnimationSpeed;
 		sf::Vector2f boxSize( mUsersBox.getSize() );
-		boxSize += sf::Vector2f(mRelativeAcceleration_boxRightBottom.mComponents[0],
-								mRelativeAcceleration_boxRightBottom.mComponents[1]);
+		boxSize += sf::Vector2f(mDrawingInfo.relativeAcceleration_boxRightBottom.mComponents[0],
+								mDrawingInfo.relativeAcceleration_boxRightBottom.mComponents[1]);
 		mUsersBox.setSize( boxSize );
-		const float ratio = mDistanceUsersBox/mDistanceUsersBox0;
+		const float ratio = mDrawingInfo.distanceUsersBox/mDrawingInfo.distanceUsersBox0;
 		const float ratioComplement = 1.f-ratio;
 		sf::Color blended;
-		blended.r = (uint8_t)(mUsersBoxColor0.r*ratio + mUsersBoxColor1.r*ratioComplement);
-		blended.g = (uint8_t)(mUsersBoxColor0.g*ratio + mUsersBoxColor1.g*ratioComplement);
-		blended.b = (uint8_t)(mUsersBoxColor0.b*ratio + mUsersBoxColor1.b*ratioComplement);
-		blended.a = (uint8_t)(mUsersBoxColor0.a*ratio + mUsersBoxColor1.a*ratioComplement);
+		blended.r = (uint8_t)(mDrawingInfo.usersBoxColor0.r*ratio +
+							  mDrawingInfo.usersBoxColor1.r*ratioComplement);
+		blended.g = (uint8_t)(mDrawingInfo.usersBoxColor0.g*ratio +
+							  mDrawingInfo.usersBoxColor1.g*ratioComplement);
+		blended.b = (uint8_t)(mDrawingInfo.usersBoxColor0.b*ratio +
+							  mDrawingInfo.usersBoxColor1.b*ratioComplement);
+		blended.a = (uint8_t)(mDrawingInfo.usersBoxColor0.a*ratio +
+							  mDrawingInfo.usersBoxColor1.a*ratioComplement);
 		mUsersBox.setFillColor( blended );
 		const float linearInterpolatedThickness =
-			mUsersBoxOutlineThickness0*ratio + mUsersBoxOutlineThickness1*(1.f-ratio);
+			mDrawingInfo.usersBoxOutlineThickness0*ratio + mDrawingInfo.usersBoxOutlineThickness1*(1.f-ratio);
 		mUsersBox.setOutlineThickness( linearInterpolatedThickness );
-		blended.r = (uint8_t)(mUsersBoxOutlineColor0.r*ratio + mUsersBoxOutlineColor1.r*ratioComplement);
-		blended.g = (uint8_t)(mUsersBoxOutlineColor0.g*ratio + mUsersBoxOutlineColor1.g*ratioComplement);
-		blended.b = (uint8_t)(mUsersBoxOutlineColor0.b*ratio + mUsersBoxOutlineColor1.b*ratioComplement);
-		blended.a = (uint8_t)(mUsersBoxOutlineColor0.a*ratio + mUsersBoxOutlineColor1.a*ratioComplement);
+		blended.r = (uint8_t)(mDrawingInfo.usersBoxOutlineColor0.r*ratio +
+							  mDrawingInfo.usersBoxOutlineColor1.r*ratioComplement);
+		blended.g = (uint8_t)(mDrawingInfo.usersBoxOutlineColor0.g*ratio +
+							  mDrawingInfo.usersBoxOutlineColor1.g*ratioComplement);
+		blended.b = (uint8_t)(mDrawingInfo.usersBoxOutlineColor0.b*ratio +
+							  mDrawingInfo.usersBoxOutlineColor1.b*ratioComplement);
+		blended.a = (uint8_t)(mDrawingInfo.usersBoxOutlineColor0.a*ratio +
+							  mDrawingInfo.usersBoxOutlineColor1.a*ratioComplement);
 		mUsersBox.setOutlineColor( blended );
-		math::Vector<2> v( mDestination_boxLeftTop.mComponents[0]-boxPos.x,
-						  mDestination_boxLeftTop.mComponents[1]-boxPos.y );
+		math::Vector<2> v( mDrawingInfo.destination_boxLeftTop.mComponents[0]-boxPos.x,
+						  mDrawingInfo.destination_boxLeftTop.mComponents[1]-boxPos.y );
 		const float mag = v.magnitude();
 		if ( mag < ERROR_RANGE )
 		{
@@ -1249,32 +1351,35 @@ void scene::online::InLobby::draw( )
 		}
 	}
 	mWindow_.draw( mGuideTextLabel );
-	uint8_t numOfMovingPoints = (uint8_t)mMovingPoints.size();
-	for ( auto& pair : mUserList )
 	{
-		while ( true )
+		std::scoped_lock lock( MutexForMovingPoints );
+		uint8_t numOfMovingPoints = (uint8_t)mDrawingInfo.movingPoints.size();
+		for ( auto& pair : mUserList )
 		{
-			auto& tf = pair.second;
-			const sf::Vector2f dir( mMovingPoints[tf.second] - tf.first.getPosition() );
-			math::Vector<2> v( dir.x, dir.y );
-			const float mag = v.magnitude();
-			if ( mag <= ERROR_RANGE )
+			while ( true )
 			{
-				if ( numOfMovingPoints-1 == tf.second )
+				auto& tf = pair.second;
+				const sf::Vector2f dir( mDrawingInfo.movingPoints[tf.second] - tf.first.getPosition() );
+				math::Vector<2> v( dir.x, dir.y );
+				const float mag = v.magnitude();
+				if ( mag <= ERROR_RANGE )
 				{
-					tf.second = 0;
+					if ( numOfMovingPoints-1 == tf.second )
+					{
+						tf.second = 0;
+					}
+					else
+					{
+						++tf.second;
+					}
 				}
 				else
 				{
-					++tf.second;
+					const math::Vector<2> nv( v.normalize()*SPEED_NICKNAME_MOVE );
+					tf.first.move( nv.mComponents[0], nv.mComponents[1] );
+					mWindow_.draw( tf.first );
+					break;
 				}
-			}
-			else
-			{
-				const math::Vector<2> nv( v.normalize()*SPEED_NICKNAME_MOVE );
-				tf.first.move( nv.mComponents[0], nv.mComponents[1] );
-				mWindow_.draw( tf.first );
-				break;
 			}
 		}
 	}

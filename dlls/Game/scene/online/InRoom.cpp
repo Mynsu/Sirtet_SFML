@@ -13,7 +13,7 @@ bool scene::online::InRoom::IsInstantiated = false;
 
 scene::online::InRoom::InRoom( sf::RenderWindow& window, Online& net, const bool asHost )
 	: mIsReceiving( false ), mAsHost( asHost ),
-	mIsPlaying_( false ), mIsMouseOverStartButton_( false ), mIsStartButtonPressed_( false ),
+	mIsPlaying( false ), mIsMouseOverStartButton_( false ), mIsStartButtonPressed_( false ),
 	mFrameCount_rotationInterval( 0 ),
 	mWindow_( window ), mNet( net ),
 	mOtherPlayerSlots{ EMPTY_SLOT }
@@ -59,6 +59,10 @@ void scene::online::InRoom::loadResources( )
 	float myPanelOutlineThickness = 11.0;
 	uint32_t myPanelOutlineColor = 0x3f3f3f'7f;
 	float myStageCellSize = 30.0;
+	mDrawingInfo.myNicknameFontSize = 30;
+	mDrawingInfo.myNicknameColor = 0xffa500ff; // Orange
+	mDrawingInfo.otherPlayerNicknameFontSize = 10;
+	mDrawingInfo.otherPlayerNicknameFontColor = 0xffffffff;
 	std::string vfxComboPathNName( "Vfxs/Combo.png" );
 	sf::Vector2i vfxComboClipSize( 256, 256 );
 	sf::Vector2f nextTetriminoPanelPosition( 520.f, 30.f );
@@ -66,7 +70,8 @@ void scene::online::InRoom::loadResources( )
 	uint32_t nextTetriminoPanelColor = 0x000000'ff;
 	float nextTetriminoPanelOutlineThickness = 5.0;
 	uint32_t nextTetriminoPanelOutlineColor = 0x000000'7f;
-	mDrawingInfo.theta_degree = 1.5f;
+	mDrawingInfo.angularVelocity = 1.5f;
+	mDrawingInfo.arcLength = 90;
 	mDrawingInfo.scaleFactor = 0.9f;
 	mDrawingInfo.framesRotationInterval = 60;
 	mDrawingInfo.position = sf::Vector2f(600.f, 400.f);
@@ -80,8 +85,6 @@ void scene::online::InRoom::loadResources( )
 	mDrawingInfo.outlineColor_on = 0x0000007f;
 	mDrawingInfo.countdownSpritePathNName = "Images/Countdown.png";
 	mDrawingInfo.countdownSpriteClipSize = sf::Vector2i(256, 256);
-	uint32_t nicknameFontSize = 10;
-	uint32_t nicknameFontColor = 0xffffffff;
 	sf::Vector2f startingGuidePosition( 550.f, 60.f );
 	uint32_t startingGuideFontSize = 30;
 	uint32_t startingGuideFontColor = 0xffffffff;
@@ -262,6 +265,46 @@ void scene::online::InRoom::loadResources( )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			field = "nicknameFontSize";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			if ( LUA_TNUMBER == type )
+			{
+				mDrawingInfo.myNicknameFontSize = (uint32_t)lua_tointeger(lua, TOP_IDX);
+			}
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			field = "nicknameFontColor";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			if ( LUA_TNUMBER == type )
+			{
+				mDrawingInfo.myNicknameColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
+			}
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 		}
@@ -540,13 +583,33 @@ void scene::online::InRoom::loadResources( )
 			}
 			lua_pop( lua, 1 );
 
-			field = "theta_degree";
+			field = "angularVelocity";
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				mDrawingInfo.theta_degree = (float)lua_tonumber(lua, TOP_IDX);
+				mDrawingInfo.angularVelocity = (float)lua_tonumber(lua, TOP_IDX);
+			}
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			field = "arcLength";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			if ( LUA_TNUMBER == type )
+			{
+				mDrawingInfo.arcLength = (float)lua_tonumber(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -832,7 +895,7 @@ void scene::online::InRoom::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				nicknameFontSize = (uint32_t)lua_tointeger(lua, TOP_IDX);
+				mDrawingInfo.otherPlayerNicknameFontSize = (uint32_t)lua_tointeger(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -852,7 +915,7 @@ void scene::online::InRoom::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				nicknameFontColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
+				mDrawingInfo.otherPlayerNicknameFontColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -971,12 +1034,10 @@ void scene::online::InRoom::loadResources( )
 		::model::Stage& stage = playView.stage();
 		stage.setPosition( myPanelPosition );
 		stage.setSize( myStageCellSize );
-		stage.setBackgroundColor( sf::Color(myPanelColor),
-								 myPanelOutlineThickness, sf::Color(myPanelOutlineColor),
-								 sf::Color(cellOutlineColor) );
+		stage.setColor( sf::Color(myPanelColor), sf::Color(cellOutlineColor) );
+		stage.setOutline( myPanelOutlineThickness, sf::Color(myPanelOutlineColor) );
 		if ( false == playView.loadCountdownSprite(mDrawingInfo.countdownSpritePathNName) )
 		{
-			// File Not Found Exception
 			gService( )->console( ).printScriptError( ExceptionType::FILE_NOT_FOUND,
 													"Path:CountdownSprite", scriptPathNName );
 #ifdef _DEBUG
@@ -992,11 +1053,11 @@ void scene::online::InRoom::loadResources( )
 		::ui::NextTetriminoPanel& nextTetPanel = playView.nextTetriminoPanel();
 		nextTetPanel.setDimension( nextTetriminoPanelPosition, nextTetriminoPanelCellSize );
 		mNextTetriminoPanelBound = nextTetPanel.globalBounds();
+		// Making the bound enough to contain a mouse cursor.
 		mNextTetriminoPanelBound.width += 5.f;
 		mNextTetriminoPanelBound.height += 5.f;
-		nextTetPanel.setBackgroundColor( sf::Color(nextTetriminoPanelColor),
-										nextTetriminoPanelOutlineThickness, sf::Color(nextTetriminoPanelOutlineColor),
-										sf::Color(cellOutlineColor) );
+		nextTetPanel.setColor( sf::Color(nextTetriminoPanelColor), sf::Color(cellOutlineColor) );
+		nextTetPanel.setOutline( nextTetriminoPanelOutlineThickness, sf::Color(nextTetriminoPanelOutlineColor) );
 		if ( false == vfxCombo.loadResources(vfxComboPathNName) )
 		{
 			gService( )->console( ).printFailure( FailureLevel::FATAL,
@@ -1025,8 +1086,7 @@ void scene::online::InRoom::loadResources( )
 	mOtherPlayerSlotBackground.setFillColor( sf::Color(otherPlayerPanelColor) );
 	mOtherPlayerSlotBackground.setOutlineThickness( otherPlayerPanelOutlineThickness );
 	mOtherPlayerSlotBackground.setOutlineColor( sf::Color(otherPlayerPanelOutlineColor) );
-	mNicknameLabel.setCharacterSize( nicknameFontSize );
-	mNicknameLabel.setFillColor( sf::Color(nicknameFontColor) );
+	
 	if ( false == mFont.loadFromFile(fontPathNName) )
 	{
 		gService( )->console( ).printFailure( FailureLevel::FATAL,
@@ -1093,7 +1153,6 @@ void scene::online::InRoom::loadResources( )
 						}
 					}
 					it = mParticipants.erase(it);
-					//TODO: 누가 종료했다고 알리기.
 				}
 				else
 				{
@@ -1122,15 +1181,12 @@ void scene::online::InRoom::loadResources( )
 #endif
 				::ui::PlayView& playView = mParticipants[pair.first].playView;
 				::model::Stage& stage =	playView.stage();
-				// TODO: 닉네임 보여주기
 				const sf::Vector2f pos( mDrawingInfo.position-mDrawingInfo.positionDifferences[slotIdx] );
 				stage.setPosition( pos );
 				stage.setSize( mDrawingInfo.cellSize );
 				const sf::Color cellOutlineColor( 0x000000'7f );
-				// TODO: parameter 줄이기
-				stage.setBackgroundColor( sf::Color(mDrawingInfo.panelColor_on),
-										 mDrawingInfo.outlineThickness_on, sf::Color(mDrawingInfo.outlineColor_on),
-										 cellOutlineColor );
+				stage.setColor( sf::Color(mDrawingInfo.panelColor_on), sf::Color(cellOutlineColor) );
+				stage.setOutline( mDrawingInfo.outlineThickness_on, sf::Color(mDrawingInfo.outlineColor_on) );
 				::model::Tetrimino& curTet = playView.currentTetrimino();
 				curTet.setOrigin( pos );
 				curTet.setSize( mDrawingInfo.cellSize );
@@ -1155,8 +1211,7 @@ void scene::online::InRoom::loadResources( )
 			nextSceneID = ::scene::online::ID::IN_LOBBY;
 			return nextSceneID;
 		}
-		// TODO: 이거 없애거나 이름 바꾸기.
-		if ( false == mIsPlaying_ )
+		if ( false == mIsPlaying )
 		{
 			if ( std::optional<std::string> response( mNet.getByTag(TAGGED_REQ_GET_READY,
 																   Online::Option::RETURN_TAG_ATTACHED,
@@ -1167,7 +1222,7 @@ void scene::online::InRoom::loadResources( )
 				{
 					it.second.playView.start( );
 				}
-				mIsPlaying_ = true;
+				mIsPlaying = true;
 			}
 		}
 		else
@@ -1337,7 +1392,7 @@ void scene::online::InRoom::loadResources( )
 				{
 					pair.second.playView.gameOver( );
 				}
-				mIsPlaying_ = false;
+				mIsPlaying = false;
 			}
 		}
 	}
@@ -1355,7 +1410,6 @@ void scene::online::InRoom::loadResources( )
 
 	for ( auto it = eventQueue.cbegin(); eventQueue.cend() != it; )
 	{
-		//궁금: 계속 눌러도 인식하나?
 		if ( sf::Event::EventType::MouseButtonPressed == it->type &&
 			sf::Mouse::Button::Left == it->mouseButton.button &&
 			true == mIsMouseOverStartButton_ )
@@ -1409,13 +1463,13 @@ void scene::online::InRoom::draw( )
 				mIsMouseOverStartButton_ = true;
 				if ( 0 == mFrameCount_rotationInterval )
 				{
-					nextTetPanel.rotate( mDrawingInfo.theta_degree );
+					nextTetPanel.rotate( mDrawingInfo.angularVelocity );
 					float degree = nextTetPanel.rotation();
-					while ( 90.f <= degree )
+					while ( mDrawingInfo.arcLength <= degree )
 					{
-						degree -= 90.f;
+						degree -= mDrawingInfo.arcLength;
 					}
-					if ( degree < mDrawingInfo.theta_degree/2.f )
+					if ( degree < mDrawingInfo.angularVelocity/2.f )
 					{
 						mFrameCount_rotationInterval = 1;
 					}
@@ -1446,13 +1500,15 @@ void scene::online::InRoom::draw( )
 			}
 		}
 		it->second.playView.draw();
-		if ( false == mIsPlaying_ )
+		if ( false == mIsPlaying )
 		{
 			mWindow_.draw( mStartingGuide );
 		}
-		const sf::Vector2f margin( 5.f, 0.f );
-		mNicknameLabel.setPosition( it->second.playView.stage().position() + margin );
+		const sf::Vector2f margin( 10.f, 0.f );
 		mNicknameLabel.setString( mNet.myNickname() );
+		mNicknameLabel.setCharacterSize( mDrawingInfo.myNicknameFontSize );
+		mNicknameLabel.setPosition( it->second.playView.stage().position() + margin );
+		mNicknameLabel.setFillColor( sf::Color(mDrawingInfo.myNicknameColor) );
 		mWindow_.draw( mNicknameLabel );
 	}
 #ifdef _DEBUG
@@ -1465,7 +1521,7 @@ void scene::online::InRoom::draw( )
 	for ( uint8_t i = 0; ROOM_CAPACITY-1 != i; ++i )
 	{
 		const sf::Vector2f pos( mDrawingInfo.position-mDrawingInfo.positionDifferences[i] );
-		const sf::Vector2f margin( 5.f, 0.f );
+		const sf::Vector2f margin( 10.f, 0.f );
 		if ( EMPTY_SLOT == mOtherPlayerSlots[i] )
 		{
 			mOtherPlayerSlotBackground.setPosition( pos );
@@ -1477,8 +1533,10 @@ void scene::online::InRoom::draw( )
 				mParticipants.end() != it )
 			{
 				it->second.playView.draw( );
-				mNicknameLabel.setPosition( pos + margin );
 				mNicknameLabel.setString( it->second.nickname );
+				mNicknameLabel.setCharacterSize( mDrawingInfo.otherPlayerNicknameFontSize );
+				mNicknameLabel.setFillColor( sf::Color(mDrawingInfo.otherPlayerNicknameFontColor) );
+				mNicknameLabel.setPosition( pos + margin );
 				mWindow_.draw( mNicknameLabel );
 			}
 #ifdef _DEBUG

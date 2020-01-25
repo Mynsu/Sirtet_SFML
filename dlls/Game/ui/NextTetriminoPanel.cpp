@@ -49,3 +49,22 @@ void ui::NextTetriminoPanel::draw( )
 		mWindow_.draw( it );
 	}
 }
+
+void ui::NextTetriminoPanel::setDimension( const sf::Vector2f position, const float cellSize)
+{
+	const uint8_t side = ::model::tetrimino::BLOCKS_A_TETRIMINO+2;
+	sf::Vector2f size( side, side );
+	size *= cellSize;
+	mPanel.setSize( size );
+	size *= 0.5f;
+	mPanel.setOrigin( size );
+	mPanel.setPosition( position );
+	mLeftTopPosition = position-size;
+	size = sf::Vector2f(cellSize, cellSize);
+	for ( sf::RectangleShape& block : mBlocks )
+	{
+		block.setPosition( position );
+		block.setSize( size );
+	}
+	mCellSize_ = cellSize;
+}

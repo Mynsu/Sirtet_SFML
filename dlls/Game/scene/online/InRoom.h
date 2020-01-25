@@ -34,8 +34,10 @@ namespace scene::online
 	private:
 		struct
 		{
-			float cellSize, outlineThickness_on, theta_degree, scaleFactor;
-			uint32_t panelColor_on, outlineColor_on, framesRotationInterval;
+			float cellSize, outlineThickness_on, angularVelocity, arcLength, scaleFactor;
+			uint32_t panelColor_on, outlineColor_on, framesRotationInterval,
+				myNicknameFontSize, myNicknameColor,
+				otherPlayerNicknameFontSize, otherPlayerNicknameFontColor;
 			sf::Vector2f position;
 			sf::Vector2f positionDifferences[ROOM_CAPACITY-1];
 			sf::Vector2i countdownSpriteClipSize;
@@ -46,7 +48,8 @@ namespace scene::online
 		void leaveRoom( );
 		void _leaveRoom( const std::string_view& );
 		static bool IsInstantiated;
-		bool mIsReceiving, mAsHost, mIsPlaying_, mIsMouseOverStartButton_, mIsStartButtonPressed_;
+		bool mIsReceiving, mAsHost, mIsPlaying,
+			mIsMouseOverStartButton_, mIsStartButtonPressed_;
 		sf::RenderWindow& mWindow_;
 		uint32_t mFrameCount_rotationInterval;
 		Online& mNet;
