@@ -67,6 +67,15 @@ namespace math
 	}
 
 	template <int N>
+	void operator*=( Vector<N>& v, const float s )
+	{
+		for ( uint8_t i = 0; N != i; ++i )
+		{
+			v.mComponents[i] *= s;
+		}
+	}
+
+	template <int N>
 	Vector<N> operator-( const Vector<N> lh, const Vector<N> rh )
 	{
 		Vector<N> retVal;

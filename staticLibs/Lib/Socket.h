@@ -61,10 +61,11 @@ public:
 	int updateAcceptContext( Socket& listener );
 	int connect( const EndPoint& targetEndPoint );
 	int disconnectOverlapped( );
-	int receiveOverlapped( );
+	int receiveOverlapped( LPWSAOVERLAPPED_COMPLETION_ROUTINE lpRoutine = NULL );
 	int receiveBlocking( );
-	int sendOverlapped( char* const data, const size_t size );
-	int sendOverlapped( Packet& packet );
+	int sendOverlapped( char* const data, const size_t size,
+					   LPWSAOVERLAPPED_COMPLETION_ROUTINE lpRoutine = NULL );
+	int sendOverlapped( Packet& packet, LPWSAOVERLAPPED_COMPLETION_ROUTINE lpRoutine = NULL );
 	void close( )
 	{
 		closesocket( mhSocket );

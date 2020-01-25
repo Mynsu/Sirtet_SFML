@@ -2,9 +2,9 @@
 #include "IScene.h"
 #include "../../ui/PlayView.h"
 #include "../../model/Tetrimino.h"
+#include "../inPlay/Assertion.h"
 
 const uint8_t ROOM_CAPACITY = 4;
-
 
 namespace scene::online
 {
@@ -32,6 +32,26 @@ namespace scene::online
 		::scene::online::ID update( std::list<sf::Event>& eventQueue ) override;
 		void draw( ) override;
 	private:
+		void startGame( ) const;
+		void _startGame( const std::string_view& );
+		void leaveRoom( ) const;
+		void _leaveRoom( const std::string_view& );
+		enum class AlarmIndex
+		{
+			ALL_OVER_FREEZE,
+			NONE_MAX,
+		};
+		// Also reset.
+		inline bool alarmAfter( const uint32_t milliseconds, const AlarmIndex index )
+		{
+			bool retVal = false;
+			if ( std::chrono::milliseconds(milliseconds) < Clock::now()-mAlarms[(int)index] )
+			{
+				mAlarms[(int)index] = Clock::time_point::max();
+				retVal = true;
+			}
+			return retVal;
+		}
 		struct
 		{
 			float cellSize, outlineThickness_on, angularVelocity, arcLength, scaleFactor;
@@ -43,16 +63,14 @@ namespace scene::online
 			sf::Vector2i countdownSpriteClipSize;
 			std::string countdownSpritePathNName;
 		} mDrawingInfo;
-		void startGame( );
-		void _startGame( const std::string_view& );
-		void leaveRoom( );
-		void _leaveRoom( const std::string_view& );
 		static bool IsInstantiated;
 		bool mIsReceiving, mAsHost, mIsPlaying,
 			mIsMouseOverStartButton_, mIsStartButtonPressed_;
 		sf::RenderWindow& mWindow_;
 		uint32_t mFrameCount_rotationInterval;
+		Clock::time_point mAlarms[(int)AlarmIndex::NONE_MAX];
 		Online& mNet;
+		std::unique_ptr<::scene::inPlay::IScene> mOverlappedScene;
 		sf::FloatRect mNextTetriminoPanelBound;
 		// When empty, the value should be 0 == EMPTY_SLOT.
 		HashedKey mOtherPlayerSlots[ROOM_CAPACITY-1];

@@ -52,13 +52,14 @@ int main()
 		//	// Exception
 		//	std::cerr << "Failed to set receiving buffer size to zero for the listener.\n";
 		//}
-		else if ( const DWORD SND_BUF_SIZ = 0;
-				0 != ::setsockopt(listener.handle(), SOL_SOCKET, SO_SNDBUF, (char*)&SND_BUF_SIZ, sizeof(DWORD)) )
-		{
-			// Exception
-			std::cerr << "FATAL: Failed to set sending buffer size to zero for the listener.\n";
-			result = false;
-		}
+		//궁금: 8KB 받기 버퍼에게 오류를 일으키는 것 같다.
+		//else if ( const DWORD SND_BUF_SIZ = 0;
+		//		0 != ::setsockopt(listener.handle(), SOL_SOCKET, SO_SNDBUF, (char*)&SND_BUF_SIZ, sizeof(DWORD)) )
+		//{
+		//	// Exception
+		//	std::cerr << "FATAL: Failed to set sending buffer size to zero for the listener.\n";
+		//	result = false;
+		//}
 		else if ( -1 == iocp.add(listener.handle(), LISTENER_IDX) )
 		{
 			// Exception

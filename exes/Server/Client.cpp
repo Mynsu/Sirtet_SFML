@@ -47,7 +47,7 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 							}
 #ifdef _DEBUG
 							std::cout << "Client " << mIndex <<
-								"wants the list of users in the lobby.\n";
+								" wants the list of users in the lobby.\n";
 #endif
 							std::string userList;
 							userList.reserve( lobby.size()*10 );

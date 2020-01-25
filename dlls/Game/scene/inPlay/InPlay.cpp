@@ -40,7 +40,7 @@ void scene::inPlay::InPlay::loadResources( )
 	{
 		setScene( nextScene );
 	}
-	else if ( ::scene::inPlay::ID::MAIN_MENU == nextScene )
+	else if ( ::scene::inPlay::ID::EXIT == nextScene )
 	{
 		retVal = ::scene::ID::MAIN_MENU;
 	}
@@ -48,11 +48,11 @@ void scene::inPlay::InPlay::loadResources( )
 	if ( nullptr != mOverlappedScene )
 	{
 		const ::scene::inPlay::ID nextScene = mOverlappedScene->update( eventQueue );
-		if ( ::scene::inPlay::ID::OFF == nextScene )
+		if ( ::scene::inPlay::ID::UNDO == nextScene )
 		{
 			mOverlappedScene.reset( );
 		}
-		else if ( ::scene::inPlay::ID::MAIN_MENU == nextScene )
+		else if ( ::scene::inPlay::ID::EXIT == nextScene )
 		{
 			retVal = ::scene::ID::MAIN_MENU;
 		}

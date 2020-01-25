@@ -10,7 +10,7 @@ VfxCombo = { path = "Vfxs/Combo.png", clipWidth = 256, clipHeight = 256 }
 NextTetriminoPanel = { x = 600, y = 110, cellSize = 30,
 					color = 0x0f0f0fff,
 					outlineThickness = 5, outlineColor = 0x0000007f,
-					angularVelocity = 1.5, arcLength = 90, rotationIntervalMs = 2000, scaleFactor = 0.8 }
+					angularVelocity = 1.5, arcLength = 90, rotationIntervalMs = 2000, scaleFactor = 0.7 }
 OtherPlayerSlot = { x = 600, y = 400, cellSize = 8,
 					margin = 10,
 					color = 0x3f3f3f7f, color_on = 0x3f3f3fff,

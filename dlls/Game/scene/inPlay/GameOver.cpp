@@ -148,7 +148,7 @@ void scene::inPlay::GameOver::loadResources( )
 		// 3 seconds after,
 		if ( 3*mFPS_ == mFrameCount )
 		{
-			retVal = ::scene::inPlay::ID::MAIN_MENU;
+			retVal = ::scene::inPlay::ID::EXIT;
 		}
 	}
 

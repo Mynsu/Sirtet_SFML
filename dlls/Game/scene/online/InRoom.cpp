@@ -8,18 +8,20 @@
 
 const uint32_t EMPTY_SLOT = 0;
 const uint32_t ROTATION_INTERVAL_THRESHOLD_MS = 1000;
+const uint32_t ALL_OVER_FREEZE_MS = 2000;
 
 bool scene::online::InRoom::IsInstantiated = false;
 
 scene::online::InRoom::InRoom( sf::RenderWindow& window, Online& net, const bool asHost )
 	: mIsReceiving( false ), mAsHost( asHost ),
-	mIsPlaying( false ), mIsMouseOverStartButton_( false ), mIsStartButtonPressed_( false ),
-	mFrameCount_rotationInterval( 0 ),
+	mIsPlaying( false ),
+	mIsMouseOverStartButton_( false ), mIsStartButtonPressed_( false ),
+	mFrameCount_rotationInterval( 0 ), mAlarms{ Clock::time_point::max() },
 	mWindow_( window ), mNet( net ),
 	mOtherPlayerSlots{ EMPTY_SLOT }
 {
 	ASSERT_TRUE( false == IsInstantiated );
-
+	
 	mParticipants.reserve( ROOM_CAPACITY );
 	mParticipants.emplace( mNet.myNicknameHashed(), Participant(mNet.myNickname(), ::ui::PlayView(mWindow_, mNet)) );
 	IServiceLocator* const service = gService();
@@ -1093,7 +1095,14 @@ void scene::online::InRoom::loadResources( )
 											 "File Not Found: "+fontPathNName );
 	}
 	mNicknameLabel.setFont( mFont );
-	mStartingGuide.setString( "Start" );
+	if ( true == mAsHost )
+	{
+		mStartingGuide.setString( "Go!" );
+	}
+	else
+	{
+		mStartingGuide.setString( "Be\nPrepared!" );
+	}
 	mStartingGuide.setFont( mFont );
 	mStartingGuide.setCharacterSize( startingGuideFontSize );
 	const sf::FloatRect bound( mStartingGuide.getLocalBounds() );
@@ -1117,6 +1126,7 @@ void scene::online::InRoom::loadResources( )
 															   -1) );
 			std::nullopt != userList )
 		{
+			// TODO: FPS 떨어뜨리면 시간차 누적돼서 서버에서 킥한다.
 			// 궁금: 왜 8KB 버퍼가 다 차지?
 			const std::string& _userList( userList.value() );
 			const uint32_t userListSize = (uint32_t)_userList.size();
@@ -1388,15 +1398,11 @@ void scene::online::InRoom::loadResources( )
 																	NULL) );
 					 std::nullopt != allOver )
 			{
-				for ( auto& pair : mParticipants )
-				{
-					pair.second.playView.gameOver( );
-				}
-				mIsPlaying = false;
+				mAlarms[(int)AlarmIndex::ALL_OVER_FREEZE] = Clock::now();
 			}
 		}
 	}
-	
+
 	for ( auto& pair : mParticipants )
 	{
 		pair.second.playView.update( eventQueue );
@@ -1408,27 +1414,60 @@ void scene::online::InRoom::loadResources( )
 		mIsReceiving = true;
 	}
 
+	if ( true == alarmAfter(ALL_OVER_FREEZE_MS, AlarmIndex::ALL_OVER_FREEZE) )
+	{
+		for ( auto& pair : mParticipants )
+		{
+			pair.second.playView.stage().clear();
+		}
+		mIsPlaying = false;
+	}
+
+	if ( nullptr != mOverlappedScene )
+	{
+		const ::scene::inPlay::ID nextScene = mOverlappedScene->update(eventQueue);
+		switch ( nextScene )
+		{
+			case ::scene::inPlay::ID::EXIT:
+				leaveRoom( );
+				break;
+			case ::scene::inPlay::ID::UNDO:
+				mOverlappedScene.reset( );
+				break;
+			case ::scene::inPlay::ID::AS_IS:
+				break;
+			default:
+#ifdef _DEBUG
+				__debugbreak( );
+#else
+				__assume( 0 );
+#endif
+		}
+	}
+
 	for ( auto it = eventQueue.cbegin(); eventQueue.cend() != it; )
 	{
 		if ( sf::Event::EventType::MouseButtonPressed == it->type &&
 			sf::Mouse::Button::Left == it->mouseButton.button &&
-			true == mIsMouseOverStartButton_ )
+			true == mIsMouseOverStartButton_ &&
+			false == mIsPlaying )
 		{
 			mIsStartButtonPressed_ = true;
 			it = eventQueue.erase(it);
 		}
 		else if ( sf::Event::EventType::MouseButtonReleased == it->type &&
 			sf::Mouse::Button::Left == it->mouseButton.button &&
-			true == mIsMouseOverStartButton_ )
+			true == mIsMouseOverStartButton_ &&
+			false == mIsPlaying )
 		{
 			startGame( );
 			mIsStartButtonPressed_ = false;
 			it = eventQueue.erase(it);
 		}
 		else if ( sf::Event::EventType::KeyPressed == it->type &&
-				 sf::Keyboard::Escape == it->key.code )
+					sf::Keyboard::Escape == it->key.code )
 		{
-			leaveRoom( );
+			mOverlappedScene = std::make_unique<::scene::inPlay::Assertion>(mWindow_);
 			it = eventQueue.erase(it);
 		}
 		else
@@ -1547,9 +1586,14 @@ void scene::online::InRoom::draw( )
 #endif
 		}
 	}
+
+	if ( nullptr != mOverlappedScene )
+	{
+		mOverlappedScene->draw( );
+	}
 }
 
-void scene::online::InRoom::startGame()
+void scene::online::InRoom::startGame() const
 {
 	std::string request( TAGGED_REQ_START_GAME );
 	mNet.send( request.data(), (int)request.size() );
@@ -1560,7 +1604,7 @@ void scene::online::InRoom::_startGame( const std::string_view& arg )
 	startGame( );
 }
 
-void scene::online::InRoom::leaveRoom()
+void scene::online::InRoom::leaveRoom() const
 {
 	std::string request( TAGGED_REQ_LEAVE_ROOM );
 	mNet.send( request.data(), (int)request.size() );

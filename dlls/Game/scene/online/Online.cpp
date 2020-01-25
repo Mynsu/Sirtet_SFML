@@ -39,9 +39,14 @@ namespace
 			}
 			else
 			{
-				break;
+ 				break;
 			}
 		}
+	}
+
+	void CompletionRoutine(DWORD, DWORD, LPWSAOVERLAPPED lpOverlapped, DWORD)
+	{
+		SocketToServer->completedIO( lpOverlapped );
 	}
 }
 
@@ -217,6 +222,7 @@ void ::scene::online::Online::loadResources( )
 ::scene::ID scene::online::Online::update( std::list<sf::Event>& eventQueue )
 {
 	::scene::ID retVal = ::scene::ID::AS_IS;
+
 	if ( 0 == mFrameCount_disconnection )
 	{
 		const ::scene::online::ID nextSceneID = mCurrentScene->update( eventQueue );
@@ -351,16 +357,24 @@ bool scene::online::Online::connectToMainServer( )
 
 void scene::online::Online::send( char* const data, const int size )
 {
-	if( -1 == SocketToServer->sendOverlapped(data, size) )
+	if ( -1 == SocketToServer->sendOverlapped(data, size, CompletionRoutine) )
 	{
 		disconnect( );
+		return;
 	}
+	// 궁금: 메인 스레드인데, 프레임 드랍 없을까?
+	::SleepEx( 1000, TRUE );
 }
 
 void scene::online::Online::send( Packet& packet )
 {
-	std::string& data =	packet.data();
-	send( data.data(), (int)data.size() );
+	if ( -1 == SocketToServer->sendOverlapped(packet, CompletionRoutine) )
+	{
+		disconnect( );
+		return;
+	}
+	// 궁금: 메인 스레드인데, 프레임 드랍 없을까?
+	::SleepEx( 1000, TRUE );
 }
 
 void scene::online::Online::receive( )
@@ -378,7 +392,7 @@ void scene::online::Online::receive( )
 	ReceivingError = 0;
 	if ( nullptr == ThreadToReceive )
 	{
-		ThreadToReceive = std::make_unique<std::thread>( &Receive, std::ref(*SocketToServer) );
+		ThreadToReceive = std::make_unique<std::thread>(&Receive, std::ref(*SocketToServer));
 	}
 	else
 	{

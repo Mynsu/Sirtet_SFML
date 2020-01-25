@@ -60,7 +60,7 @@ namespace ui
 		bool mHasTetriminoCollidedOnClient, mHasTetriminoCollidedOnServer,
 			mIsForThisPlayer, mHasCurrentTetrimino;
 		uint8_t mCountDownSec, mNumOfLinesCleared;
-		uint32_t mFrameCount_input, mFrameCount_clearingVFX, mFrameCount_reset, mFPS_;
+		uint32_t mFrameCount_input, mFrameCount_clearingVFX, mFPS_;
 		uint32_t mTempoMs;
 		enum class State
 		{

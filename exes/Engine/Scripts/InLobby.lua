@@ -1,6 +1,5 @@
 BackgroundColor = 0x29cdb5fa
 BoxAnimationSpeed = 3
-BoxAnimationSpeed2 = 11
 Nickname = { fontSize = 30, colorForMine = 0xffa500ff, colorForOthers = 0xffffffff } -- NOTE: Font is the same as that of GuideTextLabel.
 Box = { x = 0, y = 100, 
 		width = 800, height = 400,

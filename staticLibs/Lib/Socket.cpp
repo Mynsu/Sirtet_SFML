@@ -46,7 +46,7 @@ Socket::Socket( const::Socket::Type type )
 #endif
 			break;
 	}
-	ZeroMemory( mReceivingBuffer, sizeof( mReceivingBuffer ) );
+	ZeroMemory( mReceivingBuffer, sizeof(mReceivingBuffer) );
 }
 
 Socket::~Socket( )
@@ -163,7 +163,7 @@ int Socket::disconnectOverlapped( )
 	return result;
 }
 
-int Socket::receiveOverlapped( )
+int Socket::receiveOverlapped( LPWSAOVERLAPPED_COMPLETION_ROUTINE lpRoutine )
 {
 	if ( true == mIsReceiving_ )
 	{
@@ -175,7 +175,7 @@ int Socket::receiveOverlapped( )
 	b.buf = mReceivingBuffer;
 	DWORD ignored = 0;
 	LPOVERLAPPED lpOverlapped = makeWork(IOType::RECEIVE);
-	int result = WSARecv( mhSocket, &b, 1, NULL, &ignored, lpOverlapped, NULL );
+	int result = WSARecv( mhSocket, &b, 1, NULL, &ignored, lpOverlapped, lpRoutine );
 	const int err = WSAGetLastError();
 	if ( -1 == result &&
 		WSA_IO_PENDING == err )
@@ -191,19 +191,22 @@ int Socket::receiveBlocking( )
 	return ::recv(mhSocket, mReceivingBuffer, (int)RCV_BUF_SIZ, 0 );
 }
 
-int Socket::sendOverlapped( char* const data, const size_t size )
+int Socket::sendOverlapped( char* const data, const size_t size,
+						   LPWSAOVERLAPPED_COMPLETION_ROUTINE lpRoutine )
 {
 	WSABUF b;
 	b.buf = data;
 	b.len = (ULONG)size;
 	LPOVERLAPPED lpOverlapped = makeWork( IOType::SEND );
-	int result = ::WSASend( mhSocket, &b, 1, NULL, 0, lpOverlapped, NULL );
+	int result = ::WSASend( mhSocket, &b, 1, NULL, 0, lpOverlapped, lpRoutine );
 	const int err = WSAGetLastError();
-	if ( -1 == result &&
-		WSA_IO_PENDING == err )
+	if ( 0 == result ||
+		-1 == result && WSA_IO_PENDING == err ||
+		-1 == result && WSA_IO_INCOMPLETE == err )
 	{
 		result = -2;
 	}
+	// Exception
 	else
 	{
 		for ( Work& w : mWorks )
@@ -219,20 +222,22 @@ int Socket::sendOverlapped( char* const data, const size_t size )
 	return result;
 }
 
-int Socket::sendOverlapped( Packet& packet )
+int Socket::sendOverlapped( Packet& packet, LPWSAOVERLAPPED_COMPLETION_ROUTINE lpRoutine )
 {
 	std::string& data = packet.data();
 	WSABUF b;
 	b.buf = data.data();
 	b.len = (ULONG)data.size();
 	LPOVERLAPPED lpOverlapped = makeWork(IOType::SEND);
-	int result = ::WSASend( mhSocket, &b, 1, NULL, 0, lpOverlapped, NULL );
+	int result = ::WSASend( mhSocket, &b, 1, NULL, 0, lpOverlapped, lpRoutine );
 	const int err = WSAGetLastError();
-	if ( -1 == result &&
-		WSA_IO_PENDING == err )
+	if ( 0 == result ||
+		-1 == result &&	WSA_IO_PENDING == err ||
+		-1 == result && WSA_IO_INCOMPLETE == err )
 	{
 		result = -2;
 	}
+	// Exception
 	else
 	{
 		for ( Work& w : mWorks )

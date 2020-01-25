@@ -146,16 +146,21 @@ void scene::inPlay::Assertion::loadResources( )
 	// 2 seconds after created,
 	if ( 2*mFPS_ == mFrameCount )
 	{
-		retVal = ::scene::inPlay::ID::OFF;
+		retVal = ::scene::inPlay::ID::UNDO;
 	}
 	else
 	{
-		for ( auto it = eventQueue.cbegin(); eventQueue.cend() != it; ++it )
+		for ( auto it = eventQueue.cbegin(); eventQueue.cend() != it; )
 		{
-			if ( sf::Event::KeyPressed == it->type && sf::Keyboard::Escape == it->key.code )
+			if ( sf::Event::KeyPressed == it->type &&
+				sf::Keyboard::Escape == it->key.code )
 			{
 				it = eventQueue.erase( it );
-				retVal = ::scene::inPlay::ID::MAIN_MENU;
+				retVal = ::scene::inPlay::ID::EXIT;
+			}
+			else
+			{
+				++it;
 			}
 		}
 	}

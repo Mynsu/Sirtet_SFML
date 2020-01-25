@@ -7,7 +7,6 @@
 const uint8_t FALLING_DOWN_SPEED = 3;
 const uint32_t INPUT_DELAY_MS = 40;
 const uint32_t ASYNC_TOLERANCE_MS = 2500;
-const uint32_t ALL_OVER_DURATION = 120;
  
 ui::PlayView::PlayView( )
 	: mWindow_( nullptr ), mNet( nullptr ), mVfxCombo( *mWindow_), mNextTetriminoPanel( *mWindow_ )
@@ -18,7 +17,7 @@ ui::PlayView::PlayView( sf::RenderWindow& window, ::scene::online::Online& net, 
 	: mHasTetriminoCollidedOnClient( false ), mHasTetriminoCollidedOnServer( false ),
 	mIsForThisPlayer( isPlayable ), mHasCurrentTetrimino( false ),
 	mCountDownSec( 3 ), mNumOfLinesCleared( 0 ),
-	mFrameCount_input( 0 ), mFrameCount_clearingVFX( 0 ), mFrameCount_reset( 0 ),
+	mFrameCount_input( 0 ), mFrameCount_clearingVFX( 0 ),
 	mState_( PlayView::State::WAITING_OR_OVER ),
 	mTempoMs( 1000 ),
 	mWindow_( &window ), mNet( &net ),
@@ -57,6 +56,12 @@ void ui::PlayView::setCountdownSpriteDimension( const sf::Vector2f origin,
 
 void ui::PlayView::start()
 {
+	mHasCurrentTetrimino = false;
+	while ( false == mNextTetriminos.empty() )
+	{
+		mNextTetriminos.pop( );
+	}
+	mTempoMs = 1000;
 	resetAlarm( AlarmIndex::COUNT_DOWN );
 	mCountDownSec = 3;
 	mState_ = PlayView::State::ON_START;
@@ -64,13 +69,6 @@ void ui::PlayView::start()
 
 void ui::PlayView::update( std::list<sf::Event>& eventQueue )
 {
-	if ( ALL_OVER_DURATION < mFrameCount_reset )
-	{
-		mStage.clear( );
-		mFrameCount_reset = 0;
-		return;
-	}
-	
 	if ( PlayView::State::ON_START == mState_ &&
 		0 == mCountDownSec &&
 		true == mHasCurrentTetrimino )
@@ -349,22 +347,8 @@ void ui::PlayView::setNumOfLinesCleared( const uint8_t numOfLinesCleared )
 
 void ui::PlayView::gameOver()
 {
-	if ( PlayView::State::WAITING_OR_OVER == mState_ )
-	{
-		// Triggering
-		mFrameCount_reset = 1;
-	}
-	else
-	{
-		mState_ = PlayView::State::WAITING_OR_OVER;
-		mHasCurrentTetrimino = false;
-		while ( false == mNextTetriminos.empty() )
-		{
-			mNextTetriminos.pop( );
-		}
-		mNextTetriminoPanel.clearTetrimino( );
-		mTempoMs = 1000;
-	}
+	mState_ = PlayView::State::WAITING_OR_OVER;
+	mNextTetriminoPanel.clearTetrimino( );
 }
 
 void ui::PlayView::draw()
@@ -400,11 +384,6 @@ void ui::PlayView::draw()
 												countdownSpriteSize_.x, countdownSpriteSize_.y) );
 			mWindow_->draw( mSprite );
 		}
-	}
-	
-	if ( 0 != mFrameCount_reset )
-	{
-		++mFrameCount_reset;
 	}
 }
 

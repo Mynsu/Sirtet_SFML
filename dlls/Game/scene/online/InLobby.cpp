@@ -14,7 +14,7 @@ std::mutex MutexForGuideText, MutexForMovingPoints;
 bool scene::online::InLobby::IsInstantiated = false;
 
 scene::online::InLobby::InLobby( sf::RenderWindow& window, ::scene::online::Online& net )
-	: mIsReceiving( false ), mHasJoined( false ),
+	: mIsReceiving( false ), mHasJoined( false ), mIsLoading( true ),
 	mGuideTextIndex( 0 ), mEnteringRoom( 0 ),
 	mFrameCount_update( 30 ), mFrameCount_requestDelay( 0 ),
 	mWindow_( window ), mNet( net ),
@@ -57,17 +57,16 @@ void scene::online::InLobby::loadResources( )
 {
 	uint32_t backgroundColor = 0x29cdb5fa; // Cyan
 	mDrawingInfo.usersBoxAnimationSpeed = 3.f;
-	float boxAnimationSpeed2 = 4.f;
 	uint32_t myNicknameColor = 0xffa500ff;
 	mDrawingInfo.nicknameFontSize = 30;
 	mDrawingInfo.nicknameColor = 0xffffffff;
-	sf::Vector2f boxPosition( 0.f, 100.f );
-	sf::Vector2f boxSize( 800.f, 400.f );
-	mDrawingInfo.usersBoxColor0 = sf::Color(0x000000ff);
-	mDrawingInfo.usersBoxOutlineThickness0 = 5.f;
-	mDrawingInfo.usersBoxOutlineThickness1 = 11.f;
-	mDrawingInfo.usersBoxOutlineColor0 = sf::Color(0x0000007f);
-	mDrawingInfo.usersBoxOutlineColor1 = sf::Color(0x3f3f3f7f);
+	mDrawingInfo.usersBoxPosition = ::math::Vector<2>(0.f, 100.f);
+	mDrawingInfo.usersBoxSize = ::math::Vector<2>(800.f, 400.f);
+	mDrawingInfo.usersBoxColor = sf::Color(0x000000ff);
+	mDrawingInfo.usersBoxOutlineThickness = 5.f;
+	mDrawingInfo.roomOutlineThickness = 11.f;
+	mDrawingInfo.usersBoxOutlineColor = sf::Color(0x0000007f);
+	mDrawingInfo.roomOutlineColor = sf::Color(0x3f3f3f7f);
 	mDrawingInfo.movingPoints.clear( );
 	mDrawingInfo.movingPoints.emplace_back( 0.f, 490.f );
 	mDrawingInfo.movingPoints.emplace_back( 0.f, 110.f );
@@ -91,10 +90,9 @@ void scene::online::InLobby::loadResources( )
 	sf::Vector2f subWindowInputTextFieldRelativePosition( 20.f, 60.f );
 	uint32_t subWindowInputTextFieldFontSize = 25;
 	uint32_t subWindowInputTextFieldFontColor = 0xffffffff;
-	float cellSize = 30.f;
-	mDrawingInfo.usersBoxColor1 = sf::Color(0x3f3f3fff);
-	mDrawingInfo.distanceUsersBox0 = 0.f;
-	mDrawingInfo.distanceUsersBox = 0.f;
+	mDrawingInfo.roomColor = sf::Color(0x3f3f3fff);
+	mDrawingInfo.totalDistanceUsersBoxToRoom = 0.f;
+	mDrawingInfo.remainingDistanceUsersBoxToRoom = 0.f;
 
 	lua_State* lua = luaL_newstate( );
 	std::string scriptPathNName( "Scripts/InLobby.lua" );
@@ -133,25 +131,6 @@ void scene::online::InLobby::loadResources( )
 		if ( LUA_TNUMBER == type )
 		{
 			mDrawingInfo.usersBoxAnimationSpeed = (float)lua_tonumber(lua, TOP_IDX);
-		}
-		else if ( LUA_TNIL == type )
-		{
-			gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-												   varName, scriptPathNName );
-		}
-		else
-		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-													 varName, scriptPathNName );
-		}
-		lua_pop( lua, 1 );
-
-		varName = "BoxAnimationSpeed2";
-		lua_getglobal( lua, varName.data() );
-		type = lua_type(lua, TOP_IDX);
-		if ( LUA_TNUMBER == type )
-		{
-			boxAnimationSpeed2 = (float)lua_tonumber(lua, TOP_IDX);
 		}
 		else if ( LUA_TNIL == type )
 		{
@@ -251,7 +230,8 @@ void scene::online::InLobby::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				boxPosition.x = (float)lua_tonumber(lua, TOP_IDX);
+				mDrawingInfo.usersBoxPosition.mComponents[0] =
+					(float)lua_tonumber(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -271,7 +251,8 @@ void scene::online::InLobby::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				boxPosition.y = (float)lua_tonumber(lua, TOP_IDX);
+				mDrawingInfo.usersBoxPosition.mComponents[1] =
+					(float)lua_tonumber(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -291,7 +272,8 @@ void scene::online::InLobby::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				boxSize.x = (float)lua_tonumber(lua, TOP_IDX);
+				mDrawingInfo.usersBoxSize.mComponents[0] =
+					(float)lua_tonumber(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -311,7 +293,8 @@ void scene::online::InLobby::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				boxSize.y = (float)lua_tonumber(lua, TOP_IDX);
+				mDrawingInfo.usersBoxSize.mComponents[1] =
+					(float)lua_tonumber(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -331,7 +314,7 @@ void scene::online::InLobby::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				mDrawingInfo.usersBoxColor0 = sf::Color((uint32_t)lua_tointeger(lua, TOP_IDX));
+				mDrawingInfo.usersBoxColor = sf::Color((uint32_t)lua_tointeger(lua, TOP_IDX));
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -351,7 +334,7 @@ void scene::online::InLobby::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				mDrawingInfo.usersBoxOutlineThickness0 = (float)lua_tonumber(lua, TOP_IDX);
+				mDrawingInfo.usersBoxOutlineThickness = (float)lua_tonumber(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -371,7 +354,7 @@ void scene::online::InLobby::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				mDrawingInfo.usersBoxOutlineColor0 = sf::Color((uint32_t)lua_tointeger(lua, TOP_IDX));
+				mDrawingInfo.usersBoxOutlineColor = sf::Color((uint32_t)lua_tointeger(lua, TOP_IDX));
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -928,11 +911,23 @@ void scene::online::InLobby::loadResources( )
 		__debugbreak( );
 	}
 #endif
-	mUsersBox.setPosition( boxPosition );
-	mUsersBox.setSize( boxSize );
-	mUsersBox.setFillColor( mDrawingInfo.usersBoxColor0 );
-	mUsersBox.setOutlineThickness( mDrawingInfo.usersBoxOutlineThickness0 );
-	mUsersBox.setOutlineColor( mDrawingInfo.usersBoxOutlineColor0 );
+	::math::Vector<2> dir( mDrawingInfo.usersBoxPosition-
+								::math::Vector<2>(0.f, 0.f) );
+	mDrawingInfo.accelerationUsersBoxLeftTop0 = dir.normalize();
+	mDrawingInfo.accelerationUsersBoxLeftTop0 *=
+		mDrawingInfo.usersBoxAnimationSpeed;
+	mUsersBox.setSize( sf::Vector2f(mWindow_.getSize()) );
+	float mag = dir.magnitude();
+	float ratio =	mDrawingInfo.usersBoxAnimationSpeed/mag;
+	const sf::Vector2f winSize( mWindow_.getSize() );
+	dir = mDrawingInfo.usersBoxSize - ::math::Vector<2>(winSize.x, winSize.y);
+	mag = dir.magnitude();
+	float animationSpeed = mag*ratio;
+	mDrawingInfo.relativeAccelerationUserBoxRightBottom0 = dir.normalize();
+	mDrawingInfo.relativeAccelerationUserBoxRightBottom0 *= animationSpeed;
+	mUsersBox.setFillColor( mDrawingInfo.usersBoxColor );
+	mUsersBox.setOutlineThickness( mDrawingInfo.usersBoxOutlineThickness );
+	mUsersBox.setOutlineColor( mDrawingInfo.usersBoxOutlineColor );
 	mFont.loadFromFile( guideTextFont );
 	mGuideTextLabel.setPosition( guideTextLabelPosition );
 	mGuideTextLabel.setFillColor( sf::Color(guideTextColor) );
@@ -957,8 +952,9 @@ void scene::online::InLobby::loadResources( )
 	//
 	////
 
-	mDrawingInfo.destination_boxLeftTop.mComponents[0] = 100.f;
-	mDrawingInfo.destination_boxLeftTop.mComponents[1] = 0.f;
+	mDrawingInfo.roomPosition.mComponents[0] = 100.f;
+	mDrawingInfo.roomPosition.mComponents[1] = 0.f;
+	float cellSize = 30.f;
 	scriptPathNName = "Scripts/InRoom.lua";
 	lua = luaL_newstate( );
 	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
@@ -986,7 +982,7 @@ void scene::online::InLobby::loadResources( )
 			int type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				mDrawingInfo.destination_boxLeftTop.mComponents[0] = (float)lua_tonumber(lua, TOP_IDX);
+				mDrawingInfo.roomPosition.mComponents[0] = (float)lua_tonumber(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -1006,7 +1002,7 @@ void scene::online::InLobby::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				mDrawingInfo.destination_boxLeftTop.mComponents[1] = (float)lua_tonumber(lua, TOP_IDX);
+				mDrawingInfo.roomPosition.mComponents[1] = (float)lua_tonumber(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -1046,7 +1042,7 @@ void scene::online::InLobby::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				mDrawingInfo.usersBoxColor1 = sf::Color((uint32_t)lua_tointeger(lua, TOP_IDX));
+				mDrawingInfo.roomColor = sf::Color((uint32_t)lua_tointeger(lua, TOP_IDX));
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -1065,7 +1061,7 @@ void scene::online::InLobby::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				mDrawingInfo.usersBoxOutlineThickness1 = (float)lua_tonumber(lua, TOP_IDX);
+				mDrawingInfo.roomOutlineThickness = (float)lua_tonumber(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -1085,7 +1081,7 @@ void scene::online::InLobby::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				mDrawingInfo.usersBoxOutlineColor1 = sf::Color((uint32_t)lua_tointeger(lua, TOP_IDX));
+				mDrawingInfo.roomOutlineColor = sf::Color((uint32_t)lua_tointeger(lua, TOP_IDX));
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -1103,16 +1099,22 @@ void scene::online::InLobby::loadResources( )
 	}
 	lua_pop( lua, 1 );
 	lua_close( lua );
-	math::Vector<2> dir( mDrawingInfo.destination_boxLeftTop.mComponents[0]-boxPosition.x,
-						mDrawingInfo.destination_boxLeftTop.mComponents[1]-boxPosition.y );
-	mDrawingInfo.acceleration_boxLeftTop = dir.normalize()*mDrawingInfo.usersBoxAnimationSpeed;
-	mDrawingInfo.distanceUsersBox0 = dir.magnitude();
-	mDrawingInfo.distanceUsersBox = mDrawingInfo.distanceUsersBox0;
-	mDrawingInfo.relativeDestination_boxRightBottom =
-		math::Vector<2>(::model::stage::GRID_WIDTH*cellSize, ::model::stage::GRID_HEIGHT*cellSize);
-	const sf::Vector2f size( mUsersBox.getSize() );
-	dir = mDrawingInfo.relativeDestination_boxRightBottom - math::Vector<2>(size.x, size.y);
-	mDrawingInfo.relativeAcceleration_boxRightBottom = dir.normalize()*boxAnimationSpeed2;
+
+	dir = mDrawingInfo.roomPosition - mDrawingInfo.usersBoxPosition;
+	mDrawingInfo.accelerationUsersBoxLeftTopToRoom = dir.normalize();
+	mDrawingInfo.accelerationUsersBoxLeftTopToRoom *= mDrawingInfo.usersBoxAnimationSpeed;
+	mDrawingInfo.totalDistanceUsersBoxToRoom = dir.magnitude();
+	mDrawingInfo.remainingDistanceUsersBoxToRoom =
+		mDrawingInfo.totalDistanceUsersBoxToRoom;
+	ratio = mDrawingInfo.usersBoxAnimationSpeed/mDrawingInfo.totalDistanceUsersBoxToRoom;
+	mDrawingInfo.roomSize =
+		math::Vector<2>(::model::stage::GRID_WIDTH*cellSize,
+						::model::stage::GRID_HEIGHT*cellSize);
+	dir = mDrawingInfo.roomSize - mDrawingInfo.usersBoxSize;
+	mag = dir.magnitude();
+	animationSpeed = ratio*mag;
+	mDrawingInfo.relativeAccelerationUsersBoxRightBottomToRoom = dir.normalize();
+	mDrawingInfo.relativeAccelerationUsersBoxRightBottomToRoom *= animationSpeed;
 }
 
 ::scene::online::ID scene::online::InLobby::update( std::list<sf::Event>& eventQueue )
@@ -1292,43 +1294,60 @@ void scene::online::InLobby::loadResources( )
 void scene::online::InLobby::draw( )
 {
 	mWindow_.draw( mBackground );
-	if ( 0 != mEnteringRoom )
+	if ( true == mIsLoading )
+	{
+		sf::Vector2f pos( mUsersBox.getPosition() );
+		pos.x += mDrawingInfo.accelerationUsersBoxLeftTop0.mComponents[0];
+		pos.y += mDrawingInfo.accelerationUsersBoxLeftTop0.mComponents[1];
+		mUsersBox.setPosition( pos );
+		const ::math::Vector<2> v( mDrawingInfo.usersBoxPosition.mComponents[0]-pos.x,
+								  mDrawingInfo.usersBoxPosition.mComponents[1]-pos.y );
+		if ( v.magnitude() < ERROR_RANGE )
+		{
+			mIsLoading = false;
+		}
+		sf::Vector2f size( mUsersBox.getSize() );
+		size.x += mDrawingInfo.relativeAccelerationUserBoxRightBottom0.mComponents[0];
+		size.y += mDrawingInfo.relativeAccelerationUserBoxRightBottom0.mComponents[1];
+		mUsersBox.setSize( size );
+	}
+	else if ( 0 != mEnteringRoom )
 	{
 		sf::Vector2f boxPos( mUsersBox.getPosition() );
-		boxPos += sf::Vector2f(mDrawingInfo.acceleration_boxLeftTop.mComponents[0],
-							   mDrawingInfo.acceleration_boxLeftTop.mComponents[1]);
+		boxPos += sf::Vector2f(mDrawingInfo.accelerationUsersBoxLeftTopToRoom.mComponents[0],
+							   mDrawingInfo.accelerationUsersBoxLeftTopToRoom.mComponents[1]);
 		mUsersBox.setPosition( boxPos );
-		mDrawingInfo.distanceUsersBox -= mDrawingInfo.usersBoxAnimationSpeed;
+		mDrawingInfo.remainingDistanceUsersBoxToRoom -= mDrawingInfo.usersBoxAnimationSpeed;
 		sf::Vector2f boxSize( mUsersBox.getSize() );
-		boxSize += sf::Vector2f(mDrawingInfo.relativeAcceleration_boxRightBottom.mComponents[0],
-								mDrawingInfo.relativeAcceleration_boxRightBottom.mComponents[1]);
+		boxSize += sf::Vector2f(mDrawingInfo.relativeAccelerationUsersBoxRightBottomToRoom.mComponents[0],
+								mDrawingInfo.relativeAccelerationUsersBoxRightBottomToRoom.mComponents[1]);
 		mUsersBox.setSize( boxSize );
-		const float ratio = mDrawingInfo.distanceUsersBox/mDrawingInfo.distanceUsersBox0;
+		const float ratio = mDrawingInfo.remainingDistanceUsersBoxToRoom/mDrawingInfo.totalDistanceUsersBoxToRoom;
 		const float ratioComplement = 1.f-ratio;
 		sf::Color blended;
-		blended.r = (uint8_t)(mDrawingInfo.usersBoxColor0.r*ratio +
-							  mDrawingInfo.usersBoxColor1.r*ratioComplement);
-		blended.g = (uint8_t)(mDrawingInfo.usersBoxColor0.g*ratio +
-							  mDrawingInfo.usersBoxColor1.g*ratioComplement);
-		blended.b = (uint8_t)(mDrawingInfo.usersBoxColor0.b*ratio +
-							  mDrawingInfo.usersBoxColor1.b*ratioComplement);
-		blended.a = (uint8_t)(mDrawingInfo.usersBoxColor0.a*ratio +
-							  mDrawingInfo.usersBoxColor1.a*ratioComplement);
+		blended.r = (uint8_t)(mDrawingInfo.usersBoxColor.r*ratio +
+							  mDrawingInfo.roomColor.r*ratioComplement);
+		blended.g = (uint8_t)(mDrawingInfo.usersBoxColor.g*ratio +
+							  mDrawingInfo.roomColor.g*ratioComplement);
+		blended.b = (uint8_t)(mDrawingInfo.usersBoxColor.b*ratio +
+							  mDrawingInfo.roomColor.b*ratioComplement);
+		blended.a = (uint8_t)(mDrawingInfo.usersBoxColor.a*ratio +
+							  mDrawingInfo.roomColor.a*ratioComplement);
 		mUsersBox.setFillColor( blended );
 		const float linearInterpolatedThickness =
-			mDrawingInfo.usersBoxOutlineThickness0*ratio + mDrawingInfo.usersBoxOutlineThickness1*(1.f-ratio);
+			mDrawingInfo.usersBoxOutlineThickness*ratio + mDrawingInfo.roomOutlineThickness*(1.f-ratio);
 		mUsersBox.setOutlineThickness( linearInterpolatedThickness );
-		blended.r = (uint8_t)(mDrawingInfo.usersBoxOutlineColor0.r*ratio +
-							  mDrawingInfo.usersBoxOutlineColor1.r*ratioComplement);
-		blended.g = (uint8_t)(mDrawingInfo.usersBoxOutlineColor0.g*ratio +
-							  mDrawingInfo.usersBoxOutlineColor1.g*ratioComplement);
-		blended.b = (uint8_t)(mDrawingInfo.usersBoxOutlineColor0.b*ratio +
-							  mDrawingInfo.usersBoxOutlineColor1.b*ratioComplement);
-		blended.a = (uint8_t)(mDrawingInfo.usersBoxOutlineColor0.a*ratio +
-							  mDrawingInfo.usersBoxOutlineColor1.a*ratioComplement);
+		blended.r = (uint8_t)(mDrawingInfo.usersBoxOutlineColor.r*ratio +
+							  mDrawingInfo.roomOutlineColor.r*ratioComplement);
+		blended.g = (uint8_t)(mDrawingInfo.usersBoxOutlineColor.g*ratio +
+							  mDrawingInfo.roomOutlineColor.g*ratioComplement);
+		blended.b = (uint8_t)(mDrawingInfo.usersBoxOutlineColor.b*ratio +
+							  mDrawingInfo.roomOutlineColor.b*ratioComplement);
+		blended.a = (uint8_t)(mDrawingInfo.usersBoxOutlineColor.a*ratio +
+							  mDrawingInfo.roomOutlineColor.a*ratioComplement);
 		mUsersBox.setOutlineColor( blended );
-		math::Vector<2> v( mDrawingInfo.destination_boxLeftTop.mComponents[0]-boxPos.x,
-						  mDrawingInfo.destination_boxLeftTop.mComponents[1]-boxPos.y );
+		const math::Vector<2> v( mDrawingInfo.roomPosition.mComponents[0]-boxPos.x,
+						  mDrawingInfo.roomPosition.mComponents[1]-boxPos.y );
 		const float mag = v.magnitude();
 		if ( mag < ERROR_RANGE )
 		{

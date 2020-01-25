@@ -27,16 +27,18 @@ namespace scene::online
 		struct
 		{
 			uint32_t nicknameFontSize, nicknameColor;
-			float distanceUsersBox0, distanceUsersBox,
+			float totalDistanceUsersBoxToRoom, remainingDistanceUsersBoxToRoom,
 				usersBoxAnimationSpeed,
-				usersBoxOutlineThickness0, usersBoxOutlineThickness1;
-			sf::Color usersBoxColor0, usersBoxColor1,
-				usersBoxOutlineColor0, usersBoxOutlineColor1;
-			math::Vector<2> acceleration_boxLeftTop, destination_boxLeftTop,
-				relativeAcceleration_boxRightBottom, relativeDestination_boxRightBottom;
+				usersBoxOutlineThickness, roomOutlineThickness;
+			sf::Color usersBoxColor, roomColor,
+				usersBoxOutlineColor, roomOutlineColor;
+			math::Vector<2> accelerationUsersBoxLeftTop0, usersBoxPosition,
+				relativeAccelerationUserBoxRightBottom0, usersBoxSize,
+				accelerationUsersBoxLeftTopToRoom, roomPosition,
+				relativeAccelerationUsersBoxRightBottomToRoom, roomSize;
 			std::vector<sf::Vector2f> movingPoints;
 		} mDrawingInfo;
-		bool mIsReceiving, mHasJoined;
+		bool mIsReceiving, mHasJoined, mIsLoading;
 		int8_t mEnteringRoom;
 		uint8_t mGuideTextIndex;
 		uint32_t mFrameCount_update, mFrameCount_requestDelay;

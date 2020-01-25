@@ -6,8 +6,8 @@ namespace scene::inPlay
 {
 	enum class ID
 	{
-		MAIN_MENU = -3,
-		OFF = -2,
+		EXIT = -3,
+		UNDO = -2,
 		AS_IS = -1,
 		READY,
 		PLAYING,
