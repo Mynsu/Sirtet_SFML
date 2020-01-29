@@ -352,8 +352,8 @@ bool model::Tetrimino::hasCollidedWith( const ::model::stage::Grid& grid ) const
 	bool retVal = false;
 	for ( int8_t i = ::model::tetrimino::LOCAL_SPACE_SIZE-1; i != -1; --i )
 	{
-		if ( mPossibleRotations[static_cast<int>(mRotationID)]
-			& (0x1u<<(::model::tetrimino::LOCAL_SPACE_SIZE-i-1u)) )
+		if ( mPossibleRotations[(int)mRotationID]
+			& (0x1<<(::model::tetrimino::LOCAL_SPACE_SIZE-i-1)) )
 		{
 			// Coordinate transformation
 			const int8_t x = mPosition.x + i%model::tetrimino::BLOCKS_A_TETRIMINO;

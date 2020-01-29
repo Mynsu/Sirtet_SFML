@@ -52,6 +52,7 @@ private:
 		}
 		return elapsed;
 	}
+	bool mHasTempoChanged_;
 	ClientIndex mHostIndex;
 	Room::State mState;
 	std::vector<ClientIndex> mCandidateParticipants;

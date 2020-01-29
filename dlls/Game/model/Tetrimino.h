@@ -48,7 +48,7 @@ namespace model
 		static Tetrimino Spawn( ::model::tetrimino::Type type = ::model::tetrimino::Type::NONE_MAX );
 		
 		// Returns true when colliding with the floor or another tetrimino.
-		inline bool moveDown( const ::model::stage::Grid& grid, const uint8_t diff = 1u )
+		inline bool moveDown( const ::model::stage::Grid& grid, const uint8_t diff = 1 )
 		{
 			ASSERT_TRUE( diff < ::model::stage::GRID_HEIGHT );
 			mPosition.y += diff;
@@ -59,7 +59,7 @@ namespace model
 			}
 			return retVal;
 		}
-		inline void tryMoveLeft( const ::model::stage::Grid& grid, const uint8_t diff = 1u )
+		inline void tryMoveLeft( const ::model::stage::Grid& grid, const uint8_t diff = 1 )
 		{
 			ASSERT_TRUE( diff < ::model::stage::GRID_WIDTH );
 			Tetrimino afterMove( *this );

@@ -1,7 +1,5 @@
 ﻿#include "pch.h"
 
-//TODO: DDoS 방지, RDBMS로 ID와 Password 매칭, callback.
-
 using Ticket = HashedKey;
 using ClientIndex = uint32_t;
 const uint32_t CAPACITY = 100;

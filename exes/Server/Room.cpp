@@ -4,14 +4,15 @@
 
 const uint32_t UPDATE_USER_LIST_INTERVAL_MS = 1000;
 const uint32_t COUNTDOWN_MS = 3000;
+const int32_t TEMPO_DIFF_MS = -20;
 
 Room::Room( )
-	: mHostIndex( -1 ), mState( State::WAITING )
+	: mHasTempoChanged_( false ), mHostIndex( -1 ), mState( State::WAITING )
 {
 }
 
 Room::Room( const ClientIndex hostIndex )
-	: mHostIndex( hostIndex ), mState( State::WAITING )
+	: mHasTempoChanged_( false ), mHostIndex( hostIndex ), mState( State::WAITING )
 {
 	mParticipants.reserve( PARTICIPANT_CAPACITY );
 	mCandidateParticipants.emplace_back( hostIndex );
@@ -59,15 +60,15 @@ int Room::leave( const ClientIndex index )
 	}
 	else if ( index == mHostIndex )
 	{
-		if ( true == wasCandidateParticipant )
+		if ( const auto it = mParticipants.cbegin();
+			mParticipants.cend() != it )
 		{
-			const auto it = mCandidateParticipants.cbegin();
-			mHostIndex = *it;
+			mHostIndex = it->first;
 		}
 		else
 		{
-			const auto it = mParticipants.cbegin();
-			mHostIndex = it->first;
+			const auto it2 = mCandidateParticipants.cbegin();
+			mHostIndex = *it2;
 		}
 	}
 	return (true==isThereSomeoneRemains)? 1: 0;
@@ -125,6 +126,13 @@ std::vector<ClientIndex> Room::update( std::vector<Client>& clients )
 					// Exception
 					std::cerr << "FAIL: Client " << pair.first << "'s time out.\n";
 					failedIndices.emplace_back( pair.first );
+				}
+				if ( Playing::UpdateResult::LINE_CLEARED == pair.second.updateResult() )
+				{
+					const uint8_t numOfLinesCleared = pair.second.numOfLinesCleared();
+					const int32_t tempoDiff = TEMPO_DIFF_MS*numOfLinesCleared;
+					pair.second.setRelativeTempoMs( tempoDiff );
+					mHasTempoChanged_ = true;
 				}
 			}
 			break;
@@ -278,12 +286,10 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 						const Playing& playing = pair.second;
 						const ::model::tetrimino::Type nextTetType = playing.nextTetriminoType();
 						std::string serializedStage( playing.serializedStage() );
-						uint32_t tempoMs = playing.tempoMs();
 						const uint8_t numOfLinesCleared = playing.numOfLinesCleared();
 						Packet packet;
 						packet.pack( TAG_MY_NEXT_TETRIMINO, (uint8_t)nextTetType );
 						packet.pack( TAG_MY_STAGE, serializedStage, false );
-						packet.pack( TAG_MY_TEMPO_MS, tempoMs );
 						Socket& socket = clients[pair.first].socket();
 						if ( -1 == socket.sendOverlapped(packet) )
 						{
@@ -326,7 +332,20 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 #endif
 						break;
 				}
+				if ( true == mHasTempoChanged_ )
+				{
+					const uint32_t tempoMs = pair.second.tempoMs();
+					Packet packet;
+					packet.pack( TAG_MY_TEMPO_MS, tempoMs );
+					Socket& socket = clients[pair.first].socket();
+					if ( -1 == socket.sendOverlapped(packet) )
+					{
+						std::cerr << "WARNING: Failed to send to Client " << pair.first << ".\n";
+						failedIndices.emplace_back( pair.first );
+					}
+				}
 			}
+			mHasTempoChanged_ = false;
 			Packet packet;
 			if ( false == currentTetriminosMove.empty() )
 			{

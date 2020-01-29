@@ -64,7 +64,7 @@ namespace scene::online
 			std::string countdownSpritePathNName;
 		} mDrawingInfo;
 		static bool IsInstantiated;
-		bool mIsReceiving, mAsHost, mIsPlaying,
+		bool mIsReceiving, mAsHost, mIsStartingGuideVisible,
 			mIsMouseOverStartButton_, mIsStartButtonPressed_;
 		sf::RenderWindow& mWindow_;
 		uint32_t mFrameCount_rotationInterval;

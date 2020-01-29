@@ -13,8 +13,8 @@ const uint32_t LINE_CLEAR_CHK_INTERVAL_MS = 100;
 								   sf::Drawable& shapeOrSprite,
 								   const std::unique_ptr<::scene::inPlay::IScene>& overlappedScene )
 	: mNumOfLinesCleared( 0u ),
-	mFrameCount_fallDown( 0u ), mFrameCount_clearingInterval_( 0u ),
-	mFrameCount_clearingVfx_( 0u ), mFrameCount_gameOver( 0u ),
+	mFrameCount_fallDown( 0u ), mFrameCount_clearingInterval_( 0 ),
+	mFrameCount_clearingVfx_( 0 ), mFrameCount_gameOver( 0 ),
 	mTempo( 0.75f ),
 	mWindow_( window ), mBackgroundRect_( (sf::RectangleShape&)shapeOrSprite ),
 	mOverlappedScene_( overlappedScene ),

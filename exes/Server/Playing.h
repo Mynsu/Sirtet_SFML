@@ -29,6 +29,7 @@ public:
 	sf::Vector2<int8_t> currentTetriminoPosition( ) const;
 	::model::tetrimino::Type nextTetriminoType( ) const;
 	uint32_t tempoMs( ) const;
+	void setRelativeTempoMs( const int32_t milliseconds );
 	std::string serializedStage( ) const;
 	uint8_t numOfLinesCleared( ) const;
 	bool isGameOver() const;

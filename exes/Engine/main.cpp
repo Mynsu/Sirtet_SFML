@@ -2,14 +2,8 @@
 #include "../VaultKeyList.h"
 #include "ServiceLocator.h"
 
-//TODO: 개발 완료 후 auto 쓰는 대신 타입 명시, 브랜치에 커밋
-//TODO: https://tetris.fandom.com/wiki/Tetris_Guideline
-//TODO: 암호화, 몇몇 it은 pair로, 패키징, 함수의 전제, 이상한 걸 받았을 경우 중단하지 말고 어떻게든 살라기, 루아 파기,
-//		루아는 일단 파일을 메모리로 불러올까? SFML은?, 식별자를 후치형용으로, inline 함수 정리, 주석 최소화, __debugbreak() 최소화
-//		사운드, mFrameCount 대체, 책갈피 검토, 리터럴u 제거, 공유기 펀치, 방장 튕기면 방 터지나?, 프로파일링,
-
 const uint32_t DEFAULT_FOREGROUND_FPS = 60;
-const uint32_t DEFAULT_BACKGROUND_FPS = 30;
+const uint32_t DEFAULT_BACKGROUND_FPS = 60;
 
 int main( int argc, char* argv[] )
 {

@@ -14,7 +14,7 @@ bool scene::online::InRoom::IsInstantiated = false;
 
 scene::online::InRoom::InRoom( sf::RenderWindow& window, Online& net, const bool asHost )
 	: mIsReceiving( false ), mAsHost( asHost ),
-	mIsPlaying( false ),
+	mIsStartingGuideVisible( true ),
 	mIsMouseOverStartButton_( false ), mIsStartButtonPressed_( false ),
 	mFrameCount_rotationInterval( 0 ), mAlarms{ Clock::time_point::max() },
 	mWindow_( window ), mNet( net ),
@@ -1126,7 +1126,6 @@ void scene::online::InRoom::loadResources( )
 															   -1) );
 			std::nullopt != userList )
 		{
-			// TODO: FPS 떨어뜨리면 시간차 누적돼서 서버에서 킥한다.
 			// 궁금: 왜 8KB 버퍼가 다 차지?
 			const std::string& _userList( userList.value() );
 			const uint32_t userListSize = (uint32_t)_userList.size();
@@ -1213,193 +1212,190 @@ void scene::online::InRoom::loadResources( )
 													 mDrawingInfo.countdownSpriteClipSize );
 			}
 		}
+
 		if ( const std::optional<std::string> response( mNet.getByTag(TAGGED_REQ_LEAVE_ROOM,
 																	  Online::Option::RETURN_TAG_ATTACHED,
-																	  NULL) );
+																	  0) );
 			std::nullopt != response )
 		{
 			nextSceneID = ::scene::online::ID::IN_LOBBY;
 			return nextSceneID;
 		}
-		if ( false == mIsPlaying )
+
+		if ( std::optional<std::string> response( mNet.getByTag(TAGGED_REQ_GET_READY,
+																Online::Option::RETURN_TAG_ATTACHED,
+																0) );
+			std::nullopt != response )
 		{
-			if ( std::optional<std::string> response( mNet.getByTag(TAGGED_REQ_GET_READY,
-																   Online::Option::RETURN_TAG_ATTACHED,
-																   NULL) );
-				std::nullopt != response )
+			for ( auto& it : mParticipants )
 			{
-				for ( auto& it : mParticipants )
+				it.second.playView.start( );
+			}
+			mIsStartingGuideVisible = false;
+		}
+
+		if ( std::optional<std::string> newCurrentTetriminos( mNet.getByTag(TAG_NEW_CURRENT_TETRIMINOS,
+																		Online::Option::DEFAULT,
+																			-1) );
+			std::nullopt != newCurrentTetriminos )
+		{
+			const std::string& newCurTetTypes = newCurrentTetriminos.value();
+			const char* ptr = newCurTetTypes.data();
+			const uint32_t totalSize = (uint32_t)newCurTetTypes.size();
+			uint32_t curPos = 0;
+			while ( totalSize != curPos )
+			{
+				const HashedKey nicknameHashed = ::ntohl(*(HashedKey*)&ptr[curPos]);
+				curPos += sizeof(HashedKey);
+				const ::model::tetrimino::Type newType = (::model::tetrimino::Type)ptr[curPos++];
+				if ( const auto it = mParticipants.find(nicknameHashed);
+					mParticipants.end() != it )
 				{
-					it.second.playView.start( );
+					it->second.playView.setNewCurrentTetrimino( newType );
 				}
-				mIsPlaying = true;
+#ifdef _DEBUG
+				else
+				{
+					__debugbreak( );
+				}
+#endif
 			}
 		}
-		else
+
+		if ( std::optional<std::string> currentTetriminosMove( mNet.getByTag(TAG_CURRENT_TETRIMINOS_MOVE,
+																				Online::Option::DEFAULT,
+																				-1) );
+			std::nullopt != currentTetriminosMove )
 		{
-			if ( std::optional<std::string> newCurrentTetriminos( mNet.getByTag(TAG_NEW_CURRENT_TETRIMINOS,
-																			Online::Option::DEFAULT,
-																			   -1) );
-				std::nullopt != newCurrentTetriminos )
+			std::string& curTetsMove = currentTetriminosMove.value();
+			const char* ptr = curTetsMove.data();
+			const uint32_t totalSize = (uint32_t)curTetsMove.size();
+			uint32_t curPos = 0;
+			while ( totalSize != curPos )
 			{
-				const std::string& newCurTetTypes = newCurrentTetriminos.value();
-				const char* ptr = newCurTetTypes.data();
-				const uint32_t totalSize = (uint32_t)newCurTetTypes.size();
-				uint32_t curPos = 0;
-				while ( totalSize != curPos )
+				const HashedKey nicknameHashed = ::ntohl(*(HashedKey*)&ptr[curPos]);
+				if ( nicknameHashed == myNicknameHashed )
 				{
-					const HashedKey nicknameHashed = ::ntohl(*(HashedKey*)&ptr[curPos]);
-					curPos += sizeof(HashedKey);
-					const ::model::tetrimino::Type newType = (::model::tetrimino::Type)ptr[curPos++];
-					if ( const auto it = mParticipants.find(nicknameHashed);
-						mParticipants.end() != it )
-					{
-						it->second.playView.setNewCurrentTetrimino( newType );
-					}
-#ifdef _DEBUG
-					else
-					{
-						__debugbreak( );
-					}
-#endif
+					curPos += sizeof(HashedKey) + sizeof(uint8_t) + sizeof(sf::Vector2<int8_t>);
+					continue;
 				}
+				curPos += sizeof(HashedKey);
+				const ::model::tetrimino::Rotation rotID = (::model::tetrimino::Rotation)ptr[curPos];
+				++curPos;
+				const sf::Vector2<int8_t> pos( *(sf::Vector2<int8_t>*)&ptr[curPos] );
+				curPos += sizeof(sf::Vector2<int8_t>);
+				if ( const auto it = mParticipants.find(nicknameHashed);
+					mParticipants.end() != it )
+				{
+					::model::Tetrimino& tet = it->second.playView.currentTetrimino();
+					tet.move( rotID, pos );
+				}
+#ifdef _DEBUG
+				else
+				{
+					__debugbreak( );
+				}
+#endif
 			}
+		}
 
-			if ( std::optional<std::string> currentTetriminosMove( mNet.getByTag(TAG_CURRENT_TETRIMINOS_MOVE,
-																				 Online::Option::DEFAULT,
-																				 -1) );
-				std::nullopt != currentTetriminosMove )
+		if ( std::optional<std::string> stages( mNet.getByTag(TAG_STAGES,
+															Online::Option::DEFAULT,
+																-1) );
+			std::nullopt != stages )
+		{
+			std::string& _stages = stages.value();
+			const char* ptr = _stages.data();
+			const uint32_t totalSize = (uint32_t)_stages.size();
+			uint32_t curPos = 0;
+			while ( totalSize != curPos )
 			{
-				std::string& curTetsMove = currentTetriminosMove.value();
-				const char* ptr = curTetsMove.data();
-				const uint32_t totalSize = (uint32_t)curTetsMove.size();
-				uint32_t curPos = 0;
-				while ( totalSize != curPos )
+				const HashedKey nicknameHashed = ::ntohl(*(HashedKey*)&ptr[curPos]);
+				if ( nicknameHashed == myNicknameHashed )
 				{
-					const HashedKey nicknameHashed = ::ntohl(*(HashedKey*)&ptr[curPos]);
-					if ( nicknameHashed == myNicknameHashed )
-					{
-						curPos += sizeof(HashedKey) + sizeof(uint8_t) + sizeof(sf::Vector2<int8_t>);
-						continue;
-					}
-					curPos += sizeof(HashedKey);
-					const ::model::tetrimino::Rotation rotID = (::model::tetrimino::Rotation)ptr[curPos];
-					++curPos;
-					const sf::Vector2<int8_t> pos( *(sf::Vector2<int8_t>*)&ptr[curPos] );
-					curPos += sizeof(sf::Vector2<int8_t>);
-					if ( const auto it = mParticipants.find(nicknameHashed);
-						mParticipants.end() != it )
-					{
-						::model::Tetrimino& tet = it->second.playView.currentTetrimino();
-						tet.move( rotID, pos );
-					}
-#ifdef _DEBUG
-					else
-					{
-						__debugbreak( );
-					}
-#endif
+					curPos += sizeof(HashedKey) + sizeof(::model::stage::Grid);
+					continue;
 				}
+				curPos += sizeof(HashedKey);
+				const ::model::stage::Grid* const grid = (::model::stage::Grid*)&ptr[curPos];
+				curPos += sizeof(::model::stage::Grid);
+				if ( const auto it = mParticipants.find(nicknameHashed);
+					mParticipants.end() != it )
+				{
+					::model::Stage& stage =	it->second.playView.stage();
+					stage.deserialize( grid );
+				}
+#ifdef _DEBUG
+				else
+				{
+					__debugbreak( );
+				}
+#endif
 			}
+		}
 
-			if ( std::optional<std::string> stages( mNet.getByTag(TAG_STAGES,
+		if ( std::optional<std::string> numsOfLinesCleared( mNet.getByTag(TAG_NUMS_OF_LINES_CLEARED,
+																		Online::Option::DEFAULT,
+																			-1) );
+			std::nullopt != numsOfLinesCleared )
+		{
+			std::string& _numsOfLinesCleared = numsOfLinesCleared.value();
+			const char* ptr = _numsOfLinesCleared.data();
+			const uint32_t totalSize = (uint32_t)_numsOfLinesCleared.size();
+			uint32_t curPos = 0;
+			while ( totalSize != curPos )
+			{
+				const HashedKey nicknameHashed = ::ntohl(*(HashedKey*)&ptr[curPos]);
+				curPos += sizeof(HashedKey);
+				const uint8_t numOfLinesCleared = (uint8_t)ptr[curPos];
+				++curPos;
+				if ( const auto it = mParticipants.find(nicknameHashed);
+					mParticipants.end() != it )
+				{
+					it->second.playView.setNumOfLinesCleared( numOfLinesCleared );
+				}
+#ifdef _DEBUG
+				else
+				{
+					__debugbreak( );
+				}
+#endif
+			}
+		}
+
+		if ( std::optional<std::string> gamesOver( mNet.getByTag(TAG_GAMES_OVER,
 																Online::Option::DEFAULT,
-																  -1) );
-				std::nullopt != stages )
+																	-1) );
+			std::nullopt != gamesOver )
+		{
+			std::string& _gamesOver = gamesOver.value();
+			const uint32_t totalSize = (uint32_t)_gamesOver.size();
+			const char* ptr = _gamesOver.data();
+			uint32_t curPos = 0;
+			while ( totalSize != curPos )
 			{
-				std::string& _stages = stages.value();
-				const char* ptr = _stages.data();
-				const uint32_t totalSize = (uint32_t)_stages.size();
-				uint32_t curPos = 0;
-				while ( totalSize != curPos )
+				const HashedKey nicknameHashed = ::ntohl(*(HashedKey*)&ptr[curPos]);
+				curPos += sizeof(HashedKey);
+				if ( const auto it = mParticipants.find(nicknameHashed);
+					mParticipants.end() != it )
 				{
-					const HashedKey nicknameHashed = ::ntohl(*(HashedKey*)&ptr[curPos]);
-					if ( nicknameHashed == myNicknameHashed )
-					{
-						curPos += sizeof(HashedKey) + sizeof(::model::stage::Grid);
-						continue;
-					}
-					curPos += sizeof(HashedKey);
-					const ::model::stage::Grid* const grid = (::model::stage::Grid*)&ptr[curPos];
-					curPos += sizeof(::model::stage::Grid);
-					if ( const auto it = mParticipants.find(nicknameHashed);
-						mParticipants.end() != it )
-					{
-						::model::Stage& stage =	it->second.playView.stage();
-						stage.deserialize( grid );
-					}
-#ifdef _DEBUG
-					else
-					{
-						__debugbreak( );
-					}
-#endif
+					it->second.playView.gameOver();
 				}
-			}
-
-			if ( std::optional<std::string> numsOfLinesCleared( mNet.getByTag(TAG_NUMS_OF_LINES_CLEARED,
-																			Online::Option::DEFAULT,
-																			  -1) );
-				std::nullopt != numsOfLinesCleared )
-			{
-				std::string& _numsOfLinesCleared = numsOfLinesCleared.value();
-				const char* ptr = _numsOfLinesCleared.data();
-				const uint32_t totalSize = (uint32_t)_numsOfLinesCleared.size();
-				uint32_t curPos = 0;
-				while ( totalSize != curPos )
+#ifdef _DEBUG
+				else
 				{
-					const HashedKey nicknameHashed = ::ntohl(*(HashedKey*)&ptr[curPos]);
-					curPos += sizeof(HashedKey);
-					const uint8_t numOfLinesCleared = (uint8_t)ptr[curPos];
-					++curPos;
-					if ( const auto it = mParticipants.find(nicknameHashed);
-						mParticipants.end() != it )
-					{
-						it->second.playView.setNumOfLinesCleared( numOfLinesCleared );
-					}
-#ifdef _DEBUG
-					else
-					{
-						__debugbreak( );
-					}
-#endif
+					__debugbreak( );
 				}
-			}
-
-			if ( std::optional<std::string> gamesOver( mNet.getByTag(TAG_GAMES_OVER,
-																	Online::Option::DEFAULT,
-																	 -1) );
-				std::nullopt != gamesOver )
-			{
-				std::string& _gamesOver = gamesOver.value();
-				const uint32_t totalSize = (uint32_t)_gamesOver.size();
-				const char* ptr = _gamesOver.data();
-				uint32_t curPos = 0;
-				while ( totalSize != curPos )
-				{
-					const HashedKey nicknameHashed = ::ntohl(*(HashedKey*)&ptr[curPos]);
-					curPos += sizeof(HashedKey);
-					if ( const auto it = mParticipants.find(nicknameHashed);
-						mParticipants.end() != it )
-					{
-						it->second.playView.gameOver();
-					}
-#ifdef _DEBUG
-					else
-					{
-						__debugbreak( );
-					}
 #endif
-				}
 			}
+		}
 
-			if ( std::optional<std::string> allOver( mNet.getByTag(TAG_ALL_OVER,
-																	Online::Option::RETURN_TAG_ATTACHED,
-																	NULL) );
-					 std::nullopt != allOver )
-			{
-				mAlarms[(int)AlarmIndex::ALL_OVER_FREEZE] = Clock::now();
-			}
+		if ( std::optional<std::string> allOver( mNet.getByTag(TAG_ALL_OVER,
+																Online::Option::RETURN_TAG_ATTACHED,
+																0) );
+					std::nullopt != allOver )
+		{
+			mAlarms[(int)AlarmIndex::ALL_OVER_FREEZE] = Clock::now();
 		}
 	}
 
@@ -1420,7 +1416,7 @@ void scene::online::InRoom::loadResources( )
 		{
 			pair.second.playView.stage().clear();
 		}
-		mIsPlaying = false;
+		mIsStartingGuideVisible = true;
 	}
 
 	if ( nullptr != mOverlappedScene )
@@ -1450,7 +1446,7 @@ void scene::online::InRoom::loadResources( )
 		if ( sf::Event::EventType::MouseButtonPressed == it->type &&
 			sf::Mouse::Button::Left == it->mouseButton.button &&
 			true == mIsMouseOverStartButton_ &&
-			false == mIsPlaying )
+			true == mIsStartingGuideVisible )
 		{
 			mIsStartButtonPressed_ = true;
 			it = eventQueue.erase(it);
@@ -1458,7 +1454,7 @@ void scene::online::InRoom::loadResources( )
 		else if ( sf::Event::EventType::MouseButtonReleased == it->type &&
 			sf::Mouse::Button::Left == it->mouseButton.button &&
 			true == mIsMouseOverStartButton_ &&
-			false == mIsPlaying )
+			true == mIsStartingGuideVisible )
 		{
 			startGame( );
 			mIsStartButtonPressed_ = false;
@@ -1539,7 +1535,7 @@ void scene::online::InRoom::draw( )
 			}
 		}
 		it->second.playView.draw();
-		if ( false == mIsPlaying )
+		if ( true == mIsStartingGuideVisible )
 		{
 			mWindow_.draw( mStartingGuide );
 		}

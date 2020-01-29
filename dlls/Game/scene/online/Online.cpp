@@ -423,9 +423,10 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag,
 														   const Online::Option option,
 														   uint32_t bodySize ) const
 {
+	ASSERT_FALSE( 0 == bodySize && Online::Option::RETURN_TAG_ATTACHED != option );
 	ASSERT_TRUE( 0 < ReceivingResult );
 
-	const char* const rcvBuf = SocketToServer->receivingBuffer( );
+	const char* const rcvBuf = SocketToServer->receivingBuffer();
 	std::string_view strView( rcvBuf, ReceivingResult );
 	uint32_t beginPos = -1;
 	if ( option & Option::FIND_END_TO_BEGIN )
@@ -453,26 +454,64 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag,
 			beginPos = (uint32_t)pos;
 		}
 	}
-
 	if ( -1 == beginPos )
 	{
 		return std::nullopt;
 	}
 
-	uint32_t dataPos = beginPos + (uint32_t)std::strlen(tag);
+	std::string _retVal;
+	const uint32_t tagLen = (uint32_t)std::strlen(tag);
+	if ( option & Option::RETURN_TAG_ATTACHED )
+	{
+		_retVal.append( &rcvBuf[beginPos], tagLen );
+		if ( 0 == bodySize )
+		{
+			return _retVal;
+		}
+	}
+	uint32_t& curPos = beginPos;
+	curPos += tagLen;
 	if ( -1 == bodySize )
 	{
-		bodySize = ::ntohl(*(uint32_t*)&rcvBuf[dataPos]);
-		dataPos += sizeof(uint32_t);
+		const uint32_t sight = Socket::RCV_BUF_SIZ - curPos;
+		if ( sizeof(uint32_t) <= sight )
+		{
+			bodySize = ::ntohl(*(uint32_t*)&rcvBuf[curPos]);
+		}
+		else
+		{
+			char _bodySize[sizeof(uint32_t)] = { '\0' };
+			if ( 0 != sight )
+			{
+				::memcpy_s( _bodySize, sizeof(uint32_t), &rcvBuf[curPos], sight );
+			}
+			if ( -1 == ::recv(SocketToServer->handle(), &_bodySize[sight], sizeof(uint32_t)-sight, 0) )
+			{
+				__debugbreak();
+			}
+			bodySize = ::ntohl(*(uint32_t*)_bodySize);
+		}
+		curPos += sizeof(uint32_t);
 	}
-	const uint32_t endPos = dataPos + bodySize;
-
-	if ( !(option & Option::RETURN_TAG_ATTACHED) )
+	const uint32_t sight = Socket::RCV_BUF_SIZ - curPos;
+	if ( bodySize <= sight )
 	{
-		beginPos = dataPos;
+		_retVal.append( &rcvBuf[curPos], bodySize );
+	}
+	else
+	{
+		char* tmpRcvBuf = new char[bodySize+1];
+		ZeroMemory( tmpRcvBuf, bodySize+1 );
+		if ( -1 == ::recv(SocketToServer->handle(), tmpRcvBuf, bodySize, 0) )
+		{
+			__debugbreak();
+		}
+		_retVal.append( tmpRcvBuf, bodySize );
+		delete tmpRcvBuf;
+		tmpRcvBuf = nullptr;
 	}
 
-	return std::string( &strView[beginPos], endPos-beginPos );
+	return _retVal;
 }
 
 void scene::online::Online::setMyNickname( std::string& myNickname )

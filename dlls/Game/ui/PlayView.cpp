@@ -21,7 +21,7 @@ ui::PlayView::PlayView( sf::RenderWindow& window, ::scene::online::Online& net, 
 	mState_( PlayView::State::WAITING_OR_OVER ),
 	mTempoMs( 1000 ),
 	mWindow_( &window ), mNet( &net ),
-	mAlarms{ Clock::now() },
+	mAlarms{ Clock::time_point::max() },
 	mTexture_countdown( std::make_unique<sf::Texture>() ), mVfxCombo( window ),
 	mStage( window ), mNextTetriminoPanel( window )
 {
@@ -285,9 +285,8 @@ void ui::PlayView::update( std::list<sf::Event>& eventQueue )
 			}
 		}
 
-		const Clock::time_point now = Clock::now();
 		if ( false == mHasTetriminoCollidedOnClient &&
-			alarmAfter(mTempoMs, AlarmIndex::TETRIMINO_DOWN) )
+			true == alarmAfter(mTempoMs, AlarmIndex::TETRIMINO_DOWN) )
 		{
 			//TODO: 시간이 많이 지난 만큼 더 이동할까?
 			mHasTetriminoCollidedOnClient = mCurrentTetrimino.moveDown( mStage.cgrid() );

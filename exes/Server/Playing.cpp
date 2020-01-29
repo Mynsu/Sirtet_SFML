@@ -3,7 +3,6 @@
 
 const uint8_t FALLING_DOWN_INTERVAL_MS = 17;
 const uint8_t FALLING_DOWN_SPEED = 3;
-const uint8_t TEMPO_DECREASE_MS = 20;
 const uint32_t ASYNC_TOLERANCE_MS = 2500;
 const uint32_t GAME_OVER_CHK_INTERVAL_MS = 250;
 
@@ -12,7 +11,8 @@ Playing::Playing()
 	mHasTetriminoCollidedOnServer( false ),
 	mIsGameOver_( false ),
 	mNumOfLinesCleared( 0 ), mTempoMs( 1000 ),
-	mMoveToUpdate( ::model::tetrimino::Move::NONE_MAX )
+	mMoveToUpdate( ::model::tetrimino::Move::NONE_MAX ),
+	mAlarms{ Clock::now() }
 {	
 	for ( auto& it : mAlarms )
 	{
@@ -144,7 +144,6 @@ bool Playing::update( )
 		if ( 0 != numOfLinesCleared )
 		{
 			mNumOfLinesCleared = numOfLinesCleared;
-			mTempoMs -= TEMPO_DECREASE_MS;
 			mUpdateResult = Playing::UpdateResult::LINE_CLEARED;
 		}
 	}
@@ -152,7 +151,7 @@ bool Playing::update( )
 	if ( true == mStage.isOver() )
 	{
 #ifdef _DEBUG
-		std::cout << " Game is over.\n";
+		std::cout << "Game is over.\n";
 #endif
 		mStage.blackout( );
 		mUpdateResult = Playing::UpdateResult::GAME_OVER;
@@ -204,6 +203,11 @@ sf::Vector2<int8_t> Playing::currentTetriminoPosition() const
 uint32_t Playing::tempoMs() const
 {
 	return mTempoMs;
+}
+
+void Playing::setRelativeTempoMs( const int32_t milliseconds )
+{
+	mTempoMs += milliseconds;
 }
 
 std::string Playing::serializedStage( ) const
