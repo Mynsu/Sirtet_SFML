@@ -354,7 +354,7 @@ void scene::online::Waiting::loadResources( )
 	mTextLabels[2].setPosition( label2Position );
 }
 
-::scene::online::ID scene::online::Waiting::update( std::list<sf::Event>& eventQueue )
+::scene::online::ID scene::online::Waiting::update( std::vector<sf::Event>& eventQueue )
 {
 	::scene::online::ID retVal = ::scene::online::ID::AS_IS;
 	switch ( mState )

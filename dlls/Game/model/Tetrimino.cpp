@@ -209,9 +209,9 @@ void model::Tetrimino::LoadResources( )
 	if ( ::model::tetrimino::Type::NONE_MAX == type )
 	{
 		std::random_device rD;
-		std::minstd_rand rE( rD() ); //±Ã±Ý: ·¹ÆÛ·±½º ¹®¼­ º¸ÀÚ.
+		std::minstd_rand rE( rD() );
 		std::uniform_int_distribution shapeDist( (int)::model::tetrimino::Type::I,
-												 (int)::model::tetrimino::Type::NONE_MAX-1 ); //±Ã±Ý: ¾êµµ.
+												 (int)::model::tetrimino::Type::NONE_MAX-1 );
 		type = (::model::tetrimino::Type)shapeDist(rE);
 	}
 	::model::Tetrimino retVal;

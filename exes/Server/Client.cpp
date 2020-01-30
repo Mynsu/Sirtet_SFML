@@ -24,7 +24,7 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 	}
 #endif
 	std::vector<ClientIndex> failedIndices;
-	const char* const rcvBuf = mSocket.receivingBuffer( );
+	const char* const rcvBuf = mSocket.receivingBuffer();
 	switch( mState )
 	{
 		case Client::State::IN_LOBBY:
@@ -38,13 +38,6 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 					{
 						case Request::UPDATE_USER_LIST:
 						{
-							if ( -1 == mSocket.receiveOverlapped() )
-							{
-								std::cerr << "Failed to receive from Client " <<
-									mIndex << ".\n";
-								failedIndices.emplace_back( mIndex );
-								return failedIndices;
-							}
 #ifdef _DEBUG
 							std::cout << "Client " << mIndex <<
 								" wants the list of users in the lobby.\n";
@@ -75,13 +68,6 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 						}
 						case Request::CREATE_ROOM:
 						{
-							if ( -1 == mSocket.receiveOverlapped() )
-							{
-								std::cerr << "Failed to receive from Client " <<
-									mIndex << ".\n";
-								failedIndices.emplace_back( mIndex );
-								return failedIndices;
-							}
 							// NOTE: Not checking out ...
 							// ... if there's memory space enough to create one more room.
 #ifdef _DEBUG
@@ -122,13 +108,6 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 								*(uint32_t*)&rcvBuf[TAGGED_REQ_JOIN_ROOM_LEN]);
 							const std::string targetNickname(
 								&rcvBuf[TAGGED_REQ_JOIN_ROOM_LEN+sizeof(uint32_t)], size );
-							if ( -1 == mSocket.receiveOverlapped() )
-							{
-								std::cerr << "Failed to receive from Client " <<
-									mIndex << ".\n";
-								failedIndices.emplace_back( mIndex );
-								return failedIndices;
-							}
 							ResultJoiningRoom res = ResultJoiningRoom::NONE;
 							if ( targetNickname == mNickname )
 							{
@@ -209,13 +188,6 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 						default:
 							std::cerr << "WARNING: Client "
 								<< mIndex << " sent an undefined request.\n";
-							if ( -1 == mSocket.receiveOverlapped() )
-							{
-								std::cerr << "Failed to receive from Client " <<
-									mIndex << ".\n";
-								failedIndices.emplace_back( mIndex );
-								return failedIndices;
-							}
 							break;
 					}
 				}
@@ -224,13 +196,14 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 				{
 					std::cerr << "WARNING: Client "
 						<< mIndex << " sent data without a valid tag.\n";
-					if ( -1 == mSocket.receiveOverlapped() )
-					{
-						std::cerr << "Failed to receive from Client " <<
-							mIndex << ".\n";
-						failedIndices.emplace_back( mIndex );
-						return failedIndices;
-					}
+				}
+
+				if ( -1 == mSocket.receiveOverlapped() )
+				{
+					std::cerr << "Failed to receive from Client " <<
+						mIndex << ".\n";
+					failedIndices.emplace_back( mIndex );
+					return failedIndices;
 				}
 			}
 			break;
@@ -244,13 +217,6 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 					switch ( req )
 					{
 						case Request::START_GAME:
-							if ( -1 == mSocket.receiveOverlapped() )
-							{
-								std::cerr << "Failed to receive from Client " <<
-									mIndex << ".\n";
-								failedIndices.emplace_back( mIndex );
-								return failedIndices;
-							}
 							if ( auto it = rooms.find(mRoomID);
 								rooms.end() != it &&
 								it->second.hostIndex() == mIndex )
@@ -269,13 +235,6 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 #endif
 							break;
 						case Request::LEAVE_ROOM:
-							if ( -1 == mSocket.receiveOverlapped() )
-							{
-								std::cerr << "Failed to receive from Client " <<
-									mIndex << ".\n";
-								failedIndices.emplace_back( mIndex );
-								return failedIndices;
-							}
 							if ( auto it = rooms.find(mRoomID);
 								it != rooms.end() )
 							{
@@ -316,13 +275,6 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 						default:
 							std::cerr << "WARNING: Client "
 								<< mIndex << " sent an undefined request.\n";
-							if ( -1 == mSocket.receiveOverlapped() )
-							{
-								std::cerr << "Failed to receive from Client " <<
-									mIndex << ".\n";
-								failedIndices.emplace_back( mIndex );
-								return failedIndices;
-							}
 							break;
 					}
 				}
@@ -331,13 +283,14 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 				{
 					std::cerr << "WARNING: Client "
 						<< mIndex << " sent data without a valid tag.\n";
-					if ( -1 == mSocket.receiveOverlapped() )
-					{
-						std::cerr << "Failed to receive from Client " <<
-							mIndex << ".\n";
-						failedIndices.emplace_back( mIndex );
-						return failedIndices;
-					}
+				}
+
+				if ( -1 == mSocket.receiveOverlapped() )
+				{
+					std::cerr << "Failed to receive from Client " <<
+						mIndex << ".\n";
+					failedIndices.emplace_back( mIndex );
+					return failedIndices;
 				}
 			}
 			break;
@@ -354,13 +307,6 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 					switch ( req )
 					{
 						case Request::LEAVE_ROOM:
-							if ( -1 == mSocket.receiveOverlapped() )
-							{
-								std::cerr << "Failed to receive from Client " <<
-									mIndex << ".\n";
-								failedIndices.emplace_back( mIndex );
-								return failedIndices;
-							}
 							if ( auto it = rooms.find(mRoomID);
 								it != rooms.end() )
 							{
@@ -401,16 +347,8 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 						default:
 							std::cerr << "WARNING: Client "
 								<< mIndex << " sent an undefined request.\n";
-							if ( -1 == mSocket.receiveOverlapped() )
-							{
-								std::cerr << "Failed to receive from Client " <<
-									mIndex << ".\n";
-								failedIndices.emplace_back( mIndex );
-								return failedIndices;
-							}
 							break;
 					}
-					break;
 				}
 
 				if ( const size_t pos = strView.find(TAG_MY_TETRIMINO_MOVE);
@@ -449,19 +387,19 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 #endif
 				}
 
+				// Exception
+				if ( true == hasException )
+				{
+					std::cerr << "WARNING: Client "
+					<< mIndex << " sent data without a valid tag.\n";
+				}
+
 				if ( -1 == mSocket.receiveOverlapped() )
 				{
 					std::cerr << "Failed to receive from Client " <<
 						mIndex << ".\n";
 					failedIndices.emplace_back( mIndex );
 					return failedIndices;
-				}
-				
-				// Exception
-				if ( true == hasException )
-				{
-					std::cerr << "WARNING: Client "
-					<< mIndex << " sent data without a valid tag.\n";
 				}
 			}
 			break;

@@ -96,10 +96,8 @@ private:
 	SOCKET_HANDLE mhSocket;
 	LPFN_ACCEPTEX AcceptEx;
 	LPFN_DISCONNECTEX DisconnectEx;
-	//궁금: heap보다 stack?
 	std::forward_list<Work> mWorks;
 	std::string mExtraReceivingBuffer;
-	// 궁금: 수신을 쭉 걸어두기 위해서 수신버퍼를 Work에 둬야 하나?
 	char mReceivingBuffer[ RCV_BUF_SIZ ];
 };
 

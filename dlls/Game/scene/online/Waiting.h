@@ -12,7 +12,7 @@ namespace scene::online
 		~Waiting( );
 		
 		void loadResources( ) override;
-		::scene::online::ID update( std::list<sf::Event>& eventQueue ) override;
+		::scene::online::ID update( std::vector<sf::Event>& eventQueue ) override;
 		void draw( ) override;
 	private:
 		enum class State

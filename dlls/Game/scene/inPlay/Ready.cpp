@@ -162,7 +162,7 @@ void ::scene::inPlay::Ready::loadResources( )
 	mSprite.setPosition( (sf::Vector2f(mWindow_.getSize())-mSpriteClipSize_)*0.5f );
 }
 
-::scene::inPlay::ID scene::inPlay::Ready::update( std::list< sf::Event >& )
+::scene::inPlay::ID scene::inPlay::Ready::update( std::vector<sf::Event>& )
 {
 	// NOTE: moved into 'draw( ).'
 	///--mFrameCount;

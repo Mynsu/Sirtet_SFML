@@ -15,7 +15,7 @@ namespace scene::inPlay
 		~Playing( ) = default;
 
 		void loadResources( ) override;
-		::scene::inPlay::ID update( std::list< sf::Event >& eventQueue ) override;
+		::scene::inPlay::ID update( std::vector<sf::Event>& eventQueue ) override;
 		void draw( ) override;
 	private:
 		void reloadTetrimino( );

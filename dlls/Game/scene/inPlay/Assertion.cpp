@@ -140,7 +140,7 @@ void scene::inPlay::Assertion::loadResources( )
 	mGuideTextLabel.setPosition( sf::Vector2f(mWindow_.getSize())*0.5f );
 }
 
-::scene::inPlay::ID scene::inPlay::Assertion::update( std::list<sf::Event>& eventQueue )
+::scene::inPlay::ID scene::inPlay::Assertion::update( std::vector<sf::Event>& eventQueue )
 {
 	::scene::inPlay::ID retVal = ::scene::inPlay::ID::AS_IS;
 	// 2 seconds after created,
@@ -155,7 +155,7 @@ void scene::inPlay::Assertion::loadResources( )
 			if ( sf::Event::KeyPressed == it->type &&
 				sf::Keyboard::Escape == it->key.code )
 			{
-				it = eventQueue.erase( it );
+				it = eventQueue.erase(it);
 				retVal = ::scene::inPlay::ID::EXIT;
 			}
 			else

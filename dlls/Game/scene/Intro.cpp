@@ -102,7 +102,7 @@ void scene::Intro::loadResources( )
 	}
 }
 
-::scene::ID scene::Intro::update( std::list<sf::Event>& )
+::scene::ID scene::Intro::update( std::vector<sf::Event>& )
 {
 	//
 	// Scene Transition

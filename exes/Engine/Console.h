@@ -15,7 +15,7 @@ public:
 	bool isVisible( ) const override;
 	
 	void draw( sf::RenderWindow& window );
-	void handleEvent( std::list< sf::Event >& eventQueue );
+	void handleEvent( std::vector<sf::Event>& eventQueue );
 	inline void processCommand( const std::string& commandLine )
 	{
 		mCommand.processCommand( commandLine );

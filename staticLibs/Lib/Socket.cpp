@@ -275,7 +275,6 @@ IOType Socket::completedIO( const LPOVERLAPPED lpOverlapped,
 	{
 		if ( lpOverlapped == &w.overlapped )
 		{
-
 			retVal = w.ioType;
 			w.reset( );
 			//

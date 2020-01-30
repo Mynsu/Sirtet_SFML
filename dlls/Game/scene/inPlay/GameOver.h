@@ -11,7 +11,7 @@ namespace scene::inPlay
 		~GameOver( ) = default;
 
 		void loadResources( ) override;
-		::scene::inPlay::ID update( std::list< sf::Event >& ignored_eventQueue ) override;
+		::scene::inPlay::ID update( std::vector<sf::Event>& eventQueue ) override;
 		void draw( ) override;
 	private:
 		const uint8_t TARGET_ALPHA;

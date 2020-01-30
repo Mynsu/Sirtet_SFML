@@ -286,7 +286,7 @@ void Console::draw( sf::RenderWindow& window )
 	}
 }
 
-void Console::handleEvent( std::list<sf::Event>& eventQueue )
+void Console::handleEvent( std::vector<sf::Event>& eventQueue )
 {
 	for ( auto it = eventQueue.cbegin(); eventQueue.cend() != it; )
 	{
@@ -294,7 +294,7 @@ void Console::handleEvent( std::list<sf::Event>& eventQueue )
 		{
 			// Toggling console on/off
 			mVisible = !mVisible;
-			eventQueue.erase( it );
+			eventQueue.erase(it);
 			return;
 		}
 
@@ -341,7 +341,7 @@ void Console::handleEvent( std::list<sf::Event>& eventQueue )
 						break;
 				}
 			}
-			it = eventQueue.erase( it );
+			it = eventQueue.erase(it);
 		}
 		else
 		{

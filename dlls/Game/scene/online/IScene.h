@@ -23,7 +23,7 @@ namespace scene::online
 
 		virtual void loadResources( ) = 0;
 		// Returns 0 when doing nothing, -1 when coming back, 1 when going on.
-		virtual ::scene::online::ID update( std::list< sf::Event >& eventQueue ) = 0;
+		virtual ::scene::online::ID update( std::vector<sf::Event>& eventQueue ) = 0;
 		virtual void draw( ) = 0;
 	protected:
 		IScene( ) = default;

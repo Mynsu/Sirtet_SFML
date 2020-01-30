@@ -331,6 +331,8 @@ int main( )
 			////
 			else if ( MAIN_SERVER_INDEX == (ClientIndex)ev.lpCompletionKey )
 			{
+				const IOType cmpl = socketToMainServer->completedIO(ev.lpOverlapped,
+																	ev.dwNumberOfBytesTransferred);
 				if ( 0 == ev.dwNumberOfBytesTransferred )
 				{
 					if ( 1 == statusAgainstMainServer[Status::WAITING_FOR_IDENTIFICATION] )
@@ -352,8 +354,6 @@ int main( )
 				}
 				else
 				{
-					const IOType cmpl = socketToMainServer->completedIO(ev.lpOverlapped,
-																		ev.dwNumberOfBytesTransferred);
 					switch ( cmpl )
 					{
 						case IOType::RECEIVE:

@@ -32,7 +32,7 @@ void scene::inPlay::InPlay::loadResources( )
 	mCurrentScene->loadResources( );
 }
 
-::scene::ID scene::inPlay::InPlay::update( std::list<sf::Event>& eventQueue )
+::scene::ID scene::inPlay::InPlay::update( std::vector<sf::Event>& eventQueue )
 {
 	::scene::ID retVal = ::scene::ID::AS_IS;
 	const ::scene::inPlay::ID nextScene = mCurrentScene->update( eventQueue );

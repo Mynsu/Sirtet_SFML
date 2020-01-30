@@ -77,7 +77,7 @@ namespace ui
 		{
 			mIsActive = false;
 		}
-		bool processEvent( std::list<sf::Event>& eventQueue );
+		bool processEvent( std::vector<sf::Event>& eventQueue );
 		const std::string& inputString( )
 		{
 			return mInputTextFieldString;

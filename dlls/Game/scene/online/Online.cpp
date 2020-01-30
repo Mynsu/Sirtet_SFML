@@ -219,7 +219,7 @@ void ::scene::online::Online::loadResources( )
 	mSprite.setPosition( (sf::Vector2f(mWindow_.getSize())-mSpriteClipSize_)*0.5f );
 }
 
-::scene::ID scene::online::Online::update( std::list<sf::Event>& eventQueue )
+::scene::ID scene::online::Online::update( std::vector<sf::Event>& eventQueue )
 {
 	::scene::ID retVal = ::scene::ID::AS_IS;
 
@@ -438,7 +438,7 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag,
 		}
 		else
 		{
-			const uint32_t tagLen =	std::strlen(tag);
+			const uint32_t tagLen =	(uint32_t)std::strlen(tag);
 			_retVal.append( extraRcvBuf, tagLen, extraRcvBuf.size()-tagLen );
 		}
 		return _retVal;

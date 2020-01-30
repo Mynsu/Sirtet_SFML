@@ -344,7 +344,7 @@ void scene::MainMenu::loadResources( )
 	mSprite.setTexture( mTexture );
 }
 
-::scene::ID scene::MainMenu::update( std::list<sf::Event>& eventQueue )
+::scene::ID scene::MainMenu::update( std::vector<sf::Event>& eventQueue )
 {
 	for ( const auto& it : eventQueue )
 	{

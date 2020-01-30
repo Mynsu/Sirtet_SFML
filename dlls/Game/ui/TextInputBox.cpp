@@ -1,7 +1,7 @@
 #include "../pch.h"
 #include "TextInputBox.h"
 
-bool ui::TextInputBox::processEvent( std::list<sf::Event>& eventQueue )
+bool ui::TextInputBox::processEvent( std::vector<sf::Event>& eventQueue )
 {
 	bool remainsSomethingToProcessOutside = false;
 	for ( auto it = eventQueue.cbegin(); eventQueue.cend() != it; )

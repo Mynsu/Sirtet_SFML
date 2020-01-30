@@ -1117,7 +1117,7 @@ void scene::online::InLobby::loadResources( )
 	mDrawingInfo.relativeAccelerationUsersBoxRightBottomToRoom *= animationSpeed;
 }
 
-::scene::online::ID scene::online::InLobby::update( std::list<sf::Event>& eventQueue )
+::scene::online::ID scene::online::InLobby::update( std::vector<sf::Event>& eventQueue )
 {
 	::scene::online::ID retVal = ::scene::online::ID::AS_IS;
 	if ( 2 == mEnteringRoom )

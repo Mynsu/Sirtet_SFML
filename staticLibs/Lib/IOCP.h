@@ -40,7 +40,7 @@ public:
 		if ( FALSE == GetQueuedCompletionStatusEx( mhIOCP, event.events, IOCPEvent::MAX_EVENTS,
 											   (PULONG)&event.eventCount,
 											   timeoutMs,
-											   FALSE ) ) //±Ã±Ý: ¹¹Áö?
+											   FALSE ) )
 		{
 			const int err = WSAGetLastError();
 			if ( WSA_WAIT_TIMEOUT == err )

@@ -11,7 +11,7 @@ public:
 	enum class State
 	{
 		WAITING,
-		STARTED,
+		ON_START,
 		READY,
 		PLAYING,
 		ALL_OVER,

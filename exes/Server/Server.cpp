@@ -473,17 +473,7 @@ int main()
 							const char* const rcvBuf = clientSocket.receivingBuffer();
 							constexpr uint8_t TAG_TICKET_LEN = ::util::hash::Measure(TAG_TICKET);
 							const Ticket ticket = ::ntohl(*(Ticket*)&rcvBuf[TAG_TICKET_LEN]);
-							if ( -1 == clientSocket.receiveOverlapped() )
-							{
-								// Exception
-								std::cerr << "WARNING: Failed to receive from Client " << clientIdx << ".\n";
-								if ( false == forceDisconnection(clientIdx) )
-								{
-									// Break twice
-									goto cleanUp;
-								}
-								continue;
-							}
+							
 							auto it = tickets.cbegin();
 							while ( tickets.cend() != it )
 							{
@@ -522,7 +512,17 @@ int main()
 								client.setNickname( nickname );
 								client.setState( Client::State::IN_LOBBY );
 								lobby.emplace_back( clientIdx );
-								
+								if ( -1 == clientSocket.receiveOverlapped() )
+								{
+									// Exception
+									std::cerr << "WARNING: Failed to receive from Client " << clientIdx << ".\n";
+									if ( false == forceDisconnection(clientIdx) )
+									{
+										// Break twice
+										goto cleanUp;
+									}
+									continue;
+								}
 							}
 							// When the queue server(now as a client) asked how many clients keep connecting,
 							else if ( encryptedSign == ::ntohl(*(HashedKey*)rcvBuf) )
@@ -550,6 +550,17 @@ int main()
 #ifdef _DEBUG
 								std::cout << "Population has been told: " << pop << ".\n";
 #endif
+								if ( -1 == clientSocket.receiveOverlapped() )
+								{
+									// Exception
+									std::cerr << "WARNING: Failed to receive from Client " << clientIdx << ".\n";
+									if ( false == forceDisconnection(clientIdx) )
+									{
+										// Break twice
+										goto cleanUp;
+									}
+									continue;
+								}
 							}
 							// Exception
 							// When not having the copy of the ticket or

@@ -25,7 +25,7 @@ namespace ui
 										 const float cellSize,
 										 const sf::Vector2i clipSize );
 		void getReady( );
-		void update( std::list<sf::Event>& eventQueue );
+		void update( std::vector<sf::Event>& eventQueue );
 		void setNewCurrentTetrimino( const ::model::tetrimino::Type newCurrentType );
 		void setNumOfLinesCleared( const uint8_t numOfLinesCleared );
 		// When called twice, stage will be cleared.

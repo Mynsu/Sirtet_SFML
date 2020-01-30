@@ -67,13 +67,18 @@ void ui::PlayView::getReady()
 	mState_ = PlayView::State::ON_START;
 }
 
-void ui::PlayView::update( std::list<sf::Event>& eventQueue )
+void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
 {
 	if ( PlayView::State::ON_START == mState_ &&
 		0 == mCountDownSec &&
 		true == mHasCurrentTetrimino )
 	{
 		mState_ = PlayView::State::PLAYING;
+	}
+
+	if ( false == mIsForThisPlayer )
+	{
+		return;
 	}
 
 	// Exception
@@ -134,11 +139,6 @@ void ui::PlayView::update( std::list<sf::Event>& eventQueue )
 				resetAlarm( AlarmIndex::COLLIDED_ON_SERVER );
 			}
 		}
-	}
-
-	if ( false == mIsForThisPlayer )
-	{
-		return;
 	}
 
 	if ( true == mHasTetriminoCollidedOnClient ||

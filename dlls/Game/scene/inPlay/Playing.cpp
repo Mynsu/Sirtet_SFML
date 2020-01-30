@@ -483,7 +483,7 @@ void ::scene::inPlay::Playing::loadResources( )
 	::model::Tetrimino::LoadResources( );
 }
 
-::scene::inPlay::ID scene::inPlay::Playing::update( std::list< sf::Event >& eventQueue )
+::scene::inPlay::ID scene::inPlay::Playing::update( std::vector<sf::Event>& eventQueue )
 {
 	const uint32_t fps = (uint32_t)gService( )->vault( )[HK_FORE_FPS];
 	if ( fps < mFrameCount_gameOver )
@@ -527,28 +527,28 @@ void ::scene::inPlay::Playing::loadResources( )
 					case sf::Keyboard::Down:
 						hasCollidedAtThisFrame = mCurrentTetrimino.moveDown( mStage.cgrid( ) );
 						mFrameCount_fallDown = 0u;
-						it = eventQueue.erase( it );
+						it = eventQueue.erase(it);
 						break;
 					case sf::Keyboard::Left:
 						mCurrentTetrimino.tryMoveLeft( mStage.cgrid( ) );
-						it = eventQueue.erase( it );
+						it = eventQueue.erase(it);
 						break;
 					case sf::Keyboard::Right:
 						mCurrentTetrimino.tryMoveRight( mStage.cgrid( ) );
-						it = eventQueue.erase( it );
+						it = eventQueue.erase(it);
 						break;
 					case sf::Keyboard::LShift:
 						[[ fallthrough ]];
 					case sf::Keyboard::Up:
 						mCurrentTetrimino.tryRotate( mStage.cgrid( ) );
-						it = eventQueue.erase( it );
+						it = eventQueue.erase(it);
 						break;
 					case sf::Keyboard::Escape:
 						if ( nullptr == mOverlappedScene_ ||
 							typeid(*mOverlappedScene_) != typeid(::scene::inPlay::Assertion) )
 						{
 							retVal = ::scene::inPlay::ID::ASSERTION;
-							it = eventQueue.erase( it );
+							it = eventQueue.erase(it);
 						}
 						else
 						{
@@ -603,8 +603,6 @@ void ::scene::inPlay::Playing::loadResources( )
 		}
 	}
 	
-	//궁금: 숨기기, 반대로 움직이기, 일렁이기, 대기열 가리기 같은 아이템 구현하는 게 과연 좋을까?
-
 	return retVal;
 }
 

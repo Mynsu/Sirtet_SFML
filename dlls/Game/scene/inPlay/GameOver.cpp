@@ -136,7 +136,7 @@ void scene::inPlay::GameOver::loadResources( )
 	mSprite.setPosition( sf::Vector2f(mWindow_.getSize())*0.5f );
 }
 
-::scene::inPlay::ID scene::inPlay::GameOver::update( std::list<sf::Event>& )
+::scene::inPlay::ID scene::inPlay::GameOver::update( std::vector<sf::Event>& )
 {
 	::scene::inPlay::ID retVal = ::scene::inPlay::ID::AS_IS;
 

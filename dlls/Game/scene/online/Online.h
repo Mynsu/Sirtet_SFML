@@ -19,7 +19,7 @@ namespace scene::online
 		~Online( );
 
 		void loadResources( ) override;
-		::scene::ID update( std::list<sf::Event>& eventQueue ) override;
+		::scene::ID update( std::vector<sf::Event>& eventQueue ) override;
 		void draw( ) override;
 
 		void connectToQueueServer( );

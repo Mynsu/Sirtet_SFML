@@ -10,7 +10,7 @@ namespace scene::inPlay
 		Assertion( sf::RenderWindow& window );
 		~Assertion( ) = default;
 		void loadResources( ) override;
-		::scene::inPlay::ID update( std::list<sf::Event>& eventQueue ) override;
+		::scene::inPlay::ID update( std::vector<sf::Event>& eventQueue ) override;
 		void draw( ) override;
 	private:
 		uint32_t mFPS_, mFrameCount;

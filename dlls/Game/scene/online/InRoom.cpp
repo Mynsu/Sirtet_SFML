@@ -1114,7 +1114,7 @@ void scene::online::InRoom::loadResources( )
 	::model::Tetrimino::LoadResources( );
 }
 
-::scene::online::ID scene::online::InRoom::update( std::list<sf::Event>& eventQueue )
+::scene::online::ID scene::online::InRoom::update( std::vector<sf::Event>& eventQueue )
 {
 	::scene::online::ID nextSceneID = ::scene::online::ID::AS_IS;
 	const HashedKey myNicknameHashed = mNet.myNicknameHashed();
@@ -1136,11 +1136,9 @@ void scene::online::InRoom::loadResources( )
 															   -1) );
 			std::nullopt != userList )
 		{
-			// 궁금: 왜 8KB 버퍼가 다 차지?
 			const std::string& _userList( userList.value() );
 			const uint32_t userListSize = (uint32_t)_userList.size();
 			const char* const ptr = _userList.data();
-			// 궁금: 최적화할 여지
 			std::unordered_map<HashedKey, std::string> users;
 			uint32_t curPos = 0;
 			while ( userListSize != curPos )

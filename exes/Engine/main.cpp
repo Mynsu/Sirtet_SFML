@@ -126,8 +126,7 @@ Main Loop
 	vault.emplace( HK_HAS_GAINED_FOCUS, 1 );
 	while ( 0 != vault[HK_IS_RUNNING] )
 	{
-		//궁금: 이건 std::list가 std::vector보다 더 빠르려나?
-		std::list<sf::Event> subEventQueue;
+		std::vector<sf::Event> subEventQueue;
 		sf::Event event;
 		while ( true == window.pollEvent(event) )
 		{
