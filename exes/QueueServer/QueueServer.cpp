@@ -3,7 +3,7 @@
 using Ticket = HashedKey;
 using ClientIndex = uint32_t;
 const uint32_t CAPACITY = 100;
-// Capacity in the main server defaults to 10000u.
+// Capacity in the main server defaults to 10000.
 // You can resize it indirectly here without re-compliing or rescaling the main server.
 // !IMPORTANT: This must be less than the real capacity of the server.
 const uint32_t MAIN_SERVER_CAPACITY = 5;
@@ -265,7 +265,8 @@ int main( )
 			////
 			if ( LISTENER_IDX == (ClientIndex)ev.lpCompletionKey )
 			{
-				const IOType cmpl = listener.completedIO(ev.lpOverlapped);
+				const IOType cmpl = listener.completedIO(ev.lpOverlapped,
+														 ev.dwNumberOfBytesTransferred);
 #ifdef _DEBUG
 				if ( IOType::ACCEPT != cmpl )
 				{
@@ -351,7 +352,8 @@ int main( )
 				}
 				else
 				{
-					const IOType cmpl = socketToMainServer->completedIO(ev.lpOverlapped);
+					const IOType cmpl = socketToMainServer->completedIO(ev.lpOverlapped,
+																		ev.dwNumberOfBytesTransferred);
 					switch ( cmpl )
 					{
 						case IOType::RECEIVE:
@@ -427,7 +429,8 @@ int main( )
 			{
 				const ClientIndex clientIdx = (ClientIndex)ev.lpCompletionKey;
 				Socket& clientSocket = clients[clientIdx];
-				const IOType cmpl = clientSocket.completedIO(ev.lpOverlapped);
+				const IOType cmpl = clientSocket.completedIO(ev.lpOverlapped,
+															 ev.dwNumberOfBytesTransferred);
 				if ( IOType::DISCONNECT == cmpl )
 				{
 					const bool isAlreadyCandidate = candidates.contains(clientIdx);
@@ -749,15 +752,18 @@ cleanUp:
 			const ClientIndex idx = (ClientIndex)ev.lpCompletionKey;
 			if ( MAIN_SERVER_INDEX == idx )
 			{
-				socketToMainServer->completedIO( ev.lpOverlapped );
+				socketToMainServer->completedIO( ev.lpOverlapped,
+												ev.dwNumberOfBytesTransferred );
 			}
 			else if ( LISTENER_IDX == idx )
 			{
-				listener.completedIO( ev.lpOverlapped );
+				listener.completedIO( ev.lpOverlapped,
+									 ev.dwNumberOfBytesTransferred );
 			}
 			else
 			{
-				clients[idx].completedIO( ev.lpOverlapped );
+				clients[idx].completedIO( ev.lpOverlapped,
+										 ev.dwNumberOfBytesTransferred );
 				--areClientsPending;
 			}
 		}

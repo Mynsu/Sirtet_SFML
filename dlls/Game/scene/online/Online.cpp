@@ -44,9 +44,9 @@ namespace
 		}
 	}
 
-	void CompletionRoutine(DWORD, DWORD, LPWSAOVERLAPPED lpOverlapped, DWORD)
+	void CompletionRoutine(DWORD, DWORD cbTransferred, LPWSAOVERLAPPED lpOverlapped, DWORD)
 	{
-		SocketToServer->completedIO( lpOverlapped );
+		SocketToServer->completedIO( lpOverlapped, cbTransferred );
 	}
 }
 
@@ -426,6 +426,24 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag,
 	ASSERT_FALSE( 0 == bodySize && Online::Option::RETURN_TAG_ATTACHED != option );
 	ASSERT_TRUE( 0 < ReceivingResult );
 
+	std::string _retVal;
+	std::string& extraRcvBuf = SocketToServer->extraReceivingBuffer();
+	if ( false == extraRcvBuf.empty() &&
+		0 == extraRcvBuf.find(tag) )
+	{
+		if ( option & Online::Option::RETURN_TAG_ATTACHED )
+		{
+			_retVal.append( extraRcvBuf, 0, extraRcvBuf.size() );
+			
+		}
+		else
+		{
+			const uint32_t tagLen =	std::strlen(tag);
+			_retVal.append( extraRcvBuf, tagLen, extraRcvBuf.size()-tagLen );
+		}
+		return _retVal;
+	}
+
 	const char* const rcvBuf = SocketToServer->receivingBuffer();
 	std::string_view strView( rcvBuf, ReceivingResult );
 	uint32_t beginPos = -1;
@@ -458,8 +476,7 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag,
 	{
 		return std::nullopt;
 	}
-
-	std::string _retVal;
+	
 	const uint32_t tagLen = (uint32_t)std::strlen(tag);
 	if ( option & Option::RETURN_TAG_ATTACHED )
 	{
@@ -500,15 +517,15 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag,
 	}
 	else
 	{
-		char* tmpRcvBuf = new char[bodySize+1];
-		ZeroMemory( tmpRcvBuf, bodySize+1 );
-		if ( -1 == ::recv(SocketToServer->handle(), tmpRcvBuf, bodySize, 0) )
+		extraRcvBuf.resize( tagLen + bodySize );
+		extraRcvBuf += _retVal; 
+		char* _extraRcvBuf = extraRcvBuf.data();
+		_extraRcvBuf += tagLen;
+		if ( -1 == ::recv(SocketToServer->handle(), _extraRcvBuf, bodySize, 0) )
 		{
 			__debugbreak();
 		}
-		_retVal.append( tmpRcvBuf, bodySize );
-		delete tmpRcvBuf;
-		tmpRcvBuf = nullptr;
+		_retVal.append( _extraRcvBuf, bodySize );
 	}
 
 	return _retVal;

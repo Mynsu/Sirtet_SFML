@@ -24,7 +24,7 @@ public:
 		IsInstantiated = false;
 	};
 
-	void update( std::list< sf::Event >& eventQueue )
+	void update( std::list<sf::Event>& eventQueue )
 	{
 		mSceneManager.update( eventQueue );
 	}

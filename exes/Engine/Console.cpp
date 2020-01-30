@@ -286,7 +286,7 @@ void Console::draw( sf::RenderWindow& window )
 	}
 }
 
-void Console::handleEvent( std::list< sf::Event >& eventQueue )
+void Console::handleEvent( std::list<sf::Event>& eventQueue )
 {
 	for ( auto it = eventQueue.cbegin(); eventQueue.cend() != it; )
 	{

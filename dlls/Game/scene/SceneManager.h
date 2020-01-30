@@ -27,7 +27,7 @@ namespace scene
 		void operator=( const SceneManager& ) = delete;
 		void lastInit( sf::RenderWindow* const window );
 
-		inline void update( std::list< sf::Event >& eventQueue )
+		inline void update( std::list<sf::Event>& eventQueue )
 		{
 			const ::scene::ID nextSceneID = mCurrentScene->update( eventQueue );
 			if ( ::scene::ID::AS_IS != nextSceneID )

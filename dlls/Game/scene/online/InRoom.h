@@ -54,24 +54,23 @@ namespace scene::online
 		}
 		struct
 		{
-			float cellSize, outlineThickness_on, angularVelocity, arcLength, scaleFactor;
 			uint32_t panelColor_on, outlineColor_on, framesRotationInterval,
 				myNicknameFontSize, myNicknameColor,
 				otherPlayerNicknameFontSize, otherPlayerNicknameFontColor;
-			sf::Vector2f position;
-			sf::Vector2f positionDifferences[ROOM_CAPACITY-1];
+			float cellSize, outlineThickness_on, angularVelocity, arcLength, scaleFactor;
+			sf::Vector2f position, positionDifferences[ROOM_CAPACITY-1];
 			sf::Vector2i countdownSpriteClipSize;
+			sf::FloatRect nextTetriminoPanelBound;
 			std::string countdownSpritePathNName;
 		} mDrawingInfo;
 		static bool IsInstantiated;
-		bool mIsReceiving, mAsHost, mIsStartingGuideVisible,
-			mIsMouseOverStartButton_, mIsStartButtonPressed_;
+		bool mIsReceiving, mAsHost,
+			mIsStartingGuideVisible_, mIsMouseOverStartButton_, mIsStartButtonPressed_;
 		sf::RenderWindow& mWindow_;
 		uint32_t mFrameCount_rotationInterval;
 		Clock::time_point mAlarms[(int)AlarmIndex::NONE_MAX];
 		Online& mNet;
 		std::unique_ptr<::scene::inPlay::IScene> mOverlappedScene;
-		sf::FloatRect mNextTetriminoPanelBound;
 		// When empty, the value should be 0 == EMPTY_SLOT.
 		HashedKey mOtherPlayerSlots[ROOM_CAPACITY-1];
 		sf::Font mFont;

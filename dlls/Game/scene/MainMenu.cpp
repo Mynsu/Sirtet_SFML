@@ -344,13 +344,22 @@ void scene::MainMenu::loadResources( )
 	mSprite.setTexture( mTexture );
 }
 
-::scene::ID scene::MainMenu::update( std::list< sf::Event >& eventQueue )
+::scene::ID scene::MainMenu::update( std::list<sf::Event>& eventQueue )
 {
 	for ( const auto& it : eventQueue )
 	{
-		if ( sf::Event::KeyPressed == it.type && sf::Keyboard::Escape == it.key.code )
+		if ( sf::Event::KeyPressed == it.type &&
+			sf::Keyboard::Escape == it.key.code )
 		{
-			gService( )->vault( )[ HK_IS_RUNNING ] = 0;
+			auto& vault = gService()->vault();
+			const auto it = vault.find(HK_IS_RUNNING);
+#ifdef _DEBUG
+			if ( vault.end() == it )
+			{
+				__debugbreak( );
+			}
+#endif
+			it->second = 0;
 		}
 	}
 

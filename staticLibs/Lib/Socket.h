@@ -79,20 +79,26 @@ public:
 		return mhSocket;
 	}
 	// Returns which IO has been completed, makes the work reusable and releases reception lock.
-	IOType completedIO( const LPOVERLAPPED lpOverlapped );
+	IOType completedIO( const LPOVERLAPPED lpOverlapped, const DWORD cbTransferred );
 	char* const receivingBuffer( )
 	{
 		return mReceivingBuffer;
+	}
+	std::string& extraReceivingBuffer( )
+	{
+		return mExtraReceivingBuffer;
 	}
 private:
 	LPOVERLAPPED makeWork( const IOType ioType );
 	bool mIsReceiving_;
 	uint8_t mNumOfWorks_;
+	uint32_t mRecentlyReceivedSize_;
 	SOCKET_HANDLE mhSocket;
 	LPFN_ACCEPTEX AcceptEx;
 	LPFN_DISCONNECTEX DisconnectEx;
 	//궁금: heap보다 stack?
 	std::forward_list<Work> mWorks;
+	std::string mExtraReceivingBuffer;
 	// 궁금: 수신을 쭉 걸어두기 위해서 수신버퍼를 Work에 둬야 하나?
 	char mReceivingBuffer[ RCV_BUF_SIZ ];
 };

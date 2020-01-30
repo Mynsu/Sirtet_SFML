@@ -27,7 +27,7 @@ void Work::reset()
 ////
 
 Socket::Socket( const::Socket::Type type )
-	: mIsReceiving_( false ), mNumOfWorks_( 0 ),
+	: mIsReceiving_( false ), mNumOfWorks_( 0 ), mRecentlyReceivedSize_( 0 ),
 	mhSocket( NULL ), AcceptEx( nullptr ), DisconnectEx( nullptr )
 {
 	switch ( type )
@@ -170,6 +170,10 @@ int Socket::receiveOverlapped( LPWSAOVERLAPPED_COMPLETION_ROUTINE lpRoutine )
 		return -2;
 	}
 
+	ZeroMemory( mReceivingBuffer, mRecentlyReceivedSize_ );
+	mExtraReceivingBuffer.clear();
+	mExtraReceivingBuffer.resize( 0 );
+
 	WSABUF b;
 	b.len = RCV_BUF_SIZ;
 	b.buf = mReceivingBuffer;
@@ -188,6 +192,16 @@ int Socket::receiveOverlapped( LPWSAOVERLAPPED_COMPLETION_ROUTINE lpRoutine )
 
 int Socket::receiveBlocking( )
 {
+	if ( '\0' != *mReceivingBuffer )
+	{
+		ZeroMemory( mReceivingBuffer, mRecentlyReceivedSize_ );
+	}
+	if ( false == mExtraReceivingBuffer.empty() )
+	{
+		mExtraReceivingBuffer.clear();
+		mExtraReceivingBuffer.resize( 0 );
+	}
+
 	return ::recv(mhSocket, mReceivingBuffer, (int)RCV_BUF_SIZ, 0 );
 }
 
@@ -253,13 +267,15 @@ int Socket::sendOverlapped( Packet& packet, LPWSAOVERLAPPED_COMPLETION_ROUTINE l
 	return result;
 }
 
-IOType Socket::completedIO( const LPOVERLAPPED lpOverlapped )
+IOType Socket::completedIO( const LPOVERLAPPED lpOverlapped,
+						   const DWORD cbTransferred )
 {
 	IOType retVal = IOType::NONE;
 	for ( Work& w : mWorks )
 	{
 		if ( lpOverlapped == &w.overlapped )
 		{
+
 			retVal = w.ioType;
 			w.reset( );
 			//
@@ -267,6 +283,7 @@ IOType Socket::completedIO( const LPOVERLAPPED lpOverlapped )
 			if ( IOType::RECEIVE == retVal )
 			{
 				mIsReceiving_ = false;
+				mRecentlyReceivedSize_ = cbTransferred;
 			}
 			break;
 		}

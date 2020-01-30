@@ -7,11 +7,11 @@ class Client
 public:
 	enum class State
 	{
+		AS_QUEUE_SERVER = -1,
 		UNVERIFIED,
 		IN_LOBBY,
 		WAITING_IN_ROOM,
 		PLAYING_IN_ROOM,
-		AS_QUEUE_SERVER,
 	};
 
 	Client( ) = delete;

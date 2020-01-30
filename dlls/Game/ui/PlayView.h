@@ -24,7 +24,7 @@ namespace ui
 		void setCountdownSpriteDimension( const sf::Vector2f origin,
 										 const float cellSize,
 										 const sf::Vector2i clipSize );
-		void start( );
+		void getReady( );
 		void update( std::list<sf::Event>& eventQueue );
 		void setNewCurrentTetrimino( const ::model::tetrimino::Type newCurrentType );
 		void setNumOfLinesCleared( const uint8_t numOfLinesCleared );

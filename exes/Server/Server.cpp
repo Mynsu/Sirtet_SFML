@@ -196,7 +196,8 @@ int main()
 			////
 			if ( LISTENER_IDX == (ClientIndex)ev.lpCompletionKey )
 			{
-				const IOType cmpl = listener.completedIO(ev.lpOverlapped);
+				const IOType cmpl = listener.completedIO(ev.lpOverlapped,
+														 ev.dwNumberOfBytesTransferred);
 #ifdef _DEBUG
 				if ( IOType::ACCEPT != cmpl )
 				{
@@ -264,7 +265,8 @@ int main()
 				}
 				Client& queueServer = clients[queueServerIdx];
 				Socket& socketToQueueServer = queueServer.socket();
-				const IOType cmpl = socketToQueueServer.completedIO(ev.lpOverlapped);
+				const IOType cmpl = socketToQueueServer.completedIO(ev.lpOverlapped,
+																	ev.dwNumberOfBytesTransferred);
 				if ( IOType::DISCONNECT == cmpl )
 				{
 					queueServer.reset( );
@@ -408,7 +410,8 @@ int main()
 				}
 				Client& client = clients[clientIdx];
 				Socket& clientSocket = client.socket();
-				const IOType cmpl =	clientSocket.completedIO(ev.lpOverlapped);
+				const IOType cmpl =	clientSocket.completedIO(ev.lpOverlapped,
+															 ev.dwNumberOfBytesTransferred);
 				if ( IOType::DISCONNECT == cmpl )
 				{
 					if ( Client::State::IN_LOBBY == client.state() )
@@ -676,13 +679,15 @@ cleanUp:
 			// When event comes from listener,
 			if ( LISTENER_IDX == evIdx )
 			{
-				listener.completedIO( ev.lpOverlapped );
+				listener.completedIO( ev.lpOverlapped,
+									 ev.dwNumberOfBytesTransferred );
 			}
 			// When event comes from TCP,
 			else
 			{
 				Socket& socket = clients[evIdx].socket();
-				socket.completedIO( ev.lpOverlapped );
+				socket.completedIO( ev.lpOverlapped,
+								   ev.dwNumberOfBytesTransferred );
 				--areClientsPending;
 			}
 		}

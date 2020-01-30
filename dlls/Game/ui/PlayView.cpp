@@ -54,7 +54,7 @@ void ui::PlayView::setCountdownSpriteDimension( const sf::Vector2f origin,
 	countdownSpriteSize_ = clipSize;
 }
 
-void ui::PlayView::start()
+void ui::PlayView::getReady()
 {
 	mHasCurrentTetrimino = false;
 	while ( false == mNextTetriminos.empty() )
@@ -76,11 +76,6 @@ void ui::PlayView::update( std::list<sf::Event>& eventQueue )
 		mState_ = PlayView::State::PLAYING;
 	}
 
-	if ( false == mIsForThisPlayer )
-	{
-		return;
-	}
-
 	// Exception
 	if ( true == mHasTetriminoCollidedOnServer &&
 		true == alarmAfter(ASYNC_TOLERANCE_MS, AlarmIndex::COLLIDED_ON_SERVER) )
@@ -89,7 +84,7 @@ void ui::PlayView::update( std::list<sf::Event>& eventQueue )
 		mNet->disconnect( );
 		return;
 	}
-	// TODO: InRoom.cpp에 있는 걸 여기로 옮기기
+
 	if ( true == mNet->hasReceived() )
 	{
 		if ( std::optional<std::string> nextTet( mNet->getByTag(TAG_MY_NEXT_TETRIMINO,
@@ -139,6 +134,11 @@ void ui::PlayView::update( std::list<sf::Event>& eventQueue )
 				resetAlarm( AlarmIndex::COLLIDED_ON_SERVER );
 			}
 		}
+	}
+
+	if ( false == mIsForThisPlayer )
+	{
+		return;
 	}
 
 	if ( true == mHasTetriminoCollidedOnClient ||
@@ -334,8 +334,12 @@ void ui::PlayView::update( std::list<sf::Event>& eventQueue )
 
 void ui::PlayView::setNewCurrentTetrimino( const::model::tetrimino::Type newCurrentType )
 {
-	mCurrentTetrimino = ::model::Tetrimino::Spawn(newCurrentType);
-	mHasCurrentTetrimino = true;
+	if ( false == mIsForThisPlayer ||
+		false == mHasCurrentTetrimino )
+	{
+		mCurrentTetrimino = ::model::Tetrimino::Spawn(newCurrentType);
+		mHasCurrentTetrimino = true;
+	}
 }
 
 void ui::PlayView::setNumOfLinesCleared( const uint8_t numOfLinesCleared )

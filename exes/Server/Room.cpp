@@ -25,7 +25,7 @@ Room::Room( const ClientIndex hostIndex )
 
 void Room::start( )
 {
-	mState = State::STARTED;
+	mState = State::ON_START;
 }
 
 int Room::leave( const ClientIndex index )
@@ -107,7 +107,7 @@ std::vector<ClientIndex> Room::update( std::vector<Client>& clients )
 	{
 		case Room::State::WAITING:
 			break;
-		case Room::State::STARTED:
+		case Room::State::ON_START:
 			for ( const ClientIndex idx : mCandidateParticipants )
 			{
 				mParticipants.emplace( idx, Playing() );
@@ -172,7 +172,7 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 	{
 		case Room::State::WAITING:
 			break;
-		case Room::State::STARTED:
+		case Room::State::ON_START:
 		{
 			Packet packet;
 			const uint8_t ignored = 1;

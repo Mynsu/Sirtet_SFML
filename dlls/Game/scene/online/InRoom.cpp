@@ -14,7 +14,7 @@ bool scene::online::InRoom::IsInstantiated = false;
 
 scene::online::InRoom::InRoom( sf::RenderWindow& window, Online& net, const bool asHost )
 	: mIsReceiving( false ), mAsHost( asHost ),
-	mIsStartingGuideVisible( true ),
+	mIsStartingGuideVisible_( true ),
 	mIsMouseOverStartButton_( false ), mIsStartButtonPressed_( false ),
 	mFrameCount_rotationInterval( 0 ), mAlarms{ Clock::time_point::max() },
 	mWindow_( window ), mNet( net ),
@@ -1054,10 +1054,10 @@ void scene::online::InRoom::loadResources( )
 		vfxCombo.setOrigin( myPanelPosition, myStageCellSize, vfxComboClipSize );
 		::ui::NextTetriminoPanel& nextTetPanel = playView.nextTetriminoPanel();
 		nextTetPanel.setDimension( nextTetriminoPanelPosition, nextTetriminoPanelCellSize );
-		mNextTetriminoPanelBound = nextTetPanel.globalBounds();
+		mDrawingInfo.nextTetriminoPanelBound = nextTetPanel.globalBounds();
 		// Making the bound enough to contain a mouse cursor.
-		mNextTetriminoPanelBound.width += 5.f;
-		mNextTetriminoPanelBound.height += 5.f;
+		mDrawingInfo.nextTetriminoPanelBound.width += 5.f;
+		mDrawingInfo.nextTetriminoPanelBound.height += 5.f;
 		nextTetPanel.setColor( sf::Color(nextTetriminoPanelColor), sf::Color(cellOutlineColor) );
 		nextTetPanel.setOutline( nextTetriminoPanelOutlineThickness, sf::Color(nextTetriminoPanelOutlineColor) );
 		if ( false == vfxCombo.loadResources(vfxComboPathNName) )
@@ -1121,6 +1121,16 @@ void scene::online::InRoom::loadResources( )
 	if ( true == mNet.hasReceived() )
 	{
 		mIsReceiving = false;
+
+		if ( const std::optional<std::string> hasLeftOrKicked( mNet.getByTag(TAGGED_REQ_LEAVE_ROOM,
+																			 Online::Option::RETURN_TAG_ATTACHED,
+																			 0) );
+			std::nullopt != hasLeftOrKicked )
+		{
+			nextSceneID = ::scene::online::ID::IN_LOBBY;
+			return nextSceneID;
+		}
+
 		if ( std::optional<std::string> userList( mNet.getByTag(TAGGED_NOTI_UPDATE_USER_LIST,
 															   Online::Option::DEFAULT,
 															   -1) );
@@ -1213,30 +1223,21 @@ void scene::online::InRoom::loadResources( )
 			}
 		}
 
-		if ( const std::optional<std::string> response( mNet.getByTag(TAGGED_REQ_LEAVE_ROOM,
-																	  Online::Option::RETURN_TAG_ATTACHED,
-																	  0) );
-			std::nullopt != response )
-		{
-			nextSceneID = ::scene::online::ID::IN_LOBBY;
-			return nextSceneID;
-		}
-
-		if ( std::optional<std::string> response( mNet.getByTag(TAGGED_REQ_GET_READY,
-																Online::Option::RETURN_TAG_ATTACHED,
-																0) );
-			std::nullopt != response )
+		if ( const std::optional<std::string> gettingReady( mNet.getByTag(TAGGED_REQ_GET_READY,
+																		Online::Option::RETURN_TAG_ATTACHED,
+																		0) );
+			std::nullopt != gettingReady )
 		{
 			for ( auto& it : mParticipants )
 			{
-				it.second.playView.start( );
+				it.second.playView.getReady( );
 			}
-			mIsStartingGuideVisible = false;
+			mIsStartingGuideVisible_ = false;
 		}
 
-		if ( std::optional<std::string> newCurrentTetriminos( mNet.getByTag(TAG_NEW_CURRENT_TETRIMINOS,
-																		Online::Option::DEFAULT,
-																			-1) );
+		if ( const std::optional<std::string> newCurrentTetriminos( mNet.getByTag(TAG_NEW_CURRENT_TETRIMINOS,
+																				Online::Option::DEFAULT,
+																				-1) );
 			std::nullopt != newCurrentTetriminos )
 		{
 			const std::string& newCurTetTypes = newCurrentTetriminos.value();
@@ -1416,7 +1417,7 @@ void scene::online::InRoom::loadResources( )
 		{
 			pair.second.playView.stage().clear();
 		}
-		mIsStartingGuideVisible = true;
+		mIsStartingGuideVisible_ = true;
 	}
 
 	if ( nullptr != mOverlappedScene )
@@ -1446,7 +1447,7 @@ void scene::online::InRoom::loadResources( )
 		if ( sf::Event::EventType::MouseButtonPressed == it->type &&
 			sf::Mouse::Button::Left == it->mouseButton.button &&
 			true == mIsMouseOverStartButton_ &&
-			true == mIsStartingGuideVisible )
+			true == mIsStartingGuideVisible_ )
 		{
 			mIsStartButtonPressed_ = true;
 			it = eventQueue.erase(it);
@@ -1454,7 +1455,7 @@ void scene::online::InRoom::loadResources( )
 		else if ( sf::Event::EventType::MouseButtonReleased == it->type &&
 			sf::Mouse::Button::Left == it->mouseButton.button &&
 			true == mIsMouseOverStartButton_ &&
-			true == mIsStartingGuideVisible )
+			true == mIsStartingGuideVisible_ )
 		{
 			startGame( );
 			mIsStartButtonPressed_ = false;
@@ -1486,7 +1487,7 @@ void scene::online::InRoom::draw( )
 		{
 			::ui::NextTetriminoPanel& nextTetPanel = it->second.playView.nextTetriminoPanel();
 			const sf::Vector2f mousePos( sf::Mouse::getPosition()-mWindow_.getPosition() );
-			if ( true == mNextTetriminoPanelBound.contains(mousePos) )
+			if ( true == mDrawingInfo.nextTetriminoPanelBound.contains(mousePos) )
 			{
 				if ( false == mIsMouseOverStartButton_ )
 				{
@@ -1535,7 +1536,7 @@ void scene::online::InRoom::draw( )
 			}
 		}
 		it->second.playView.draw();
-		if ( true == mIsStartingGuideVisible )
+		if ( true == mIsStartingGuideVisible_ )
 		{
 			mWindow_.draw( mStartingGuide );
 		}
