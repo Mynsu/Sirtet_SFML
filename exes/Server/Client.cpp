@@ -3,10 +3,14 @@
 #include "Room.h"
 #include <sstream>
 
+#define NULL_HASHED_KEY 0
+#define NULL_TICKET NULL_HASHED_KEY
+#define NULL_ROOM_ID -1
+
 Client::Client( const Socket::Type type, const ClientIndex index )
 	: mIndex( index ), mState( State::UNVERIFIED ),
-	mTicket( 0u ), mRoomID( -1 ),
-	mNicknameHashed_( 0 ),
+	mTicket( NULL_TICKET ), mRoomID( NULL_ROOM_ID ),
+	mNicknameHashed_( NULL_HASHED_KEY ),
 	mSocket( type )
 {
 }
@@ -87,7 +91,12 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 							////
 							std::random_device rd;
 							std::minstd_rand re( rd() );
-							const RoomID roomID = (RoomID)re();
+							RoomID roomID = NULL_ROOM_ID;
+							while ( NULL_ROOM_ID == roomID ||
+									rooms.end() != rooms.find(roomID) )
+							{
+								roomID = (RoomID)re();
+							}
 							////
 							mRoomID = roomID;
 							rooms.emplace( roomID, mIndex );
@@ -465,13 +474,17 @@ Socket& Client::socket( )
 void Client::reset( const bool isSocketReusable )
 {
 	mState = Client::State::UNVERIFIED;
-	mTicket = 0u;
-	mRoomID = -1;
-	mNicknameHashed_ = 0;
+	mTicket = NULL_TICKET;
+	mRoomID = NULL_ROOM_ID;
+	mNicknameHashed_ = NULL_HASHED_KEY;
 	mNickname.clear( );
 	if ( false == isSocketReusable )
 	{
 		mSocket.close( );
-		mSocket = Socket(Socket::Type::TCP);
+		mSocket.reset( false );
+	}
+	else
+	{
+		mSocket.reset( );
 	}
 }

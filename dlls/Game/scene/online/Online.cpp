@@ -258,7 +258,6 @@ void ::scene::online::Online::draw( )
 void scene::online::Online::connectToQueueServer()
 {
 	SocketToServer = std::make_unique<Socket>(Socket::Type::TCP);
-	//궁금: 여기가 Any가 아니면 서버에서 IP 들여다볼 수 있을까?
 	if ( -1 == SocketToServer->bind(EndPoint::Any) )
 	{
 		// Exception
@@ -309,7 +308,6 @@ bool scene::online::Online::connectToMainServer( )
 	SocketToServer->close( );
 	SocketToServer.reset( );
 	SocketToServer = std::make_unique<Socket>(Socket::Type::TCP);
-	//궁금: 여기가 Any가 아니면 서버에서 IP 들여다볼 수 있을까?
 	if ( -1 == SocketToServer->bind(EndPoint::Any) )
 	{
 		// Exception

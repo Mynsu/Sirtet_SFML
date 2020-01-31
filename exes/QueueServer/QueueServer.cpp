@@ -236,7 +236,7 @@ int main( )
 		bool result = true;
 		Socket& clientSocket = clients[index];
 		clientSocket.close( );
-		clientSocket = Socket(Socket::Type::TCP);
+		clientSocket.reset( false );
 		if ( -1 == iocp.add(clientSocket.handle(), index) )
 		{
 			// Exception
@@ -440,6 +440,7 @@ int main( )
 					}
 					else
 					{
+						clientSocket.reset( );
 						candidates.emplace_back( clientIdx );
 						if ( false == ticketedClients.test(clientIdx) )
 						{

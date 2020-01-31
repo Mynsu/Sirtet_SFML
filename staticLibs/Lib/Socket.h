@@ -5,6 +5,7 @@
 #pragma comment (lib, "mswsock")
 #include <forward_list>
 #include <string>
+#include <memory>
 #include <stdint.h>
 #include "EndPoint.h"
 #include "Hash.h"
@@ -46,11 +47,14 @@ public:
 	static const uint32_t BACKLOG_SIZ = 5000;
 
 	Socket( ) = delete;
-	// !IMPORTANT: When replacing an old socket by new one,
-	// after having failed disconnecting successfully,
-	// you should set the 2nd argument 'work' to Socket::CompletedWork::DISCONNECT.
-	// Otherwise, the new socket with the old but same index would act like the old socket did.
 	Socket( const ::Socket::Type type );
+	// !IMPORTANT: DO NOT USE!  Defined to use std::vector.
+	Socket( const Socket& )
+	{
+#ifdef _DEBUG
+		__debugbreak( );
+#endif
+	}
 	~Socket( );
 	int bind( const EndPoint& selfEndPoint );
 	void listen( )
@@ -70,6 +74,7 @@ public:
 	{
 		closesocket( mhSocket );
 	}
+	void reset( const bool isSocketReusable = true, const Socket::Type type = Socket::Type::TCP );
 	bool isPending( ) const
 	{
 		return (0 < mNumOfWorks_)? true: false;
@@ -90,12 +95,24 @@ public:
 	}
 private:
 	LPOVERLAPPED makeWork( const IOType ioType );
+	static LPFN_ACCEPTEX AcceptEx;
+	static LPFN_DISCONNECTEX DisconnectEx;
+	static LPFN_GETACCEPTEXSOCKADDRS GetAcceptExSockAddrs;
 	bool mIsReceiving_;
 	uint8_t mNumOfWorks_;
 	uint32_t mRecentlyReceivedSize_;
 	SOCKET_HANDLE mhSocket;
-	LPFN_ACCEPTEX AcceptEx;
-	LPFN_DISCONNECTEX DisconnectEx;
+	struct AddressBuffer
+	{
+		AddressBuffer( )
+		{
+			ZeroMemory( this, sizeof(AddressBuffer) );
+		}
+		char localAddress[sizeof(SOCKADDR_IN)+16];
+		char remoteAddress[sizeof(SOCKADDR_IN)+16];
+	};
+	std::unique_ptr<AddressBuffer> mAddressBuffer;
+	SOCKADDR_IN* mpRemoteSockAddr;
 	std::forward_list<Work> mWorks;
 	std::string mExtraReceivingBuffer;
 	char mReceivingBuffer[ RCV_BUF_SIZ ];
