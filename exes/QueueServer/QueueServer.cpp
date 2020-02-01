@@ -20,10 +20,10 @@ void ProcessSignal( int signal )
 		IsWorking = false;
 	}
 }
-inline void PrintLeavingWithError( const uint32_t clientIndex, const uint32_t numOfCandidates )
+inline void PrintLeavingWithError( const uint32_t clientIndex, const uint32_t population )
 {
 	std::cout << "Client " << clientIndex << " left due to an error. (Now " <<
-		CAPACITY-numOfCandidates << '/' << CAPACITY << " connections.)\n";
+		population << '/' << CAPACITY << " connections.)\n";
 }
 // Returns 0 in success, -1 in fail.
 inline bool ResetAndReconnectToMainServer( std::unique_ptr<Socket>& socketToMainServer,
@@ -209,21 +209,26 @@ int main( )
 			WSACleanup( );
 			return -1;
 		}
-		candidates.emplace_back( i );
-	}
-	{
-		const int result = listener.acceptOverlapped(clients.at(candidates.front()));
-		if ( FALSE == result )
+
+		if ( i < Socket::BACKLOG_SIZ )
 		{
-			// Exception
-			std::cerr << "FATAL: Failed to accept.\n";
-			IsWorking = false;
+			const int result = listener.acceptOverlapped(socket, i);
+			if ( FALSE == result )
+			{
+				// Exception
+				std::cerr << "FATAL: Failed to accept.\n";
+				IsWorking = false;
+			}
+			else if ( -1 == result )
+			{
+				// Exception
+				std::cerr << "FATAL: Getting AcceptEx failed.\n";
+				IsWorking = false;
+			}
 		}
-		else if ( -1 == result )
+		else
 		{
-			// Exception
-			std::cerr << "FATAL: Getting AcceptEx failed.\n";
-			IsWorking = false;
+			candidates.emplace_back( i );
 		}
 	}
 
@@ -231,7 +236,9 @@ int main( )
 	//
 	////
 
-	auto forceDisconnection = [ &clients, &iocp, &candidates ]( const ClientIndex index ) -> bool
+	uint32_t population = 0;
+	auto forceDisconnection =
+		[ &iocp, &clients, &candidates, &population ]( const ClientIndex index ) -> bool
 	{
 		bool result = true;
 		Socket& clientSocket = clients[index];
@@ -243,54 +250,44 @@ int main( )
 			result = false;
 			return result;
 		}
+		--population;
 		candidates.emplace_back( index );
 		return result;
 	};
-	bool wasBoatful = false;
 	uint32_t roomInMainServer = 0;
 	Clock::time_point lastTimeNotifyingQueue = Clock::now();
 	Clock::time_point lastTimeAskingPop = Clock::now();
 	std::list<ClientIndex> queue;
 	IOCPEvent event;
-	//궁금: std::unordered_set이 더 빠를까?
 	std::bitset<CAPACITY> ticketedClients;
 	while ( true == IsWorking )
 	{
 		iocp.wait( event, 100 );
 		for ( uint32_t i = 0; i != event.eventCount; ++i )
 		{
-			const OVERLAPPED_ENTRY& ev = event.events[ i ];
+			const OVERLAPPED_ENTRY& ev = event.events[i];
 			////
 			// When event comes from listener,
 			////
 			if ( LISTENER_IDX == (ClientIndex)ev.lpCompletionKey )
 			{
-				const IOType cmpl = listener.completedIO(ev.lpOverlapped,
-														 ev.dwNumberOfBytesTransferred);
-#ifdef _DEBUG
-				if ( IOType::ACCEPT != cmpl )
-				{
-					__debugbreak( );
-				}
-#endif
-				const ClientIndex candidate = candidates.front();
-				Socket& candidateSocket = clients[candidate];
-				//궁금: 동시에 accept 여럿하면 잘 되려나?
+				const ClientIndex candidateIdx = listener.extractIndexFrom(ev.lpOverlapped);
+				Socket& candidateSocket = clients[candidateIdx];
 				if ( -1 == candidateSocket.updateAcceptContext(listener) )
 				{
 					// Exception
-					std::cerr << "FATAL: Failed to update acception context of Candidate " << candidate << ".\n";
+					std::cerr << "FATAL: Failed to update acception context of Candidate " << candidateIdx << ".\n";
 					// NOTE: Break and break
 					goto cleanUp;
 				}
 				// When accepting successfully,
-				candidates.pop_front( );
+				++population;
 				Socket& clientSocket = candidateSocket;
-				const ClientIndex clientIdx = candidate;
+				const ClientIndex clientIdx = candidateIdx;
 #ifdef _DEBUG
 				std::cout << "A new client " << clientIdx <<
 					" wants to join the main server. (Now " <<
-					CAPACITY-candidates.size() << "/" << CAPACITY << " connections.)\n";
+					population << "/" << CAPACITY << " connections.)\n";
 #endif
 				if ( -1 == clientSocket.receiveOverlapped() )
 				{
@@ -303,27 +300,20 @@ int main( )
 						// Break twice
 						goto cleanUp;
 					}
-					PrintLeavingWithError( clientIdx, candidates.size() );
+					PrintLeavingWithError( clientIdx, population );
 				}
 
 				// Reloading the next candidate.
 				// When room for the next client in THIS QUEUE SERVER, not the main server, remains yet,
 				if ( 0 < candidates.size() )
 				{
-					const ClientIndex nextCandidate = candidates.front();
-					if ( FALSE == listener.acceptOverlapped(clients[nextCandidate]) )
+					const ClientIndex nextCandidateIdx = candidates.front();
+					if ( FALSE == listener.acceptOverlapped(clients[nextCandidateIdx], nextCandidateIdx) )
 					{
 						// Exception
 						std::cerr << "FATAL: Overlapped acceptEx failed.\n";
 						goto cleanUp;
 					}
-				}
-				else
-				{
-#ifdef _DEBUG
-					std::cout << "Boatful!\n";
-#endif
-					wasBoatful = true;
 				}
 			}
 			////
@@ -441,14 +431,14 @@ int main( )
 					else
 					{
 						clientSocket.reset( );
+						--population;
 						candidates.emplace_back( clientIdx );
 						if ( false == ticketedClients.test(clientIdx) )
 						{
 #ifdef _DEBUG
-							const uint32_t numOfCandidates = candidates.size();
 							std::cout << "A client " << clientIdx <<
 								" left without a ticket. (Now "
-								<< CAPACITY-numOfCandidates << '/' << CAPACITY << " connections.)\n";
+								<< population << '/' << CAPACITY << " connections.)\n";
 #endif
 							for ( auto it = queue.cbegin(); queue.cend() != it; ++it )
 							{
@@ -462,10 +452,9 @@ int main( )
 						else
 						{
 #ifdef _DEBUG
-							const uint32_t numOfCandidates = candidates.size();
 							std::cout << "A client " << clientIdx <<
 								" left with a ticket. (Now "
-								<< CAPACITY-numOfCandidates << '/' << CAPACITY << " connections.)\n";
+								<< population << '/' << CAPACITY << " connections.)\n";
 #endif
 							ticketedClients.reset( clientIdx );
 						}
@@ -484,7 +473,7 @@ int main( )
 							// Break twice
 							goto cleanUp;
 						}
-						PrintLeavingWithError( clientIdx, candidates.size() );
+						PrintLeavingWithError( clientIdx, population );
 						continue;
 					}
 					else if ( -1 == result )
@@ -533,7 +522,7 @@ int main( )
 										// Break twice
 										goto cleanUp;
 									}
-									PrintLeavingWithError( clientIdx, candidates.size() );
+									PrintLeavingWithError( clientIdx, population );
 									continue;
 								}
 								queue.emplace_back( clientIdx );
@@ -553,7 +542,7 @@ int main( )
 										// Break twice
 										goto cleanUp;
 									}
-									PrintLeavingWithError( clientIdx, candidates.size() );
+									PrintLeavingWithError( clientIdx, population );
 								}
 								else if ( -1 == result )
 								{
@@ -580,7 +569,7 @@ int main( )
 										goto cleanUp;
 									}
 									ticketedClients.reset( clientIdx );
-									PrintLeavingWithError( clientIdx, candidates.size() );
+									PrintLeavingWithError( clientIdx, population );
 									continue;
 								}
 								else if ( -1 == result )
@@ -626,7 +615,7 @@ int main( )
 					// Break twice
 					goto cleanUp;
 				}
-				PrintLeavingWithError( *it, candidates.size() );
+				PrintLeavingWithError( *it, population );
 			}
 			else
 			{
@@ -674,7 +663,7 @@ int main( )
 					// Break twice
 					goto cleanUp;
 				}
-				PrintLeavingWithError( *it, candidates.size() );
+				PrintLeavingWithError( *it, population );
 				it = queue.erase(it);
 				continue;
 			}
@@ -713,11 +702,10 @@ int main( )
 #endif
 		}
 
-		if ( true == wasBoatful && 0 < candidates.size() )
+		if ( 0 < candidates.size() )
 		{
-			wasBoatful = false;
-			const ClientIndex nextCandidateClientIdx = candidates.front();
-			if ( FALSE == listener.acceptOverlapped(clients[nextCandidateClientIdx]) )
+			const ClientIndex nextCandidateIdx = candidates.front();
+			if ( FALSE == listener.acceptOverlapped(clients[nextCandidateIdx], nextCandidateIdx) )
 			{
 				// Exception
 				std::cerr << "FATAL: Overlapped acceptEx failed.\n";

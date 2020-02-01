@@ -37,7 +37,6 @@ namespace model
 		inline void blackout( )
 		{
 			const sf::Color GRAY( 0x808080ff );
-#pragma omp parallel
 			for ( auto& row : mGrid )
 			{
 				for ( auto& cell : row )
@@ -89,8 +88,6 @@ namespace model
 		inline void draw( )
 		{
 			mWindow_->draw( mPanel );
-			// NOTE: The failure regarding OpenGL occurs.
-			///#pragma omp parallel
 			for ( uint8_t i = 0; i != ::model::stage::GRID_HEIGHT; ++i )
 			{
 				for ( uint8_t k = 0; k != ::model::stage::GRID_WIDTH; ++k )

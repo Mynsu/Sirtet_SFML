@@ -10,22 +10,6 @@
 //
 ////
 
-Work::Work( const IOType ioType )
-	: ioType( ioType )
-{
-	ZeroMemory( &overlapped, sizeof(WSAOVERLAPPED) );
-}
-
-void Work::reset()
-{
-	ioType = IOType::NONE;
-	ZeroMemory( &overlapped, sizeof(WSAOVERLAPPED) );
-}
-
-////
-//
-////
-
 LPFN_ACCEPTEX Socket::AcceptEx = nullptr;
 LPFN_DISCONNECTEX Socket::DisconnectEx = nullptr;
 LPFN_GETACCEPTEXSOCKADDRS Socket::GetAcceptExSockAddrs = nullptr;
@@ -56,7 +40,7 @@ int Socket::bind( const EndPoint& selfEndPoint )
 	return result;
 }
 
-int Socket::acceptOverlapped( Socket& candidateClientSocket )
+int Socket::acceptOverlapped( Socket& candidateClientSocket, const uint32_t candidateClientIndex )
 {
 	int result = FALSE;
 	if ( nullptr == AcceptEx )
@@ -75,12 +59,12 @@ int Socket::acceptOverlapped( Socket& candidateClientSocket )
 		}
 	}
 	DWORD ignored = 0;
-	LPOVERLAPPED lpOverlapped = makeWork(IOType::ACCEPT);
+	Overlapped& overlapped = mOverlappedStructs.emplace_front(candidateClientIndex);
 	result = AcceptEx( mhSocket, candidateClientSocket.mhSocket,
 					  candidateClientSocket.mAddressBuffer.get(), 0,
 					  sizeof(AddressBuffer::localAddress), sizeof(AddressBuffer::remoteAddress),
 					  &ignored,
-					  lpOverlapped );
+					  &overlapped );
 	const int err = WSAGetLastError();
 	if ( FALSE == result &&
 		WSA_IO_PENDING == err )
@@ -88,6 +72,14 @@ int Socket::acceptOverlapped( Socket& candidateClientSocket )
 		result = TRUE;
 	}
 	return result;
+}
+
+uint32_t Socket::extractIndexFrom( LPOVERLAPPED const lpOverlapped )
+{
+	const Overlapped* const ptr = (Overlapped*)lpOverlapped;
+	const uint32_t retVal = ptr->ioTypeOrIndex;
+	erase( lpOverlapped );
+	return retVal;
 }
 
 int Socket::updateAcceptContext( Socket& listener )
@@ -142,8 +134,8 @@ int Socket::disconnectOverlapped( )
 			return result;
 		}
 	}
-	LPOVERLAPPED lpOverlapped = makeWork(IOType::DISCONNECT);
-	result = DisconnectEx(mhSocket, lpOverlapped, TF_REUSE_SOCKET, 0);
+	Overlapped& overlapped = mOverlappedStructs.emplace_front(IOType::DISCONNECT);
+	result = DisconnectEx(mhSocket, &overlapped, TF_REUSE_SOCKET, 0);
 	const int err = WSAGetLastError();
 	if ( FALSE == result )
 	{
@@ -154,14 +146,7 @@ int Socket::disconnectOverlapped( )
 		else if ( WSAENOTCONN == err )
 		{
 			result = TRUE;
-			for ( Work& w : mWorks )
-			{
-				if ( lpOverlapped == &w.overlapped )
-				{
-					w.reset( );
-					--mNumOfWorks_;
-				}
-			}
+			erase( &overlapped );
 		}
 	}
 	return result;
@@ -182,8 +167,8 @@ int Socket::receiveOverlapped( LPWSAOVERLAPPED_COMPLETION_ROUTINE lpRoutine )
 	b.len = RCV_BUF_SIZ;
 	b.buf = mReceivingBuffer;
 	DWORD ignored = 0;
-	LPOVERLAPPED lpOverlapped = makeWork(IOType::RECEIVE);
-	int result = WSARecv( mhSocket, &b, 1, NULL, &ignored, lpOverlapped, lpRoutine );
+	Overlapped& overlapped = mOverlappedStructs.emplace_front(IOType::RECEIVE);
+	int result = WSARecv(mhSocket, &b, 1, NULL, &ignored, &overlapped, lpRoutine);
 	const int err = WSAGetLastError();
 	if ( 0 == result ||
 		-1 == result && WSA_IO_PENDING == err ||
@@ -195,15 +180,7 @@ int Socket::receiveOverlapped( LPWSAOVERLAPPED_COMPLETION_ROUTINE lpRoutine )
 	// Exception
 	else
 	{
-		for ( Work& w : mWorks )
-		{
-			if ( lpOverlapped == &w.overlapped )
-			{
-				w.reset( );
-				--mNumOfWorks_;
-				break;
-			}
-		}
+		erase( &overlapped );
 	}
 	return result;
 }
@@ -229,8 +206,8 @@ int Socket::sendOverlapped( char* const data, const size_t size,
 	WSABUF b;
 	b.buf = data;
 	b.len = (ULONG)size;
-	LPOVERLAPPED lpOverlapped = makeWork( IOType::SEND );
-	int result = ::WSASend( mhSocket, &b, 1, NULL, 0, lpOverlapped, lpRoutine );
+	Overlapped& overlapped = mOverlappedStructs.emplace_front(IOType::SEND);
+	int result = ::WSASend( mhSocket, &b, 1, NULL, 0, &overlapped, lpRoutine );
 	const int err = WSAGetLastError();
 	if ( 0 == result ||
 		-1 == result && WSA_IO_PENDING == err ||
@@ -241,15 +218,7 @@ int Socket::sendOverlapped( char* const data, const size_t size,
 	// Exception
 	else
 	{
-		for ( Work& w : mWorks )
-		{
-			if ( lpOverlapped == &w.overlapped )
-			{
-				w.reset( );
-				--mNumOfWorks_;
-				break;
-			}
-		}
+		erase( &overlapped );
 	}
 	return result;
 }
@@ -260,8 +229,8 @@ int Socket::sendOverlapped( Packet& packet, LPWSAOVERLAPPED_COMPLETION_ROUTINE l
 	WSABUF b;
 	b.buf = data.data();
 	b.len = (ULONG)data.size();
-	LPOVERLAPPED lpOverlapped = makeWork(IOType::SEND);
-	int result = ::WSASend( mhSocket, &b, 1, NULL, 0, lpOverlapped, lpRoutine );
+	Overlapped& overlapped = mOverlappedStructs.emplace_front(IOType::SEND);
+	int result = ::WSASend( mhSocket, &b, 1, NULL, 0, &overlapped, lpRoutine );
 	const int err = WSAGetLastError();
 	if ( 0 == result ||
 		-1 == result &&	WSA_IO_PENDING == err ||
@@ -272,15 +241,7 @@ int Socket::sendOverlapped( Packet& packet, LPWSAOVERLAPPED_COMPLETION_ROUTINE l
 	// Exception
 	else
 	{
-		for ( Work& w : mWorks )
-		{
-			if ( lpOverlapped == &w.overlapped )
-			{
-				w.reset( );
-				--mNumOfWorks_;
-				break;
-			}
-		}
+		erase( &overlapped );
 	}
 	return result;
 }
@@ -288,14 +249,11 @@ int Socket::sendOverlapped( Packet& packet, LPWSAOVERLAPPED_COMPLETION_ROUTINE l
 void Socket::reset( const bool isSocketReusable, const Socket::Type type )
 {
 	mIsReceiving_ = false;
-	mNumOfWorks_ = 0;
-	mRecentlyReceivedSize_ = RCV_BUF_SIZ;
+	mRecentlyReceivedSize_ = 0;
 	mAddressBuffer = std::make_unique<AddressBuffer>();
 	mpRemoteSockAddr = nullptr;
-	for ( Work& w : mWorks )
-	{
-		w.reset( );
-	}
+	mOverlappedStructs.clear();
+	ZeroMemory( mReceivingBuffer, RCV_BUF_SIZ );
 	if ( false == isSocketReusable )
 	{
 		switch ( type )
@@ -317,57 +275,54 @@ void Socket::reset( const bool isSocketReusable, const Socket::Type type )
 	}
 }
 
-IOType Socket::completedIO( const LPOVERLAPPED lpOverlapped,
+IOType Socket::completedIO( LPOVERLAPPED const lpOverlapped,
 						   const DWORD cbTransferred )
 {
-	IOType retVal = IOType::NONE;
-	for ( Work& w : mWorks )
+	const Overlapped* const ptr = (Overlapped*)lpOverlapped;
+	const IOType retVal = (IOType)ptr->ioTypeOrIndex;
+	erase( lpOverlapped );
+	if ( IOType::RECEIVE == retVal )
 	{
-		if ( lpOverlapped == &w.overlapped )
-		{
-			retVal = w.ioType;
-			w.reset( );
-			//
-			--mNumOfWorks_;
-			if ( IOType::RECEIVE == retVal )
-			{
-				mIsReceiving_ = false;
-				mRecentlyReceivedSize_ = cbTransferred;
-			}
-			break;
-		}
+		mIsReceiving_ = false;
+		mRecentlyReceivedSize_ = cbTransferred;
 	}
-#ifdef _DEBUG
-	if ( IOType::NONE == retVal )
-	{
-		__debugbreak( );
-	}
-#endif
 	return retVal;
 }
 
-LPOVERLAPPED Socket::makeWork( const IOType ioType )
+void Socket::erase( LPOVERLAPPED const lpOverlapped )
 {
-	LPOVERLAPPED retVal = nullptr;
-	for ( Work& w : mWorks )
-	{
-		// When finding one reusable,
-		if ( IOType::NONE == w.ioType )
-		{
-			++mNumOfWorks_;
-			w.ioType = ioType;
-			retVal = &w.overlapped;
-			return retVal;
-		}
-	}
-	Work& w = mWorks.emplace_front(ioType);
-	++mNumOfWorks_;
 #ifdef _DEBUG
-	if ( -1 == mNumOfWorks_ )
+	if ( true == mOverlappedStructs.empty() )
 	{
 		__debugbreak( );
 	}
 #endif
-	retVal = &w.overlapped;
-	return retVal;
+	auto it = mOverlappedStructs.begin();
+	if ( lpOverlapped == &*it )
+	{
+		mOverlappedStructs.pop_front();
+	}
+	else
+	{
+		++it;
+#ifdef _DEBUG
+		if ( mOverlappedStructs.end() == it )
+		{
+			__debugbreak( );
+		}
+#endif
+		auto it2 = mOverlappedStructs.cbegin();
+		while ( lpOverlapped != &*it )
+		{
+			++it;
+#ifdef _DEBUG
+			if ( mOverlappedStructs.end() == it )
+			{
+				__debugbreak( );
+			}
+#endif
+			++it2;
+		}
+		mOverlappedStructs.erase_after(it2);
+	}
 }

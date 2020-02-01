@@ -130,8 +130,6 @@ namespace model
 
 		inline void draw( sf::RenderWindow& window )
 		{
-			// NOTE: The OpenGL failure occurs.
-			///#pragma omp parallel
 			for ( uint8_t i = 0; i != ::model::tetrimino::LOCAL_SPACE_SIZE; ++i )
 			{
 				if ( mPossibleRotations[(int)mRotationID] &

@@ -43,21 +43,6 @@ int main()
 			std::cerr << "FATAL: Failed to bind listener.\n";
 			result = false;
 		}
-		//궁금: 항상 받기 걸어두기가 가능하면 이게 필요하다.
-		//else if ( const DWORD rcvBufSize = 0;
-		//	0 != ::setsockopt(listener.handle(), SOL_SOCKET, SO_RCVBUF, (char*)&rcvBufSize, sizeof(DWORD)) )
-		//{
-		//	// Exception
-		//	std::cerr << "Failed to set receiving buffer size to zero for the listener.\n";
-		//}
-		//궁금: 8KB 받기 버퍼에게 오류를 일으키는 것 같다.
-		//else if ( const DWORD SND_BUF_SIZ = 0;
-		//		0 != ::setsockopt(listener.handle(), SOL_SOCKET, SO_SNDBUF, (char*)&SND_BUF_SIZ, sizeof(DWORD)) )
-		//{
-		//	// Exception
-		//	std::cerr << "FATAL: Failed to set sending buffer size to zero for the listener.\n";
-		//	result = false;
-		//}
 		else if ( -1 == iocp.add(listener.handle(), LISTENER_IDX) )
 		{
 			// Exception
@@ -88,7 +73,7 @@ int main()
 	for ( uint32_t i = 0; i != CLIENT_CAPACITY; ++i )
 	{
 		Client& client = clients.emplace_back(Socket::Type::TCP, i);
-		const Socket& socket = client.socket();
+		Socket& socket = client.socket();
 		if ( -1 == iocp.add(socket.handle(), i) )
 		{
 			std::cerr << "FATAL: Failed to add Client " << i << " into IOCP.\n";
@@ -97,27 +82,32 @@ int main()
 			clients.clear( );
 			return -1;
 		}
-		candidates.emplace_back( i );
-	}
-	{
-		const int result = listener.acceptOverlapped(clients.at(candidates.front()).socket());
-		if ( FALSE == result )
+
+		if ( i < Socket::BACKLOG_SIZ )
 		{
-			// Exception
-			std::cerr << "FATAL: Failed to accept.\n";
-			listener.close( );
-			clients.clear( );
-			WSACleanup( );
-			return -1;
+			const int result = listener.acceptOverlapped(socket, i);
+			if ( FALSE == result )
+			{
+				// Exception
+				std::cerr << "FATAL: Failed to accept.\n";
+				listener.close( );
+				clients.clear( );
+				WSACleanup( );
+				return -1;
+			}
+			else if ( -1 == result )
+			{
+				// Exception
+				std::cerr << "FATAL: Failed to get AcceptEx(...).\n";
+				listener.close( );
+				clients.clear( );
+				WSACleanup( );
+				return -1;
+			}
 		}
-		else if ( -1 == result )
+		else
 		{
-			// Exception
-			std::cerr << "FATAL: Failed to get AcceptEx(...).\n";
-			listener.close( );
-			clients.clear( );
-			WSACleanup( );
-			return -1;
+			candidates.emplace_back( i );
 		}
 	}
 
@@ -125,12 +115,14 @@ int main()
 	//
 	////
 
+	uint32_t population = 0;
 	// NOTE: std::vector with cache runs faster than std::list.
 	std::vector<ClientIndex> lobby;
 	lobby.reserve( LOBBY_CAPACITY );
 	std::unordered_map<HashedKey, Room> rooms;
 	rooms.reserve( ROOM_CAPACITY );
-	auto forceDisconnection = [ &clients, &iocp, &candidates, &lobby, &rooms ]( const ClientIndex index ) -> bool
+	auto forceDisconnection =
+		[ &iocp, &clients, &candidates, &population, &lobby, &rooms ]( const ClientIndex index ) -> bool
 	{
 		bool result = true;
 		Client& client = clients[index];
@@ -166,12 +158,12 @@ int main()
 			result = false;
 			return result;
 		}
+		--population;
 		candidates.emplace_back( index );
 		std::cout << "Forced to disconnect Client " << index << ". (Now "
-			<< CLIENT_CAPACITY-candidates.size() << "/" << CLIENT_CAPACITY << " connections.)\n";
+			<< population << "/" << CLIENT_CAPACITY << " connections.)\n";
 		return result;
 	};
-	bool wasBoatful = false;
 	ClientIndex queueServerIdx = -1;
 	std::cout << "###############\n### MAIN SERVER\n###############\n\nWhat would the queue server say?" << std::endl;
 	std::string sign;
@@ -196,30 +188,25 @@ int main()
 			////
 			if ( LISTENER_IDX == (ClientIndex)ev.lpCompletionKey )
 			{
-				const IOType cmpl = listener.completedIO(ev.lpOverlapped,
-														 ev.dwNumberOfBytesTransferred);
-#ifdef _DEBUG
-				if ( IOType::ACCEPT != cmpl )
-				{
-					__debugbreak( );
-				}
-#endif
-				const ClientIndex candidate = candidates.front();
-				Socket& candidateClientSocket = clients[candidate].socket();
+				const ClientIndex candidateIdx = listener.extractIndexFrom(ev.lpOverlapped);
+				Socket& candidateClientSocket = clients[candidateIdx].socket();
 				if ( -1 == candidateClientSocket.updateAcceptContext(listener) )
 				{
 					// Exception
-					std::cerr << "FATAL: Failed to update acception context of Candidate " << candidate << ".\n";
+					std::cerr << "FATAL: Failed to update acception context of Candidate " <<
+						candidateIdx << ".\n";
 					// Break twice
 					goto cleanUp;
 				}
 				// When accepting successfully,
+				++population;
 				Socket& clientSocket = candidateClientSocket;
-				const ClientIndex clientIdx = candidate;
+				const ClientIndex clientIdx = candidateIdx;
 				if ( -1 == clientSocket.receiveOverlapped() )
 				{
 					// Exception
-					std::cerr << "WARNING: Failed to receive from a new client " << clientIdx << ".\n";
+					std::cerr << "WARNING: Failed to receive from a new client " <<
+						clientIdx << ".\n";
 					if ( false == forceDisconnection(clientIdx) )
 					{
 						// Break twice
@@ -228,30 +215,23 @@ int main()
 				}
 				else
 				{
-					candidates.pop_front( );
 #ifdef _DEBUG
 					std::cout << "A new client " << clientIdx << " joined. (Now "
-						<< CLIENT_CAPACITY-candidates.size() << "/" << CLIENT_CAPACITY << " connections.)\n";
+						<< population << "/" << CLIENT_CAPACITY << " connections.)\n";
 #endif
 				}
 
 				// Reloading the next candidate.
 				if ( 0 < candidates.size() )
 				{
-					const ClientIndex nextCandidate = candidates.front();
-					if ( FALSE == listener.acceptOverlapped(clients[nextCandidate].socket()) )
+					const ClientIndex nextCandidateIdx = candidates.front();
+					if ( FALSE == listener.acceptOverlapped(clients[nextCandidateIdx].socket(),
+															nextCandidateIdx) )
 					{
 						// Exception
 						std::cerr << "FATAL: Failed to accept.\n";
 						goto cleanUp;
 					}
-				}
-				else
-				{
-#ifdef _DEBUG
-					std::cout << "Boatful!\n";
-#endif
-					wasBoatful = true;
 				}
 			}
 			////
@@ -270,12 +250,13 @@ int main()
 				if ( IOType::DISCONNECT == cmpl )
 				{
 					queueServer.reset( );
+					--population;
 					candidates.emplace_back( queueServerIdx );
 					// Reset
 					queueServerIdx = -1;
 #ifdef _DEBUG
 					std::cerr << "WARNING: The queue server disconnected. (Now "
-						<< CLIENT_CAPACITY-candidates.size( ) << '/' << CLIENT_CAPACITY << " connections.)\n";
+						<< population << '/' << CLIENT_CAPACITY << " connections.)\n";
 #endif
 				}
 				else if ( 0 == ev.dwNumberOfBytesTransferred )
@@ -311,16 +292,14 @@ int main()
 							const char* const rcvBuf = socketToQueueServer.receivingBuffer();
 							const std::string_view strView( rcvBuf );
 							// When the queue server asked how many clients keep connecting,
-// 궁금: receive 쪼개서 받을 수 있으면 이렇게 안 해도 될텐데.
 							if ( const size_t pos = strView.find(TAG_POPULATION);
 								std::string_view::npos != pos )
 							{
 #ifdef _DEBUG
 								std::cout << "Population has been asked by the queue server.\n";
 #endif
-								const uint32_t pop = CLIENT_CAPACITY-candidates.size();
 								Packet packet;
-								packet.pack( TAG_POPULATION, pop );
+								packet.pack( TAG_POPULATION, population );
 								if ( -1 == socketToQueueServer.sendOverlapped(packet) )
 								{
 									// Exception
@@ -336,27 +315,30 @@ int main()
 								else
 								{
 #ifdef _DEBUG
-									std::cout << "Population has been told: " << pop << ".\n";
+									std::cout << "Population has been told: " << population << ".\n";
 #endif
 								}
 							}
-							uint32_t off = 0;
-							// When having received copies of the issued ticket,
-							constexpr uint8_t TAG_TICKET_LEN = ::util::hash::Measure(TAG_TICKET);
-							while ( true )
+							else
 							{
-								const size_t tagPos = strView.find( TAG_TICKET, off );
-								if ( std::string_view::npos == tagPos )
+								uint32_t off = 0;
+								// When having received copies of the issued ticket,
+								constexpr uint8_t TAG_TICKET_LEN = ::util::hash::Measure(TAG_TICKET);
+								while ( true )
 								{
-									break;
-								}
- 								const uint32_t beginPos = (uint32_t)tagPos + TAG_TICKET_LEN;
-								off += sizeof(Ticket);
-								const Ticket id = ::ntohl(*(Ticket*)&rcvBuf[beginPos]);
-								tickets.emplace_back( id );
+									const size_t tagPos = strView.find(TAG_TICKET, off);
+									if ( std::string_view::npos == tagPos )
+									{
+										break;
+									}
+ 									const uint32_t beginPos = (uint32_t)tagPos + TAG_TICKET_LEN;
+									off += sizeof(Ticket);
+									const Ticket id = ::ntohl(*(Ticket*)&rcvBuf[beginPos]);
+									tickets.emplace_back( id );
 #ifdef _DEBUG
-								std::cout << "A copy of the issued ticket arrived: " << id << ".\n";
+									std::cout << "A copy of the issued ticket arrived: " << id << ".\n";
 #endif
+								}
 							}
 							//TODO: 끊임없이 받기 걸어두고 싶다.
 							if ( -1 == socketToQueueServer.receiveOverlapped() )
@@ -438,10 +420,11 @@ int main()
 						}
 					}
 					client.reset( );
+					--population;
 					candidates.emplace_back( clientIdx );
 #ifdef _DEBUG
 					std::cout << "Client " << clientIdx << " left. (Now "
-						<< CLIENT_CAPACITY-candidates.size( ) << "/" << CLIENT_CAPACITY << " connections.)\n";
+						<< population << "/" << CLIENT_CAPACITY << " connections.)\n";
 #endif
 				}
 				else if ( 0 == ev.dwNumberOfBytesTransferred )
@@ -489,7 +472,6 @@ int main()
 							}
 							if ( tickets.cend() != it )
 							{
-								client.holdTicket( ticket );
 								tickets.erase( it );
 //TODO: 닉네임
 								std::string nickname( "nickname" );
@@ -533,8 +515,7 @@ int main()
 								std::cout << "Population has been asked by the queue server.\n";
 #endif
 								Packet packet;
-								const uint32_t pop = CLIENT_CAPACITY-candidates.size();
-								packet.pack( TAG_POPULATION, pop );
+								packet.pack( TAG_POPULATION, population );
 								Socket& queueServerSocket = clientSocket;
 								if ( -1 == queueServerSocket.sendOverlapped(packet) )
 								{
@@ -548,7 +529,7 @@ int main()
 									continue;
 								}
 #ifdef _DEBUG
-								std::cout << "Population has been told: " << pop << ".\n";
+								std::cout << "Population has been told: " << population << ".\n";
 #endif
 								if ( -1 == clientSocket.receiveOverlapped() )
 								{
@@ -650,11 +631,11 @@ int main()
 			}
 		}
 
-		if ( true == wasBoatful && 0 < candidates.size() )
+		if ( 0 < candidates.size() )
 		{
-			wasBoatful = false;
-			const ClientIndex nextCandidateClientIdx = candidates.front();
-			if ( FALSE == listener.acceptOverlapped(clients[nextCandidateClientIdx].socket()) )
+			const ClientIndex nextCandidateIdx = candidates.front();
+			if ( FALSE == listener.acceptOverlapped(clients[nextCandidateIdx].socket(),
+													nextCandidateIdx) )
 			{
 				// Exception
 				std::cerr << "FATAL: Overlapped acceptEx failed.\n";

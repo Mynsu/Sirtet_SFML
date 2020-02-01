@@ -360,7 +360,7 @@ void scene::online::Online::send( char* const data, const int size )
 		disconnect( );
 		return;
 	}
-	// 궁금: 메인 스레드인데, 프레임 드랍 없을까?
+	// NOTE: Blocking can happen.
 	::SleepEx( 1000, TRUE );
 }
 
@@ -371,7 +371,7 @@ void scene::online::Online::send( Packet& packet )
 		disconnect( );
 		return;
 	}
-	// 궁금: 메인 스레드인데, 프레임 드랍 없을까?
+	// NOTE: Blocking can happen.
 	::SleepEx( 1000, TRUE );
 }
 

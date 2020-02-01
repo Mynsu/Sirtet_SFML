@@ -4,13 +4,11 @@
 #include <sstream>
 
 #define NULL_HASHED_KEY 0
-#define NULL_TICKET NULL_HASHED_KEY
 #define NULL_ROOM_ID -1
 
 Client::Client( const Socket::Type type, const ClientIndex index )
 	: mIndex( index ), mState( State::UNVERIFIED ),
-	mTicket( NULL_TICKET ), mRoomID( NULL_ROOM_ID ),
-	mNicknameHashed_( NULL_HASHED_KEY ),
+	mRoomID( NULL_ROOM_ID ), mNicknameHashed_( NULL_HASHED_KEY ),
 	mSocket( type )
 {
 }
@@ -434,11 +432,6 @@ void Client::setState(const Client::State state)
 	mState = state;
 }
 
-void Client::holdTicket(const Ticket ticket)
-{
-	mTicket = ticket;
-}
-
 RoomID Client::roomID( ) const
 {
 	return mRoomID;
@@ -474,7 +467,6 @@ Socket& Client::socket( )
 void Client::reset( const bool isSocketReusable )
 {
 	mState = Client::State::UNVERIFIED;
-	mTicket = NULL_TICKET;
 	mRoomID = NULL_ROOM_ID;
 	mNicknameHashed_ = NULL_HASHED_KEY;
 	mNickname.clear( );

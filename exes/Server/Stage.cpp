@@ -20,7 +20,6 @@ uint8_t model::Stage::tryClearRow( )
 		// k reaches GRID_WIDTH when the i-th line is full with blocks.
 		if ( ::model::stage::GRID_WIDTH == k )
 		{
-			#pragma omp parallel
 			for ( auto& it : mGrid[ i ] )
 			{
 				// NOTE: Don't need to set it.color transparent.
@@ -54,7 +53,6 @@ uint8_t model::Stage::tryClearRow( )
 					{
 						mGrid[ i ] = mGrid[ k ];
 						fLineCleared.set( i, false );
-						#pragma omp parallel
 						for ( auto& it : mGrid[ k ] )
 						{
 							it.blocked = false;

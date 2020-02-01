@@ -13,9 +13,9 @@ sf::Vector2<int8_t> model::Tetrimino::Test[ (int)::model::tetrimino::Rotation::N
 {
 	::model::Tetrimino retVal;
 	std::random_device rD;
-	std::minstd_rand rE( rD() ); //±Ã±Ý: ·¹ÆÛ·±½º ¹®¼­ º¸ÀÚ.
+	std::minstd_rand rE( rD() );
 	std::uniform_int_distribution shapeDist( (int)::model::tetrimino::Type::I,
-											 (int)::model::tetrimino::Type::NONE_MAX-1 ); //±Ã±Ý: ¾êµµ.
+											 (int)::model::tetrimino::Type::NONE_MAX-1 );
 	const ::model::tetrimino::Type type = (::model::tetrimino::Type)shapeDist(rE);
 	retVal.mType = type;
 	switch ( type )

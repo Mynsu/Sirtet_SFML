@@ -18,20 +18,24 @@ enum class IOType
 	NONE,
 	RECEIVE,
 	SEND,
-	ACCEPT,
 	CONNECT,
 	DISCONNECT,
 };
 
-struct Work
+struct Overlapped : public WSAOVERLAPPED
 {
-public:
-	Work( ) = delete;
-	Work( const IOType ioType );
-	~Work( ) = default;
-	void reset( );
-	IOType ioType;
-	WSAOVERLAPPED overlapped;
+	Overlapped( ) = delete;
+	explicit Overlapped( const IOType ioType )
+	{
+		ZeroMemory( this, sizeof(Overlapped) );
+		ioTypeOrIndex = (uint32_t)ioType;
+	}
+	explicit Overlapped( const uint32_t clientIndex )
+	{
+		ZeroMemory( this, sizeof(Overlapped) );
+		ioTypeOrIndex = clientIndex;
+	}
+	uint32_t ioTypeOrIndex;
 };
 
 class Socket
@@ -61,7 +65,8 @@ public:
 	{
 		::listen( mhSocket, BACKLOG_SIZ );
 	}
-	int acceptOverlapped( Socket& candidateClientSocket );
+	int acceptOverlapped( Socket& candidateClientSocket, const uint32_t candidateClientIndex );
+	uint32_t extractIndexFrom( LPOVERLAPPED const lpOverlapped );
 	int updateAcceptContext( Socket& listener );
 	int connect( const EndPoint& targetEndPoint );
 	int disconnectOverlapped( );
@@ -77,14 +82,14 @@ public:
 	void reset( const bool isSocketReusable = true, const Socket::Type type = Socket::Type::TCP );
 	bool isPending( ) const
 	{
-		return (0 < mNumOfWorks_)? true: false;
+		return !mOverlappedStructs.empty();
 	}
 	SOCKET_HANDLE handle( ) const
 	{
 		return mhSocket;
 	}
 	// Returns which IO has been completed, makes the work reusable and releases reception lock.
-	IOType completedIO( const LPOVERLAPPED lpOverlapped, const DWORD cbTransferred );
+	IOType completedIO( LPOVERLAPPED const lpOverlapped, const DWORD cbTransferred );
 	char* const receivingBuffer( )
 	{
 		return mReceivingBuffer;
@@ -94,12 +99,11 @@ public:
 		return mExtraReceivingBuffer;
 	}
 private:
-	LPOVERLAPPED makeWork( const IOType ioType );
+	void erase( LPOVERLAPPED const lpOverlapped );
 	static LPFN_ACCEPTEX AcceptEx;
 	static LPFN_DISCONNECTEX DisconnectEx;
 	static LPFN_GETACCEPTEXSOCKADDRS GetAcceptExSockAddrs;
 	bool mIsReceiving_;
-	uint8_t mNumOfWorks_;
 	uint32_t mRecentlyReceivedSize_;
 	SOCKET_HANDLE mhSocket;
 	struct AddressBuffer
@@ -113,7 +117,7 @@ private:
 	};
 	std::unique_ptr<AddressBuffer> mAddressBuffer;
 	SOCKADDR_IN* mpRemoteSockAddr;
-	std::forward_list<Work> mWorks;
+	std::forward_list<Overlapped> mOverlappedStructs;
 	std::string mExtraReceivingBuffer;
 	char mReceivingBuffer[ RCV_BUF_SIZ ];
 };

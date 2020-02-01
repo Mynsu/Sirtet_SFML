@@ -16,7 +16,14 @@ public:
 
 	Client( ) = delete;
 	Client( const Socket::Type type, const ClientIndex index );
-	Client( const Client& ) = default;
+	// !IMPORTANT: DO NOT USE!  Defined to use std::vector.
+	Client( const Client& )
+		: mIndex( -1 ), mSocket( Socket::Type::TCP )
+	{
+#ifdef _DEBUG
+		__debugbreak( );
+#endif
+	}
 	void operator=( const Client& ) = delete;
 	~Client( ) = default;
 
@@ -26,7 +33,6 @@ public:
 								std::unordered_map<HashedKey, Room>& roomS );
 	Client::State state( ) const;
 	void setState( const Client::State state );
-	void holdTicket( const Ticket ticket );
 	RoomID roomID( ) const;
 	void setRoomID( const RoomID roomID );
 	const std::string& nickname( ) const;
@@ -37,8 +43,6 @@ public:
 private:
 	const ClientIndex mIndex;
 	Client::State mState;
-	//궁금: 필요 있으려나?
-	Ticket mTicket;
 	RoomID mRoomID;
 	HashedKey mNicknameHashed_;
 	std::string mNickname;

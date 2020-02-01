@@ -25,7 +25,6 @@ namespace model
 		inline void blackout( )
 		{
 			const sf::Color GRAY( 0x808080ff );
-#pragma omp parallel
 			for ( auto& row : mGrid )
 			{
 				for ( auto& cell : row )
