@@ -66,20 +66,18 @@ int Socket::acceptOverlapped( Socket& candidateClientSocket, const uint32_t cand
 					  &ignored,
 					  &overlapped );
 	const int err = WSAGetLastError();
-	if ( FALSE == result &&
-		WSA_IO_PENDING == err )
+	if ( FALSE == result )
 	{
-		result = TRUE;
+		if ( WSA_IO_PENDING == err )
+		{
+			result = TRUE;
+		}
+		else
+		{
+			erase( &overlapped );
+		}
 	}
 	return result;
-}
-
-uint32_t Socket::extractIndexFrom( LPOVERLAPPED const lpOverlapped )
-{
-	const Overlapped* const ptr = (Overlapped*)lpOverlapped;
-	const uint32_t retVal = ptr->ioTypeOrIndex;
-	erase( lpOverlapped );
-	return retVal;
 }
 
 int Socket::updateAcceptContext( Socket& listener )
@@ -275,13 +273,13 @@ void Socket::reset( const bool isSocketReusable, const Socket::Type type )
 	}
 }
 
-IOType Socket::completedIO( LPOVERLAPPED const lpOverlapped,
+uint32_t Socket::completedIO( LPOVERLAPPED const lpOverlapped,
 						   const DWORD cbTransferred )
 {
 	const Overlapped* const ptr = (Overlapped*)lpOverlapped;
-	const IOType retVal = (IOType)ptr->ioTypeOrIndex;
+	const uint32_t retVal = ptr->ioTypeOrIndex;
 	erase( lpOverlapped );
-	if ( IOType::RECEIVE == retVal )
+	if ( IOType::RECEIVE == (IOType)retVal )
 	{
 		mIsReceiving_ = false;
 		mRecentlyReceivedSize_ = cbTransferred;

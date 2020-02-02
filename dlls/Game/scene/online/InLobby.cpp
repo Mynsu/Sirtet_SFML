@@ -1369,7 +1369,10 @@ void scene::online::InLobby::draw( )
 			mGuideTextLabel.setString( mGuideTexts[mGuideTextIndex] );
 		}
 	}
-	mWindow_.draw( mGuideTextLabel );
+	if ( 0 == mEnteringRoom )
+	{
+		mWindow_.draw( mGuideTextLabel );
+	}
 	{
 		std::scoped_lock lock( MutexForMovingPoints );
 		uint8_t numOfMovingPoints = (uint8_t)mDrawingInfo.movingPoints.size();

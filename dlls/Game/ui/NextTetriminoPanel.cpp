@@ -5,9 +5,10 @@
 void ui::NextTetriminoPanel::setTetrimino( const::model::Tetrimino& next )
 {
 	const sf::Color nextTetColor( next.color() );
-	for ( auto& it : mBlocks )
+	for ( sf::RectangleShape& block : mBlocks )
 	{
-		it.setFillColor( nextTetColor );
+		block.setFillColor( nextTetColor );
+		block.setOutlineThickness( 0.5f );
 	}
 	const ::model::tetrimino::Type type = next.type( );
 	const ::model::tetrimino::LocalSpace nextTetBlocks = next.blocks( );

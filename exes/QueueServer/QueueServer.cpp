@@ -271,7 +271,8 @@ int main( )
 			////
 			if ( LISTENER_IDX == (ClientIndex)ev.lpCompletionKey )
 			{
-				const ClientIndex candidateIdx = listener.extractIndexFrom(ev.lpOverlapped);
+				const ClientIndex candidateIdx = listener.completedIO(ev.lpOverlapped,
+																	  ev.dwNumberOfBytesTransferred);
 				Socket& candidateSocket = clients[candidateIdx];
 				if ( -1 == candidateSocket.updateAcceptContext(listener) )
 				{
@@ -321,7 +322,7 @@ int main( )
 			////
 			else if ( MAIN_SERVER_INDEX == (ClientIndex)ev.lpCompletionKey )
 			{
-				const IOType cmpl = socketToMainServer->completedIO(ev.lpOverlapped,
+				const IOType cmpl = (IOType)socketToMainServer->completedIO(ev.lpOverlapped,
 																	ev.dwNumberOfBytesTransferred);
 				if ( 0 == ev.dwNumberOfBytesTransferred )
 				{
@@ -419,7 +420,7 @@ int main( )
 			{
 				const ClientIndex clientIdx = (ClientIndex)ev.lpCompletionKey;
 				Socket& clientSocket = clients[clientIdx];
-				const IOType cmpl = clientSocket.completedIO(ev.lpOverlapped,
+				const IOType cmpl = (IOType)clientSocket.completedIO(ev.lpOverlapped,
 															 ev.dwNumberOfBytesTransferred);
 				if ( IOType::DISCONNECT == cmpl )
 				{
@@ -711,6 +712,7 @@ int main( )
 				std::cerr << "FATAL: Overlapped acceptEx failed.\n";
 				break;
 			}
+			candidates.pop_front( );
 		}
 	}
 
@@ -735,6 +737,7 @@ cleanUp:
 	{
 		IOCPEvent event;
 		iocp.wait( event, 100 );
+		// 궁금: 소켓 닫으면 이벤트 발생?
 		for ( uint32_t i = 0; i != event.eventCount; ++i )
 		{
 			const OVERLAPPED_ENTRY& ev = event.events[i];

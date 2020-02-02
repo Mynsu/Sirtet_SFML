@@ -16,6 +16,7 @@ using SOCKET_HANDLE = SOCKET;
 enum class IOType
 {
 	NONE,
+	ACCEPT,
 	RECEIVE,
 	SEND,
 	CONNECT,
@@ -66,7 +67,6 @@ public:
 		::listen( mhSocket, BACKLOG_SIZ );
 	}
 	int acceptOverlapped( Socket& candidateClientSocket, const uint32_t candidateClientIndex );
-	uint32_t extractIndexFrom( LPOVERLAPPED const lpOverlapped );
 	int updateAcceptContext( Socket& listener );
 	int connect( const EndPoint& targetEndPoint );
 	int disconnectOverlapped( );
@@ -88,8 +88,9 @@ public:
 	{
 		return mhSocket;
 	}
-	// Returns which IO has been completed, makes the work reusable and releases reception lock.
-	IOType completedIO( LPOVERLAPPED const lpOverlapped, const DWORD cbTransferred );
+	// Returns which IO has been completed.
+	// If acceptance has been completed, this returns the index or key of the socket.
+	uint32_t completedIO( LPOVERLAPPED const lpOverlapped, const DWORD cbTransferred );
 	char* const receivingBuffer( )
 	{
 		return mReceivingBuffer;

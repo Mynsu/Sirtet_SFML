@@ -29,7 +29,6 @@ namespace ui
 			mPanel.setFillColor( background );
 			for ( sf::RectangleShape& block : mBlocks )
 			{
-				block.setOutlineThickness( 1.0f );
 				block.setOutlineColor( cellOutlineColor );
 			}
 		}
@@ -61,6 +60,7 @@ namespace ui
 			for ( sf::RectangleShape& block : mBlocks )
 			{
 				block.setFillColor( sf::Color::Transparent );
+				block.setOutlineThickness( 0.f );
 			}
 		}
 		void draw( );

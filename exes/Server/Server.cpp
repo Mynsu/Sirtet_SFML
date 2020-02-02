@@ -188,7 +188,8 @@ int main()
 			////
 			if ( LISTENER_IDX == (ClientIndex)ev.lpCompletionKey )
 			{
-				const ClientIndex candidateIdx = listener.extractIndexFrom(ev.lpOverlapped);
+				const ClientIndex candidateIdx = listener.completedIO(ev.lpOverlapped,
+																	  ev.dwNumberOfBytesTransferred);
 				Socket& candidateClientSocket = clients[candidateIdx].socket();
 				if ( -1 == candidateClientSocket.updateAcceptContext(listener) )
 				{
@@ -245,7 +246,7 @@ int main()
 				}
 				Client& queueServer = clients[queueServerIdx];
 				Socket& socketToQueueServer = queueServer.socket();
-				const IOType cmpl = socketToQueueServer.completedIO(ev.lpOverlapped,
+				const IOType cmpl = (IOType)socketToQueueServer.completedIO(ev.lpOverlapped,
 																	ev.dwNumberOfBytesTransferred);
 				if ( IOType::DISCONNECT == cmpl )
 				{
@@ -392,7 +393,7 @@ int main()
 				}
 				Client& client = clients[clientIdx];
 				Socket& clientSocket = client.socket();
-				const IOType cmpl =	clientSocket.completedIO(ev.lpOverlapped,
+				const IOType cmpl =	(IOType)clientSocket.completedIO(ev.lpOverlapped,
 															 ev.dwNumberOfBytesTransferred);
 				if ( IOType::DISCONNECT == cmpl )
 				{
@@ -631,7 +632,8 @@ int main()
 			}
 		}
 
-		if ( 0 < candidates.size() )
+		if ( 
+			0 < candidates.size() )
 		{
 			const ClientIndex nextCandidateIdx = candidates.front();
 			if ( FALSE == listener.acceptOverlapped(clients[nextCandidateIdx].socket(),
@@ -641,6 +643,7 @@ int main()
 				std::cerr << "FATAL: Overlapped acceptEx failed.\n";
 				break;
 			}
+			candidates.pop_front( );
 		}
 	}
 
