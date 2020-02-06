@@ -13,59 +13,37 @@ namespace model
 	class Tetrimino
 	{
 	public:
-		// Needs initialization.
-		inline Tetrimino( )
+		// Needs to be initialized by Spawn( ).
+		Tetrimino( )
 			: mIsFallingDown( false )
-		{
-		}
-		inline Tetrimino( const Tetrimino& arg )
-			: mIsFallingDown( false ),
-			mPosition( arg.mPosition ), mColor( arg.mColor ),
-			mType( arg.mType ), mRotationID( arg.mRotationID )
-		{
-			for ( uint8_t i = 0u; i != (uint8_t)::model::tetrimino::Rotation::NONE_MAX; ++i )
-			{
-				mPossibleRotations[ i ] = arg.mPossibleRotations[ i ];
-			}
-		}
-		inline void operator=( const Tetrimino& arg )
-		{
-			mPosition = arg.mPosition;
-			mColor = arg.mColor;
-			mType = arg.mType;
-			mRotationID = arg.mRotationID;
-			for ( uint8_t i = 0u; i != (uint8_t)::model::tetrimino::Rotation::NONE_MAX; ++i )
-			{
-				mPossibleRotations[ i ] = arg.mPossibleRotations[ i ];
-			}
-		}
-		~Tetrimino( ) = default;
+		{ }
+		virtual ~Tetrimino( ) = default;
 
 		static ::model::Tetrimino Spawn( );
 
-		inline bool isFallingDown( ) const
+		bool isFallingDown( ) const
 		{
 			return mIsFallingDown;
 		}
-		inline sf::Vector2<int8_t> position( ) const
+		sf::Vector2<int8_t> position( ) const
 		{
 			return mPosition;
 		}
 		// Current blocks within their own local space.
-		inline LocalSpace blocks( ) const
+		LocalSpace blocks( ) const
 		{
 			return mPossibleRotations[ static_cast<int>(mRotationID) ];
 		}
-		inline ::model::tetrimino::Type type( ) const
+		::model::tetrimino::Type type( ) const
 		{
 			return mType;
 		}
-		inline ::model::tetrimino::Rotation rotationID( ) const
+		::model::tetrimino::Rotation rotationID( ) const
 		{
 			return mRotationID;
 		}
 		// Returns true when colliding with the floor or another tetrimino.
-		inline bool moveDown( const ::model::stage::Grid& grid, const uint8_t diff = 1u )
+		bool moveDown( const ::model::stage::Grid& grid, const uint8_t diff = 1u )
 		{
 			ASSERT_TRUE( diff < ::model::stage::GRID_HEIGHT );
 			mPosition.y += diff;
@@ -76,7 +54,7 @@ namespace model
 			}
 			return retVal;
 		}
-		inline void tryMoveLeft( const ::model::stage::Grid& grid, const uint8_t diff = 1u )
+		void tryMoveLeft( const ::model::stage::Grid& grid, const uint8_t diff = 1u )
 		{
 			ASSERT_TRUE( diff < ::model::stage::GRID_WIDTH );
 			Tetrimino afterMove( *this );
@@ -86,7 +64,7 @@ namespace model
 				*this = afterMove;
 			}
 		}
-		inline void tryMoveRight( const ::model::stage::Grid& grid, const uint8_t diff = 1u )
+		void tryMoveRight( const ::model::stage::Grid& grid, const uint8_t diff = 1u )
 		{
 			ASSERT_TRUE( diff < ::model::stage::GRID_WIDTH );
 			Tetrimino afterMove( *this );
@@ -99,7 +77,7 @@ namespace model
 		// Rotates counter-clockwise.
 		void tryRotate( const ::model::stage::Grid& grid );
 		void land( ::model::stage::Grid& grid );
-		inline void fallDown( const bool isFallingDown = true )
+		void fallDown( const bool isFallingDown = true )
 		{
 			mIsFallingDown = isFallingDown;
 		}

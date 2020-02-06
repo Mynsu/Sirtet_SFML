@@ -36,7 +36,7 @@ sf::Vector2<int8_t> model::Tetrimino::Test[ (int)::model::tetrimino::Rotation::N
 			retVal.mPossibleRotations[ 3 ] = 0b0110'0100'0100'0000;
 			retVal.mRotationID = (::model::tetrimino::Rotation)0;
 			// Blue
-			retVal.mColor = sf::Color(0x0000e5ff);
+			retVal.mColor = sf::Color(0x205cffff);
 			break;
 		case ::model::tetrimino::Type::L:
 			retVal.mPossibleRotations[ 0 ] = 0b0010'1110'0000'0000;

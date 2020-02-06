@@ -4,6 +4,7 @@
 #include "Tetrimino.h"
 
 const uint32_t CLIENT_CAPACITY = 100;
+const uint32_t BACKLOG_SIZ = CLIENT_CAPACITY/2;
 const uint32_t ROOM_CAPACITY = 25;
 const uint32_t LOBBY_CAPACITY = 100;
 const ClientIndex LISTENER_IDX = CLIENT_CAPACITY;
@@ -51,7 +52,7 @@ int main()
 		}
 		else
 		{
-			listener.listen( );
+			listener.listen( BACKLOG_SIZ );
 		}
 
 		if ( false == result )
@@ -66,6 +67,7 @@ int main()
 	//
 	////
 
+	uint32_t numOfAcceptancePending = 0;
 	std::vector<Client> clients;
 	clients.reserve( CLIENT_CAPACITY );
 	container::IteratoredQueue<ClientIndex> candidates;
@@ -83,7 +85,7 @@ int main()
 			return -1;
 		}
 
-		if ( i < Socket::BACKLOG_SIZ )
+		if ( i < BACKLOG_SIZ )
 		{
 			const int result = listener.acceptOverlapped(socket, i);
 			if ( FALSE == result )
@@ -104,6 +106,7 @@ int main()
 				WSACleanup( );
 				return -1;
 			}
+			++numOfAcceptancePending;
 		}
 		else
 		{
@@ -200,6 +203,7 @@ int main()
 					goto cleanUp;
 				}
 				// When accepting successfully,
+				--numOfAcceptancePending;
 				++population;
 				Socket& clientSocket = candidateClientSocket;
 				const ClientIndex clientIdx = candidateIdx;
@@ -220,19 +224,6 @@ int main()
 					std::cout << "A new client " << clientIdx << " joined. (Now "
 						<< population << "/" << CLIENT_CAPACITY << " connections.)\n";
 #endif
-				}
-
-				// Reloading the next candidate.
-				if ( 0 < candidates.size() )
-				{
-					const ClientIndex nextCandidateIdx = candidates.front();
-					if ( FALSE == listener.acceptOverlapped(clients[nextCandidateIdx].socket(),
-															nextCandidateIdx) )
-					{
-						// Exception
-						std::cerr << "FATAL: Failed to accept.\n";
-						goto cleanUp;
-					}
 				}
 			}
 			////
@@ -632,7 +623,7 @@ int main()
 			}
 		}
 
-		if ( 
+		if ( numOfAcceptancePending < BACKLOG_SIZ &&
 			0 < candidates.size() )
 		{
 			const ClientIndex nextCandidateIdx = candidates.front();
@@ -644,6 +635,7 @@ int main()
 				break;
 			}
 			candidates.pop_front( );
+			++numOfAcceptancePending;
 		}
 	}
 

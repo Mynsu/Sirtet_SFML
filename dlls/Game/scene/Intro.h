@@ -6,7 +6,6 @@ namespace scene
 	class Intro final : public ::scene::IScene
 	{
 	public:
-		Intro( ) = delete;
 		Intro( sf::RenderWindow& window );
 		~Intro( );
 

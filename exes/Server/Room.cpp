@@ -6,13 +6,9 @@ const uint32_t UPDATE_USER_LIST_INTERVAL_MS = 1000;
 const uint32_t COUNTDOWN_MS = 3000;
 const int32_t TEMPO_DIFF_MS = -20;
 
-Room::Room( )
-	: mHasTempoChanged_( false ), mHostIndex( -1 ), mState( State::WAITING )
-{
-}
-
 Room::Room( const ClientIndex hostIndex )
-	: mHasTempoChanged_( false ), mHostIndex( hostIndex ), mState( State::WAITING )
+	: mHasTempoChanged_( false ), mHasHostChanged_( false ),
+	mHostIndex( hostIndex ), mState( State::WAITING )
 {
 	mParticipants.reserve( PARTICIPANT_CAPACITY );
 	mCandidateParticipants.emplace_back( hostIndex );
@@ -70,6 +66,7 @@ int Room::leave( const ClientIndex index )
 			const auto it2 = mCandidateParticipants.cbegin();
 			mHostIndex = *it2;
 		}
+		mHasHostChanged_ = true;
 	}
 	return (true==isThereSomeoneRemains)? 1: 0;
 }
@@ -252,6 +249,9 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 					{
 						const HashedKey nicknameHashed = ::htonl(clients[pair.first].nicknameHashed());
 						const Playing& playing = pair.second;
+						const ::model::tetrimino::Type curTetType = playing.currentTetriminoType();
+						newCurrentTetriminos.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
+						newCurrentTetriminos += (char)curTetType;
 						const ::model::tetrimino::Rotation rotID = playing.currentTetriminoRotationID();
 						const sf::Vector2<int8_t> pos( playing.currentTetriminoPosition() );
 						currentTetriminosMove.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
@@ -412,6 +412,11 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 		}
 		Packet packet;
 		packet.pack( TAGGED_NOTI_UPDATE_USER_LIST, userList );
+		if ( true == mHasHostChanged_ )
+		{
+			packet.pack( TAGGED_NOTI_HOST_CHANGED, clients[mHostIndex].nicknameHashed() );
+			mHasHostChanged_ = false;
+		}
 		for ( const ClientIndex idx : everyoneInRoom )
 		{
 			Socket& socket = clients[idx].socket();

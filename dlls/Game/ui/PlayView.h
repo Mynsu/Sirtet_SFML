@@ -13,12 +13,11 @@ namespace ui
 	class PlayView
 	{
 	public:
-		// NOTE: DO NOT USE.  Not deleted because std::unordered_map requires.
-		PlayView( );
-		// NOTE: DO NOT USE.  Not deleted because std::unordered_map requires.
-		PlayView( PlayView&& ) = default;
 		PlayView( sf::RenderWindow& window, ::scene::online::Online& net, const bool isPlayable = true );
-		~PlayView( ) = default;
+		// This's not copy c'tor, just initialization.
+		PlayView( const PlayView& another );
+		void operator=( const PlayView& ) = delete;
+		virtual ~PlayView( ) = default;
 		
 		bool loadCountdownSprite( std::string& filePathNName );
 		void setCountdownSpriteDimension( const sf::Vector2f origin,
@@ -27,8 +26,8 @@ namespace ui
 		void getReady( );
 		void update( std::vector<sf::Event>& eventQueue );
 		void setNewCurrentTetrimino( const ::model::tetrimino::Type newCurrentType );
+		void updateStage( const ::model::stage::Grid& grid );
 		void setNumOfLinesCleared( const uint8_t numOfLinesCleared );
-		// When called twice, stage will be cleared.
 		void gameOver( );
 		void draw( );
 		::model::Tetrimino& currentTetrimino( );
@@ -44,7 +43,7 @@ namespace ui
 			NONE_MAX,
 		};
 		// This function doesn't reset the alarm.
-		inline bool alarmAfter( const uint32_t milliseconds, const AlarmIndex index )
+		bool alarmAfter( const uint32_t milliseconds, const AlarmIndex index )
 		{
 			bool elapsed = false;
 			if ( std::chrono::milliseconds(milliseconds) < Clock::now()-mAlarms[(int)index] )
@@ -53,7 +52,7 @@ namespace ui
 			}
 			return elapsed;
 		}
-		inline void resetAlarm( const AlarmIndex index )
+		void resetAlarm( const AlarmIndex index )
 		{
 			mAlarms[(int)index] = Clock::now();
 		}
@@ -70,17 +69,17 @@ namespace ui
 		};
 		State mState_;
 		sf::Vector2i countdownSpriteSize_;
-		sf::RenderWindow* mWindow_;
-		::scene::online::Online* mNet;
+		sf::RenderWindow& mWindow_;
+		::scene::online::Online& mNet;
 		// NOTE: Stack-based sf::Texture instance made a malfunction here.
 		std::unique_ptr<sf::Texture> mTexture_countdown;
 		Clock::time_point mAlarms[(int)AlarmIndex::NONE_MAX];
-		sf::Sprite mSprite;
-		::model::Tetrimino mCurrentTetrimino;
 		std::queue<::model::Tetrimino> mNextTetriminos;
-		std::string mNextStageSerialized;
-		::model::Stage mStage;
+		sf::Sprite mSprite_countdown;
+		::model::Tetrimino mCurrentTetrimino;
 		::vfx::Combo mVfxCombo;
+		::model::stage::Grid mBufferForStage;
+		::model::Stage mStage;
 		::ui::NextTetriminoPanel mNextTetriminoPanel;
 	};
 }

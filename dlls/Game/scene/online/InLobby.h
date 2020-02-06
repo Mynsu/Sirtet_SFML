@@ -12,7 +12,6 @@ namespace scene::online
 	class InLobby final : public ::scene::online::IScene
 	{
 	public:
-		InLobby( ) = delete;
 		InLobby( sf::RenderWindow& window, ::scene::online::Online& net );
 		~InLobby( );
 

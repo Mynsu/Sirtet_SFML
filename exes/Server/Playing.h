@@ -15,9 +15,8 @@ public:
 	};
 
 	Playing( );
-	Playing( const Playing& ) = default;
 	void operator=( const Playing& ) = delete;
-	~Playing( ) = default;
+	virtual ~Playing( ) = default;
 
 	void spawnTetrimino( );
 	void perceive( const ::model::tetrimino::Move move );
@@ -34,7 +33,7 @@ public:
 	uint8_t numOfLinesCleared( ) const;
 	bool isGameOver() const;
 private:
-	inline void reloadTetrimino( )
+	void reloadTetrimino( )
 	{
 		mCurrentTetrimino = mNextTetriminos.front( );
 		mNextTetriminos.pop( );
@@ -48,7 +47,7 @@ private:
 		NONE_MAX,
 	};
 	// This function doesn't reset the alarm.
-	inline bool alarmAfter( const uint32_t milliseconds, const AlarmIndex index )
+	bool alarmAfter( const uint32_t milliseconds, const AlarmIndex index )
 	{
 		bool elapsed = false;
 		if ( std::chrono::milliseconds(milliseconds) < Clock::now()-mAlarms[(int)index] )
@@ -57,7 +56,7 @@ private:
 		}
 		return elapsed;
 	}
-	inline void resetAlarm( const AlarmIndex index )
+	void resetAlarm( const AlarmIndex index )
 	{
 		mAlarms[(int)index] = Clock::now( );
 	}
@@ -68,6 +67,6 @@ private:
 	::model::tetrimino::Move mMoveToUpdate;
 	UpdateResult mUpdateResult;
 	::model::Tetrimino mCurrentTetrimino;
-	std::queue< ::model::Tetrimino > mNextTetriminos;
+	std::queue<::model::Tetrimino> mNextTetriminos;
 	::model::Stage mStage;
 };

@@ -8,14 +8,12 @@ const uint8_t ROOM_CAPACITY = 4;
 
 namespace scene::online
 {
-	struct Participant
+	struct Participant final
 	{
-		// !IMPORTANT: DO NOT USE!  Defined to use std::unordered_map.
-		Participant() = default;
-		Participant( const std::string& nickname, ::ui::PlayView&& playView )
-			: nickname( nickname ), playView( std::forward<::ui::PlayView&&>(playView) )
-		{}
-		const std::string nickname;
+		Participant( const std::string& nickname, ::ui::PlayView&& playView );
+		void operator=( const Participant& ) = delete;
+			
+		std::string nickname;
 		::ui::PlayView playView;
 	};
 
@@ -42,7 +40,7 @@ namespace scene::online
 			NONE_MAX,
 		};
 		// Also reset.
-		inline bool alarmAfter( const uint32_t milliseconds, const AlarmIndex index )
+		bool alarmAfter( const uint32_t milliseconds, const AlarmIndex index )
 		{
 			bool retVal = false;
 			if ( std::chrono::milliseconds(milliseconds) < Clock::now()-mAlarms[(int)index] )

@@ -6,7 +6,6 @@ namespace scene::inPlay
 	class GameOver final : public ::scene::inPlay::IScene
 	{
 	public:
-		GameOver( ) = delete;
 		GameOver( sf::RenderWindow& window, sf::Drawable& shapeOrSprite, std::unique_ptr<::scene::inPlay::IScene>& overlappedScene );
 		~GameOver( ) = default;
 

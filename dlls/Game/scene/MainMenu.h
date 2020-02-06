@@ -6,7 +6,6 @@ namespace scene
 	class MainMenu final : public ::scene::IScene
 	{
 	public:
-		MainMenu( ) = delete;
 		MainMenu( sf::RenderWindow& window );
 		~MainMenu( );
 

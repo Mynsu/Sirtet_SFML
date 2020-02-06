@@ -22,7 +22,7 @@ namespace model
 		// Strictly, cell isn't block and vice versa, but they match up each other.
 		struct Cell
 		{
-			inline Cell( )
+			Cell( )
 				: blocked( false ), color( sf::Color::Transparent )
 			{
 			}
@@ -75,6 +75,7 @@ namespace model
 
 enum class _Tag
 {
+	// !IMPORTANT: 0 equals '\0' that might cause an error.
 	////
 	// Connection
 	////
@@ -141,6 +142,7 @@ constexpr Tag TAG_MY_NICKNAME = { (char)_Tag::MY_NICKNAME, ':', '\0' };
 
 enum class Request
 {
+	// !IMPORTANT: 0 equals '\0' that might cause an error.
 	UPDATE_USER_LIST = 1,
 	CREATE_ROOM,
 	START_GAME,
@@ -170,6 +172,7 @@ enum class ResultJoiningRoom
 {
 	FAILED_BY_SERVER_ERROR = -1,
 	///
+	// !IMPORTANT: 0 equals '\0' that might cause an error.
 	SUCCCEDED = 1,
 	FAILED_DUE_TO_SELF_TARGET,
 	FAILED_DUE_TO_TARGET_NOT_CONNECTING,
@@ -182,12 +185,15 @@ enum class ResultJoiningRoom
 ////
 enum class Notification
 {
-	// !IMPORTANT: 0 equals '\0'
+	// !IMPORTANT: 0 equals '\0' that might cause an error.
 	UPDATE_USER_LIST = 1,
+	HOST_CHANGED,
 };
 
 // Attached to uint32_t(for the total size) and repeated pairs of <uint8_t,std::string>.
 constexpr Tag TAGGED_NOTI_UPDATE_USER_LIST = { (char)_Tag::NOTIFICATION, ':', (char)Notification::UPDATE_USER_LIST, '\0' };
+// Attached to HashedKey.
+constexpr Tag TAGGED_NOTI_HOST_CHANGED = { (char)_Tag::NOTIFICATION, ':', (char)Notification::HOST_CHANGED, '\0' };
 
 ////
 // Inplay

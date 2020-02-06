@@ -13,42 +13,16 @@ namespace model
 	{
 	public:
 		// Needs initialization.
-		inline Tetrimino( )
-			: mIsFallingDown( false )
-		{
-			mBlockShape.setOutlineThickness( 1.f );
-		}
-		inline Tetrimino( const Tetrimino& arg )
-			: mIsFallingDown( false ), mType( arg.mType ),
-			mRotationID( arg.mRotationID ), mPosition( arg.mPosition )
-		{
-			mBlockShape.setFillColor( arg.mBlockShape.getFillColor() );
-			mBlockShape.setOutlineThickness( 1.f );
-			mBlockShape.setOutlineColor( arg.mBlockShape.getOutlineColor() );
-			for ( uint8_t i = 0u; i != (uint8_t)::model::tetrimino::Rotation::NONE_MAX; ++i )
-			{
-				mPossibleRotations[ i ] = arg.mPossibleRotations[ i ];
-			}
-		}
-		inline void operator=( const Tetrimino& arg )
-		{
-			mType = arg.mType;
-			mRotationID = arg.mRotationID;
-			mPosition = arg.mPosition;
-			mBlockShape.setFillColor( arg.mBlockShape.getFillColor() );
-			mBlockShape.setOutlineColor( arg.mBlockShape.getOutlineColor() );
-			for ( uint8_t i = 0u; i != (uint8_t)::model::tetrimino::Rotation::NONE_MAX; ++i )
-			{
-				mPossibleRotations[ i ] = arg.mPossibleRotations[ i ];
-			}
-		}
-		~Tetrimino( ) = default;
+		Tetrimino( );
+		Tetrimino( const Tetrimino& arg );
+		void operator=( const Tetrimino& arg );
+		virtual ~Tetrimino( ) = default;
 
 		static void LoadResources( );
 		static Tetrimino Spawn( ::model::tetrimino::Type type = ::model::tetrimino::Type::NONE_MAX );
 		
 		// Returns true when colliding with the floor or another tetrimino.
-		inline bool moveDown( const ::model::stage::Grid& grid, const uint8_t diff = 1 )
+		bool moveDown( const ::model::stage::Grid& grid, const uint8_t diff = 1 )
 		{
 			ASSERT_TRUE( diff < ::model::stage::GRID_HEIGHT );
 			mPosition.y += diff;
@@ -59,7 +33,7 @@ namespace model
 			}
 			return retVal;
 		}
-		inline void tryMoveLeft( const ::model::stage::Grid& grid, const uint8_t diff = 1 )
+		void tryMoveLeft( const ::model::stage::Grid& grid, const uint8_t diff = 1 )
 		{
 			ASSERT_TRUE( diff < ::model::stage::GRID_WIDTH );
 			Tetrimino afterMove( *this );
@@ -69,7 +43,7 @@ namespace model
 				*this = afterMove;
 			}
 		}
-		inline void tryMoveRight( const ::model::stage::Grid& grid, const uint8_t diff = 1u )
+		void tryMoveRight( const ::model::stage::Grid& grid, const uint8_t diff = 1u )
 		{
 			ASSERT_TRUE( diff < ::model::stage::GRID_WIDTH );
 			Tetrimino afterMove( *this );
@@ -82,53 +56,53 @@ namespace model
 		// Rotates counter-clockwise.
 		void tryRotate( const ::model::stage::Grid& grid );
 		void land( ::model::stage::Grid& grid );
-		inline void move( const ::model::tetrimino::Rotation rotationID, const sf::Vector2<int8_t> position )
+		void move( const ::model::tetrimino::Rotation rotationID, const sf::Vector2<int8_t> position )
 		{
 			mRotationID = rotationID;
 			mPosition = position;
 		}
-		inline void setOrigin( const sf::Vector2f& origin )
+		void setOrigin( const sf::Vector2f& origin )
 		{
 			mOrigin_ = origin;
 		}
-		inline sf::Vector2<int8_t> position( ) const
+		sf::Vector2<int8_t> position( ) const
 		{
 			return mPosition;
 		}
-		inline ::model::tetrimino::Type type( ) const
+		::model::tetrimino::Type type( ) const
 		{
 			return mType;
 		}
-		inline sf::Color color( ) const
+		sf::Color color( ) const
 		{
 			return mBlockShape.getFillColor( );
 		}
-		inline void setColor( const sf::Color color, const sf::Color outlineColor )
+		void setColor( const sf::Color color, const sf::Color outlineColor )
 		{
 			mBlockShape.setFillColor( color );
 			mBlockShape.setOutlineColor( outlineColor );
 		}
-		inline void setSize( const float blockSize )
+		void setSize( const float blockSize )
 		{
 			ASSERT_TRUE( 0 < blockSize );
 			mBlockShape.setSize( sf::Vector2f( blockSize, blockSize ) );
 			mBlockSize_ = blockSize;
 		}
 		// Current blocks within their own local space.
-		inline ::model::tetrimino::LocalSpace blocks( ) const
+		::model::tetrimino::LocalSpace blocks( ) const
 		{
 			return mPossibleRotations[ static_cast<int>(mRotationID) ];
 		}
-		inline bool isFallingDown( ) const
+		bool isFallingDown( ) const
 		{
 			return mIsFallingDown;
 		}
-		inline void fallDown( const bool isFallingDown = true )
+		void fallDown( const bool isFallingDown = true )
 		{
 			mIsFallingDown = isFallingDown;
 		}
 
-		inline void draw( sf::RenderWindow& window )
+		void draw( sf::RenderWindow& window )
 		{
 			for ( uint8_t i = 0; i != ::model::tetrimino::LOCAL_SPACE_SIZE; ++i )
 			{
@@ -149,7 +123,7 @@ namespace model
 		bool mIsFallingDown;
 		// X and y on global coordinate.
 		// Unit: Grid.
-		sf::Vector2< int8_t > mPosition;
+		sf::Vector2<int8_t> mPosition;
 		::model::tetrimino::Type mType;
 		::model::tetrimino::Rotation mRotationID;
 		float mBlockSize_;

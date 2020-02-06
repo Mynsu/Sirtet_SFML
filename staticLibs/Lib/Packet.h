@@ -11,7 +11,7 @@ public:
 	{ }
 	~Packet( ) = default;
 
-	inline void pack( const Tag tag, std::string& data, const bool includingTotalSize = true )
+	void pack( const Tag tag, std::string& data, const bool includingTotalSize = true )
 	{
 		mData += tag;
 		if ( true == includingTotalSize )
@@ -23,7 +23,7 @@ public:
 		mHasSomethingToSend = true;
 	}
 	template < typename T, std::enable_if_t<std::is_integral_v<T>>* = nullptr >
-	inline void pack( const Tag tag, T data )
+	void pack( const Tag tag, T data )
 	{
 		mData += tag;
 		switch ( sizeof(T) )
@@ -56,11 +56,11 @@ public:
 		mData.append( (char*)&data, sizeof(T) );
 		mHasSomethingToSend = true;
 	}
-	inline bool hasData( ) const
+	bool hasData( ) const
 	{
 		return mHasSomethingToSend;
 	}
-	inline std::string& data( )
+	std::string& data( )
 	{
 		return mData;
 	}

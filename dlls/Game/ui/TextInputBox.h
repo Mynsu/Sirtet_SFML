@@ -5,7 +5,6 @@ namespace ui
 	class TextInputBox
 	{
 	public:
-		TextInputBox() = delete;
 		TextInputBox( sf::RenderWindow& window )
 			: mIsActive( false ), mWindow_( window )
 		{

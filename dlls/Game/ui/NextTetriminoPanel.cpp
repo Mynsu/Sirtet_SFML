@@ -2,13 +2,19 @@
 #include "NextTetriminoPanel.h"
 #include "../model/Tetrimino.h"
 
+ui::NextTetriminoPanel::NextTetriminoPanel(sf::RenderWindow & window)
+	: mWindow_( window )
+{
+	clearTetrimino( );
+}
+
 void ui::NextTetriminoPanel::setTetrimino( const::model::Tetrimino& next )
 {
 	const sf::Color nextTetColor( next.color() );
 	for ( sf::RectangleShape& block : mBlocks )
 	{
 		block.setFillColor( nextTetColor );
-		block.setOutlineThickness( 0.5f );
+		block.setOutlineThickness( 1.0f );
 	}
 	const ::model::tetrimino::Type type = next.type( );
 	const ::model::tetrimino::LocalSpace nextTetBlocks = next.blocks( );
@@ -64,7 +70,6 @@ void ui::NextTetriminoPanel::setDimension( const sf::Vector2f position, const fl
 	size = sf::Vector2f(cellSize, cellSize);
 	for ( sf::RectangleShape& block : mBlocks )
 	{
-		block.setPosition( position );
 		block.setSize( size );
 	}
 	mCellSize_ = cellSize;

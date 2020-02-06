@@ -14,9 +14,8 @@ public:
 		PLAYING_IN_ROOM,
 	};
 
-	Client( ) = delete;
 	Client( const Socket::Type type, const ClientIndex index );
-	// !IMPORTANT: DO NOT USE!  Defined to use std::vector.
+	// !IMPORTANT: DO NOT USE.  Declared because std::vector requires.
 	Client( const Client& )
 		: mIndex( -1 ), mSocket( Socket::Type::TCP )
 	{
@@ -25,7 +24,7 @@ public:
 #endif
 	}
 	void operator=( const Client& ) = delete;
-	~Client( ) = default;
+	virtual ~Client( ) = default;
 
 	std::vector<ClientIndex> work( const IOType completedIOType,
 								std::vector<Client>& clientS,

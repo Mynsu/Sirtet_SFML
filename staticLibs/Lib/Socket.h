@@ -26,17 +26,20 @@ enum class IOType
 struct Overlapped : public WSAOVERLAPPED
 {
 	Overlapped( ) = delete;
-	explicit Overlapped( const IOType ioType )
+	explicit Overlapped( const IOType iotype )
 	{
 		ZeroMemory( this, sizeof(Overlapped) );
-		ioTypeOrIndex = (uint32_t)ioType;
+		this->ioType = iotype;
+		index = -1;
 	}
 	explicit Overlapped( const uint32_t clientIndex )
 	{
 		ZeroMemory( this, sizeof(Overlapped) );
-		ioTypeOrIndex = clientIndex;
+		index = clientIndex;
+		ioType = IOType::ACCEPT;
 	}
-	uint32_t ioTypeOrIndex;
+	uint32_t index;
+	IOType ioType;
 };
 
 class Socket
@@ -49,7 +52,6 @@ public:
 	};
 
 	static const uint32_t RCV_BUF_SIZ = 8192;
-	static const uint32_t BACKLOG_SIZ = 5000;
 
 	Socket( ) = delete;
 	Socket( const ::Socket::Type type );
@@ -62,9 +64,9 @@ public:
 	}
 	~Socket( );
 	int bind( const EndPoint& selfEndPoint );
-	void listen( )
+	void listen( const uint32_t backlogSize )
 	{
-		::listen( mhSocket, BACKLOG_SIZ );
+		::listen( mhSocket, backlogSize );
 	}
 	int acceptOverlapped( Socket& candidateClientSocket, const uint32_t candidateClientIndex );
 	int updateAcceptContext( Socket& listener );

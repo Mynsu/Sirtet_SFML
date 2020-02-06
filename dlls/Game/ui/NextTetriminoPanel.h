@@ -10,21 +10,21 @@ namespace ui
 	class NextTetriminoPanel
 	{
 	public:
-		inline NextTetriminoPanel( sf::RenderWindow& window )
-			: mWindow_( window )
-		{
-			clearTetrimino( );
-		}
+		NextTetriminoPanel( sf::RenderWindow& window );
+		NextTetriminoPanel( const NextTetriminoPanel& ) = delete;
+		void operator=( const NextTetriminoPanel& ) = delete;
+		NextTetriminoPanel( NextTetriminoPanel&& ) = delete;
+		virtual ~NextTetriminoPanel( ) = default;
 
-		inline sf::FloatRect globalBounds( ) const
+		sf::FloatRect globalBounds( ) const
 		{
 			return mPanel.getGlobalBounds();
 		}
-		inline float rotation( ) const
+		float rotation( ) const
 		{
 			return mPanel.getRotation();
 		}
-		inline void setColor( const sf::Color background, const sf::Color cellOutlineColor )
+		void setColor( const sf::Color background, const sf::Color cellOutlineColor )
 		{
 			mPanel.setFillColor( background );
 			for ( sf::RectangleShape& block : mBlocks )
@@ -32,25 +32,25 @@ namespace ui
 				block.setOutlineColor( cellOutlineColor );
 			}
 		}
-		inline void setOutline( const float thickness, const sf::Color color )
+		void setOutline( const float thickness, const sf::Color color )
 		{
 			mPanel.setOutlineThickness( thickness );
 			mPanel.setOutlineColor( color );
 		}
 		void setDimension( const sf::Vector2f position, const float cellSize );
-		inline void rotate( const float degree )
+		void rotate( const float degree )
 		{
 			mPanel.rotate( degree );
 		}
-		inline void resetRotation( )
+		void resetRotation( )
 		{
 			mPanel.setRotation( 0 );
 		}
-		inline void scale( const float factor )
+		void scale( const float factor )
 		{
 			mPanel.scale( factor, factor );
 		}
-		inline void resetScale( )
+		void resetScale( )
 		{
 			mPanel.setScale( 1.f, 1.f );
 		}

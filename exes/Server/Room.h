@@ -17,12 +17,9 @@ public:
 		ALL_OVER,
 	};
 
-	// !IMPORTANT: DO NOT USE!  Defined to use std::unordered_map.
-	Room( );
 	explicit Room( const ClientIndex hostIndex );
-	Room( const Room& ) = delete;
 	void operator=( const Room& ) = delete;
-	~Room( ) = default;
+	virtual ~Room( ) = default;
 
 	void start( );
 	int leave( const ClientIndex index );
@@ -41,7 +38,7 @@ private:
 		NONE_MAX,
 	};
 	// Auto reset
-	inline bool alarmAfter( const uint32_t milliseconds, const AlarmIndex index )
+	bool alarmAfter( const uint32_t milliseconds, const AlarmIndex index )
 	{
 		bool elapsed = false;
 		const Clock::time_point now = Clock::now();
@@ -52,10 +49,10 @@ private:
 		}
 		return elapsed;
 	}
-	bool mHasTempoChanged_;
+	bool mHasTempoChanged_, mHasHostChanged_;
 	ClientIndex mHostIndex;
 	Room::State mState;
 	std::vector<ClientIndex> mCandidateParticipants;
 	Clock::time_point mAlarms[(int)AlarmIndex::NONE_MAX];
-	std::unordered_map< ClientIndex, Playing > mParticipants;
+	std::unordered_map<ClientIndex, Playing> mParticipants;
 };

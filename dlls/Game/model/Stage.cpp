@@ -1,6 +1,60 @@
 #include "../pch.h"
 #include "Stage.h"
 
+bool model::Stage::isOver( ) const
+{
+	bool retVal = false;
+	for ( const auto& it : mGrid[1] )
+	{
+		if ( true == it.blocked )
+		{
+			retVal = true;
+			break;
+		}
+	}
+	return retVal;
+}
+
+void model::Stage::blackout( )
+{
+	const sf::Color GRAY( 0x808080ff );
+	for ( auto& row : mGrid )
+	{
+		for ( auto& cell : row )
+		{
+			cell.color = GRAY;
+		}
+	}
+}
+
+void model::Stage::clear()
+{
+	for ( auto& row : mGrid )
+	{
+		for ( auto& cell : row )
+		{
+			cell.blocked = false;
+		}
+	}
+}
+
+void model::Stage::draw()
+{
+	mWindow_.draw( mPanel );
+	for ( uint8_t i = 0; i != ::model::stage::GRID_HEIGHT; ++i )
+	{
+		for ( uint8_t k = 0; k != ::model::stage::GRID_WIDTH; ++k )
+		{
+			if ( true == mGrid[i][k].blocked )
+			{
+				mCellShape.setFillColor( mGrid[i][k].color );
+				mCellShape.setPosition( mPosition_ + sf::Vector2f(k, i)*mCellSize_ );
+				mWindow_.draw( mCellShape );
+			}
+		}
+	}
+}
+
 uint8_t model::Stage::tryClearRow( )
 {
 	std::bitset<::model::stage::GRID_HEIGHT> fLineCleared;
@@ -70,12 +124,4 @@ uint8_t model::Stage::tryClearRow( )
 		}
 	}
 	return linesCleared;
-}
-
-void model::Stage::setSize( const float cellSize )
-{
-	ASSERT_TRUE( 0 < cellSize );
-	mPanel.setSize( sf::Vector2f(::model::stage::GRID_WIDTH,::model::stage::GRID_HEIGHT) * cellSize );
-	mCellShape.setSize( sf::Vector2f( cellSize, cellSize ) );
-	mCellSize_ = cellSize;
 }

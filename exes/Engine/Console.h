@@ -1,11 +1,14 @@
 #pragma once
 #include "Command.h"
 
-class Console final : public IConsole
+class Console : public IConsole
 {
 public:
 	Console( );
-	~Console( ) = default;
+	Console( const Console& ) = delete;
+	void operator=( const Console& ) = delete;
+	Console( Console&& ) = delete;
+	virtual ~Console( ) = default;
 	
 	void print( const std::string& message, const sf::Color color = sf::Color::White ) override;
 	void printFailure( const FailureLevel failureLevel, const std::string& message ) override;
@@ -16,17 +19,17 @@ public:
 	
 	void draw( sf::RenderWindow& window );
 	void handleEvent( std::vector<sf::Event>& eventQueue );
-	inline void processCommand( const std::string& commandLine )
+	void processCommand( const std::string& commandLine )
 	{
 		mCommand.processCommand( commandLine );
 	}
-	inline void release( )
+	void release( )
 	{
 		mCommand.release( );
 	}
 	void initialize( );
 private:
-	inline void refresh( const std::string_view& )
+	void refresh( const std::string_view& )
 	{
 		initialize( );
 	}

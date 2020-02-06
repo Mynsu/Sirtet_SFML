@@ -13,29 +13,29 @@ namespace container
 	{
 	public:
 		template < std::enable_if_t<std::is_class_v<T>>* = nullptr >
-		inline IteratoredQueue( )
+		IteratoredQueue( )
 		{ }
-		inline ~IteratoredQueue( ) = default;
+		~IteratoredQueue( ) = default;
 
-		inline void reserve( const uint32_t max )
+		void reserve( const uint32_t max )
 		{
 			mForRandomAccess.reserve( max );
 		}
-		inline void emplace_back( T&& value, const size_t index )
+		void emplace_back( T&& value, const size_t index )
 		{
 			mQueue.emplace_back( std::make_pair(std::forward(value), index) );
 			mForRandomAccess.emplace( index );
 		}
-		inline T& front( )
+		T& front( )
 		{
 			return mQueue.front( );
 		}
-		inline void pop_front( )
+		void pop_front( )
 		{
 			mForRandomAccess.erase( mQueue.front( ).second );
 			mQueue.pop_front( );
 		}
-		inline bool contains( const size_t index ) const
+		bool contains( const size_t index ) const
 		{
 			const size_t cnt = mForRandomAccess.count( index );
 #ifdef _DEBUG
@@ -46,7 +46,7 @@ namespace container
 #endif
 			return (1==cnt)? true: false;
 		}
-		inline uint32_t size( ) const
+		uint32_t size( ) const
 		{
 			return (uint32_t)mQueue.size();
 		}
@@ -62,28 +62,28 @@ namespace container
 	class IteratoredQueue< uint32_t >
 	{
 	public:
-		inline IteratoredQueue( ) = default;
-		inline ~IteratoredQueue( ) = default;
+		IteratoredQueue( ) = default;
+		~IteratoredQueue( ) = default;
 
-		inline void reserve( const uint32_t max )
+		void reserve( const uint32_t max )
 		{
 			mForRandomAccess.reserve( max );
 		}
-		inline void emplace_back( const uint32_t value )
+		void emplace_back( const uint32_t value )
 		{
 			mQueue.emplace_back( value );
 			mForRandomAccess.emplace( value );
 		}
-		inline uint32_t front( )
+		uint32_t front( )
 		{
 			return mQueue.front( );
 		}
-		inline void pop_front( )
+		void pop_front( )
 		{
 			mForRandomAccess.erase( mQueue.front() );
 			mQueue.pop_front( );
 		}
-		inline bool contains( const uint32_t index ) const
+		bool contains( const uint32_t index ) const
 		{
 			const size_t cnt = mForRandomAccess.count( index );
 #ifdef _DEBUG
@@ -94,7 +94,7 @@ namespace container
 #endif
 			return (1==cnt)? true: false;
 		}
-		inline uint32_t size( ) const
+		uint32_t size( ) const
 		{
 			return (uint32_t)mQueue.size();
 		}

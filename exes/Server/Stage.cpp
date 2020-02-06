@@ -71,3 +71,30 @@ uint8_t model::Stage::tryClearRow( )
 	}
 	return linesCleared;
 }
+
+bool model::Stage::isOver( ) const
+{
+	bool retVal = false;
+	for ( const auto& it : mGrid[ 1 ] )
+	{
+		if ( true == it.blocked )
+		{
+			retVal = true;
+			break;
+		}
+	}
+	return retVal;
+}
+
+void model::Stage::blackout( )
+{
+	const sf::Color GRAY( 0x808080ff );
+	for ( auto& row : mGrid )
+	{
+		for ( auto& cell : row )
+		{
+			// Gray
+			cell.color = GRAY;
+		}
+	}
+}

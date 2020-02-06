@@ -5,14 +5,13 @@ namespace vfx
 	class Combo
 	{
 	public:
-		Combo( ) = delete;
-		inline Combo( sf::RenderWindow& window )
-			: mWindow_( window )
-		{
-		}
-		inline ~Combo( ) = default;
+		Combo( sf::RenderWindow& window );
+		Combo( const Combo& ) = delete;
+		void operator=( const Combo& ) = delete;
+		Combo( Combo&& ) = delete;
+		virtual ~Combo( ) = default;
 
-		inline bool loadResources( const std::string& textureFileName )
+		bool loadResources( const std::string& textureFileName )
 		{
 			if ( false == mTexture.loadFromFile( textureFileName ) )
 			{
@@ -21,7 +20,7 @@ namespace vfx
 			mSprite.setTexture( mTexture );
 			return true;
 		}
-		inline void setOrigin( const sf::Vector2f origin, const float cellSize, const sf::Vector2i effectWidthHeight )
+		void setOrigin( const sf::Vector2f origin, const float cellSize, const sf::Vector2i effectWidthHeight )
 		{
 			ASSERT_TRUE( (0<=origin.x) && (0<=origin.y) && (0<cellSize) && (0<effectWidthHeight.x) && (0<effectWidthHeight.y) );
 

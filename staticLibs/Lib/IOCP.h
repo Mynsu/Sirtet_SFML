@@ -21,7 +21,7 @@ public:
 	{ }
 	~IOCP( ) = default;
 
-	inline int add( const SOCKET_HANDLE handle, const ULONG_PTR id )
+	int add( const SOCKET_HANDLE handle, const ULONG_PTR id )
 	{
 		if ( NULL == CreateIoCompletionPort( (HANDLE)handle,
 									  mhIOCP,
@@ -35,7 +35,7 @@ public:
 			return 0;
 		}
 	}
-	inline void wait( IOCPEvent& event, int timeoutMs )
+	void wait( IOCPEvent& event, int timeoutMs )
 	{
 		if ( FALSE == GetQueuedCompletionStatusEx( mhIOCP, event.events, IOCPEvent::MAX_EVENTS,
 											   (PULONG)&event.eventCount,

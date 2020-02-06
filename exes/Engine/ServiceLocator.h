@@ -2,10 +2,10 @@
 #include "pch.h" // Commonly included headers, not pch.
 #include "Console.h"
 
-class ServiceLocator : public IServiceLocator
+class ServiceLocator final : public IServiceLocator
 {
 public:
-	inline ServiceLocator( )
+	ServiceLocator( )
 	{
 		ASSERT_FALSE( IsInstantiated );
 
@@ -16,7 +16,8 @@ public:
 	}
 	ServiceLocator( const ServiceLocator& ) = delete;
 	void operator=( const ServiceLocator& ) = delete;
-	inline ~ServiceLocator( )
+	ServiceLocator( ServiceLocator&& ) = delete;
+	~ServiceLocator( )
 	{
 		WSACleanup();
 
@@ -29,7 +30,7 @@ public:
 		return mConsole;
 	}
 	// Access the console.  For internal use.
-	inline Console& _console( )
+	Console& _console( )
 	{
 		return mConsole;
 	}

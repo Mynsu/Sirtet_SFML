@@ -6,7 +6,6 @@ namespace scene::inPlay
 	class Ready final : public ::scene::inPlay::IScene
 	{
 	public:
-		Ready( ) = delete;
 		Ready( sf::RenderWindow& window, sf::Drawable& shapeOrSprite );
 		~Ready( ) = default;
 

@@ -8,7 +8,7 @@ class EndPoint
 public:
 	EndPoint( );
 	EndPoint( const char* const ipAddress, const uint16_t port );
-	inline const SOCKADDR_IN& get( ) const
+	const SOCKADDR_IN& get( ) const
 	{
 		return mIPv4EP;
 	}

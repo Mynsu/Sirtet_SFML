@@ -14,7 +14,6 @@ namespace scene::online
 			RETURN_TAG_ATTACHED,
 		};
 
-		Online( ) = delete;
 		Online( sf::RenderWindow& window );
 		~Online( );
 

@@ -12,6 +12,11 @@ const uint32_t ALL_OVER_FREEZE_MS = 2000;
 
 bool scene::online::InRoom::IsInstantiated = false;
 
+scene::online::Participant::Participant( const std::string& nickname, ::ui::PlayView&& playView )
+// NOTE: r-value reference malfunctions within SFML, thus 'playView' is copied here.
+	: nickname( nickname ), playView( playView )
+{ }
+
 scene::online::InRoom::InRoom( sf::RenderWindow& window, Online& net, const bool asHost )
 	: mIsReceiving( false ), mAsHost( asHost ),
 	mIsStartingGuideVisible_( true ),
@@ -22,7 +27,7 @@ scene::online::InRoom::InRoom( sf::RenderWindow& window, Online& net, const bool
 {
 	ASSERT_TRUE( false == IsInstantiated );
 	
-	mParticipants.reserve( ROOM_CAPACITY );
+	//mParticipants.reserve( ROOM_CAPACITY );
 	mParticipants.emplace( mNet.myNicknameHashed(), Participant(mNet.myNickname(), ::ui::PlayView(mWindow_, mNet)) );
 	IServiceLocator* const service = gService();
 	ASSERT_NOT_NULL( service );
@@ -1052,14 +1057,6 @@ void scene::online::InRoom::loadResources( )
 		tetrimino.setSize( myStageCellSize );
 		::vfx::Combo& vfxCombo = playView.vfxCombo();
 		vfxCombo.setOrigin( myPanelPosition, myStageCellSize, vfxComboClipSize );
-		::ui::NextTetriminoPanel& nextTetPanel = playView.nextTetriminoPanel();
-		nextTetPanel.setDimension( nextTetriminoPanelPosition, nextTetriminoPanelCellSize );
-		mDrawingInfo.nextTetriminoPanelBound = nextTetPanel.globalBounds();
-		// Making the bound enough to contain a mouse cursor.
-		mDrawingInfo.nextTetriminoPanelBound.width += 5.f;
-		mDrawingInfo.nextTetriminoPanelBound.height += 5.f;
-		nextTetPanel.setColor( sf::Color(nextTetriminoPanelColor), sf::Color(cellOutlineColor) );
-		nextTetPanel.setOutline( nextTetriminoPanelOutlineThickness, sf::Color(nextTetriminoPanelOutlineColor) );
 		if ( false == vfxCombo.loadResources(vfxComboPathNName) )
 		{
 			gService( )->console( ).printFailure( FailureLevel::FATAL,
@@ -1068,6 +1065,14 @@ void scene::online::InRoom::loadResources( )
 			__debugbreak( );
 #endif
 		}
+		::ui::NextTetriminoPanel& nextTetPanel = playView.nextTetriminoPanel();
+		nextTetPanel.setDimension( nextTetriminoPanelPosition, nextTetriminoPanelCellSize );
+		mDrawingInfo.nextTetriminoPanelBound = nextTetPanel.globalBounds();
+		// Making the bound enough to contain a mouse cursor.
+		mDrawingInfo.nextTetriminoPanelBound.width += 5.f;
+		mDrawingInfo.nextTetriminoPanelBound.height += 5.f;
+		nextTetPanel.setColor( sf::Color(nextTetriminoPanelColor), sf::Color(cellOutlineColor) );
+		nextTetPanel.setOutline( nextTetriminoPanelOutlineThickness, sf::Color(nextTetriminoPanelOutlineColor) );
 	}
 	// Exception
 #ifdef _DEBUG
@@ -1196,7 +1201,7 @@ void scene::online::InRoom::loadResources( )
 					__debugbreak( );
 				}
 #endif
-				::ui::PlayView& playView = mParticipants[pair.first].playView;
+				::ui::PlayView& playView = mParticipants.find(pair.first)->second.playView;
 				::model::Stage& stage =	playView.stage();
 				const sf::Vector2f pos( mDrawingInfo.position-mDrawingInfo.positionDifferences[slotIdx] );
 				stage.setPosition( pos );
@@ -1221,16 +1226,50 @@ void scene::online::InRoom::loadResources( )
 			}
 		}
 
+		if ( const std::optional<std::string> hostChanged( mNet.getByTag(TAGGED_NOTI_HOST_CHANGED,
+																		 Online::Option::DEFAULT,
+																		 sizeof(HashedKey)) );
+			std::nullopt != hostChanged	)
+		{
+			const std::string& _newHostNicknameHashed = hostChanged.value();
+			const HashedKey newHostNicknameHashed = ::ntohl(*(HashedKey*)_newHostNicknameHashed.data());
+			if ( newHostNicknameHashed == mNet.myNicknameHashed() )
+			{
+				mAsHost = true;
+			}
+		}
+
 		if ( const std::optional<std::string> gettingReady( mNet.getByTag(TAGGED_REQ_GET_READY,
 																		Online::Option::RETURN_TAG_ATTACHED,
 																		0) );
 			std::nullopt != gettingReady )
 		{
-			for ( auto& it : mParticipants )
+			for ( auto& pair : mParticipants )
 			{
-				it.second.playView.getReady( );
+				pair.second.playView.getReady( );
 			}
 			mIsStartingGuideVisible_ = false;
+		}
+
+		if ( std::optional<std::string> gamesOver( mNet.getByTag(TAG_GAMES_OVER,
+																 Online::Option::DEFAULT,
+																 -1) );
+			std::nullopt != gamesOver )
+		{
+			std::string& _gamesOver = gamesOver.value();
+			const uint32_t totalSize = (uint32_t)_gamesOver.size();
+			const char* ptr = _gamesOver.data();
+			uint32_t curPos = 0;
+			while ( totalSize != curPos )
+			{
+				const HashedKey nicknameHashed = ::ntohl(*(HashedKey*)&ptr[curPos]);
+				curPos += sizeof(HashedKey);
+				if ( const auto it = mParticipants.find(nicknameHashed);
+					mParticipants.end() != it )
+				{
+					it->second.playView.gameOver();
+				}
+			}
 		}
 
 		if ( const std::optional<std::string> newCurrentTetriminos( mNet.getByTag(TAG_NEW_CURRENT_TETRIMINOS,
@@ -1252,12 +1291,6 @@ void scene::online::InRoom::loadResources( )
 				{
 					it->second.playView.setNewCurrentTetrimino( newType );
 				}
-#ifdef _DEBUG
-				else
-				{
-					__debugbreak( );
-				}
-#endif
 			}
 		}
 
@@ -1289,12 +1322,6 @@ void scene::online::InRoom::loadResources( )
 					::model::Tetrimino& tet = it->second.playView.currentTetrimino();
 					tet.move( rotID, pos );
 				}
-#ifdef _DEBUG
-				else
-				{
-					__debugbreak( );
-				}
-#endif
 			}
 		}
 
@@ -1310,26 +1337,14 @@ void scene::online::InRoom::loadResources( )
 			while ( totalSize != curPos )
 			{
 				const HashedKey nicknameHashed = ::ntohl(*(HashedKey*)&ptr[curPos]);
-				if ( nicknameHashed == myNicknameHashed )
-				{
-					curPos += sizeof(HashedKey) + sizeof(::model::stage::Grid);
-					continue;
-				}
 				curPos += sizeof(HashedKey);
 				const ::model::stage::Grid* const grid = (::model::stage::Grid*)&ptr[curPos];
 				curPos += sizeof(::model::stage::Grid);
 				if ( const auto it = mParticipants.find(nicknameHashed);
 					mParticipants.end() != it )
 				{
-					::model::Stage& stage =	it->second.playView.stage();
-					stage.deserialize( grid );
+					it->second.playView.updateStage( *grid );
 				}
-#ifdef _DEBUG
-				else
-				{
-					__debugbreak( );
-				}
-#endif
 			}
 		}
 
@@ -1353,39 +1368,6 @@ void scene::online::InRoom::loadResources( )
 				{
 					it->second.playView.setNumOfLinesCleared( numOfLinesCleared );
 				}
-#ifdef _DEBUG
-				else
-				{
-					__debugbreak( );
-				}
-#endif
-			}
-		}
-
-		if ( std::optional<std::string> gamesOver( mNet.getByTag(TAG_GAMES_OVER,
-																Online::Option::DEFAULT,
-																	-1) );
-			std::nullopt != gamesOver )
-		{
-			std::string& _gamesOver = gamesOver.value();
-			const uint32_t totalSize = (uint32_t)_gamesOver.size();
-			const char* ptr = _gamesOver.data();
-			uint32_t curPos = 0;
-			while ( totalSize != curPos )
-			{
-				const HashedKey nicknameHashed = ::ntohl(*(HashedKey*)&ptr[curPos]);
-				curPos += sizeof(HashedKey);
-				if ( const auto it = mParticipants.find(nicknameHashed);
-					mParticipants.end() != it )
-				{
-					it->second.playView.gameOver();
-				}
-#ifdef _DEBUG
-				else
-				{
-					__debugbreak( );
-				}
-#endif
 			}
 		}
 
@@ -1411,9 +1393,11 @@ void scene::online::InRoom::loadResources( )
 
 	if ( true == alarmAfter(ALL_OVER_FREEZE_MS, AlarmIndex::ALL_OVER_FREEZE) )
 	{
+		// Resetting remnants once and for all.
 		for ( auto& pair : mParticipants )
 		{
-			pair.second.playView.stage().clear();
+			::ui::PlayView& playView = pair.second.playView;
+			playView.stage().clear();
 		}
 		mIsStartingGuideVisible_ = true;
 	}
@@ -1520,16 +1504,13 @@ void scene::online::InRoom::draw( )
 			}
 			else
 			{
-				if ( true == mIsMouseOverStartButton_ )
-				{
-					mStartingGuide.setString( "Start" );
-					const sf::FloatRect bound( mStartingGuide.getLocalBounds() );
-					const sf::Vector2f center( bound.width*0.5f, bound.height*0.5f );
-					mStartingGuide.setOrigin( center );
-					nextTetPanel.resetScale( );
-					nextTetPanel.resetRotation( );
-					mFrameCount_rotationInterval = 0;
-				}
+				mStartingGuide.setString( "Start" );
+				const sf::FloatRect bound( mStartingGuide.getLocalBounds() );
+				const sf::Vector2f center( bound.width*0.5f, bound.height*0.5f );
+				mStartingGuide.setOrigin( center );
+				nextTetPanel.resetScale( );
+				nextTetPanel.resetRotation( );
+				mFrameCount_rotationInterval = 0;
 				mIsMouseOverStartButton_ = false;
 			}
 		}

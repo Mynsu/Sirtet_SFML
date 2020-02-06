@@ -7,7 +7,6 @@ namespace scene::inPlay
 	class InPlay final : public ::scene::IScene
 	{
 	public:
-		InPlay( ) = delete;
 		InPlay( sf::RenderWindow& window );
 		~InPlay( );
 

@@ -77,6 +77,7 @@ int Socket::acceptOverlapped( Socket& candidateClientSocket, const uint32_t cand
 			erase( &overlapped );
 		}
 	}
+
 	return result;
 }
 
@@ -276,14 +277,24 @@ void Socket::reset( const bool isSocketReusable, const Socket::Type type )
 uint32_t Socket::completedIO( LPOVERLAPPED const lpOverlapped,
 						   const DWORD cbTransferred )
 {
+	uint32_t retVal = -1;
 	const Overlapped* const ptr = (Overlapped*)lpOverlapped;
-	const uint32_t retVal = ptr->ioTypeOrIndex;
-	erase( lpOverlapped );
-	if ( IOType::RECEIVE == (IOType)retVal )
+	const IOType ioType = ptr->ioType;
+	switch ( ioType )
 	{
-		mIsReceiving_ = false;
-		mRecentlyReceivedSize_ = cbTransferred;
+		case IOType::ACCEPT:
+			retVal = ptr->index;
+			break;
+		case IOType::RECEIVE:
+			mIsReceiving_ = false;
+			mRecentlyReceivedSize_ = cbTransferred;
+			[[ fallthrough ]];
+		default:
+			retVal = (uint32_t)ioType;
+			break;
 	}
+	erase( lpOverlapped );
+
 	return retVal;
 }
 

@@ -2,6 +2,38 @@
 #include "Tetrimino.h"
 #include "../ServiceLocatorMirror.h"
 
+model::Tetrimino::Tetrimino( )
+	: mIsFallingDown( false )
+{
+	mBlockShape.setOutlineThickness( 1.f );
+}
+
+model::Tetrimino::Tetrimino( const Tetrimino& arg )
+	: mIsFallingDown( false ), mType( arg.mType ),
+	mRotationID( arg.mRotationID ), mPosition( arg.mPosition )
+{
+	mBlockShape.setFillColor( arg.mBlockShape.getFillColor() );
+	mBlockShape.setOutlineThickness( 1.f );
+	mBlockShape.setOutlineColor( arg.mBlockShape.getOutlineColor() );
+	for ( uint8_t i = 0u; i != (uint8_t)::model::tetrimino::Rotation::NONE_MAX; ++i )
+	{
+		mPossibleRotations[ i ] = arg.mPossibleRotations[ i ];
+	}
+}
+
+void model::Tetrimino::operator=( const Tetrimino& arg )
+{
+	mType = arg.mType;
+	mRotationID = arg.mRotationID;
+	mPosition = arg.mPosition;
+	mBlockShape.setFillColor( arg.mBlockShape.getFillColor() );
+	mBlockShape.setOutlineColor( arg.mBlockShape.getOutlineColor() );
+	for ( uint8_t i = 0u; i != (uint8_t)::model::tetrimino::Rotation::NONE_MAX; ++i )
+	{
+		mPossibleRotations[ i ] = arg.mPossibleRotations[ i ];
+	}
+}
+
 sf::Vector2<int8_t> model::Tetrimino::Test[ (int)::model::tetrimino::Rotation::NONE_MAX ][ 4 ] =
 	{ 
 		{ {1,0}, {1,-1}, {0,2}, {1,2} },

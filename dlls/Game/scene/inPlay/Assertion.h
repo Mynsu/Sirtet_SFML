@@ -6,9 +6,9 @@ namespace scene::inPlay
 	class Assertion final : public ::scene::inPlay::IScene
 	{
 	public:
-		Assertion( ) = delete;
 		Assertion( sf::RenderWindow& window );
 		~Assertion( ) = default;
+
 		void loadResources( ) override;
 		::scene::inPlay::ID update( std::vector<sf::Event>& eventQueue ) override;
 		void draw( ) override;

@@ -1,16 +1,19 @@
 #pragma once
 
-class ServiceLocatorMirror
+class ServiceLocatorMirror final
 {
 	friend void _2943305454( const EngineComponents );
 public:
-	inline ServiceLocatorMirror( )
+	ServiceLocatorMirror( )
 		: mPtr( nullptr )
 	{
 		ASSERT_FALSE( IsInstantiated );
 		IsInstantiated = true;
 	}
-	inline ~ServiceLocatorMirror( )
+	ServiceLocatorMirror( const ServiceLocatorMirror& ) = delete;
+	void operator=( const ServiceLocatorMirror& ) = delete;
+	ServiceLocatorMirror( ServiceLocatorMirror&& ) = delete;
+	~ServiceLocatorMirror( )
 	{
 		mPtr = nullptr;
 		IsInstantiated = false;

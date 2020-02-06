@@ -3,6 +3,7 @@
 using Ticket = HashedKey;
 using ClientIndex = uint32_t;
 const uint32_t CAPACITY = 100;
+const uint32_t BACKLOG_SIZ = CAPACITY/2;
 // Capacity in the main server defaults to 10000.
 // You can resize it indirectly here without re-compliing or rescaling the main server.
 // !IMPORTANT: This must be less than the real capacity of the server.
@@ -173,7 +174,7 @@ int main( )
 		}
 		else
 		{
-			listener.listen( );
+			listener.listen( BACKLOG_SIZ );
 		}
 
 		if ( false == result )
@@ -191,6 +192,7 @@ int main( )
 	//
 	////
 
+	uint32_t numOfAcceptancePending = 0;
 	std::vector<Socket> clients;
 	clients.reserve( CAPACITY );
 	container::IteratoredQueue<ClientIndex> candidates;
@@ -210,7 +212,7 @@ int main( )
 			return -1;
 		}
 
-		if ( i < Socket::BACKLOG_SIZ )
+		if ( i < BACKLOG_SIZ )
 		{
 			const int result = listener.acceptOverlapped(socket, i);
 			if ( FALSE == result )
@@ -225,6 +227,7 @@ int main( )
 				std::cerr << "FATAL: Getting AcceptEx failed.\n";
 				IsWorking = false;
 			}
+			++numOfAcceptancePending;
 		}
 		else
 		{
@@ -282,6 +285,7 @@ int main( )
 					goto cleanUp;
 				}
 				// When accepting successfully,
+				--numOfAcceptancePending;
 				++population;
 				Socket& clientSocket = candidateSocket;
 				const ClientIndex clientIdx = candidateIdx;
@@ -302,19 +306,6 @@ int main( )
 						goto cleanUp;
 					}
 					PrintLeavingWithError( clientIdx, population );
-				}
-
-				// Reloading the next candidate.
-				// When room for the next client in THIS QUEUE SERVER, not the main server, remains yet,
-				if ( 0 < candidates.size() )
-				{
-					const ClientIndex nextCandidateIdx = candidates.front();
-					if ( FALSE == listener.acceptOverlapped(clients[nextCandidateIdx], nextCandidateIdx) )
-					{
-						// Exception
-						std::cerr << "FATAL: Overlapped acceptEx failed.\n";
-						goto cleanUp;
-					}
 				}
 			}
 			////
@@ -599,7 +590,9 @@ int main( )
 		{
 			Socket& clientSocket = clients[*it];
 			const uint32_t salt = *it;
-			const Ticket ticket = ::util::hash::Digest((uint32_t)(clientSocket.handle()+salt));
+			std::random_device d;
+			std::minstd_rand engine( d() );
+			const Ticket ticket = engine();
 			Packet packet;
 			packet.pack( TAG_TICKET, ticket );
 			// First sent to a client, last to the main server.
@@ -703,7 +696,8 @@ int main( )
 #endif
 		}
 
-		if ( 0 < candidates.size() )
+		if ( numOfAcceptancePending < BACKLOG_SIZ &&
+			0 < candidates.size() )
 		{
 			const ClientIndex nextCandidateIdx = candidates.front();
 			if ( FALSE == listener.acceptOverlapped(clients[nextCandidateIdx], nextCandidateIdx) )
@@ -713,6 +707,7 @@ int main( )
 				break;
 			}
 			candidates.pop_front( );
+			++numOfAcceptancePending;
 		}
 	}
 

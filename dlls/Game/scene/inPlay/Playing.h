@@ -10,7 +10,6 @@ namespace scene::inPlay
 	class Playing final : public ::scene::inPlay::IScene
 	{
 	public:
-		Playing( ) = delete;
 		Playing( sf::RenderWindow& window, sf::Drawable& shapeOrSprite, const std::unique_ptr<::scene::inPlay::IScene>& overlappedScene );
 		~Playing( ) = default;
 
@@ -29,7 +28,7 @@ namespace scene::inPlay
 		::ui::NextTetriminoPanel mNextTetriminoPanel;
 		::vfx::Combo mVfxCombo;
 		::model::Tetrimino mCurrentTetrimino;
-		std::queue< ::model::Tetrimino > mNextTetriminos;
+		std::queue<::model::Tetrimino> mNextTetriminos;
 		::model::Stage mStage;
 	};
 }
