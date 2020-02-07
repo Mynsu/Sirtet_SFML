@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
+#include <SFML/Audio.hpp>
 #include <lua.hpp>
 #include <Lib/Hash.h>
 #include <Lib/Socket.h>

@@ -46,7 +46,7 @@ namespace model
 		void setColor( const sf::Color background, const sf::Color cellOutlineColor )
 		{
 			mPanel.setFillColor( background );
-			mCellShape.setOutlineThickness( 1.f );
+			mCellShape.setOutlineThickness( -2.f );
 			mCellShape.setOutlineColor( cellOutlineColor );
 		}
 		void setOutline( const float thickness, const sf::Color color )

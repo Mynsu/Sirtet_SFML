@@ -5,7 +5,8 @@
 model::Tetrimino::Tetrimino( )
 	: mIsFallingDown( false )
 {
-	mBlockShape.setOutlineThickness( 1.f );
+	mBlockShape.setOutlineThickness( -2.f );
+	LoadResources( );
 }
 
 model::Tetrimino::Tetrimino( const Tetrimino& arg )
@@ -13,7 +14,7 @@ model::Tetrimino::Tetrimino( const Tetrimino& arg )
 	mRotationID( arg.mRotationID ), mPosition( arg.mPosition )
 {
 	mBlockShape.setFillColor( arg.mBlockShape.getFillColor() );
-	mBlockShape.setOutlineThickness( 1.f );
+	mBlockShape.setOutlineThickness( -2.f );
 	mBlockShape.setOutlineColor( arg.mBlockShape.getOutlineColor() );
 	for ( uint8_t i = 0u; i != (uint8_t)::model::tetrimino::Rotation::NONE_MAX; ++i )
 	{
@@ -53,7 +54,6 @@ sf::Color model::Tetrimino::Colors[(int)Type::NONE_MAX] =
 		sf::Color(0x562f72ff),// Purple - Old Citadel
 		sf::Color::Yellow
 	};
-sf::Color model::Tetrimino::BlockOutlineColor(0x000000'ff);
 
 void model::Tetrimino::LoadResources( )
 {
@@ -68,19 +68,6 @@ void model::Tetrimino::LoadResources( )
 	{
 		luaL_openlibs( lua );
 		const int TOP_IDX = -1;
-
-		std::string varName( "BlockOutlineColor" );
-		lua_getglobal( lua, varName.data() );
-		if ( false == lua_isinteger(lua, TOP_IDX) )
-		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-													 varName, scriptPathNName );
-		}
-		else
-		{
-			BlockOutlineColor = sf::Color((uint32_t)lua_tointeger(lua, TOP_IDX));
-		}
-		lua_pop( lua, 1 );
 
 		std::string tableName( "Color" );
 		lua_getglobal( lua, tableName.data( ) );
@@ -256,7 +243,7 @@ void model::Tetrimino::LoadResources( )
 			retVal.mPossibleRotations[ 2 ] = 0b0010'0010'0010'0010;
 			retVal.mPossibleRotations[ 3 ] = 0b0000'1111'0000'0000;
 			retVal.mRotationID = (::model::tetrimino::Rotation)1;
-			retVal.setColor( Colors[(int)Type::I], BlockOutlineColor );
+			retVal.setColor( Colors[(int)Type::I], sf::Color(0xffffffff) );
 			break;
 		case ::model::tetrimino::Type::J:
 			retVal.mPossibleRotations[ 0 ] = 0b1000'1110'0000'0000;
@@ -264,7 +251,7 @@ void model::Tetrimino::LoadResources( )
 			retVal.mPossibleRotations[ 2 ] = 0b0000'1110'0010'0000;
 			retVal.mPossibleRotations[ 3 ] = 0b0110'0100'0100'0000;
 			retVal.mRotationID = (::model::tetrimino::Rotation)0;
-			retVal.setColor( Colors[(int)Type::J], BlockOutlineColor );
+			retVal.setColor( Colors[(int)Type::J], sf::Color(0xffffffff) );
 			break;
 		case ::model::tetrimino::Type::L:
 			retVal.mPossibleRotations[ 0 ] = 0b0010'1110'0000'0000;
@@ -272,7 +259,7 @@ void model::Tetrimino::LoadResources( )
 			retVal.mPossibleRotations[ 2 ] = 0b0000'1110'1000'0000;
 			retVal.mPossibleRotations[ 3 ] = 0b0100'0100'0110'0000;
 			retVal.mRotationID = (::model::tetrimino::Rotation)0;
-			retVal.setColor( Colors[(int)Type::L], BlockOutlineColor );
+			retVal.setColor( Colors[(int)Type::L], sf::Color(0xffffffff) );
 			break;
 		case ::model::tetrimino::Type::N:
 			retVal.mPossibleRotations[ 0 ] = 0b1100'0110'0000'0000;
@@ -280,7 +267,7 @@ void model::Tetrimino::LoadResources( )
 			retVal.mPossibleRotations[ 2 ] = 0b0000'1100'0110'0000;
 			retVal.mPossibleRotations[ 3 ] = 0b0010'0110'0100'0000;
 			retVal.mRotationID = (::model::tetrimino::Rotation)0;
-			retVal.setColor( Colors[(int)Type::N], BlockOutlineColor );
+			retVal.setColor( Colors[(int)Type::N], sf::Color(0xffffffff) );
 			break;
 		case ::model::tetrimino::Type::S:
 			retVal.mPossibleRotations[ 0 ] = 0b0110'1100'0000'0000;
@@ -288,7 +275,7 @@ void model::Tetrimino::LoadResources( )
 			retVal.mPossibleRotations[ 2 ] = 0b0000'0110'1100'0000;
 			retVal.mPossibleRotations[ 3 ] = 0b1000'1100'0100'0000;
 			retVal.mRotationID = (::model::tetrimino::Rotation)0;
-			retVal.setColor( Colors[(int)Type::S], BlockOutlineColor );
+			retVal.setColor( Colors[(int)Type::S], sf::Color(0xffffffff) );
 			break;
 		case ::model::tetrimino::Type::T:
 			retVal.mPossibleRotations[ 0 ] = 0b0100'1110'0000'0000;
@@ -296,7 +283,7 @@ void model::Tetrimino::LoadResources( )
 			retVal.mPossibleRotations[ 2 ] = 0b0000'1110'0100'0000;
 			retVal.mPossibleRotations[ 3 ] = 0b0100'0110'0100'0000;
 			retVal.mRotationID = (::model::tetrimino::Rotation)0;
-			retVal.setColor( Colors[(int)Type::T], BlockOutlineColor );
+			retVal.setColor( Colors[(int)Type::T], sf::Color(0xffffffff) );
 			break;
 		case ::model::tetrimino::Type::O:
 		{
@@ -306,7 +293,7 @@ void model::Tetrimino::LoadResources( )
 			retVal.mPossibleRotations[ 2 ] = localspace;
 			retVal.mPossibleRotations[ 3 ] = localspace;
 			retVal.mRotationID = (::model::tetrimino::Rotation)0;
-			retVal.setColor( Colors[(int)Type::O], BlockOutlineColor );
+			retVal.setColor( Colors[(int)Type::O], sf::Color(0xffffffff) );
 			break;
 		}
 		default:

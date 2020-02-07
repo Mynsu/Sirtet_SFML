@@ -20,11 +20,17 @@ namespace scene::online
 			TICKETING,
 			SUBMITTING_TICKET,
 		};
+		enum class AudioIndex
+		{
+			ON_SELECTION,
+			NULL_MAX,
+		};
 		static bool IsInstantiated;
 		uint32_t mOrder;
 		::scene::online::Waiting::State mState;
 		sf::RenderWindow& mWindow_;
 		Online& mNet;
+		std::string mAudioList[(int)AudioIndex::NULL_MAX];
 		sf::Font mFont;
 		sf::Text mTextLabels[3];
 	};

@@ -5,4 +5,4 @@ Color = { I=0x00e5e5f0,--Cyan
 		S=0x329932f0,--Green
 		T=0x562f72f0,--Purple - Old Citadel
 		O=0xffff00f0 }--Yellow
-BlockOutlineColor = 0x0000007f
+--BlockOutlineColor = 0x0000007f

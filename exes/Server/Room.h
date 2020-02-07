@@ -3,8 +3,6 @@
 
 class Client;
 
-const uint8_t PARTICIPANT_CAPACITY = 4u;
-
 class Room
 {
 public:
@@ -49,6 +47,7 @@ private:
 		}
 		return elapsed;
 	}
+	static const uint8_t PARTICIPANT_CAPACITY = 4;
 	bool mHasTempoChanged_, mHasHostChanged_;
 	ClientIndex mHostIndex;
 	Room::State mState;

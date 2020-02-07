@@ -6,10 +6,8 @@
 bool ::scene::MainMenu::IsInstantiated = false;
 
 ::scene::MainMenu::MainMenu( sf::RenderWindow& window )
-	: mWindow_( window ),/// mSetScene( setScene ),
-	mNextSceneID( ::scene::ID::AS_IS ),
-	mSpriteClipSize_( 256.f, 128.f ), mLogoMargin_( 70.f, 70.f ),
-	mButtonSinglePosition_( 150.f, 150.f ), mButtonOnlinePosition_( 150.f, 300.f )
+	: mIsCursorOnButton( false ), mWindow_( window ),
+	mNextSceneID( ::scene::ID::AS_IS )
 {
 	ASSERT_FALSE( IsInstantiated );
 
@@ -26,6 +24,12 @@ bool ::scene::MainMenu::IsInstantiated = false;
 void scene::MainMenu::loadResources( )
 {
 	std::string spritePathNName( "Images/MainMenu.png" );
+	mSpriteClipSize_ = sf::Vector2f(256.f, 128.f);
+	mLogoMargin_ = sf::Vector2f(70.f, 70.f);
+	mButtonSinglePosition_ = sf::Vector2f(150.f, 150.f);
+	mButtonOnlinePosition_ = sf::Vector2f(150.f, 300.f);
+	mAudioList[(int)AudioIndex::BGM] = "Audio/korobeiniki.mp3";
+	mAudioList[(int)AudioIndex::ON_SELECTION] = "Audio/selection.wav";
 
 	lua_State* lua = luaL_newstate( );
 	const std::string scriptPathNName( "Scripts/MainMenu.lua" );
@@ -329,6 +333,80 @@ void scene::MainMenu::loadResources( )
 			lua_pop( lua, 1 );
 		}
 		lua_pop( lua, 1 );
+
+		tableName = "Audio";
+		lua_getglobal( lua, tableName.data() );
+		if ( false == lua_istable(lua, TOP_IDX) )
+		{
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
+		}
+		else
+		{
+			std::string innerTableName( "BGM" );
+			lua_pushstring( lua, innerTableName.data() );
+			lua_gettable( lua, 1 );
+			if ( false == lua_istable(lua, TOP_IDX) )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+innerTableName, scriptPathNName );
+			}
+			else
+			{
+				std::string field( "path" );
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				int type = lua_type(lua, TOP_IDX);
+				if ( LUA_TSTRING == type )
+				{
+					mAudioList[(int)AudioIndex::BGM] = lua_tostring(lua, TOP_IDX);
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
+			}
+			lua_pop( lua, 1 );
+
+			innerTableName = "onSelection";
+			lua_pushstring( lua, innerTableName.data() );
+			lua_gettable( lua, 1 );
+			if ( false == lua_istable(lua, TOP_IDX) )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+innerTableName, scriptPathNName );
+			}
+			else
+			{
+				std::string field( "path" );
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				int type = lua_type(lua, TOP_IDX);
+				if ( LUA_TSTRING == type )
+				{
+					mAudioList[(int)AudioIndex::ON_SELECTION] = lua_tostring(lua, TOP_IDX);
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
+			}
+			lua_pop( lua, 1 );
+		}
+		lua_pop( lua, 1 );
 	}
 	lua_close( lua );
 
@@ -340,8 +418,12 @@ void scene::MainMenu::loadResources( )
 		__debugbreak( );
 #endif
 	}
-
 	mSprite.setTexture( mTexture );
+	if ( false == gService()->audio().playBGM(mAudioList[(int)AudioIndex::BGM], true) )
+	{
+		gService()->console().printFailure(FailureLevel::WARNING,
+										   "File Not Found: "+mAudioList[(int)AudioIndex::BGM] );
+	}
 }
 
 ::scene::ID scene::MainMenu::update( std::vector<sf::Event>& eventQueue )
@@ -417,6 +499,15 @@ void scene::MainMenu::touchButton( )
 			mSprite.setTextureRect( sf::IntRect( 0,
 												 3*cast.y, cast.x, cast.y ) );
 			mWindow_.draw( mSprite );
+			if ( false == mIsCursorOnButton )
+			{
+				mIsCursorOnButton = true;
+				if ( false == gService()->audio().playSFX(mAudioList[(int)AudioIndex::ON_SELECTION]) )
+				{
+					gService()->console().printFailure(FailureLevel::WARNING,
+													   "File Not Found: "+mAudioList[(int)AudioIndex::ON_SELECTION] );
+				}
+			}
 		}
 		else if ( const sf::Vector2f btOnlineGlobalPos( sf::Vector2f(mWindow_.getPosition())+titlebarHeight+mButtonOnlinePosition_ );
 				  btOnlineGlobalPos.x < mouseGlobalPos.x && mouseGlobalPos.x < btOnlineGlobalPos.x+mSpriteClipSize_.x
@@ -434,6 +525,15 @@ void scene::MainMenu::touchButton( )
 			mSprite.setTextureRect( sf::IntRect( cast.x,
 												 3*cast.y, cast.x, cast.y ) );
 			mWindow_.draw( mSprite );
+			if ( false == mIsCursorOnButton )
+			{
+				mIsCursorOnButton = true;
+				if ( false == gService()->audio().playSFX(mAudioList[(int)AudioIndex::ON_SELECTION]) )
+				{
+					gService()->console().printFailure(FailureLevel::WARNING,
+													   "File Not Found: "+mAudioList[(int)AudioIndex::ON_SELECTION] );
+				}
+			}
 		}
 		else
 		{
@@ -446,6 +546,7 @@ void scene::MainMenu::touchButton( )
 			mSprite.setTextureRect( sf::IntRect( 0,
 												 3*cast.y, cast.x, cast.y ) );
 			mWindow_.draw( mSprite );
+			mIsCursorOnButton = false;
 		}
 	}
 	else
@@ -459,5 +560,6 @@ void scene::MainMenu::touchButton( )
 		mSprite.setTextureRect( sf::IntRect( 0,
 											 3*cast.y, cast.x, cast.y ) );
 		mWindow_.draw( mSprite );
+		mIsCursorOnButton = false;
 	}
 }

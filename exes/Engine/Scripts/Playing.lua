@@ -8,3 +8,5 @@ NextTetriminoPanel = { x = 620, y = 300, cellSize = 30,
 					color = 0x1f1f1fff,
 					outlineThickness = 5, outlineColor = 0x0000007f,
 					cellOutlineColor = 0x0000007f }
+Audio = { tetriminoLocked = { path = "Audio/tetriminoLocked.wav" },
+		   lineCleared = { path = "Audio/lineCleared.wav" } }

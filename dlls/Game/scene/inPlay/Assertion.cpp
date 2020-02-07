@@ -23,6 +23,7 @@ void scene::inPlay::Assertion::loadResources( )
 	uint32_t fontSize = 50;
 	uint32_t fontColor = 0x000000'af;
 	std::string fontPathNName( "Fonts/AGENCYR.ttf" );
+	mAudioList[(int)AudioIndex::ON_SELECTION] = "Audio/selection.wav";
 
 	lua_State* lua = luaL_newstate();
 	const std::string scriptPathNName( "Scripts/Assertion.lua" );
@@ -123,6 +124,48 @@ void scene::inPlay::Assertion::loadResources( )
 			lua_pop( lua, 1 );
 		}
 		lua_pop( lua, 1 );
+
+		tableName = "Audio";
+		lua_getglobal( lua, tableName.data() );
+		if ( false == lua_istable(lua, TOP_IDX) )
+		{
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
+		}
+		else
+		{
+			std::string innerTableName( "onSelection" );
+			lua_pushstring( lua, innerTableName.data() );
+			lua_gettable( lua, 1 );
+			if ( false == lua_istable(lua, TOP_IDX) )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+innerTableName, scriptPathNName );
+			}
+			else
+			{
+				std::string field( "path" );
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				int type = lua_type(lua, TOP_IDX);
+				if ( LUA_TSTRING == type )
+				{
+					mAudioList[(int)AudioIndex::ON_SELECTION] = lua_tostring(lua, TOP_IDX);
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
+			}
+			lua_pop( lua, 1 );
+		}
+		lua_pop( lua, 1 );
 	}
 	lua_close( lua );
 
@@ -155,6 +198,11 @@ void scene::inPlay::Assertion::loadResources( )
 			if ( sf::Event::KeyPressed == it->type &&
 				sf::Keyboard::Escape == it->key.code )
 			{
+				if ( false == gService()->audio().playSFX(mAudioList[(int)AudioIndex::ON_SELECTION]) )
+				{
+					gService()->console().printFailure(FailureLevel::WARNING,
+													   "File Not Found: "+mAudioList[(int)AudioIndex::ON_SELECTION] );
+				}
 				it = eventQueue.erase(it);
 				retVal = ::scene::inPlay::ID::EXIT;
 			}

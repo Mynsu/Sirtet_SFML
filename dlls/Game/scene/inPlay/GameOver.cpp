@@ -6,20 +6,35 @@
 
 scene::inPlay::GameOver::GameOver( sf::RenderWindow& window, sf::Drawable& shapeOrSprite,
 								   std::unique_ptr<::scene::inPlay::IScene>& overlappedScene )
-	: TARGET_ALPHA( 0x7fu ), mFade( 0xffu ), mFrameCount( 0u ),
+	: TARGET_ALPHA( 0x7fu ), mFade( 0xffu ), mFrameCount( 0 ),
 	mWindow_( window ), mBackgroundRect_( (sf::RectangleShape&)shapeOrSprite )
 {
 	overlappedScene.reset( );
-
+	auto& vault = gService()->vault();
+	if ( auto it = vault.find(HK_FORE_FPS);
+		vault.end() != it )
+	{
+		mFPS_ = (uint32_t)it->second;
+	}
+#ifdef _DEBUG
+	else
+	{
+		__debugbreak( );
+	}
+#endif
 	loadResources( );
-
-	mFPS_ = (uint32_t)gService( )->vault( )[ HK_FORE_FPS ];
+	if ( false == gService()->audio().playBGM(mAudioList[(int)AudioIndex::BGM]) )
+	{
+		gService()->console().printFailure(FailureLevel::WARNING,
+										   "File Not Found: "+mAudioList[(int)AudioIndex::BGM] );
+	}
 }
 
 void scene::inPlay::GameOver::loadResources( )
 {
 	sf::Vector2f imageSize( 512.f, 256.f );
 	std::string imagePathNName( "Images/GameOver.png" );
+	mAudioList[(int)AudioIndex::BGM] = "Audio/gameOver.wav";
 
 	lua_State* lua = luaL_newstate( );
 	const std::string scriptPathNName( "Scripts/GameOver.lua" );
@@ -115,6 +130,48 @@ void scene::inPlay::GameOver::loadResources( )
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+		}
+		lua_pop( lua, 1 );
+
+		tableName = "Audio";
+		lua_getglobal( lua, tableName.data() );
+		if ( false == lua_istable(lua, TOP_IDX) )
+		{
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
+		}
+		else
+		{
+			std::string innerTableName( "BGM" );
+			lua_pushstring( lua, innerTableName.data() );
+			lua_gettable( lua, 1 );
+			if ( false == lua_istable(lua, TOP_IDX) )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+innerTableName, scriptPathNName );
+			}
+			else
+			{
+				std::string field( "path" );
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				int type = lua_type(lua, TOP_IDX);
+				if ( LUA_TSTRING == type )
+				{
+					mAudioList[(int)AudioIndex::BGM] = lua_tostring(lua, TOP_IDX);
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
 			}
 			lua_pop( lua, 1 );
 		}

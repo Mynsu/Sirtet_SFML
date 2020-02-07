@@ -13,12 +13,18 @@ namespace scene::inPlay
 		::scene::inPlay::ID update( std::vector<sf::Event>& eventQueue ) override;
 		void draw( ) override;
 	private:
+		enum class AudioIndex
+		{
+			BGM,
+			NULL_MAX,
+		};
 		const uint8_t TARGET_ALPHA;
 		uint32_t mFade;
 		uint32_t mFPS_, mFrameCount;
 		sf::RenderWindow& mWindow_;
 		sf::RectangleShape& mBackgroundRect_;
 		sf::Texture mTexture;
+		std::string mAudioList[(int)AudioIndex::NULL_MAX];
 		sf::Sprite mSprite;
 	};
 }

@@ -1,11 +1,13 @@
 #pragma once
 #include "pch.h" // Commonly included headers, not pch.
 #include "Console.h"
+#include "Audio.h"
 
 class ServiceLocator final : public IServiceLocator
 {
 public:
 	ServiceLocator( )
+		: mAudio( std::make_unique<Audio>() )
 	{
 		ASSERT_FALSE( IsInstantiated );
 
@@ -35,9 +37,17 @@ public:
 		return mConsole;
 	}
 	// Access global variables.
-	auto vault( ) -> std::unordered_map< HashedKey, Dword >&
+	auto vault( ) -> std::unordered_map<HashedKey, Dword>&
 	{
 		return mVault;
+	}
+	void registerAudio( std::unique_ptr<IAudio>& audioService )
+	{
+		mAudio = std::move(audioService);
+	}
+	auto audio( ) -> IAudio&
+	{
+		return *mAudio;
 	}
 	void release( )
 	{
@@ -47,8 +57,9 @@ public:
 private:
 	static bool IsInstantiated;
 //TODO: 콘솔을 개발용으로만 둘까, 콘솔에 유저 권한을 둘까?
+	std::unique_ptr<IAudio> mAudio;
 	Console mConsole;
-	std::unordered_map< HashedKey, Dword > mVault;
+	std::unordered_map<HashedKey, Dword> mVault;
 };
 
 extern ::ServiceLocator gService;

@@ -20,3 +20,4 @@ SubWindow = { shade = 0x0000007f,
 			  font = "Fonts/AGENCYB.TTF",
 			  titleRelativeX = 20, titleRelativeY = 10, titleFontSize = 30, titleFontColor = 0xffffffff,
 			  inputTextFieldX = 20, inputTextFieldY = 60, inputTextFieldFontSize = 25, inputTextFieldFontColor = 0x000000ff }
+Audio = { onSelection = { path = "Audio/selection.wav" } }

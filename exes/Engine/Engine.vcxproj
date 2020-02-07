@@ -35,6 +35,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Audio.h" />
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Command.h" />
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Console.h" />
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\pch.h" />
@@ -42,6 +43,7 @@
     <ClInclude Include="..\..\VaultKeyList.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Audio.cpp" />
     <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Command.cpp" />
     <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Console.cpp" />
     <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\main.cpp" />
@@ -82,6 +84,7 @@
     <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\Playing.lua">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </None>
+    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\PlayView.lua" />
     <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\Tetrimino.lua">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </None>

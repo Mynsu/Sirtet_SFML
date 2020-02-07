@@ -30,15 +30,21 @@ namespace scene::online
 		::scene::online::ID update( std::vector<sf::Event>& eventQueue ) override;
 		void draw( ) override;
 	private:
-		void startGame( ) const;
-		void _startGame( const std::string_view& );
-		void leaveRoom( ) const;
-		void _leaveRoom( const std::string_view& );
 		enum class AlarmIndex
 		{
 			ALL_OVER_FREEZE,
 			NONE_MAX,
 		};
+		enum class AudioIndex
+		{
+			ON_SELECTION,
+			GAME_OVER,
+			NONE_MAX,
+		};
+		void startGame( ) const;
+		void _startGame( const std::string_view& );
+		void leaveRoom( ) const;
+		void _leaveRoom( const std::string_view& );
 		// Also reset.
 		bool alarmAfter( const uint32_t milliseconds, const AlarmIndex index )
 		{
@@ -71,6 +77,7 @@ namespace scene::online
 		std::unique_ptr<::scene::inPlay::IScene> mOverlappedScene;
 		// When empty, the value should be 0 == EMPTY_SLOT.
 		HashedKey mOtherPlayerSlots[ROOM_CAPACITY-1];
+		std::string mAudioList[(int)AudioIndex::NONE_MAX];
 		sf::Font mFont;
 		sf::Text mStartingGuide, mNicknameLabel;
 		std::unordered_map<HashedKey, ::scene::online::Participant> mParticipants;

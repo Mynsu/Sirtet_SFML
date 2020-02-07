@@ -19,6 +19,11 @@ namespace scene::online
 		::scene::online::ID update( std::vector<sf::Event>& eventQueue ) override;
 		void draw( ) override;
 	private:
+		enum class AudioIndex
+		{
+			ON_SELECTION,
+			NULL_MAX,
+		};
 		void createRoom( );
 		void _createRoom( const std::string_view& );
 		void joinRoom( const std::string_view& arg );
@@ -45,6 +50,7 @@ namespace scene::online
 		::scene::online::Online& mNet;
 		MouseEvent mLatestMouseEvent;
 		std::vector<std::string> mGuideTexts;
+		std::string mAudioList[(int)AudioIndex::NULL_MAX];
 		::ui::TextInputBox mTextInputBox;
 		// NOTE: std::pair<sf::Text, target point to move>.
 		std::unordered_map< std::string, std::pair<sf::Text, uint8_t> > mUserList;

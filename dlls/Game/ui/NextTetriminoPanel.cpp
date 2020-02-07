@@ -14,7 +14,7 @@ void ui::NextTetriminoPanel::setTetrimino( const::model::Tetrimino& next )
 	for ( sf::RectangleShape& block : mBlocks )
 	{
 		block.setFillColor( nextTetColor );
-		block.setOutlineThickness( 1.0f );
+		block.setOutlineThickness( -2.0f );
 	}
 	const ::model::tetrimino::Type type = next.type( );
 	const ::model::tetrimino::LocalSpace nextTetBlocks = next.blocks( );

@@ -7,6 +7,101 @@
 const uint8_t FALLING_DOWN_SPEED = 3;
 const uint32_t INPUT_DELAY_MS = 40;
 const uint32_t ASYNC_TOLERANCE_MS = 2500;
+std::string ui::PlayView::AudioList[(int)AudioIndex::NONE_MAX];
+
+void ui::PlayView::LoadResources( )
+{
+	AudioList[(int)AudioIndex::TETRIMINO_LOCKED] = "Audio/tetriminoLocked.wav";
+	AudioList[(int)AudioIndex::LINE_CLEARED] = "Audio/lineCleared.wav";
+
+	lua_State* lua = luaL_newstate( );
+	const std::string scriptPathNName( "Scripts/Playing.lua" );
+	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
+	{
+		// File Not Found Exception
+		gService( )->console( ).printFailure( FailureLevel::FATAL,
+											 "File Not Found: "+scriptPathNName );
+	}
+	else
+	{
+		luaL_openlibs( lua );
+		const int TOP_IDX = -1;
+
+		std::string tableName( "Audio" );
+		lua_getglobal( lua, tableName.data() );
+		if ( false == lua_istable(lua, TOP_IDX) )
+		{
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
+		}
+		else
+		{
+			std::string innerTableName( "tetriminoLocked" );
+			lua_pushstring( lua, innerTableName.data() );
+			lua_gettable( lua, 1 );
+			if ( false == lua_istable(lua, TOP_IDX) )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+innerTableName, scriptPathNName );
+			}
+			else
+			{
+				std::string field( "path" );
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				int type = lua_type(lua, TOP_IDX);
+				if ( LUA_TSTRING == type )
+				{
+					AudioList[(int)AudioIndex::TETRIMINO_LOCKED] = lua_tostring(lua, TOP_IDX);
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
+			}
+			lua_pop( lua, 1 );
+
+			innerTableName = "lineCleared";
+			lua_pushstring( lua, innerTableName.data() );
+			lua_gettable( lua, 1 );
+			if ( false == lua_istable(lua, TOP_IDX) )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+innerTableName, scriptPathNName );
+			}
+			else
+			{
+				std::string field( "path" );
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				int type = lua_type(lua, TOP_IDX);
+				if ( LUA_TSTRING == type )
+				{
+					AudioList[(int)AudioIndex::LINE_CLEARED] = lua_tostring(lua, TOP_IDX);
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
+			}
+			lua_pop( lua, 1 );
+		}
+		lua_pop( lua, 1 );
+	}
+}
 
 ui::PlayView::PlayView( sf::RenderWindow& window, ::scene::online::Online& net, const bool isPlayable )
 	: mHasTetriminoCollidedOnClient( false ), mHasTetriminoCollidedOnServer( false ),
@@ -20,6 +115,7 @@ ui::PlayView::PlayView( sf::RenderWindow& window, ::scene::online::Online& net, 
 	mTexture_countdown( std::make_unique<sf::Texture>() ), mVfxCombo( window ),
 	mStage( window ), mNextTetriminoPanel( window )
 {
+	::ui::PlayView::LoadResources( );
 }
 
 ui::PlayView::PlayView( const PlayView& another )
@@ -295,6 +391,11 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
 	{
 		if ( true == mHasTetriminoCollidedOnServer )
 		{
+			if ( false == gService()->audio().playSFX(AudioList[(int)AudioIndex::TETRIMINO_LOCKED]) )
+			{
+				gService()->console().printFailure(FailureLevel::WARNING,
+												   "File Not Found: "+AudioList[(int)AudioIndex::TETRIMINO_LOCKED] );
+			}
 			mHasTetriminoCollidedOnServer = false;
 			mHasTetriminoCollidedOnClient = false;
 			mCurrentTetrimino = mNextTetriminos.front();
@@ -346,6 +447,11 @@ void ui::PlayView::updateStage( const::model::stage::Grid& grid )
 void ui::PlayView::setNumOfLinesCleared( const uint8_t numOfLinesCleared )
 {
 	mNumOfLinesCleared = numOfLinesCleared;
+	if ( false == gService()->audio().playSFX(AudioList[(int)AudioIndex::LINE_CLEARED]) )
+	{
+		gService()->console().printFailure(FailureLevel::WARNING,
+										   "File Not Found: "+AudioList[(int)AudioIndex::LINE_CLEARED] );
+	}
 	mFrameCount_clearingVFX = mFPS_;
 }
 

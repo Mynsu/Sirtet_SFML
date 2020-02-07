@@ -95,6 +95,8 @@ void scene::online::InRoom::loadResources( )
 	sf::Vector2f startingGuidePosition( 550.f, 60.f );
 	uint32_t startingGuideFontSize = 30;
 	uint32_t startingGuideFontColor = 0xffffffff;
+	mAudioList[(int)AudioIndex::ON_SELECTION] = "Audio/selection.wav";
+	mAudioList[(int)AudioIndex::GAME_OVER] = "Audio/gameOver.wav";
 
 	lua_State* lua = luaL_newstate( );
 	const std::string scriptPathNName( "Scripts/InRoom.lua" );
@@ -1028,6 +1030,80 @@ void scene::online::InRoom::loadResources( )
 			lua_pop( lua, 1 );
 		}
 		lua_pop( lua, 1 );
+
+		tableName = "Audio";
+		lua_getglobal( lua, tableName.data() );
+		if ( false == lua_istable(lua, TOP_IDX) )
+		{
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
+		}
+		else
+		{
+			std::string innerTableName( "onSelection" );
+			lua_pushstring( lua, innerTableName.data() );
+			lua_gettable( lua, 1 );
+			if ( false == lua_istable(lua, TOP_IDX) )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+innerTableName, scriptPathNName );
+			}
+			else
+			{
+				std::string field( "path" );
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				int type = lua_type(lua, TOP_IDX);
+				if ( LUA_TSTRING == type )
+				{
+					mAudioList[(int)AudioIndex::ON_SELECTION] = lua_tostring(lua, TOP_IDX);
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
+			}
+			lua_pop( lua, 1 );
+
+			innerTableName = "gameOver";
+			lua_pushstring( lua, innerTableName.data() );
+			lua_gettable( lua, 1 );
+			if ( false == lua_istable(lua, TOP_IDX) )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+innerTableName, scriptPathNName );
+			}
+			else
+			{
+				std::string field( "path" );
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				int type = lua_type(lua, TOP_IDX);
+				if ( LUA_TSTRING == type )
+				{
+					mAudioList[(int)AudioIndex::GAME_OVER] = lua_tostring(lua, TOP_IDX);
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
+			}
+			lua_pop( lua, 1 );
+		}
+		lua_pop( lua, 1 );
 	}
 	lua_close( lua );
 
@@ -1115,8 +1191,6 @@ void scene::online::InRoom::loadResources( )
 	mStartingGuide.setOrigin( center );
 	mStartingGuide.setPosition( startingGuidePosition );
 	mStartingGuide.setFillColor( sf::Color(startingGuideFontColor) );
-
-	::model::Tetrimino::LoadResources( );
 }
 
 ::scene::online::ID scene::online::InRoom::update( std::vector<sf::Event>& eventQueue )
@@ -1249,6 +1323,7 @@ void scene::online::InRoom::loadResources( )
 				pair.second.playView.getReady( );
 			}
 			mIsStartingGuideVisible_ = false;
+			gService()->audio().stopBGM( );
 		}
 
 		if ( std::optional<std::string> gamesOver( mNet.getByTag(TAG_GAMES_OVER,
@@ -1377,6 +1452,11 @@ void scene::online::InRoom::loadResources( )
 					std::nullopt != allOver )
 		{
 			mAlarms[(int)AlarmIndex::ALL_OVER_FREEZE] = Clock::now();
+			if ( false == gService()->audio().playSFX(mAudioList[(int)AudioIndex::GAME_OVER]) )
+			{
+				gService()->console().printFailure(FailureLevel::WARNING,
+												   "File Not Found: "+mAudioList[(int)AudioIndex::GAME_OVER] );
+			}
 		}
 	}
 
@@ -1440,6 +1520,11 @@ void scene::online::InRoom::loadResources( )
 			true == mIsStartingGuideVisible_ )
 		{
 			startGame( );
+			if ( false == gService()->audio().playSFX(mAudioList[(int)AudioIndex::ON_SELECTION]) )
+			{
+				gService()->console().printFailure(FailureLevel::WARNING,
+												   "File Not Found: "+mAudioList[(int)AudioIndex::ON_SELECTION] );
+			}
 			mIsStartButtonPressed_ = false;
 			it = eventQueue.erase(it);
 		}

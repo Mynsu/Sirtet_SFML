@@ -42,6 +42,7 @@ namespace ui
 			COLLIDED_ON_SERVER,
 			NONE_MAX,
 		};
+		static void LoadResources( );
 		// This function doesn't reset the alarm.
 		bool alarmAfter( const uint32_t milliseconds, const AlarmIndex index )
 		{
@@ -67,6 +68,13 @@ namespace ui
 			PLAYING,
 			WAITING_OR_OVER,
 		};
+		enum class AudioIndex
+		{
+			TETRIMINO_LOCKED,
+			LINE_CLEARED,
+			NONE_MAX,
+		};
+		static std::string AudioList[(int)AudioIndex::NONE_MAX];
 		State mState_;
 		sf::Vector2i countdownSpriteSize_;
 		sf::RenderWindow& mWindow_;

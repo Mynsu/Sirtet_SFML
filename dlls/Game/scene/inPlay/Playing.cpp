@@ -6,14 +6,14 @@
 #include "../VaultKeyList.h"
 
 const float TEMPO_DIFF_RATIO = 0.02f;
-const uint8_t FALLING_DOWN_SPEED = 3u;
+const uint8_t FALLING_DOWN_SPEED = 3;
 const uint32_t LINE_CLEAR_CHK_INTERVAL_MS = 100;
 
 ::scene::inPlay::Playing::Playing( sf::RenderWindow& window,
 								   sf::Drawable& shapeOrSprite,
 								   const std::unique_ptr<::scene::inPlay::IScene>& overlappedScene )
-	: mNumOfLinesCleared( 0u ),
-	mFrameCount_fallDown( 0u ), mFrameCount_clearingInterval_( 0 ),
+	: mNumOfLinesCleared( 0 ),
+	mFrameCount_fallDown( 0 ), mFrameCount_clearingInterval_( 0 ),
 	mFrameCount_clearingVfx_( 0 ), mFrameCount_gameOver( 0 ),
 	mTempo( 0.75f ),
 	mWindow_( window ), mBackgroundRect_( (sf::RectangleShape&)shapeOrSprite ),
@@ -21,6 +21,7 @@ const uint32_t LINE_CLEAR_CHK_INTERVAL_MS = 100;
 	mNextTetriminoPanel( window ),
 	mVfxCombo( window ), mCurrentTetrimino( ::model::Tetrimino::Spawn( ) ), mStage( window )
 {
+	gService()->audio().stopBGM( );
 	mNextTetriminos.emplace( ::model::Tetrimino::Spawn( ) );
 	mNextTetriminos.emplace( ::model::Tetrimino::Spawn( ) );
 	mNextTetriminos.emplace( ::model::Tetrimino::Spawn( ) );
@@ -46,6 +47,8 @@ void ::scene::inPlay::Playing::loadResources( )
 	float nextTetPanelOutlineThickness = 5.0;
 	uint32_t nextTetPanelOutlineColor = 0x000000'7f;
 	uint32_t nextTetPanelCellOutlineColor = 0x000000'7f;
+	mAudioList[(int)AudioIndex::TETRIMINO_LOCKED] = "Audio/tetriminoLocked.wav";
+	mAudioList[(int)AudioIndex::LINE_CLEARED] = "Audio/lineCleared.wav";
 
 	lua_State* lua = luaL_newstate( );
 	const std::string scriptPathNName( "Scripts/Playing.lua" );
@@ -453,6 +456,80 @@ void ::scene::inPlay::Playing::loadResources( )
 			lua_pop( lua, 1 );
 		}
 		lua_pop( lua, 1 );
+
+		tableName = "Audio";
+		lua_getglobal( lua, tableName.data() );
+		if ( false == lua_istable(lua, TOP_IDX) )
+		{
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
+		}
+		else
+		{
+			std::string innerTableName( "tetriminoLocked" );
+			lua_pushstring( lua, innerTableName.data() );
+			lua_gettable( lua, 1 );
+			if ( false == lua_istable(lua, TOP_IDX) )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+innerTableName, scriptPathNName );
+			}
+			else
+			{
+				std::string field( "path" );
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				int type = lua_type(lua, TOP_IDX);
+				if ( LUA_TSTRING == type )
+				{
+					mAudioList[(int)AudioIndex::TETRIMINO_LOCKED] = lua_tostring(lua, TOP_IDX);
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
+			}
+			lua_pop( lua, 1 );
+
+			innerTableName = "lineCleared";
+			lua_pushstring( lua, innerTableName.data() );
+			lua_gettable( lua, 1 );
+			if ( false == lua_istable(lua, TOP_IDX) )
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+innerTableName, scriptPathNName );
+			}
+			else
+			{
+				std::string field( "path" );
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				int type = lua_type(lua, TOP_IDX);
+				if ( LUA_TSTRING == type )
+				{
+					mAudioList[(int)AudioIndex::LINE_CLEARED] = lua_tostring(lua, TOP_IDX);
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
+			}
+			lua_pop( lua, 1 );
+		}
+		lua_pop( lua, 1 );
 	}
 	lua_close( lua );
 
@@ -480,7 +557,6 @@ void ::scene::inPlay::Playing::loadResources( )
 		mNextTetriminoPanel.setTetrimino( mNextTetriminos.front() );
 	}
 	mCellSize_ = stageCellSize;
-	::model::Tetrimino::LoadResources( );
 }
 
 ::scene::inPlay::ID scene::inPlay::Playing::update( std::vector<sf::Event>& eventQueue )
@@ -577,6 +653,11 @@ void ::scene::inPlay::Playing::loadResources( )
 	if ( true == hasCollidedAtThisFrame )
 	{
 		mCurrentTetrimino.land( mStage.grid() );
+		if ( false == gService()->audio().playSFX(mAudioList[(int)AudioIndex::TETRIMINO_LOCKED]) )
+		{
+			gService()->console().printFailure(FailureLevel::WARNING,
+											   "File Not Found: "+mAudioList[(int)AudioIndex::TETRIMINO_LOCKED] );
+		}
 		reloadTetrimino( );
 	}
 
@@ -590,16 +671,21 @@ void ::scene::inPlay::Playing::loadResources( )
 		{
 			mNumOfLinesCleared = numOfLinesCleared;
 			mTempo -= TEMPO_DIFF_RATIO;
-			// Making 0 to 1 so as to start the timer.
-			++mFrameCount_clearingVfx_;
+			// Triggering.
+			mFrameCount_clearingVfx_ = 1;
+			if ( false == gService()->audio().playSFX(mAudioList[(int)AudioIndex::LINE_CLEARED]) )
+			{
+				gService()->console().printFailure(FailureLevel::WARNING,
+												   "File Not Found: "+mAudioList[(int)AudioIndex::LINE_CLEARED] );
+			}
 		}
 		if ( true == mStage.isOver( ) )
 		{
 			mStage.blackout( );
 			const sf::Color GRAY( 0x808080ff );
 			mCurrentTetrimino.setColor( GRAY, GRAY );
-			// Making 0 to 1 so as to start the timer.
-			++mFrameCount_gameOver;
+			// Triggering.
+			mFrameCount_gameOver = 1;
 		}
 	}
 	

@@ -17,6 +17,12 @@ namespace scene::inPlay
 		::scene::inPlay::ID update( std::vector<sf::Event>& eventQueue ) override;
 		void draw( ) override;
 	private:
+		enum class AudioIndex
+		{
+			TETRIMINO_LOCKED,
+			LINE_CLEARED,
+			NONE_MAX,
+		};
 		void reloadTetrimino( );
 		uint8_t mNumOfLinesCleared;
 		uint32_t mFrameCount_fallDown, mFrameCount_clearingInterval_, mFrameCount_clearingVfx_, mFrameCount_gameOver;
@@ -25,6 +31,7 @@ namespace scene::inPlay
 		sf::RenderWindow& mWindow_;
 		sf::RectangleShape& mBackgroundRect_;
 		const std::unique_ptr<::scene::inPlay::IScene>& mOverlappedScene_;
+		std::string mAudioList[(int)AudioIndex::NONE_MAX];
 		::ui::NextTetriminoPanel mNextTetriminoPanel;
 		::vfx::Combo mVfxCombo;
 		::model::Tetrimino mCurrentTetrimino;
