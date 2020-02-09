@@ -27,7 +27,7 @@ scene::online::InRoom::InRoom( sf::RenderWindow& window, Online& net, const bool
 {
 	ASSERT_TRUE( false == IsInstantiated );
 	
-	//mParticipants.reserve( ROOM_CAPACITY );
+	mParticipants.reserve( ROOM_CAPACITY );
 	mParticipants.emplace( mNet.myNicknameHashed(), Participant(mNet.myNickname(), ::ui::PlayView(mWindow_, mNet)) );
 	IServiceLocator* const service = gService();
 	ASSERT_NOT_NULL( service );

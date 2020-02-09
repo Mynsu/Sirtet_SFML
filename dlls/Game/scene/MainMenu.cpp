@@ -24,24 +24,42 @@ bool ::scene::MainMenu::IsInstantiated = false;
 void scene::MainMenu::loadResources( )
 {
 	std::string spritePathNName( "Images/MainMenu.png" );
-	mSpriteClipSize_ = sf::Vector2f(256.f, 128.f);
-	mLogoMargin_ = sf::Vector2f(70.f, 70.f);
-	mButtonSinglePosition_ = sf::Vector2f(150.f, 150.f);
-	mButtonOnlinePosition_ = sf::Vector2f(150.f, 300.f);
 	mAudioList[(int)AudioIndex::BGM] = "Audio/korobeiniki.mp3";
 	mAudioList[(int)AudioIndex::ON_SELECTION] = "Audio/selection.wav";
+	mDrawingInfo.logoSourcePosition.x = 0;
+	mDrawingInfo.logoSourcePosition.y = 0;
+	mDrawingInfo.logoClipSize.x = 256;
+	mDrawingInfo.logoClipSize.y = 256;
+	mDrawingInfo.logoDestinationPosition.x = 474.f;
+	mDrawingInfo.logoDestinationPosition.y = 302.f;
+	mDrawingInfo.buttonSingleSourcePosition.x = 0;
+	mDrawingInfo.buttonSingleSourcePosition.y = 256;
+	mDrawingInfo.buttonSingleClipSize.x = 256;
+	mDrawingInfo.buttonSingleClipSize.y = 128;
+	mDrawingInfo.buttonSinglePosition.x = 150.f;
+	mDrawingInfo.buttonSinglePosition.y = 150.f;
+	mDrawingInfo.buttonOnlineSourcePosition.x = 0;
+	mDrawingInfo.buttonOnlineSourcePosition.y = 256+128;
+	mDrawingInfo.buttonOnlineClipSize.x = 256;
+	mDrawingInfo.buttonOnlineClipSize.y = 128;
+	mDrawingInfo.buttonOnlinePosition.x = 150.f;
+	mDrawingInfo.buttonOnlinePosition.y = 300.f;
+	std::string fontPathNName( "Fonts/AGENCYB.ttf" );
+	uint32_t fontSize = 30;
+	sf::Vector2f copyrightPosition( 150.f, 150.f );
+	std::string copyright;
 
 	lua_State* lua = luaL_newstate( );
 	const std::string scriptPathNName( "Scripts/MainMenu.lua" );
 	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
 	{
-		// File Not Found Exception
 		gService( )->console( ).printFailure( FailureLevel::FATAL, "File Not Found: "+scriptPathNName );
 	}
 	else
 	{
 		luaL_openlibs( lua );
 		const int TOP_IDX = -1;
+
 		std::string tableName( "Sprite" );
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
@@ -70,90 +88,582 @@ void scene::MainMenu::loadResources( )
 			}
 			lua_pop( lua, 1 );
 
-			field = "clipWidth";
-			lua_pushstring( lua, field.data() );
+			std::string innerTableName( "logo" );
+			lua_pushstring( lua, innerTableName.data() );
 			lua_gettable( lua, 1 );
-			type = lua_type(lua, TOP_IDX);
-			if ( LUA_TNUMBER == type )
+			if ( false == lua_istable(lua, TOP_IDX) )
 			{
-				const float temp = (float)lua_tonumber(lua, TOP_IDX);
-				if ( 0 > temp )
-				{
-					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
-																		tableName+':'+field, scriptPathNName );
-				}
-				else
-				{
-					mSpriteClipSize_.x = temp;
-				}
-			}
-			else if ( LUA_TNIL == type )
-			{
-				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+innerTableName, scriptPathNName );
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+				field = "sourceX";
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				type = lua_type(lua, TOP_IDX);
+				if ( LUA_TNUMBER == type )
+				{
+					const int32_t temp = (int32_t)lua_tointeger(lua, TOP_IDX);
+					if ( 0 > temp )
+					{
+						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+																			tableName+':'+field, scriptPathNName );
+					}
+					else
+					{
+						mDrawingInfo.logoSourcePosition.x = temp;
+					}
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
+
+				field = "sourceY";
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				type = lua_type(lua, TOP_IDX);
+				if ( LUA_TNUMBER == type )
+				{
+					const int32_t temp = (int32_t)lua_tointeger(lua, TOP_IDX);
+					if ( 0 > temp )
+					{
+						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+																 tableName+':'+field, scriptPathNName );
+					}
+					else
+					{
+						mDrawingInfo.logoSourcePosition.y = temp;
+					}
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
+
+				field = "clipWidth";
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				type = lua_type(lua, TOP_IDX);
+				if ( LUA_TNUMBER == type )
+				{
+					const int32_t temp = (int32_t)lua_tointeger(lua, TOP_IDX);
+					if ( 0 > temp )
+					{
+						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+																 tableName+':'+field, scriptPathNName );
+					}
+					else
+					{
+						mDrawingInfo.logoClipSize.x = temp;
+					}
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
+
+				field = "clipHeight";
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				type = lua_type(lua, TOP_IDX);
+				if ( LUA_TNUMBER == type )
+				{
+					const int32_t temp = (int32_t)lua_tointeger(lua, TOP_IDX);
+					if ( 0 > temp )
+					{
+						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+																 tableName+':'+field, scriptPathNName );
+					}
+					else
+					{
+						mDrawingInfo.logoClipSize.y = temp;
+					}
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
+
+				field = "destinationX";
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				type = lua_type(lua, TOP_IDX);
+				if ( LUA_TNUMBER == type )
+				{
+					const float temp = (float)lua_tonumber(lua, TOP_IDX);
+					if ( 0 > temp )
+					{
+						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+																 tableName+':'+field, scriptPathNName );
+					}
+					else
+					{
+						mDrawingInfo.logoDestinationPosition.x = temp;
+					}
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
+
+				field = "destinationY";
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				type = lua_type(lua, TOP_IDX);
+				if ( LUA_TNUMBER == type )
+				{
+					const float temp = (float)lua_tonumber(lua, TOP_IDX);
+					if ( 0 > temp )
+					{
+						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+																 tableName+':'+field, scriptPathNName );
+					}
+					else
+					{
+						mDrawingInfo.logoDestinationPosition.y = temp;
+					}
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
 			}
 			lua_pop( lua, 1 );
 
-			field = "clipHeight";
-			lua_pushstring( lua, field.data() );
+			innerTableName = "buttonSingle";
+			lua_pushstring( lua, innerTableName.data() );
 			lua_gettable( lua, 1 );
-			type = lua_type(lua, TOP_IDX);
-			if ( LUA_TNUMBER == type )
+			if ( false == lua_istable(lua, TOP_IDX) )
 			{
-				const float temp = (float)lua_tonumber(lua, TOP_IDX);
-				if ( 0 > temp )
-				{
-					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
-																		tableName+':'+field, scriptPathNName );
-				}
-				else
-				{
-					mSpriteClipSize_.y = temp;
-				}
-			}
-			else if ( LUA_TNIL == type )
-			{
-				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+innerTableName, scriptPathNName );
 			}
 			else
 			{
+				field = "sourceX";
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				type = lua_type(lua, TOP_IDX);
+				if ( LUA_TNUMBER == type )
+				{
+					const int32_t temp = (int32_t)lua_tointeger(lua, TOP_IDX);
+					if ( 0 > temp )
+					{
+						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+																 tableName+':'+field, scriptPathNName );
+					}
+					else
+					{
+						mDrawingInfo.buttonSingleSourcePosition.x = temp;
+					}
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
+
+				field = "sourceY";
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				type = lua_type(lua, TOP_IDX);
+				if ( LUA_TNUMBER == type )
+				{
+					const int32_t temp = (int32_t)lua_tointeger(lua, TOP_IDX);
+					if ( 0 > temp )
+					{
+						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+																 tableName+':'+field, scriptPathNName );
+					}
+					else
+					{
+						mDrawingInfo.buttonSingleSourcePosition.y = temp;
+					}
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
+
+				field = "clipWidth";
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				type = lua_type(lua, TOP_IDX);
+				if ( LUA_TNUMBER == type )
+				{
+					const int32_t temp = (int32_t)lua_tointeger(lua, TOP_IDX);
+					if ( 0 > temp )
+					{
+						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+																 tableName+':'+field, scriptPathNName );
+					}
+					else
+					{
+						mDrawingInfo.buttonSingleClipSize.x = temp;
+					}
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
+
+				field = "clipHeight";
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				type = lua_type(lua, TOP_IDX);
+				if ( LUA_TNUMBER == type )
+				{
+					const int32_t temp = (int32_t)lua_tointeger(lua, TOP_IDX);
+					if ( 0 > temp )
+					{
+						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+																 tableName+':'+field, scriptPathNName );
+					}
+					else
+					{
+						mDrawingInfo.buttonSingleClipSize.y = temp;
+					}
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
+
+				field = "destinationX";
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				type = lua_type(lua, TOP_IDX);
+				if ( LUA_TNUMBER == type )
+				{
+					const float temp = (float)lua_tonumber(lua, TOP_IDX);
+					if ( 0 > temp )
+					{
+						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+																 tableName+':'+field, scriptPathNName );
+					}
+					else
+					{
+						mDrawingInfo.buttonSinglePosition.x = temp;
+					}
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
+
+				field = "destinationY";
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				type = lua_type(lua, TOP_IDX);
+				if ( LUA_TNUMBER == type )
+				{
+					const float temp = (float)lua_tonumber(lua, TOP_IDX);
+					if ( 0 > temp )
+					{
+						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+																 tableName+':'+field, scriptPathNName );
+					}
+					else
+					{
+						mDrawingInfo.buttonSinglePosition.y = temp;
+					}
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
+			}
+			lua_pop( lua, 1 );
+
+			innerTableName = "buttonOnline";
+			lua_pushstring( lua, innerTableName.data() );
+			lua_gettable( lua, 1 );
+			if ( false == lua_istable(lua, TOP_IDX) )
+			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														 tableName+':'+innerTableName, scriptPathNName );
+			}
+			else
+			{
+				field = "sourceX";
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				type = lua_type(lua, TOP_IDX);
+				if ( LUA_TNUMBER == type )
+				{
+					const int32_t temp = (int32_t)lua_tointeger(lua, TOP_IDX);
+					if ( 0 > temp )
+					{
+						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+																 tableName+':'+field, scriptPathNName );
+					}
+					else
+					{
+						mDrawingInfo.buttonOnlineSourcePosition.x = temp;
+					}
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
+
+				field = "sourceY";
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				type = lua_type(lua, TOP_IDX);
+				if ( LUA_TNUMBER == type )
+				{
+					const int32_t temp = (int32_t)lua_tointeger(lua, TOP_IDX);
+					if ( 0 > temp )
+					{
+						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+																 tableName+':'+field, scriptPathNName );
+					}
+					else
+					{
+						mDrawingInfo.buttonOnlineSourcePosition.y = temp;
+					}
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
+
+				field = "clipWidth";
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				type = lua_type(lua, TOP_IDX);
+				if ( LUA_TNUMBER == type )
+				{
+					const int32_t temp = (int32_t)lua_tointeger(lua, TOP_IDX);
+					if ( 0 > temp )
+					{
+						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+																 tableName+':'+field, scriptPathNName );
+					}
+					else
+					{
+						mDrawingInfo.buttonOnlineClipSize.x = temp;
+					}
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
+
+				field = "clipHeight";
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				type = lua_type(lua, TOP_IDX);
+				if ( LUA_TNUMBER == type )
+				{
+					const int32_t temp = (int32_t)lua_tointeger(lua, TOP_IDX);
+					if ( 0 > temp )
+					{
+						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+																 tableName+':'+field, scriptPathNName );
+					}
+					else
+					{
+						mDrawingInfo.buttonOnlineClipSize.y = temp;
+					}
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
+
+				field = "destinationX";
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				type = lua_type(lua, TOP_IDX);
+				if ( LUA_TNUMBER == type )
+				{
+					const float temp = (float)lua_tonumber(lua, TOP_IDX);
+					if ( 0 > temp )
+					{
+						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+																 tableName+':'+field, scriptPathNName );
+					}
+					else
+					{
+						mDrawingInfo.buttonOnlinePosition.x = temp;
+					}
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
+
+				field = "destinationY";
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				type = lua_type(lua, TOP_IDX);
+				if ( LUA_TNUMBER == type )
+				{
+					const float temp = (float)lua_tonumber(lua, TOP_IDX);
+					if ( 0 > temp )
+					{
+						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+																 tableName+':'+field, scriptPathNName );
+					}
+					else
+					{
+						mDrawingInfo.buttonOnlinePosition.y = temp;
+					}
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				else
+				{
+					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+															 tableName+':'+innerTableName+':'+field, scriptPathNName );
+				}
+				lua_pop( lua, 1 );
 			}
 			lua_pop( lua, 1 );
 		}
 		lua_pop( lua, 1 );
 
-		tableName = "LogoMargin";
+		tableName = "Copyright";
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
+			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+													 tableName, scriptPathNName );
 		}
 		else
 		{
-			std::string field( "x" );
+			std::string field( "font" );
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			int type = lua_type(lua, TOP_IDX);
-			if ( LUA_TNUMBER == type )
+			if ( LUA_TSTRING == type )
 			{
-				const float temp = (float)lua_tonumber(lua, TOP_IDX);
-				if ( 0 > temp )
-				{
-					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
-																		tableName+':'+field, scriptPathNName );
-				}
-				else
-				{
-					mLogoMargin_.x = temp;
-				}
+				fontPathNName = lua_tostring(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -163,25 +673,25 @@ void scene::MainMenu::loadResources( )
 			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			field = "y";
+			field = "fontSize";
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			type = lua_type( lua, TOP_IDX );
+			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				const float temp = (float)lua_tonumber(lua, TOP_IDX);
-				if ( 0 > temp )
+				const uint32_t temp = (uint32_t)lua_tointeger(lua, TOP_IDX);
+				if ( temp < 0 )
 				{
 					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
-																		tableName+':'+field, scriptPathNName );
+															 tableName+':'+field, scriptPathNName );
 				}
 				else
 				{
-					mLogoMargin_.y = temp;
+					fontSize = temp;
 				}
 			}
 			else if ( LUA_TNIL == type )
@@ -192,64 +702,25 @@ void scene::MainMenu::loadResources( )
 			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
-			}
-			lua_pop( lua, 1 );
-		}
-		lua_pop( lua, 1 );
-
-		tableName = "ButtonSingle";
-		lua_getglobal( lua, tableName.data() );
-		if ( false == lua_istable(lua, TOP_IDX) )
-		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
-		}
-		else
-		{
-			std::string field( "x" );
-			lua_pushstring( lua, field.data() );
-			lua_gettable( lua, 1 );
-			int type = lua_type(lua, TOP_IDX);
-			if ( LUA_TNUMBER == type )
-			{
-				const float temp = (float)lua_tonumber(lua, TOP_IDX);
-				if ( 0 > temp )
-				{
-					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
-																		tableName+':'+field, scriptPathNName );
-				}
-				else
-				{
-					mButtonSinglePosition_.x = temp;
-				}
-			}
-			else if ( LUA_TNIL == type )
-			{
-				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
-			}
-			else
-			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			field = "y";
+			field = "positionX";
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
 				const float temp = (float)lua_tonumber(lua, TOP_IDX);
-				if ( 0 > temp )
+				if ( temp < 0 )
 				{
 					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
-																		tableName+':'+field, scriptPathNName );
+															 tableName+':'+field, scriptPathNName );
 				}
 				else
 				{
-					mButtonSinglePosition_.y = temp;
+					copyrightPosition.x = temp;
 				}
 			}
 			else if ( LUA_TNIL == type )
@@ -260,64 +731,25 @@ void scene::MainMenu::loadResources( )
 			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
-			}
-			lua_pop( lua, 1 );
-		}
-		lua_pop( lua, 1 );
-
-		tableName = "ButtonOnline";
-		lua_getglobal( lua, tableName.data() );
-		if ( false == lua_istable(lua, TOP_IDX) )
-		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
-		}
-		else
-		{
-			std::string field( "x" );
-			lua_pushstring( lua, field.data() );
-			lua_gettable( lua, 1 );
-			int type = lua_type(lua, TOP_IDX);
-			if ( LUA_TNUMBER == type )
-			{
-				const float temp = (float)lua_tonumber( lua, TOP_IDX );
-				if ( 0 > temp )
-				{
-					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
-															tableName+':'+field, scriptPathNName );
-				}
-				else
-				{
-					mButtonOnlinePosition_.x = temp;
-				}
-			}
-			else if ( LUA_TNIL == type )
-			{
-				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
-			}
-			else
-			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			field = "y";
+			field = "positionY";
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
 				const float temp = (float)lua_tonumber(lua, TOP_IDX);
-				if ( 0 > temp )
+				if ( temp < 0 )
 				{
 					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
-															tableName+':'+field, scriptPathNName );
+															 tableName+':'+field, scriptPathNName );
 				}
 				else
 				{
-					mButtonOnlinePosition_.y = temp;
+					copyrightPosition.y = temp;
 				}
 			}
 			else if ( LUA_TNIL == type )
@@ -328,7 +760,27 @@ void scene::MainMenu::loadResources( )
 			else
 			{
 				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPathNName );
+			}
+			lua_pop( lua, 1 );
+
+			field = "text";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			if ( LUA_TSTRING == type )
+			{
+				copyright = lua_tostring(lua, TOP_IDX);
+			}
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPathNName );
+			}
+			else
+			{
+				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 		}
@@ -419,6 +871,14 @@ void scene::MainMenu::loadResources( )
 #endif
 	}
 	mSprite.setTexture( mTexture );
+	if ( false == mFont.loadFromFile(fontPathNName) )
+	{
+		gService( )->console( ).printFailure( FailureLevel::FATAL, "File Not Found: "+fontPathNName );
+	}
+	mCopyright.setCharacterSize( fontSize );
+	mCopyright.setFont( mFont );
+	mCopyright.setPosition( copyrightPosition );
+	mCopyright.setString( copyright );
 	if ( false == gService()->audio().playBGM(mAudioList[(int)AudioIndex::BGM], true) )
 	{
 		gService()->console().printFailure(FailureLevel::WARNING,
@@ -450,29 +910,6 @@ void scene::MainMenu::loadResources( )
 
 void ::scene::MainMenu::draw( )
 {
-	const sf::Vector2f winSize( mWindow_.getSize( ) );
-	// Bottom right on screen
-	const sf::Vector2f logoSize( mSpriteClipSize_.x, 2*mSpriteClipSize_.y );
-	mSprite.setPosition( winSize - logoSize - mLogoMargin_ );
-	mSprite.setTextureRect( sf::IntRect(sf::Vector2i(0,0), sf::Vector2i(logoSize)) );
-	mWindow_.draw( mSprite );
-	
-	touchButton();
-}
-
-#ifdef _DEV
-::scene::ID scene::MainMenu::currentScene( ) const
-{
-	return ::scene::ID::MAIN_MENU;
-}
-#endif
-
-void scene::MainMenu::touchButton( )
-{
-	const sf::Vector2f mouseGlobalPos( sf::Mouse::getPosition( ) );
-	const sf::Vector2i cast( mSpriteClipSize_ );
-	const sf::Vector2f titlebarHeight( 0.f, 20.f );
-		
 	bool hasGainedFocus = false;
 	auto& vault = gService()->vault();
 	if ( const auto it = vault.find(HK_HAS_GAINED_FOCUS);
@@ -480,24 +917,53 @@ void scene::MainMenu::touchButton( )
 	{
 		hasGainedFocus = (bool)it->second;
 	}
-		
+#ifdef _DEBUG
+	else
+	{
+		__debugbreak( );
+	}
+#endif
+
 	if ( true == hasGainedFocus && false == gService()->console( ).isVisible() )
 	{
-		if ( const sf::Vector2f btSingleGlobalPos( sf::Vector2f(mWindow_.getPosition())+titlebarHeight+mButtonSinglePosition_ ); 
-			 btSingleGlobalPos.x < mouseGlobalPos.x && mouseGlobalPos.x < btSingleGlobalPos.x+mSpriteClipSize_.x
-			 && btSingleGlobalPos.y < mouseGlobalPos.y && mouseGlobalPos.y < btSingleGlobalPos.y+mSpriteClipSize_.y )
+		const sf::Vector2f mousePos( sf::Mouse::getPosition()-mWindow_.getPosition() );
+		const sf::FloatRect boundLogo( mDrawingInfo.logoDestinationPosition,
+									  sf::Vector2f(mDrawingInfo.logoClipSize) );
+		if ( true == boundLogo.contains(mousePos) )
 		{
+			mIsCursorOnButton = false;
+			// Logo
+			const sf::Vector2i sourcePos( mDrawingInfo.logoSourcePosition.x + mDrawingInfo.logoClipSize.x,
+										  mDrawingInfo.logoSourcePosition.y );
+			mSprite.setTextureRect( sf::IntRect(sourcePos, mDrawingInfo.logoClipSize) );
+			mSprite.setPosition( mDrawingInfo.logoDestinationPosition );
+			mWindow_.draw( mSprite );
+			// Copyright
+			mWindow_.draw( mCopyright );
+		}
+		else if ( const sf::FloatRect boundButtonSingle(mDrawingInfo.buttonSinglePosition,
+														sf::Vector2f(mDrawingInfo.buttonSingleClipSize));
+				 true == boundButtonSingle.contains(mousePos) )
+		{
+			mIsCursorOnButton = false;
+			// Logo
+			mSprite.setTextureRect( sf::IntRect(mDrawingInfo.logoSourcePosition,
+												mDrawingInfo.logoClipSize) );
+			mSprite.setPosition( mDrawingInfo.logoDestinationPosition );
+			mWindow_.draw( mSprite );
 			if ( true == sf::Mouse::isButtonPressed(sf::Mouse::Left) )
 			{
 				mNextSceneID = ::scene::ID::SINGLE_PLAY;
 			}
-			mSprite.setPosition( mButtonSinglePosition_ );
-			mSprite.setTextureRect( sf::IntRect( cast.x,
-												 2*cast.y, cast.x, cast.y ) );
+			// Buttons
+			const sf::Vector2i sourcePos( mDrawingInfo.buttonSingleSourcePosition.x + mDrawingInfo.buttonSingleClipSize.x,
+										 mDrawingInfo.buttonSingleSourcePosition.y );
+			mSprite.setTextureRect( sf::IntRect(sourcePos, mDrawingInfo.buttonSingleClipSize) );
+			mSprite.setPosition( mDrawingInfo.buttonSinglePosition );
 			mWindow_.draw( mSprite );
-			mSprite.setPosition( mButtonOnlinePosition_ );
-			mSprite.setTextureRect( sf::IntRect( 0,
-												 3*cast.y, cast.x, cast.y ) );
+			mSprite.setTextureRect( sf::IntRect(mDrawingInfo.buttonOnlineSourcePosition,
+												mDrawingInfo.buttonOnlineClipSize) );
+			mSprite.setPosition( mDrawingInfo.buttonOnlinePosition );
 			mWindow_.draw( mSprite );
 			if ( false == mIsCursorOnButton )
 			{
@@ -509,21 +975,29 @@ void scene::MainMenu::touchButton( )
 				}
 			}
 		}
-		else if ( const sf::Vector2f btOnlineGlobalPos( sf::Vector2f(mWindow_.getPosition())+titlebarHeight+mButtonOnlinePosition_ );
-				  btOnlineGlobalPos.x < mouseGlobalPos.x && mouseGlobalPos.x < btOnlineGlobalPos.x+mSpriteClipSize_.x
-				  && btOnlineGlobalPos.y < mouseGlobalPos.y && mouseGlobalPos.y < btOnlineGlobalPos.y+mSpriteClipSize_.y )
+		else if ( const sf::FloatRect boundButtonOnline(mDrawingInfo.buttonOnlinePosition,
+														sf::Vector2f(mDrawingInfo.buttonOnlineClipSize));
+				 true == boundButtonOnline.contains(mousePos) )
 		{
+			mIsCursorOnButton = false;
+			// Logo
+			mSprite.setTextureRect( sf::IntRect(mDrawingInfo.logoSourcePosition,
+												mDrawingInfo.logoClipSize) );
+			mSprite.setPosition( mDrawingInfo.logoDestinationPosition );
+			mWindow_.draw( mSprite );
 			if ( true == sf::Mouse::isButtonPressed(sf::Mouse::Left) )
 			{
 				mNextSceneID = ::scene::ID::ONLINE_BATTLE;
 			}
-			mSprite.setPosition( mButtonSinglePosition_ );
-			mSprite.setTextureRect( sf::IntRect( 0,
-												 2*cast.y, cast.x, cast.y ) );
+			// Buttons
+			mSprite.setTextureRect( sf::IntRect(mDrawingInfo.buttonSingleSourcePosition,
+												mDrawingInfo.buttonSingleClipSize) );
+			mSprite.setPosition( mDrawingInfo.buttonSinglePosition );
 			mWindow_.draw( mSprite );
-			mSprite.setPosition( mButtonOnlinePosition_ );
-			mSprite.setTextureRect( sf::IntRect( cast.x,
-												 3*cast.y, cast.x, cast.y ) );
+			const sf::Vector2i sourcePos( mDrawingInfo.buttonOnlineSourcePosition.x + mDrawingInfo.buttonOnlineClipSize.x,
+										 mDrawingInfo.buttonOnlineSourcePosition.y );
+			mSprite.setTextureRect( sf::IntRect(sourcePos, mDrawingInfo.buttonOnlineClipSize) );
+			mSprite.setPosition( mDrawingInfo.buttonOnlinePosition );
 			mWindow_.draw( mSprite );
 			if ( false == mIsCursorOnButton )
 			{
@@ -537,29 +1011,32 @@ void scene::MainMenu::touchButton( )
 		}
 		else
 		{
-			mNextSceneID = ::scene::ID::AS_IS;
-			mSprite.setPosition( mButtonSinglePosition_ );
-			mSprite.setTextureRect( sf::IntRect( 0,
-												 2*cast.y, cast.x, cast.y ) );
-			mWindow_.draw( mSprite );
-			mSprite.setPosition( mButtonOnlinePosition_ );
-			mSprite.setTextureRect( sf::IntRect( 0,
-												 3*cast.y, cast.x, cast.y ) );
-			mWindow_.draw( mSprite );
-			mIsCursorOnButton = false;
+			goto defaultLabel;
 		}
 	}
 	else
 	{
-		mNextSceneID = ::scene::ID::AS_IS;
-		mSprite.setPosition( mButtonSinglePosition_ );
-		mSprite.setTextureRect( sf::IntRect( 0,
-											 2*cast.y, cast.x, cast.y ) );
+defaultLabel:
+		mSprite.setTextureRect( sf::IntRect(mDrawingInfo.logoSourcePosition,
+											mDrawingInfo.logoClipSize) );
+		mSprite.setPosition( mDrawingInfo.logoDestinationPosition );
 		mWindow_.draw( mSprite );
-		mSprite.setPosition( mButtonOnlinePosition_ );
-		mSprite.setTextureRect( sf::IntRect( 0,
-											 3*cast.y, cast.x, cast.y ) );
+		mNextSceneID = ::scene::ID::AS_IS;
+		mSprite.setPosition( mDrawingInfo.buttonSinglePosition );
+		mSprite.setTextureRect( sf::IntRect(mDrawingInfo.buttonSingleSourcePosition,
+											mDrawingInfo.buttonSingleClipSize) );
+		mWindow_.draw( mSprite );
+		mSprite.setPosition( mDrawingInfo.buttonOnlinePosition );
+		mSprite.setTextureRect( sf::IntRect(mDrawingInfo.buttonOnlineSourcePosition,
+											mDrawingInfo.buttonOnlineClipSize) );
 		mWindow_.draw( mSprite );
 		mIsCursorOnButton = false;
 	}
 }
+
+#ifdef _DEV
+::scene::ID scene::MainMenu::currentScene( ) const
+{
+	return ::scene::ID::MAIN_MENU;
+}
+#endif
