@@ -931,7 +931,6 @@ void ::scene::MainMenu::draw( )
 									  sf::Vector2f(mDrawingInfo.logoClipSize) );
 		if ( true == boundLogo.contains(mousePos) )
 		{
-			mIsCursorOnButton = false;
 			// Logo
 			const sf::Vector2i sourcePos( mDrawingInfo.logoSourcePosition.x + mDrawingInfo.logoClipSize.x,
 										  mDrawingInfo.logoSourcePosition.y );
@@ -945,7 +944,6 @@ void ::scene::MainMenu::draw( )
 														sf::Vector2f(mDrawingInfo.buttonSingleClipSize));
 				 true == boundButtonSingle.contains(mousePos) )
 		{
-			mIsCursorOnButton = false;
 			// Logo
 			mSprite.setTextureRect( sf::IntRect(mDrawingInfo.logoSourcePosition,
 												mDrawingInfo.logoClipSize) );
@@ -979,7 +977,6 @@ void ::scene::MainMenu::draw( )
 														sf::Vector2f(mDrawingInfo.buttonOnlineClipSize));
 				 true == boundButtonOnline.contains(mousePos) )
 		{
-			mIsCursorOnButton = false;
 			// Logo
 			mSprite.setTextureRect( sf::IntRect(mDrawingInfo.logoSourcePosition,
 												mDrawingInfo.logoClipSize) );
