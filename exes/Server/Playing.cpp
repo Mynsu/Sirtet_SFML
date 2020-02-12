@@ -7,8 +7,8 @@ const uint32_t ASYNC_TOLERANCE_MS = 2500;
 const uint32_t GAME_OVER_CHK_INTERVAL_MS = 250;
 
 Playing::Playing()
-	: mHasTetriminoCollidedOnClient( false ),
-	mHasTetriminoCollidedOnServer( false ),
+	: mHasTetriminoLandedOnClient( false ),
+	mHasTetriminoLandedOnServer( false ),
 	mIsGameOver_( false ),
 	mNumOfLinesCleared( 0 ), mTempoMs( 1000 ),
 	mMoveToUpdate( ::model::tetrimino::Move::NONE_MAX ),
@@ -34,9 +34,9 @@ void Playing::perceive( const ::model::tetrimino::Move move )
 	mMoveToUpdate = move;
 }
 
-void Playing::perceive( const bool hasTetriminoCollidedOnClient )
+void Playing::perceive( const bool hasTetriminoLandedOnClient )
 {
-	mHasTetriminoCollidedOnClient = hasTetriminoCollidedOnClient;
+	mHasTetriminoLandedOnClient = hasTetriminoLandedOnClient;
 }
 
 bool Playing::update( )
@@ -48,12 +48,12 @@ bool Playing::update( )
 		return isAsyncTolerable;
 	}
 
-	if ( true == mHasTetriminoCollidedOnServer )
+	if ( true == mHasTetriminoLandedOnServer )
 	{
-		if ( true == mHasTetriminoCollidedOnClient )
+		if ( true == mHasTetriminoLandedOnClient )
 		{
-			mHasTetriminoCollidedOnClient = false;
-			mHasTetriminoCollidedOnServer = false;
+			mHasTetriminoLandedOnClient = false;
+			mHasTetriminoLandedOnServer = false;
 		}
 		else
 		{
@@ -67,7 +67,7 @@ bool Playing::update( )
 		}
 	}
 
-	bool hasCollidedOnServer = false;
+	bool hasTetriminoLandedOnServer = false;
 	if ( true == mCurrentTetrimino.isFallingDown() )
 	{
 		if ( true == alarmAfter(FALLING_DOWN_INTERVAL_MS, AlarmIndex::TETRIMINO_DOWN) )
@@ -76,8 +76,8 @@ bool Playing::update( )
 			//TODO: 시간이 많이 지난 만큼 더 이동할까?
 			for ( uint8_t i = 0; FALLING_DOWN_SPEED != i; ++i )
 			{
-				hasCollidedOnServer = mCurrentTetrimino.moveDown( mStage.cgrid() );
-				if ( true == hasCollidedOnServer )
+				hasTetriminoLandedOnServer = mCurrentTetrimino.moveDown( mStage.cgrid() );
+				if ( true == hasTetriminoLandedOnServer )
 				{
 					mCurrentTetrimino.fallDown( false );
 					goto last;
@@ -95,7 +95,7 @@ bool Playing::update( )
 				mCurrentTetrimino.fallDown( );
 				[[ fallthrough ]];
 			case ::model::tetrimino::Move::DOWN:
-				hasCollidedOnServer = mCurrentTetrimino.moveDown( mStage.cgrid() );
+				hasTetriminoLandedOnServer = mCurrentTetrimino.moveDown( mStage.cgrid() );
 				mAlarms[(int)AlarmIndex::TETRIMINO_DOWN] = Clock::now();
 				mUpdateResult = Playing::UpdateResult::TETRIMINO_MOVED;
 				break;
@@ -126,7 +126,7 @@ bool Playing::update( )
 		{
 			//TODO: 시간이 많이 지난 만큼 더 이동할까?
 			resetAlarm( AlarmIndex::TETRIMINO_DOWN );
-			hasCollidedOnServer = mCurrentTetrimino.moveDown( mStage.cgrid() );
+			hasTetriminoLandedOnServer = mCurrentTetrimino.moveDown( mStage.cgrid() );
 			mUpdateResult = Playing::UpdateResult::TETRIMINO_MOVED;
 		}
 
@@ -134,7 +134,7 @@ bool Playing::update( )
 	}
 
 	last:
-	if ( true == hasCollidedOnServer )
+	if ( true == hasTetriminoLandedOnServer )
 	{
 		mCurrentTetrimino.land( mStage.grid() );
 		reloadTetrimino( );
@@ -161,14 +161,14 @@ bool Playing::update( )
 	if ( Playing::UpdateResult::LINE_CLEARED == mUpdateResult ||
 		Playing::UpdateResult::TETRIMINO_LANDED == mUpdateResult )
 	{
-		if ( false == mHasTetriminoCollidedOnClient )
+		if ( false == mHasTetriminoLandedOnClient )
 		{
-			mHasTetriminoCollidedOnServer = true;
+			mHasTetriminoLandedOnServer = true;
 			mAlarms[(int)AlarmIndex::ASYNC_TOLERANCE] = Clock::now();
 		}
 		else
 		{
-			mHasTetriminoCollidedOnClient = false;
+			mHasTetriminoLandedOnClient = false;
 		}
 	}
 

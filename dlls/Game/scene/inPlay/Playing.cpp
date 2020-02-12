@@ -572,13 +572,13 @@ void ::scene::inPlay::Playing::loadResources( )
 	}
 
 	::scene::inPlay::ID retVal = ::scene::inPlay::ID::AS_IS;
-	bool hasCollidedAtThisFrame = false;
+	bool hasTetriminoLanded = false;
 	if ( true == mCurrentTetrimino.isFallingDown( ) )
 	{
 		for ( uint8_t i = 0u; i != FALLING_DOWN_SPEED; ++i )
 		{
-			hasCollidedAtThisFrame = mCurrentTetrimino.moveDown(mStage.cgrid());
-			if ( true == hasCollidedAtThisFrame )
+			hasTetriminoLanded = mCurrentTetrimino.moveDown(mStage.cgrid());
+			if ( true == hasTetriminoLanded )
 			{
 				mCurrentTetrimino.fallDown( false );
 				// NOTE: Break the loop and stop stuff in the 1st if-scope immediately.
@@ -601,7 +601,7 @@ void ::scene::inPlay::Playing::loadResources( )
 						///return;
 						[[ fallthrough ]];
 					case sf::Keyboard::Down:
-						hasCollidedAtThisFrame = mCurrentTetrimino.moveDown( mStage.cgrid( ) );
+						hasTetriminoLanded = mCurrentTetrimino.moveDown( mStage.cgrid( ) );
 						mFrameCount_fallDown = 0u;
 						it = eventQueue.erase(it);
 						break;
@@ -645,12 +645,12 @@ void ::scene::inPlay::Playing::loadResources( )
 	
 	if ( static_cast<uint32_t>(fps*mTempo) < mFrameCount_fallDown )
 	{
-		hasCollidedAtThisFrame = mCurrentTetrimino.moveDown( mStage.cgrid( ) );
+		hasTetriminoLanded = mCurrentTetrimino.moveDown( mStage.cgrid( ) );
 		mFrameCount_fallDown = 0u;
 	}
 
 	last:
-	if ( true == hasCollidedAtThisFrame )
+	if ( true == hasTetriminoLanded )
 	{
 		mCurrentTetrimino.land( mStage.grid() );
 		if ( false == gService()->audio().playSFX(mAudioList[(int)AudioIndex::TETRIMINO_LOCKED]) )

@@ -5,6 +5,8 @@
 #else
 #include <iostream>
 #endif
+#include "EndPoint.h"
+#include "Packet.h"
 
 ////
 //

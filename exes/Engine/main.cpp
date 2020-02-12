@@ -99,11 +99,12 @@ Initialization
 		std::cerr << "FATAL: Failed to load 'game.dll.'" << std::endl;
 		return -1;
 	}
-	GetGameAPI_t GetGameAPI = (GetGameAPI_t)GetProcAddress( hGameDLL, "GetGameAPI" );
+	const std::string procedureName( "GetGameAPI" );
+	GetGameAPI_t GetGameAPI = (GetGameAPI_t)GetProcAddress( hGameDLL, procedureName.data() );
 	// Exception: When function 'GetGameAPI(...)' isn't declared with 'extern "C"' keyword or not registered in .def file.
 	if ( nullptr == GetGameAPI )
 	{
-		std::cerr << "FATAL: Failed to get GetGameAPI(...)." << std::endl;
+		std::cerr << "FATAL: Failed to get the address where the procedure in dll. is" << std::endl;
 		FreeLibrary( hGameDLL );
 		return -1;
 	}

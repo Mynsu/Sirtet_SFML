@@ -1,10 +1,12 @@
 #include "pch.h"
 #include "Client.h"
 #include "Room.h"
-#include <sstream>
 
 #define NULL_HASHED_KEY 0
 #define NULL_ROOM_ID -1
+const Clock::duration MIN_REQ_GAP = std::chrono::milliseconds(100);
+const Clock::duration MIN_MOVE_GAP = std::chrono::milliseconds(40);
+const Clock::duration MIN_LAND_GAP = std::chrono::milliseconds(200);
 
 Client::Client( const Socket::Type type, const ClientIndex index )
 	: mIndex( index ), mState( State::UNVERIFIED ),
@@ -27,6 +29,7 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 #endif
 	std::vector<ClientIndex> failedIndices;
 	const char* const rcvBuf = mSocket.receivingBuffer();
+	const Clock::time_point now = Clock::now();
 	switch( mState )
 	{
 		case Client::State::IN_LOBBY:
@@ -70,6 +73,14 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 						}
 						case Request::CREATE_ROOM:
 						{
+							if ( now-mTimeStamp[(int)TimeStampIndex::GENERAL] < MIN_REQ_GAP )
+							{
+								std::cerr << "Client " << mIndex <<
+									" doesn't seem to be human's.\n";
+								failedIndices.emplace_back(mIndex);
+								return failedIndices;
+							}
+							mTimeStamp[(int)TimeStampIndex::GENERAL] = now;
 							// NOTE: Not checking out ...
 							// ... if there's memory space enough to create one more room.
 #ifdef _DEBUG
@@ -111,6 +122,14 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 						}
 						case Request::JOIN_ROOM:
 						{
+							if ( now-mTimeStamp[(int)TimeStampIndex::GENERAL] < MIN_REQ_GAP )
+							{
+								std::cerr << "Client " << mIndex <<
+									" doesn't seem to be human's.\n";
+								failedIndices.emplace_back(mIndex);
+								return failedIndices;
+							}
+							mTimeStamp[(int)TimeStampIndex::GENERAL] = now;
 							const uint32_t size	= ::ntohl(
 								*(uint32_t*)&rcvBuf[TAGGED_REQ_JOIN_ROOM_LEN]);
 							const std::string targetNickname(
@@ -220,6 +239,14 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 				const _Tag tag = (_Tag)*rcvBuf;
 				if ( _Tag::REQUEST == tag )
 				{
+					if ( now-mTimeStamp[(int)TimeStampIndex::GENERAL] < MIN_REQ_GAP )
+					{
+						std::cerr << "Client " << mIndex <<
+							" doesn't seem to be human's.\n";
+						failedIndices.emplace_back(mIndex);
+						return failedIndices;
+					}
+					mTimeStamp[(int)TimeStampIndex::GENERAL] = now;
 					const Request req = (Request)rcvBuf[TAG_REQUEST_LEN];
 					switch ( req )
 					{
@@ -309,6 +336,14 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 				if ( const size_t pos = strView.find(TAG_REQUEST);
 					strView.npos != pos )
 				{
+					if ( now-mTimeStamp[(int)TimeStampIndex::GENERAL] < MIN_REQ_GAP )
+					{
+						std::cerr << "Client " << mIndex <<
+							" doesn't seem to be human's.\n";
+						failedIndices.emplace_back(mIndex);
+						return failedIndices;
+					}
+					mTimeStamp[(int)TimeStampIndex::GENERAL] = now;
 					hasException = false;
 					const Request req = (Request)rcvBuf[pos+TAG_REQUEST_LEN];
 					switch ( req )
@@ -358,9 +393,27 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 					}
 				}
 
-				if ( const size_t pos = strView.find(TAG_MY_TETRIMINO_MOVE);
-					strView.npos != pos )
+				bool hasTimeChecked = false;
+				size_t pos = 0;
+				while ( true )
 				{
+					pos = strView.find(TAG_MY_TETRIMINO_MOVE, pos);
+					if ( strView.npos == pos )
+					{
+						break;
+					}
+					if ( false == hasTimeChecked )
+					{
+						if ( now-mTimeStamp[(int)TimeStampIndex::TETRIMINO_MOVED] < MIN_MOVE_GAP )
+						{
+							std::cerr << "Client " << mIndex <<
+								" doesn't seem to be human's.\n";
+							failedIndices.emplace_back(mIndex);
+							return failedIndices;
+						}
+						mTimeStamp[(int)TimeStampIndex::TETRIMINO_MOVED] = now;
+						hasTimeChecked = true;
+					}
 					hasException = false;
 					if ( auto it = rooms.find(mRoomID);
 						rooms.end() != it )
@@ -375,11 +428,20 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 						__debugbreak( );
 					}
 #endif
+					++pos;
 				}
-
-				if ( const size_t pos = strView.find(TAG_MY_TETRIMINO_COLLIDED_ON_CLIENT);
+				
+				if ( pos = strView.find(TAG_MY_TETRIMINO_LANDED_ON_CLIENT);
 					strView.npos != pos )
 				{
+					if ( now-mTimeStamp[(int)TimeStampIndex::TETRIMINO_LANDED] < MIN_LAND_GAP )
+					{
+						std::cerr << "Client " << mIndex <<
+							" doesn't seem to be human's.\n";
+						failedIndices.emplace_back(mIndex);
+						return failedIndices;
+					}
+					mTimeStamp[(int)TimeStampIndex::TETRIMINO_LANDED] = now;
 					hasException = false;
 					if ( auto it = rooms.find(mRoomID);
 						rooms.end() != it )
@@ -477,6 +539,7 @@ void Client::reset( const bool isSocketReusable )
 	}
 	else
 	{
-		mSocket.reset( );
+		resetTimeStamp();
+		mSocket.reset();
 	}
 }

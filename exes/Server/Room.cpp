@@ -84,7 +84,7 @@ void Room::perceive( const ClientIndex index, const ::model::tetrimino::Move mov
 	}
 }
 
-void Room::perceive( const ClientIndex index, const bool hasTetriminoCollidedInClient )
+void Room::perceive( const ClientIndex index, const bool hasTetriminoLandedInClient )
 {
 	if ( auto it = mParticipants.find(index); mParticipants.end() != it )
 	{

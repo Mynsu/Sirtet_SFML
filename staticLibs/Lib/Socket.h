@@ -7,11 +7,10 @@
 #include <string>
 #include <memory>
 #include <stdint.h>
-#include "EndPoint.h"
-#include "Hash.h"
-#include "Packet.h"
 
 using SOCKET_HANDLE = SOCKET;
+class EndPoint;
+class Packet;
 
 enum class IOType
 {
@@ -63,23 +62,34 @@ public:
 #endif
 	}
 	~Socket( );
+	// Returns SOCKET_ERROR when failed.
 	int bind( const EndPoint& selfEndPoint );
-	void listen( const uint32_t backlogSize )
+	// Returns SOCKET_ERROR when failed.
+	int listen( const uint32_t backlogSize )
 	{
-		::listen( mhSocket, backlogSize );
+		return ::listen( mhSocket, backlogSize );
 	}
+	// Returns FALSE when failed.
 	int acceptOverlapped( Socket& candidateClientSocket, const uint32_t candidateClientIndex );
+	// Returns SOCKET_ERROR when failed.
 	int updateAcceptContext( Socket& listener );
+	// Returns SOCKET_ERROR when failed.
 	int connect( const EndPoint& targetEndPoint );
+	// Returns FALSE when failed.
 	int disconnectOverlapped( );
+	// Returns SOCKET_ERROR when failed.
 	int receiveOverlapped( LPWSAOVERLAPPED_COMPLETION_ROUTINE lpRoutine = NULL );
+	// Returns SOCKET_ERROR when failed.
 	int receiveBlocking( );
+	// Returns SOCKET_ERROR when failed.
 	int sendOverlapped( char* const data, const size_t size,
 					   LPWSAOVERLAPPED_COMPLETION_ROUTINE lpRoutine = NULL );
+	// Returns SOCKET_ERROR when failed.
 	int sendOverlapped( Packet& packet, LPWSAOVERLAPPED_COMPLETION_ROUTINE lpRoutine = NULL );
-	void close( )
+	// Returns SOCKET_ERROR when failed.
+	int close( )
 	{
-		closesocket( mhSocket );
+		return ::closesocket( mhSocket );
 	}
 	void reset( const bool isSocketReusable = true, const Socket::Type type = Socket::Type::TCP );
 	bool isPending( ) const
@@ -124,8 +134,3 @@ private:
 	std::string mExtraReceivingBuffer;
 	char mReceivingBuffer[ RCV_BUF_SIZ ];
 };
-
-// Used as a salt in encrpyting the genuine client's version.
-// Recommended to be renewed periodically for security.
-#define VERSION 200106
-#define SALT 124816

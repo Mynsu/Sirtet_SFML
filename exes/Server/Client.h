@@ -36,14 +36,30 @@ public:
 	void setRoomID( const RoomID roomID );
 	const std::string& nickname( ) const;
 	HashedKey nicknameHashed() const;
+	Clock::time_point timeStamp() const
+	{
+		return mTimeStamp[(int)TimeStampIndex::GENERAL];
+	}
+	void resetTimeStamp()
+	{
+		mTimeStamp[(int)TimeStampIndex::GENERAL] = Clock::now();
+	}
 	void setNickname( std::string& nickname );
 	Socket& socket( );
 	void reset( const bool isSocketReusable = true );
 private:
+	enum class TimeStampIndex
+	{
+		GENERAL,
+		TETRIMINO_MOVED,
+		TETRIMINO_LANDED,
+		NONE_MAX,
+	};
 	const ClientIndex mIndex;
-	Client::State mState;
 	RoomID mRoomID;
+	Client::State mState;
 	HashedKey mNicknameHashed_;
+	Clock::time_point mTimeStamp[(int)TimeStampIndex::NONE_MAX];
 	std::string mNickname;
 	Socket mSocket;
 };

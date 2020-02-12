@@ -1,7 +1,9 @@
 #pragma once
 #include <string>
 #include <intrin.h>
-#include "Common.h"
+
+// NOTE: Not to include "Common.h".
+using Tag = char[];
 
 class Packet
 {

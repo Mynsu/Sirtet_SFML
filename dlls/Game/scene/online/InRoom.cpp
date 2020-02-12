@@ -1,10 +1,10 @@
 #include "../../pch.h"
 #include "InRoom.h"
+#include <Lib/Common.h>
 #include "Online.h"
 #include "../../ServiceLocatorMirror.h"
 #include "../CommandList.h"
 #include "../VaultKeyList.h"
-#include <utility>
 
 const uint32_t EMPTY_SLOT = 0;
 const uint32_t ROTATION_INTERVAL_THRESHOLD_MS = 1000;

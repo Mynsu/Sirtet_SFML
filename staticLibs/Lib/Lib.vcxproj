@@ -32,7 +32,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\Common.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\EndPoint.h" />
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\Hash.h" />
@@ -41,7 +41,6 @@
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\IGame.h" />
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\IOCP.h" />
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\IServiceLocator.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\IteratoredQueue.h" />
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\math\Vector.h" />
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\Packet.h" />
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\ScriptLoader.h" />

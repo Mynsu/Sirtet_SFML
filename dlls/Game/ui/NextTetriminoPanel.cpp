@@ -1,5 +1,6 @@
 #include "../pch.h"
 #include "NextTetriminoPanel.h"
+#include <Lib/Common.h>
 #include "../model/Tetrimino.h"
 
 ui::NextTetriminoPanel::NextTetriminoPanel(sf::RenderWindow & window)

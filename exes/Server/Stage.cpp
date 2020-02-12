@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <Lib/Common.h>
 #include "Stage.h"
 
 uint8_t model::Stage::tryClearRow( )

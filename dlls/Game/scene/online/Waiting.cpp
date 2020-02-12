@@ -1,12 +1,10 @@
 #include "../../pch.h"
 #include "Waiting.h"
-#include <Lib/ScriptLoader.h>
+#include <Lib/Common.h>
 #include "Online.h"
 #include "../../ServiceLocatorMirror.h"
 #include "../VaultKeyList.h"
 #include "../CommandList.h"
-
-#include <iostream>
 
 bool scene::online::Waiting::IsInstantiated = false;
 
@@ -21,9 +19,12 @@ scene::online::Waiting::Waiting( sf::RenderWindow& window, Online& net )
 	net.receive( );
 	using WallClock = std::chrono::system_clock;
 	const WallClock::time_point now = WallClock::now();
-	const WallClock::duration tillNow = now.time_since_epoch();
-	const std::chrono::minutes atMin = std::chrono::duration_cast<std::chrono::minutes>(tillNow);
-	const HashedKey invitation = ::util::hash::Digest(VERSION + atMin.count() + SALT);
+	const std::chrono::seconds atSec =
+		std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch());
+	const uint32_t seed = (uint32_t)atSec.count();
+	std::minstd_rand engine( seed + SALT );
+	engine.discard( engine() % MAX_KEY_STRETCHING );
+	const HashedKey invitation = engine();
 	Packet packet;
 	packet.pack( TAG_INVITATION, invitation );
 	net.send( packet );

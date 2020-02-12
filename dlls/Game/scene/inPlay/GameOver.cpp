@@ -1,6 +1,5 @@
 #include "../../pch.h"
 #include "GameOver.h"
-#include <Lib/ScriptLoader.h>
 #include "../../ServiceLocatorMirror.h"
 #include "../VaultKeyList.h"
 

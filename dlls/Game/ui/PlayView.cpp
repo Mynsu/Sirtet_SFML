@@ -104,7 +104,7 @@ void ui::PlayView::LoadResources( )
 }
 
 ui::PlayView::PlayView( sf::RenderWindow& window, ::scene::online::Online& net, const bool isPlayable )
-	: mHasTetriminoCollidedOnClient( false ), mHasTetriminoCollidedOnServer( false ),
+	: mHasTetriminoLandedOnClient( false ), mHasTetriminoLandedOnServer( false ),
 	mIsForThisPlayer( isPlayable ), mHasCurrentTetrimino( false ),
 	mCountDownSec( 3 ), mNumOfLinesCleared( 0 ),
 	mFrameCount_input( 0 ), mFrameCount_clearingVFX( 0 ),
@@ -119,7 +119,7 @@ ui::PlayView::PlayView( sf::RenderWindow& window, ::scene::online::Online& net, 
 }
 
 ui::PlayView::PlayView( const PlayView& another )
-	: mHasTetriminoCollidedOnClient( false ), mHasTetriminoCollidedOnServer( false ),
+	: mHasTetriminoLandedOnClient( false ), mHasTetriminoLandedOnServer( false ),
 	mIsForThisPlayer( another.mIsForThisPlayer ), mHasCurrentTetrimino( false ),
 	mCountDownSec( 0 ), mNumOfLinesCleared( 0 ),
 	mFrameCount_input( 0 ), mFrameCount_clearingVFX( 0 ),
@@ -161,7 +161,7 @@ void ui::PlayView::setCountdownSpriteDimension( const sf::Vector2f origin,
 
 void ui::PlayView::getReady()
 {
-	mHasTetriminoCollidedOnClient = mHasTetriminoCollidedOnServer = false;
+	mHasTetriminoLandedOnClient = mHasTetriminoLandedOnServer = false;
 	mHasCurrentTetrimino = false;
 	mCountDownSec = 3;
 	mTempoMs = 1000;
@@ -176,8 +176,8 @@ void ui::PlayView::getReady()
 void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
 {
 	// Exception
-	if ( true == mHasTetriminoCollidedOnServer &&
-		true == alarmAfter(ASYNC_TOLERANCE_MS, AlarmIndex::COLLIDED_ON_SERVER) )
+	if ( true == mHasTetriminoLandedOnServer &&
+		true == alarmAfter(ASYNC_TOLERANCE_MS, AlarmIndex::LANDED_ON_SERVER) )
 	{
 		gService()->console().printFailure( FailureLevel::FATAL, "Over asynchronization." );
 		mNet.disconnect( );
@@ -224,7 +224,7 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
 	}
 	
 	Packet packet;
-	if ( false == mHasTetriminoCollidedOnClient )
+	if ( false == mHasTetriminoLandedOnClient )
 	{
 		auto& vault = gService()->vault();
 		if ( const auto it = vault.find(HK_HAS_GAINED_FOCUS);
@@ -271,12 +271,12 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
 			for ( uint8_t i = 0; FALLING_DOWN_SPEED != i; ++i )
 			{
 				//TODO: 시간이 많이 지난 만큼 더 이동할까?
-				mHasTetriminoCollidedOnClient = mCurrentTetrimino.moveDown(mStage.cgrid());
-				if ( true == mHasTetriminoCollidedOnClient )
+				mHasTetriminoLandedOnClient = mCurrentTetrimino.moveDown(mStage.cgrid());
+				if ( true == mHasTetriminoLandedOnClient )
 				{
 					mCurrentTetrimino.fallDown( false );
 					const uint8_t ignored = 1;
-					packet.pack( TAG_MY_TETRIMINO_COLLIDED_ON_CLIENT, ignored );
+					packet.pack( TAG_MY_TETRIMINO_LANDED_ON_CLIENT, ignored );
 					goto last;
 				}
 			}
@@ -295,7 +295,7 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
 							if ( inputDelayFPS < mFrameCount_input )
 							{
 								mFrameCount_input = 0;
-								if ( false == mHasTetriminoCollidedOnServer )
+								if ( false == mHasTetriminoLandedOnServer )
 								{
 									packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::FALL_DOWN );
 								}
@@ -308,15 +308,15 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
 							if ( inputDelayFPS < mFrameCount_input )
 							{
 								mFrameCount_input = 0;
-								if ( false == mHasTetriminoCollidedOnServer )
+								if ( false == mHasTetriminoLandedOnServer )
 								{
 									packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::DOWN );
 								}
-								mHasTetriminoCollidedOnClient = mCurrentTetrimino.moveDown( mStage.cgrid() );
-								if ( true == mHasTetriminoCollidedOnClient )
+								mHasTetriminoLandedOnClient = mCurrentTetrimino.moveDown( mStage.cgrid() );
+								if ( true == mHasTetriminoLandedOnClient )
 								{
 									const uint8_t ignored = 1;
-									packet.pack( TAG_MY_TETRIMINO_COLLIDED_ON_CLIENT, ignored );
+									packet.pack( TAG_MY_TETRIMINO_LANDED_ON_CLIENT, ignored );
 								}
 								resetAlarm( AlarmIndex::TETRIMINO_DOWN );
 							}
@@ -326,7 +326,7 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
 							if ( inputDelayFPS < mFrameCount_input )
 							{
 								mFrameCount_input = 0;
-								if ( false == mHasTetriminoCollidedOnServer )
+								if ( false == mHasTetriminoLandedOnServer )
 								{
 									packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::LEFT );
 									mCurrentTetrimino.tryMoveLeft( mStage.cgrid() );
@@ -338,7 +338,7 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
 							if ( inputDelayFPS < mFrameCount_input )
 							{
 								mFrameCount_input = 0;
-								if ( false == mHasTetriminoCollidedOnServer )
+								if ( false == mHasTetriminoLandedOnServer )
 								{
 									packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::RIGHT );
 									mCurrentTetrimino.tryMoveRight( mStage.cgrid() );
@@ -352,7 +352,7 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
 							if ( inputDelayFPS < mFrameCount_input )
 							{
 								mFrameCount_input = 0;
-								if ( false == mHasTetriminoCollidedOnServer )
+								if ( false == mHasTetriminoLandedOnServer )
 								{
 									packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::ROTATE );
 									mCurrentTetrimino.tryRotate( mStage.cgrid() );
@@ -371,15 +371,15 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
 				}
 			}
 
-			if ( false == mHasTetriminoCollidedOnClient &&
+			if ( false == mHasTetriminoLandedOnClient &&
 				true == alarmAfter(mTempoMs, AlarmIndex::TETRIMINO_DOWN) )
 			{
 				//TODO: 시간이 많이 지난 만큼 더 이동할까?
-				mHasTetriminoCollidedOnClient = mCurrentTetrimino.moveDown( mStage.cgrid() );
-				if ( true == mHasTetriminoCollidedOnClient )
+				mHasTetriminoLandedOnClient = mCurrentTetrimino.moveDown( mStage.cgrid() );
+				if ( true == mHasTetriminoLandedOnClient )
 				{
 					const uint8_t ignored = 1;
-					packet.pack( TAG_MY_TETRIMINO_COLLIDED_ON_CLIENT, ignored );
+					packet.pack( TAG_MY_TETRIMINO_LANDED_ON_CLIENT, ignored );
 				}
 				resetAlarm( AlarmIndex::TETRIMINO_DOWN );
 			}
@@ -387,17 +387,17 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
 	}
 
 	last:
-	if ( true == mHasTetriminoCollidedOnClient )
+	if ( true == mHasTetriminoLandedOnClient )
 	{
-		if ( true == mHasTetriminoCollidedOnServer )
+		if ( true == mHasTetriminoLandedOnServer )
 		{
 			if ( false == gService()->audio().playSFX(AudioList[(int)AudioIndex::TETRIMINO_LOCKED]) )
 			{
 				gService()->console().printFailure(FailureLevel::WARNING,
 												   "File Not Found: "+AudioList[(int)AudioIndex::TETRIMINO_LOCKED] );
 			}
-			mHasTetriminoCollidedOnServer = false;
-			mHasTetriminoCollidedOnClient = false;
+			mHasTetriminoLandedOnServer = false;
+			mHasTetriminoLandedOnClient = false;
 			mCurrentTetrimino = mNextTetriminos.front();
 			mNextTetriminos.pop( );
 			mStage.deserialize( mBufferForStage );
@@ -439,8 +439,8 @@ void ui::PlayView::updateStage( const::model::stage::Grid& grid )
 	else
 	{
 		mBufferForStage = grid;
-		resetAlarm( AlarmIndex::COLLIDED_ON_SERVER );
-		mHasTetriminoCollidedOnServer = true;
+		resetAlarm( AlarmIndex::LANDED_ON_SERVER );
+		mHasTetriminoLandedOnServer = true;
 	}
 }
 

@@ -5,25 +5,22 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include <signal.h>
-#include <Windows.h>
-#include <thread>
+#include <unordered_set>
+#include <unordered_map>
 #include <queue>
 #include <array>
-#include <forward_list>
 #include <bitset>
 #include <string>
 #include <iostream>
-#include <sstream>
 #include <stdint.h>
 #include <intrin.h>
 #include <random>
+#include <chrono>
 #include <lua.hpp>
 #include <SFML/Graphics.hpp>
-#include <Lib/IteratoredQueue.h>
 #include <Lib/IOCP.h>
 #include <Lib/EndPoint.h>
 #include <Lib/Hash.h>
-#include <Lib/Common.h>
 #include <Lib/Packet.h>
 
 using Clock = std::chrono::high_resolution_clock;

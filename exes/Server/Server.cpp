@@ -8,6 +8,8 @@ const uint32_t BACKLOG_SIZ = CLIENT_CAPACITY/2;
 const uint32_t ROOM_CAPACITY = 25;
 const uint32_t LOBBY_CAPACITY = 100;
 const ClientIndex LISTENER_IDX = CLIENT_CAPACITY;
+const Clock::duration TCP_TIMED_WAIT_DELAY_SEC = std::chrono::seconds(30);
+const Clock::duration TICKET_SUBMISSION_TIME_LIMIT = std::chrono::seconds(2);
 
 volatile bool IsWorking = true;
 void ProcessSignal( int signal )
@@ -44,6 +46,13 @@ int main()
 			std::cerr << "FATAL: Failed to bind listener.\n";
 			result = false;
 		}
+		else if ( const BOOL on = true;
+				 -1 == ::setsockopt(listener.handle(), SOL_SOCKET, SO_CONDITIONAL_ACCEPT, (char*)&on, sizeof(BOOL)) )
+		{
+			// Exception
+			std::cerr << "FATAL: Failed to set socket option.\n";
+			result = false;
+		}
 		else if ( -1 == iocp.add(listener.handle(), LISTENER_IDX) )
 		{
 			// Exception
@@ -70,8 +79,8 @@ int main()
 	uint32_t numOfAcceptancePending = 0;
 	std::vector<Client> clients;
 	clients.reserve( CLIENT_CAPACITY );
-	container::IteratoredQueue<ClientIndex> candidates;
-	candidates.reserve( CLIENT_CAPACITY );
+	std::unordered_set<ClientIndex> clientIndicesNotAccepted;
+	clientIndicesNotAccepted.reserve( CLIENT_CAPACITY );
 	for ( uint32_t i = 0; i != CLIENT_CAPACITY; ++i )
 	{
 		Client& client = clients.emplace_back(Socket::Type::TCP, i);
@@ -110,7 +119,7 @@ int main()
 		}
 		else
 		{
-			candidates.emplace_back( i );
+			clientIndicesNotAccepted.emplace( i );
 		}
 	}
 
@@ -125,7 +134,7 @@ int main()
 	std::unordered_map<HashedKey, Room> rooms;
 	rooms.reserve( ROOM_CAPACITY );
 	auto forceDisconnection =
-		[ &iocp, &clients, &candidates, &population, &lobby, &rooms ]( const ClientIndex index ) -> bool
+		[ &iocp, &clients, &clientIndicesNotAccepted, &population, &lobby, &rooms ]( const ClientIndex index ) -> bool
 	{
 		bool result = true;
 		Client& client = clients[index];
@@ -162,7 +171,7 @@ int main()
 			return result;
 		}
 		--population;
-		candidates.emplace_back( index );
+		clientIndicesNotAccepted.emplace( index );
 		std::cout << "Forced to disconnect Client " << index << ". (Now "
 			<< population << "/" << CLIENT_CAPACITY << " connections.)\n";
 		return result;
@@ -174,16 +183,12 @@ int main()
 	const HashedKey encryptedSign = ::util::hash::Digest( sign.data(), (uint8_t)sign.size() );
 	std::cout << "Ready.\n";
 	std::vector<Ticket> tickets;
+	std::unordered_set<ClientIndex> connectionsNotSubmittingTicket;
 	IOCPEvent event;
-
-	////
-	//
-	////
-
 	while ( true == IsWorking )
 	{
-		iocp.wait( event, 100 );
-		for ( uint32_t i = 0u; i != event.eventCount; ++i )
+		iocp.wait( event, 1 );
+		for ( uint32_t i = 0; i != event.eventCount; ++i )
 		{
 			const OVERLAPPED_ENTRY& ev = event.events[i];
 			////
@@ -217,22 +222,24 @@ int main()
 						// Break twice
 						goto cleanUp;
 					}
+					continue;
 				}
-				else
-				{
 #ifdef _DEBUG
-					std::cout << "A new client " << clientIdx << " joined. (Now "
+				std::cout << "A new client " << clientIdx << " joined. (Now "
 						<< population << "/" << CLIENT_CAPACITY << " connections.)\n";
 #endif
-				}
+				clients[clientIdx].resetTimeStamp();
+				connectionsNotSubmittingTicket.emplace( clientIdx );
 			}
 			////
 			// When event comes from the queue server,
 			////
 			else if ( queueServerIdx == (ClientIndex)ev.lpCompletionKey )
 			{
-				if ( true == candidates.contains(queueServerIdx) )
+				if ( auto it = clientIndicesNotAccepted.find(queueServerIdx);
+					clientIndicesNotAccepted.end() != it )
 				{
+					std::cerr << "WARNING: Queue server has already disconnected.\n";
 					continue;
 				}
 				Client& queueServer = clients[queueServerIdx];
@@ -243,7 +250,7 @@ int main()
 				{
 					queueServer.reset( );
 					--population;
-					candidates.emplace_back( queueServerIdx );
+					clientIndicesNotAccepted.emplace( queueServerIdx );
 					// Reset
 					queueServerIdx = -1;
 #ifdef _DEBUG
@@ -378,8 +385,10 @@ int main()
 			else
 			{
 				const ClientIndex clientIdx = (ClientIndex)ev.lpCompletionKey;
-				if ( true == candidates.contains(clientIdx) )
+				if ( auto it = clientIndicesNotAccepted.find(clientIdx);
+					clientIndicesNotAccepted.end() != it )
 				{
+					std::cerr << "Client " << clientIdx << " has already disconnected.\n";
 					continue;
 				}
 				Client& client = clients[clientIdx];
@@ -413,7 +422,7 @@ int main()
 					}
 					client.reset( );
 					--population;
-					candidates.emplace_back( clientIdx );
+					clientIndicesNotAccepted.emplace( clientIdx );
 #ifdef _DEBUG
 					std::cout << "Client " << clientIdx << " left. (Now "
 						<< population << "/" << CLIENT_CAPACITY << " connections.)\n";
@@ -448,7 +457,6 @@ int main()
 							const char* const rcvBuf = clientSocket.receivingBuffer();
 							constexpr uint8_t TAG_TICKET_LEN = ::util::hash::Measure(TAG_TICKET);
 							const Ticket ticket = ::ntohl(*(Ticket*)&rcvBuf[TAG_TICKET_LEN]);
-							
 							auto it = tickets.cbegin();
 							while ( tickets.cend() != it )
 							{
@@ -464,6 +472,7 @@ int main()
 							}
 							if ( tickets.cend() != it )
 							{
+								connectionsNotSubmittingTicket.erase( clientIdx );
 								tickets.erase( it );
 //TODO: 닉네임
 								std::string nickname( "nickname" );
@@ -498,10 +507,12 @@ int main()
 									continue;
 								}
 							}
-							// When the queue server(now as a client) asked how many clients keep connecting,
-							else if ( encryptedSign == ::ntohl(*(HashedKey*)rcvBuf) )
+							// When the queue server connects as a client,
+							else if ( -1 == queueServerIdx &&
+									 encryptedSign == ::ntohl(*(HashedKey*)rcvBuf) )
 							{
 								queueServerIdx = clientIdx;
+								connectionsNotSubmittingTicket.erase( queueServerIdx );
 								client.setState( Client::State::AS_QUEUE_SERVER );
 #ifdef _DEBUG
 								std::cout << "Population has been asked by the queue server.\n";
@@ -585,6 +596,26 @@ int main()
 			}
 		}
 
+		const Clock::time_point now = Clock::now();
+		for ( const ClientIndex idx : connectionsNotSubmittingTicket )
+		{
+			if ( TICKET_SUBMISSION_TIME_LIMIT < now - clients[idx].timeStamp() )
+			{
+				Socket& socket = clients[idx].socket();
+				if ( FALSE == socket.disconnectOverlapped() )
+				{
+					// Exception
+					std::cerr << "WARNING: Failed to disconnect Client " << idx << ".\n";
+					if ( false == forceDisconnection(idx) )
+					{
+						// Exception
+						// Break twice
+						goto cleanUp;
+					}
+				}
+			}
+		}
+
 		if ( 0 < rooms.size() )
 		{
 			auto it = rooms.begin();
@@ -623,19 +654,24 @@ int main()
 			}
 		}
 
-		if ( numOfAcceptancePending < BACKLOG_SIZ &&
-			0 < candidates.size() )
+		if ( numOfAcceptancePending < BACKLOG_SIZ )
 		{
-			const ClientIndex nextCandidateIdx = candidates.front();
-			if ( FALSE == listener.acceptOverlapped(clients[nextCandidateIdx].socket(),
-													nextCandidateIdx) )
+			for ( const ClientIndex idx : clientIndicesNotAccepted )
 			{
-				// Exception
-				std::cerr << "FATAL: Overlapped acceptEx failed.\n";
-				break;
+				if ( TCP_TIMED_WAIT_DELAY_SEC < now - clients[idx].timeStamp() )
+				{
+					if ( FALSE == listener.acceptOverlapped(clients[idx].socket(),
+															idx) )
+					{
+						// Exception
+						std::cerr << "FATAL: Overlapped acceptEx failed.\n";
+						goto cleanUp;
+					}
+					clientIndicesNotAccepted.erase( idx );
+					++numOfAcceptancePending;
+					break;
+				}
 			}
-			candidates.pop_front( );
-			++numOfAcceptancePending;
 		}
 	}
 

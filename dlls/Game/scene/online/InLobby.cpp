@@ -1,5 +1,6 @@
 #include "../../pch.h"
 #include "InLobby.h"
+#include <Lib/Common.h>
 #include "../../ServiceLocatorMirror.h"
 #include "../CommandList.h"
 #include "Online.h"

@@ -6,7 +6,7 @@
 
 struct IOCPEvent
 {
-	static const uint32_t MAX_EVENTS = 1000u;
+	static const uint32_t MAX_EVENTS = 1000;
 	OVERLAPPED_ENTRY events[MAX_EVENTS];
 	uint32_t eventCount;
 };

@@ -1,6 +1,6 @@
 #include "../../pch.h"
 #include "Online.h"
-#include <lua.hpp>
+#include <Lib/Common.h>
 #include "../../ServiceLocatorMirror.h"
 #include "../VaultKeyList.h"
 #include "Waiting.h"
@@ -261,18 +261,21 @@ void scene::online::Online::connectToQueueServer()
 	if ( -1 == SocketToServer->bind(EndPoint::Any) )
 	{
 		// Exception
-		gService( )->console( ).printFailure( FailureLevel::WARNING, "Failed to bind a to-queue-server socket.\n" );
+		gService( )->console( ).printFailure( FailureLevel::WARNING,
+											 "Failed to bind a to-queue-server socket.\n" );
 		// Triggering
 		mFrameCount_disconnection = 1;
 		return;
 	}
 	// NOTE: Socket option should be set after binding it.
 	if ( const DWORD timeout = RECEIVING_WAIT_MS;
-			 0 != setsockopt(SocketToServer->handle(), SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(DWORD)) )
+			 -1 == setsockopt(SocketToServer->handle(), SOL_SOCKET, SO_RCVTIMEO,
+		(char*)&timeout, sizeof(DWORD)) )
 	{
 		// Exception
 		std::string msg( "setsockopt error: " );
-		gService( )->console( ).printFailure( FailureLevel::WARNING, msg+std::to_string(WSAGetLastError()) );
+		gService( )->console( ).printFailure( FailureLevel::WARNING,
+											 msg+std::to_string(WSAGetLastError()) );
 		// Triggering
 		mFrameCount_disconnection = 1;
 		return;
@@ -280,12 +283,14 @@ void scene::online::Online::connectToQueueServer()
 	if ( -1 == SocketToServer->connect(EndPoint(QUEUE_SERVER_IP_ADDRESS, QUEUE_SERVER_PORT)) )
 	{
 		// Exception
-		gService( )->console( ).printFailure( FailureLevel::WARNING, "Failed to connect to the queue server.\n" );
+		gService( )->console( ).printFailure( FailureLevel::WARNING,
+											 "Failed to connect to the queue server.\n" );
 		// Triggering
 		mFrameCount_disconnection = 1;
 		return;
 	}
-	gService( )->console( ).print( "Succeeded to connect to the queue server.", sf::Color::Green );
+	gService( )->console( ).print( "Succeeded to connect to the queue server.",
+								  sf::Color::Green );
 }
 
 void scene::online::Online::disconnect( )
@@ -319,7 +324,7 @@ bool scene::online::Online::connectToMainServer( )
 	}
 	// NOTE: Socket option should be set after binding it.
 	if ( const DWORD timeout = RECEIVING_WAIT_MS;
-		0 != setsockopt(SocketToServer->handle(), SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, (int)sizeof(DWORD)) )
+		-1 == setsockopt(SocketToServer->handle(), SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, (int)sizeof(DWORD)) )
 	{
 		// Exception
 		std::string msg( "setsockopt error: " );
@@ -330,7 +335,7 @@ bool scene::online::Online::connectToMainServer( )
 		return result;
 	}
 	if ( const DWORD SND_BUF_SIZ = 0;
-		0 != setsockopt(SocketToServer->handle(), SOL_SOCKET, SO_SNDBUF, (char*)&SND_BUF_SIZ, (int)sizeof(DWORD)) )
+		-1 == setsockopt(SocketToServer->handle(), SOL_SOCKET, SO_SNDBUF, (char*)&SND_BUF_SIZ, (int)sizeof(DWORD)) )
 	{
 		// Exception
 		std::string msg( "setsockopt error: " );

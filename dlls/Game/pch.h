@@ -18,10 +18,10 @@
 #include <SFML/System.hpp>
 #include <lua.hpp>
 #include <Lib/Hash.h>
+#include <Lib/EndPoint.h>
 #include <Lib/Socket.h>
 #include <Lib/IServiceLocator.h>
 #include <Lib/IGame.h>
-#include <Lib/Common.h>
 #include <Lib/Packet.h>
 #include <Lib/math/Vector.h>
 

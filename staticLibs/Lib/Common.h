@@ -10,6 +10,11 @@ static const char* QUEUE_SERVER_IP_ADDRESS = "192.168.219.102";
 static const char* MAIN_SERVER_IP_ADDRESS = "192.168.219.102";
 const uint16_t QUEUE_SERVER_PORT = 10000;
 const uint16_t MAIN_SERVER_PORT = 54321;
+// Used as a salt in encrpyting the genuine client's version.
+// Recommended to be renewed periodically for security.
+#define VERSION 200211
+#define SALT VERSION
+#define MAX_KEY_STRETCHING 5000
 
 namespace model
 {
@@ -103,7 +108,7 @@ enum class _Tag
 	MY_TEMPO_MS,
 	MY_STAGE,
 	MY_TETRIMINO_MOVE,
-	MY_TETRIMINO_COLLIDED_ON_CLIENT,
+	MY_TETRIMINO_LANDED_ON_CLIENT,
 
 	NEW_CURRENT_TETRIMINOS,
 	CURRENT_TETRIMINOS_MOVE,
@@ -209,7 +214,7 @@ constexpr Tag TAG_MY_STAGE = { (char)_Tag::MY_STAGE, ':', '\0' };
 constexpr Tag TAG_MY_TETRIMINO_MOVE = { (char)_Tag::MY_TETRIMINO_MOVE, ':', '\0' };
 const uint8_t TAG_MY_TETRIMINO_MOVE_LEN = ::util::hash::Measure( TAG_MY_TETRIMINO_MOVE );
 // Attached to nothing.
-constexpr Tag TAG_MY_TETRIMINO_COLLIDED_ON_CLIENT = { (char)_Tag::MY_TETRIMINO_COLLIDED_ON_CLIENT, ':', '\0' };
+constexpr Tag TAG_MY_TETRIMINO_LANDED_ON_CLIENT = { (char)_Tag::MY_TETRIMINO_LANDED_ON_CLIENT, ':', '\0' };
 // Attached to uint32_t(for the total size) and repeated pairs of <HashedKey,uint8_t>.
 
 constexpr Tag TAG_NEW_CURRENT_TETRIMINOS = { (char)_Tag::NEW_CURRENT_TETRIMINOS, ':', '\0' };

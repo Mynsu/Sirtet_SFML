@@ -1,5 +1,6 @@
 #include "../pch.h"
 #include "Tetrimino.h"
+#include <Lib/Common.h>
 #include "../ServiceLocatorMirror.h"
 
 model::Tetrimino::Tetrimino( )

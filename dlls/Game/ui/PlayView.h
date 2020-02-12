@@ -39,7 +39,7 @@ namespace ui
 		{
 			COUNT_DOWN,
 			TETRIMINO_DOWN,
-			COLLIDED_ON_SERVER,
+			LANDED_ON_SERVER,
 			NONE_MAX,
 		};
 		static void LoadResources( );
@@ -57,7 +57,7 @@ namespace ui
 		{
 			mAlarms[(int)index] = Clock::now();
 		}
-		bool mHasTetriminoCollidedOnClient, mHasTetriminoCollidedOnServer,
+		bool mHasTetriminoLandedOnClient, mHasTetriminoLandedOnServer,
 			mIsForThisPlayer, mHasCurrentTetrimino;
 		uint8_t mCountDownSec, mNumOfLinesCleared;
 		uint32_t mFrameCount_input, mFrameCount_clearingVFX, mFPS_;

@@ -20,7 +20,7 @@ public:
 
 	void spawnTetrimino( );
 	void perceive( const ::model::tetrimino::Move move );
-	void perceive( const bool hasTetriminoCollidedInClient = true );
+	void perceive( const bool hasTetriminoLandedInClient = true );
 	bool update( );
 	Playing::UpdateResult updateResult( ) const;
 	::model::tetrimino::Type currentTetriminoType( ) const;
@@ -60,7 +60,7 @@ private:
 	{
 		mAlarms[(int)index] = Clock::now( );
 	}
-	bool mHasTetriminoCollidedOnClient, mHasTetriminoCollidedOnServer, mIsGameOver_;
+	bool mHasTetriminoLandedOnClient, mHasTetriminoLandedOnServer, mIsGameOver_;
 	uint8_t mNumOfLinesCleared;
 	uint32_t mTempoMs;
 	Clock::time_point mAlarms[ (int)AlarmIndex::NONE_MAX ];

@@ -47,9 +47,6 @@
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\Common.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\IteratoredQueue.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\IServiceLocator.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
