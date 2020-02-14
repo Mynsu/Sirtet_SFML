@@ -23,7 +23,9 @@ namespace vfx
 		}
 		void setOrigin( const sf::Vector2f origin, const float cellSize, const sf::Vector2i effectWidthHeight )
 		{
-			ASSERT_TRUE( (0<=origin.x) && (0<=origin.y) && (0<cellSize) && (0<effectWidthHeight.x) && (0<effectWidthHeight.y) );
+			ASSERT_TRUE( 0.f <= origin.x && 0.f <= origin.y &&
+						0.f < cellSize &&
+						0 < effectWidthHeight.x && 0 < effectWidthHeight.y );
 
 			mSprite.setOrigin( sf::Vector2f(effectWidthHeight)*0.5f );
 			const sf::Vector2f localPos( ::model::stage::GRID_WIDTH, ::model::stage::GRID_HEIGHT );

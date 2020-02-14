@@ -34,12 +34,13 @@ private:
 		initialize( );
 	}
 	bool mVisible;
-	uint32_t mFontSize, mLinesShown;
+	uint8_t mLinesShown;
+	uint16_t mFontSize;
 	std::string mCurrentInput;
 	Command mCommand;
 	sf::Font mFont;
 	sf::RectangleShape mConsoleBackground;
 	std::array<std::string, (int)ExceptionType::_MAX> mExceptionTypes;
-	sf::Text mCurrentInputTextField, mHistoryTextLabel;
+	sf::Text mTextFieldForCurrentInput, mTextLabelForHistory;
 	std::vector<std::pair<std::string, sf::Color>> mHistory;
 };

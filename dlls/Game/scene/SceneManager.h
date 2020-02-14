@@ -15,7 +15,7 @@ namespace scene
 		SceneManager( )
 			: mWindow( nullptr )
 		{
-			ASSERT_FALSE( IsInstantiated );
+			ASSERT_TRUE( false == IsInstantiated );
 			IsInstantiated = true;
 		}
 		virtual ~SceneManager( )

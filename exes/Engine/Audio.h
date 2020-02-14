@@ -7,10 +7,12 @@ public:
 	Audio( );
 	~Audio( );
 
+	// 0 to 100
 	void setBGMVolume( const float volume ) override
 	{
 		mBGMPlayer.setVolume( volume );
 	}
+	// 0 to 100
 	void setSFXVolume( const float volume ) override
 	{
 		mSFXPlayer.setVolume( volume );

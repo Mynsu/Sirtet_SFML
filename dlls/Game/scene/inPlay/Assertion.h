@@ -18,11 +18,11 @@ namespace scene::inPlay
 			ON_SELECTION,
 			NULL_MAX,
 		};
-		uint32_t mFPS_, mFrameCount;
+		uint16_t mFPS_, mFrameCountToCancel;
 		sf::RenderWindow& mWindow_;
 		std::string mAudioList[(int)AudioIndex::NULL_MAX];
 		sf::Font mFont;
-		sf::Text mGuideTextLabel;
+		sf::Text mTextLabelForGuide;
 		sf::RectangleShape mBackground;
 	};
 }

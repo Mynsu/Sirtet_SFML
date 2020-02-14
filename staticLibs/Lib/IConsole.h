@@ -1,5 +1,5 @@
 ////
-// Game API
+//  Commonly used in exes/Engine, dlls/Game.
 ////
 
 #pragma once
@@ -9,7 +9,7 @@
 #include <SFML/Graphics.hpp>
 #include "Hash.h"
 
-using Func = std::function< void(const std::string_view& args) >;
+using Func = std::function<void(const std::string_view& args)>;
 
 enum class FailureLevel
 {

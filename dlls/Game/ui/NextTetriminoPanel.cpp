@@ -52,7 +52,7 @@ void ui::NextTetriminoPanel::setTetrimino( const::model::Tetrimino& next )
 void ui::NextTetriminoPanel::draw( )
 {
 	mWindow_.draw( mPanel );
-	for ( auto& it : mBlocks )
+	for ( sf::RectangleShape& it : mBlocks )
 	{
 		mWindow_.draw( it );
 	}
@@ -60,6 +60,9 @@ void ui::NextTetriminoPanel::draw( )
 
 void ui::NextTetriminoPanel::setDimension( const sf::Vector2f position, const float cellSize)
 {
+	const sf::Vector2f winSize( mWindow_.getSize() );
+	ASSERT_TRUE( position.x < winSize.x && position.y < winSize.y &&
+				0.f < cellSize );
 	const uint8_t side = ::model::tetrimino::BLOCKS_A_TETRIMINO+2;
 	sf::Vector2f size( side, side );
 	size *= cellSize;

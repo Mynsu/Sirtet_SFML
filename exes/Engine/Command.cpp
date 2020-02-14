@@ -4,10 +4,10 @@
 
 void Command::processCommand( const std::string& commandLine )
 {
-	//
+	///
 	// Parsing a command line
 	///
-	const size_t _1stIdxOfTokenizer = commandLine.find_first_of( ' ' );
+	const size_t _1stIdxOfTokenizer = commandLine.find_first_of(' ');
 	// Exception
 	if ( 0 == _1stIdxOfTokenizer )
 	{
@@ -19,16 +19,16 @@ void Command::processCommand( const std::string& commandLine )
 	// When the command line has the one token, like 'refresh',
 	if ( std::string::npos == _1stIdxOfTokenizer )
 	{
-		key = ::util::hash::Digest( commandLine.data(), static_cast<uint8_t>(commandLine.size()) );
+		key = ::util::hash::Digest(commandLine.data(), (uint8_t)commandLine.size());
 	}
 	// When the command line consists of two or more tokens,
 	else if ( ' ' != commandLine.at(_1stIdxOfTokenizer+1) )
 	{
 		// NOTE: substr() of std::string_view costs less than that of std::string.
 		const std::string command( commandLine.substr(0, _1stIdxOfTokenizer) );
-		key = ::util::hash::Digest( command.data(), static_cast<uint8_t>(command.size()) );
+		key = ::util::hash::Digest(command.data(), (uint8_t)command.size());
 		argv = commandLine;
-		argv = argv.substr( _1stIdxOfTokenizer + 1 );
+		argv = argv.substr(_1stIdxOfTokenizer + 1);
 	}
 	// Exception: When the command line looks like 'refresh ', 'refresh  ' and so forth,
 	else
@@ -37,7 +37,7 @@ void Command::processCommand( const std::string& commandLine )
 	}
 
 	// When the first token, or command, e.g. 'refresh' or 'moveTo', is coined,
-	if ( const auto it = mProtocols.find( key ); mProtocols.cend( ) != it )
+	if ( const auto it = mProtocols.find(key); mProtocols.cend( ) != it )
 	{
 		it->second( argv );
 	}

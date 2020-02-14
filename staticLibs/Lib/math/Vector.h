@@ -15,7 +15,7 @@ namespace math
 			: mComponents{ 0.0 }
 		{
 		}
-		template < typename... Ts >
+		template <typename... Ts>
 		Vector( const Ts... components )
 		{
 			uint8_t i = 0;
@@ -46,7 +46,7 @@ namespace math
 		{
 			Vector retVal( *this );
 			const float mag = magnitude();
-			for ( auto& it : retVal.mComponents )
+			for ( T& it : retVal.mComponents )
 			{
 				it /= mag;
 			}

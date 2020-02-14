@@ -36,11 +36,19 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\EndPoint.h" />
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\Hash.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\IAudio.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\IConsole.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\IGame.h" />
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\IAudio.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\IConsole.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\IGame.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\IOCP.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\IServiceLocator.h" />
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\IServiceLocator.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\math\Vector.h" />
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\Packet.h" />
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\ScriptLoader.h" />
@@ -52,6 +60,9 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseWithNoPDB|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseWithNoPDB|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Lib\VaultKeyList.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClInclude>
   </ItemGroup>
   <PropertyGroup Label="Globals">

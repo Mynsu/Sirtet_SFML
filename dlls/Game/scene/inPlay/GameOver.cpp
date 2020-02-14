@@ -1,26 +1,18 @@
 #include "../../pch.h"
 #include "GameOver.h"
+#include <Lib/VaultKeyList.h>
 #include "../../ServiceLocatorMirror.h"
-#include "../VaultKeyList.h"
 
 scene::inPlay::GameOver::GameOver( sf::RenderWindow& window, sf::Drawable& shapeOrSprite,
 								   std::unique_ptr<::scene::inPlay::IScene>& overlappedScene )
-	: TARGET_ALPHA( 0x7fu ), mFade( 0xffu ), mFrameCount( 0 ),
+	: TARGET_ALPHA( 0x7fu ), mFade( 0xffu ), mFrameCountToMainMenu( 0 ),
 	mWindow_( window ), mBackgroundRect_( (sf::RectangleShape&)shapeOrSprite )
 {
 	overlappedScene.reset( );
 	auto& vault = gService()->vault();
-	if ( auto it = vault.find(HK_FORE_FPS);
-		vault.end() != it )
-	{
-		mFPS_ = (uint32_t)it->second;
-	}
-#ifdef _DEBUG
-	else
-	{
-		__debugbreak( );
-	}
-#endif
+	const auto it = vault.find(HK_FORE_FPS);
+	ASSERT_TRUE( vault.end() != it );
+	mFPS_ = (uint16_t)it->second;
 	loadResources( );
 	if ( false == gService()->audio().playBGM(mAudioList[(int)AudioIndex::BGM]) )
 	{
@@ -35,12 +27,12 @@ void scene::inPlay::GameOver::loadResources( )
 	std::string imagePathNName( "Images/GameOver.png" );
 	mAudioList[(int)AudioIndex::BGM] = "Audio/gameOver.wav";
 
-	lua_State* lua = luaL_newstate( );
+	lua_State* lua = luaL_newstate();
 	const std::string scriptPathNName( "Scripts/GameOver.lua" );
 	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
 	{
 		// File Not Found Exception
-		gService( )->console( ).printFailure( FailureLevel::FATAL, "File Not Found: "+scriptPathNName );
+		gService()->console().printFailure( FailureLevel::FATAL, "File Not Found: "+scriptPathNName );
 	}
 	else
 	{
@@ -50,14 +42,14 @@ void scene::inPlay::GameOver::loadResources( )
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
 		}
 		else
 		{
 			std::string field( "path" );
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			int type = lua_type( lua, TOP_IDX );
+			int type = lua_type(lua, TOP_IDX);
 			if ( LUA_TSTRING == type )
 			{
 				imagePathNName = lua_tostring(lua, TOP_IDX);
@@ -69,7 +61,7 @@ void scene::inPlay::GameOver::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -77,13 +69,13 @@ void scene::inPlay::GameOver::loadResources( )
 			field = "width";
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			type = lua_type( lua, TOP_IDX );
+			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
 				const float temp = (float)lua_tonumber(lua, TOP_IDX);
 				if ( 0 > temp )
 				{
-					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+					gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
 															tableName+':'+field, scriptPathNName );
 				}
 				else
@@ -98,7 +90,7 @@ void scene::inPlay::GameOver::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -106,13 +98,13 @@ void scene::inPlay::GameOver::loadResources( )
 			field = "height";
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			type = lua_type( lua, TOP_IDX );
+			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
 				const float temp = (float)lua_tonumber(lua, TOP_IDX);
 				if ( 0 > temp )
 				{
-					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+					gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
 															tableName+':'+field, scriptPathNName );
 				}
 				else
@@ -127,7 +119,7 @@ void scene::inPlay::GameOver::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -138,7 +130,7 @@ void scene::inPlay::GameOver::loadResources( )
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
 		}
 		else
 		{
@@ -147,7 +139,7 @@ void scene::inPlay::GameOver::loadResources( )
 			lua_gettable( lua, 1 );
 			if ( false == lua_istable(lua, TOP_IDX) )
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+innerTableName, scriptPathNName );
 			}
 			else
@@ -167,7 +159,7 @@ void scene::inPlay::GameOver::loadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -180,10 +172,7 @@ void scene::inPlay::GameOver::loadResources( )
 
 	if ( false == mTexture.loadFromFile(imagePathNName) )
 	{
-		gService( )->console( ).printFailure( FailureLevel::FATAL, "File Not Found: "+imagePathNName );
-#ifdef _DEBUG
-		__debugbreak( );
-#endif
+		gService()->console().printFailure( FailureLevel::FATAL, "File Not Found: "+imagePathNName );
 	}
 
 	mSprite.setTexture( mTexture );
@@ -200,9 +189,9 @@ void scene::inPlay::GameOver::loadResources( )
 	if ( mFade <= TARGET_ALPHA )
 	{
 		// Frame counting starts.
-		++mFrameCount;
+		++mFrameCountToMainMenu;
 		// 3 seconds after,
-		if ( 3*mFPS_ == mFrameCount )
+		if ( 3*mFPS_ == mFrameCountToMainMenu )
 		{
 			retVal = ::scene::inPlay::ID::EXIT;
 		}
@@ -216,7 +205,7 @@ void scene::inPlay::GameOver::draw( )
 	// Cyan
 	if ( TARGET_ALPHA < mFade )
 	{
-		const uint32_t BACKGROUND_RGB = 0x29cdb500u;
+		const uint32_t BACKGROUND_RGB = 0x29cdb500;
 		mFade -= 2u;
 		mBackgroundRect_.setFillColor( sf::Color(BACKGROUND_RGB | mFade) );
 		mWindow_.draw( mBackgroundRect_ );

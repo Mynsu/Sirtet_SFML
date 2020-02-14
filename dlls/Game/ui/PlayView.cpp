@@ -1,12 +1,12 @@
 #include "../pch.h"
 #include "PlayView.h"
+#include <Lib/VaultKeyList.h>
 #include "../scene/online/Online.h"
 #include "../ServiceLocatorMirror.h"
-#include "../VaultKeyList.h"
 
 const uint8_t FALLING_DOWN_SPEED = 3;
-const uint32_t INPUT_DELAY_MS = 40;
-const uint32_t ASYNC_TOLERANCE_MS = 2500;
+const uint16_t INPUT_DELAY_MS = 40;
+const uint16_t ASYNC_TOLERANCE_MS = 2500;
 std::string ui::PlayView::AudioList[(int)AudioIndex::NONE_MAX];
 
 void ui::PlayView::LoadResources( )
@@ -19,7 +19,7 @@ void ui::PlayView::LoadResources( )
 	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
 	{
 		// File Not Found Exception
-		gService( )->console( ).printFailure( FailureLevel::FATAL,
+		gService()->console().printFailure( FailureLevel::FATAL,
 											 "File Not Found: "+scriptPathNName );
 	}
 	else
@@ -31,7 +31,7 @@ void ui::PlayView::LoadResources( )
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
 		}
 		else
 		{
@@ -40,7 +40,7 @@ void ui::PlayView::LoadResources( )
 			lua_gettable( lua, 1 );
 			if ( false == lua_istable(lua, TOP_IDX) )
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+innerTableName, scriptPathNName );
 			}
 			else
@@ -60,7 +60,7 @@ void ui::PlayView::LoadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -72,7 +72,7 @@ void ui::PlayView::LoadResources( )
 			lua_gettable( lua, 1 );
 			if ( false == lua_istable(lua, TOP_IDX) )
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+innerTableName, scriptPathNName );
 			}
 			else
@@ -92,7 +92,7 @@ void ui::PlayView::LoadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -107,7 +107,7 @@ ui::PlayView::PlayView( sf::RenderWindow& window, ::scene::online::Online& net, 
 	: mHasTetriminoLandedOnClient( false ), mHasTetriminoLandedOnServer( false ),
 	mIsForThisPlayer( isPlayable ), mHasCurrentTetrimino( false ),
 	mCountDownSec( 3 ), mNumOfLinesCleared( 0 ),
-	mFrameCount_input( 0 ), mFrameCount_clearingVFX( 0 ),
+	mFrameCountInputDelay( 0 ), mFrameCountVfxDuration( 0 ),
 	mTempoMs( 1000 ),
 	mState_( PlayView::State::WAITING_OR_OVER ),
 	mWindow_( window ), mNet( net ),
@@ -122,7 +122,7 @@ ui::PlayView::PlayView( const PlayView& another )
 	: mHasTetriminoLandedOnClient( false ), mHasTetriminoLandedOnServer( false ),
 	mIsForThisPlayer( another.mIsForThisPlayer ), mHasCurrentTetrimino( false ),
 	mCountDownSec( 0 ), mNumOfLinesCleared( 0 ),
-	mFrameCount_input( 0 ), mFrameCount_clearingVFX( 0 ),
+	mFrameCountInputDelay( 0 ), mFrameCountVfxDuration( 0 ),
 	mTempoMs( 1000 ),
 	mState_( PlayView::State::WAITING_OR_OVER ),
 	mWindow_( another.mWindow_ ), mNet( another.mNet ),
@@ -149,6 +149,9 @@ void ui::PlayView::setCountdownSpriteDimension( const sf::Vector2f origin,
 											   const float cellSize,
 											   const sf::Vector2i clipSize )
 {
+	ASSERT_TRUE( 0.f <= origin.x && 0.f <= origin.y &&
+				0.f < cellSize &&
+				0 < clipSize.x && 0 < clipSize.y );
 	mSprite_countdown.setOrigin( sf::Vector2f(clipSize)*.5f );
 	const sf::Vector2f panelSize( ::model::stage::GRID_WIDTH*cellSize, ::model::stage::GRID_HEIGHT*cellSize );
 	mSprite_countdown.setPosition( origin + panelSize*.5f );
@@ -159,7 +162,7 @@ void ui::PlayView::setCountdownSpriteDimension( const sf::Vector2f origin,
 	countdownSpriteSize_ = clipSize;
 }
 
-void ui::PlayView::getReady()
+void ui::PlayView::getReady( )
 {
 	mHasTetriminoLandedOnClient = mHasTetriminoLandedOnServer = false;
 	mHasCurrentTetrimino = false;
@@ -186,9 +189,9 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
 
 	if ( true == mNet.hasReceived() )
 	{
-		if ( std::optional<std::string> nextTet( mNet.getByTag(TAG_MY_NEXT_TETRIMINO,
-															   ::scene::online::Online::Option::DEFAULT,
-																   sizeof(uint8_t)) );
+		if ( const std::optional<std::string> nextTet( mNet.getByTag(TAG_MY_NEXT_TETRIMINO,
+																	 ::scene::online::Online::Option::DEFAULT,
+																	 sizeof(uint8_t)) );
 			std::nullopt != nextTet	)
 		{
 			const ::model::tetrimino::Type type =
@@ -200,13 +203,13 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
 			}
 		}
 
-		if ( std::optional<std::string> tempoMs( mNet.getByTag(TAG_MY_TEMPO_MS,
-																 ::scene::online::Online::Option::DEFAULT,
-															   sizeof(uint32_t)) );
+		if ( const std::optional<std::string> tempoMs( mNet.getByTag(TAG_MY_TEMPO_MS,
+																	::scene::online::Online::Option::DEFAULT,
+																  sizeof(uint16_t)) );
 			std::nullopt != tempoMs )
 		{
-			const uint32_t tempo = *(uint32_t*)tempoMs.value().data();
-			mTempoMs = ::ntohl(tempo);
+			const uint16_t tempo = *(uint16_t*)tempoMs.value().data();
+			mTempoMs = ::ntohs(tempo);
 		}
 	}
 
@@ -226,51 +229,28 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
 	Packet packet;
 	if ( false == mHasTetriminoLandedOnClient )
 	{
-		auto& vault = gService()->vault();
-		if ( const auto it = vault.find(HK_HAS_GAINED_FOCUS);
-			vault.end() != it )
 		{
+			auto& vault = gService()->vault();
+			const auto it = vault.find(HK_HAS_GAINED_FOCUS);
+			ASSERT_TRUE( vault.end() != it );
 			if ( 1 == it->second )
 			{
-				if ( const auto it2 = vault.find(HK_FORE_FPS);
-					vault.end() != it2 )
-				{
-					mFPS_ = it2->second;
-				}
-#ifdef _DEBUG
-				else
-				{
-					__debugbreak( );
-				}
-#endif
+				const auto it2 = vault.find(HK_FORE_FPS);
+				ASSERT_TRUE( vault.end() != it2 );
+				mFPS_ = it2->second;
 			}
 			else
 			{
-				if ( const auto it2 = vault.find(HK_BACK_FPS);
-					vault.end() != it2 )
-				{
-					mFPS_ = it2->second;
-				}
-#ifdef _DEBUG
-				else
-				{
-					__debugbreak( );
-				}
-#endif
+				const auto it2 = vault.find(HK_BACK_FPS);
+				ASSERT_TRUE( vault.end() != it2 );
+				mFPS_ = it2->second;
 			}
 		}
-#ifdef _DEBUG
-		else
-		{
-			__debugbreak( );
-		}
-#endif
 		
 		if ( true == mCurrentTetrimino.isFallingDown() )
 		{
 			for ( uint8_t i = 0; FALLING_DOWN_SPEED != i; ++i )
 			{
-				//TODO: 시간이 많이 지난 만큼 더 이동할까?
 				mHasTetriminoLandedOnClient = mCurrentTetrimino.moveDown(mStage.cgrid());
 				if ( true == mHasTetriminoLandedOnClient )
 				{
@@ -284,7 +264,7 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
 		}
 		else
 		{
-			const uint32_t inputDelayFPS = mFPS_ * INPUT_DELAY_MS / 1000;
+			const uint16_t inputDelayFPS = mFPS_ * INPUT_DELAY_MS / 1000;
 			for ( auto it = eventQueue.cbegin(); eventQueue.cend() != it; )
 			{
 				if ( sf::Event::KeyPressed == it->type )
@@ -292,9 +272,9 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
 					switch ( it->key.code )
 					{
 						case sf::Keyboard::Space:
-							if ( inputDelayFPS < mFrameCount_input )
+							if ( inputDelayFPS < mFrameCountInputDelay )
 							{
-								mFrameCount_input = 0;
+								mFrameCountInputDelay = 0;
 								if ( false == mHasTetriminoLandedOnServer )
 								{
 									packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::FALL_DOWN );
@@ -302,12 +282,12 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
 								mCurrentTetrimino.fallDown( );
 								resetAlarm( AlarmIndex::TETRIMINO_DOWN );
 							}
-							it = eventQueue.erase( it );
+							it = eventQueue.erase(it);
 							break;
 						case sf::Keyboard::Down:
-							if ( inputDelayFPS < mFrameCount_input )
+							if ( inputDelayFPS < mFrameCountInputDelay )
 							{
-								mFrameCount_input = 0;
+								mFrameCountInputDelay = 0;
 								if ( false == mHasTetriminoLandedOnServer )
 								{
 									packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::DOWN );
@@ -320,45 +300,45 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
 								}
 								resetAlarm( AlarmIndex::TETRIMINO_DOWN );
 							}
-							it = eventQueue.erase( it );
+							it = eventQueue.erase(it);
 							break;
 						case sf::Keyboard::Left:
-							if ( inputDelayFPS < mFrameCount_input )
+							if ( inputDelayFPS < mFrameCountInputDelay )
 							{
-								mFrameCount_input = 0;
+								mFrameCountInputDelay = 0;
 								if ( false == mHasTetriminoLandedOnServer )
 								{
 									packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::LEFT );
 									mCurrentTetrimino.tryMoveLeft( mStage.cgrid() );
 								}
 							}
-							it = eventQueue.erase( it );
+							it = eventQueue.erase(it);
 							break;
 						case sf::Keyboard::Right:
-							if ( inputDelayFPS < mFrameCount_input )
+							if ( inputDelayFPS < mFrameCountInputDelay )
 							{
-								mFrameCount_input = 0;
+								mFrameCountInputDelay = 0;
 								if ( false == mHasTetriminoLandedOnServer )
 								{
 									packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::RIGHT );
 									mCurrentTetrimino.tryMoveRight( mStage.cgrid() );
 								}
 							}
-							it = eventQueue.erase( it );
+							it = eventQueue.erase(it);
 							break;
 						case sf::Keyboard::LShift:
 							[[ fallthrough ]];
 						case sf::Keyboard::Up:
-							if ( inputDelayFPS < mFrameCount_input )
+							if ( inputDelayFPS < mFrameCountInputDelay )
 							{
-								mFrameCount_input = 0;
+								mFrameCountInputDelay = 0;
 								if ( false == mHasTetriminoLandedOnServer )
 								{
 									packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::ROTATE );
 									mCurrentTetrimino.tryRotate( mStage.cgrid() );
 								}
 							}
-							it = eventQueue.erase( it );
+							it = eventQueue.erase(it);
 							break;
 						default:
 							++it;
@@ -374,7 +354,6 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
 			if ( false == mHasTetriminoLandedOnClient &&
 				true == alarmAfter(mTempoMs, AlarmIndex::TETRIMINO_DOWN) )
 			{
-				//TODO: 시간이 많이 지난 만큼 더 이동할까?
 				mHasTetriminoLandedOnClient = mCurrentTetrimino.moveDown( mStage.cgrid() );
 				if ( true == mHasTetriminoLandedOnClient )
 				{
@@ -446,22 +425,23 @@ void ui::PlayView::updateStage( const::model::stage::Grid& grid )
 
 void ui::PlayView::setNumOfLinesCleared( const uint8_t numOfLinesCleared )
 {
+	ASSERT_TRUE( numOfLinesCleared <= ::model::tetrimino::BLOCKS_A_TETRIMINO );
 	mNumOfLinesCleared = numOfLinesCleared;
 	if ( false == gService()->audio().playSFX(AudioList[(int)AudioIndex::LINE_CLEARED]) )
 	{
 		gService()->console().printFailure(FailureLevel::WARNING,
 										   "File Not Found: "+AudioList[(int)AudioIndex::LINE_CLEARED] );
 	}
-	mFrameCount_clearingVFX = mFPS_;
+	mFrameCountVfxDuration = mFPS_;
 }
 
-void ui::PlayView::gameOver()
+void ui::PlayView::gameOver( )
 {
 	mState_ = PlayView::State::WAITING_OR_OVER;
 	mNextTetriminoPanel.clearTetrimino( );
 }
 
-void ui::PlayView::draw()
+void ui::PlayView::draw( )
 {
 	mStage.draw( );
 	if ( true == mIsForThisPlayer )
@@ -473,12 +453,12 @@ void ui::PlayView::draw()
 		mCurrentTetrimino.draw( mWindow_ );
 		if ( true == mIsForThisPlayer )
 		{
-			if ( 0 < mFrameCount_clearingVFX )
+			if ( 0 < mFrameCountVfxDuration )
 			{
 				mVfxCombo.draw( mNumOfLinesCleared );
-				--mFrameCount_clearingVFX;
+				--mFrameCountVfxDuration;
 			}
-			++mFrameCount_input;
+			++mFrameCountInputDelay;
 		}
 	}
 	else if ( PlayView::State::ON_START == mState_ )
@@ -497,22 +477,22 @@ void ui::PlayView::draw()
 	}
 }
 
-::model::Tetrimino& ui::PlayView::currentTetrimino()
+::model::Tetrimino& ui::PlayView::currentTetrimino( )
 {
 	return mCurrentTetrimino;
 }
 
-::model::Stage& ui::PlayView::stage()
+::model::Stage& ui::PlayView::stage( )
 {
 	return mStage;
 }
 
-::vfx::Combo& ui::PlayView::vfxCombo()
+::vfx::Combo& ui::PlayView::vfxCombo( )
 {
 	return mVfxCombo;
 }
 
-::ui::NextTetriminoPanel& ui::PlayView::nextTetriminoPanel()
+::ui::NextTetriminoPanel& ui::PlayView::nextTetriminoPanel( )
 {
 	return mNextTetriminoPanel;
 }

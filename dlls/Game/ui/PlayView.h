@@ -44,7 +44,7 @@ namespace ui
 		};
 		static void LoadResources( );
 		// This function doesn't reset the alarm.
-		bool alarmAfter( const uint32_t milliseconds, const AlarmIndex index )
+		bool alarmAfter( const uint16_t milliseconds, const AlarmIndex index )
 		{
 			bool elapsed = false;
 			if ( std::chrono::milliseconds(milliseconds) < Clock::now()-mAlarms[(int)index] )
@@ -60,8 +60,8 @@ namespace ui
 		bool mHasTetriminoLandedOnClient, mHasTetriminoLandedOnServer,
 			mIsForThisPlayer, mHasCurrentTetrimino;
 		uint8_t mCountDownSec, mNumOfLinesCleared;
-		uint32_t mFrameCount_input, mFrameCount_clearingVFX, mFPS_;
-		uint32_t mTempoMs;
+		uint16_t mFrameCountInputDelay, mFrameCountVfxDuration, mFPS_,
+				mTempoMs;
 		enum class State
 		{
 			ON_START,

@@ -31,7 +31,8 @@ namespace scene::online
 		static bool IsInstantiated;
 		struct
 		{
-			uint32_t nicknameFontSize, nicknameColor;
+			uint16_t nicknameFontSize;
+			uint32_t nicknameColor;
 			float totalDistanceUsersBoxToRoom, remainingDistanceUsersBoxToRoom,
 				usersBoxAnimationSpeed,
 				usersBoxOutlineThickness, roomOutlineThickness;
@@ -45,8 +46,8 @@ namespace scene::online
 		} mDrawingInfo;
 		bool mIsReceiving, mHasJoined, mIsLoading;
 		int8_t mEnteringRoom;
-		uint8_t mGuideTextIndex;
-		uint32_t mFrameCount_update, mFrameCount_requestDelay;
+		uint8_t mIndexForGuideText;
+		uint16_t mFrameCountUserListUpdateInterval, mFrameCountRequestDelay;
 		sf::RenderWindow& mWindow_;
 		::scene::online::Online& mNet;
 		MouseEvent mLatestMouseEvent;
@@ -56,7 +57,7 @@ namespace scene::online
 		// NOTE: std::pair<sf::Text, target point to move>.
 		std::unordered_map< std::string, std::pair<sf::Text, uint8_t> > mUserList;
 		sf::Font mFont;
-		sf::Text mGuideTextLabel;
+		sf::Text mTextLabelForGuide;
 		sf::RectangleShape mBackground;
 		sf::RectangleShape mUsersBox;
 	};

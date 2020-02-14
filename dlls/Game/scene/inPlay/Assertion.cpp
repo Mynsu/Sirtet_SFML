@@ -1,26 +1,24 @@
 #include "../../pch.h"
 #include "Assertion.h"
+#include <Lib/VaultKeyList.h>
 #include "../../ServiceLocatorMirror.h"
-#include "../VaultKeyList.h"
 
 scene::inPlay::Assertion::Assertion( sf::RenderWindow& window )
-	: mFrameCount( 0 ), mFPS_( 60 ), mWindow_( window )
+	: mFrameCountToCancel( 0 ), mFPS_( 60 ), mWindow_( window )
 {
 	auto& vault = gService()->vault();
-	if ( const auto it = vault.find(HK_FORE_FPS);
-		vault.cend() != it )
-	{
-		mFPS_ = (uint32_t)it->second;
-	}
+	const auto it = vault.find(HK_FORE_FPS);
+	ASSERT_TRUE( vault.end() != it );
+	mFPS_ = (uint16_t)it->second;
 	mBackground.setSize( sf::Vector2f(window.getSize()) );
-	mGuideTextLabel.setString( "Press ESC to quit." );
+	mTextLabelForGuide.setString( "Press ESC to quit." );
 	loadResources( );
 }
 
 void scene::inPlay::Assertion::loadResources( )
 {
+	uint16_t fontSize = 50;
 	uint32_t backgroundColor = 0x0000007f;
-	uint32_t fontSize = 50;
 	uint32_t fontColor = 0x000000'af;
 	std::string fontPathNName( "Fonts/AGENCYR.ttf" );
 	mAudioList[(int)AudioIndex::ON_SELECTION] = "Audio/selection.wav";
@@ -89,7 +87,7 @@ void scene::inPlay::Assertion::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				fontSize = (uint32_t)lua_tointeger(lua, TOP_IDX);
+				fontSize = (uint16_t)lua_tointeger(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -129,7 +127,7 @@ void scene::inPlay::Assertion::loadResources( )
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
 		}
 		else
 		{
@@ -138,7 +136,7 @@ void scene::inPlay::Assertion::loadResources( )
 			lua_gettable( lua, 1 );
 			if ( false == lua_istable(lua, TOP_IDX) )
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+innerTableName, scriptPathNName );
 			}
 			else
@@ -158,7 +156,7 @@ void scene::inPlay::Assertion::loadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -174,20 +172,20 @@ void scene::inPlay::Assertion::loadResources( )
 	{
 		gService()->console().printFailure( FailureLevel::FATAL, "File Not Found: "+fontPathNName );
 	}
-	mGuideTextLabel.setCharacterSize( fontSize );
-	mGuideTextLabel.setFillColor( sf::Color(fontColor) );
-	mGuideTextLabel.setFont( mFont );
-	const sf::FloatRect bound( mGuideTextLabel.getLocalBounds() );
+	mTextLabelForGuide.setCharacterSize( fontSize );
+	mTextLabelForGuide.setFillColor( sf::Color(fontColor) );
+	mTextLabelForGuide.setFont( mFont );
+	const sf::FloatRect bound( mTextLabelForGuide.getLocalBounds() );
 	const sf::Vector2f size( bound.width, bound.height );
-	mGuideTextLabel.setOrigin( size*0.5f );
-	mGuideTextLabel.setPosition( sf::Vector2f(mWindow_.getSize())*0.5f );
+	mTextLabelForGuide.setOrigin( size*0.5f );
+	mTextLabelForGuide.setPosition( sf::Vector2f(mWindow_.getSize())*0.5f );
 }
 
 ::scene::inPlay::ID scene::inPlay::Assertion::update( std::vector<sf::Event>& eventQueue )
 {
 	::scene::inPlay::ID retVal = ::scene::inPlay::ID::AS_IS;
 	// 2 seconds after created,
-	if ( 2*mFPS_ == mFrameCount )
+	if ( 2*mFPS_ == mFrameCountToCancel )
 	{
 		retVal = ::scene::inPlay::ID::UNDO;
 	}
@@ -219,6 +217,6 @@ void scene::inPlay::Assertion::loadResources( )
 void scene::inPlay::Assertion::draw( )
 {
 	mWindow_.draw( mBackground );
-	mWindow_.draw( mGuideTextLabel );
-	++mFrameCount;
+	mWindow_.draw( mTextLabelForGuide );
+	++mFrameCountToCancel;
 }

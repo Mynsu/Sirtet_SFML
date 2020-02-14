@@ -30,12 +30,12 @@ namespace scene::online
 		// Ignore received stuff and resume reception.
 		void receive( );
 		bool hasReceived( );
-		std::optional< std::string > getByTag( const Tag tag,
-											  const Online::Option option,
-											  uint32_t bodySize ) const;
+		std::optional<std::string> getByTag( const Tag tag,
+											 const Online::Option option,
+											uint16_t bodySize ) const;
 		void setMyNickname( std::string& myNickname );
 		const std::string& myNickname( ) const;
-		HashedKey myNicknameHashed() const;
+		HashedKey myNicknameHashed( ) const;
 #ifdef _DEV
 		::scene::ID currentScene( ) const override;
 #endif
@@ -44,7 +44,7 @@ namespace scene::online
 		static bool IsInstantiated;
 		// When 0 frame counters don't increase, while 1 or more they increase.
 		// In other words, setting the value 0 to 1( or any number except 0 ) acts like a trigger.
-		uint32_t mFPS_, mFrameCount_disconnection;
+		uint16_t mFPS_, mFrameCountToMainMenu;
 		HashedKey mMyNicknameHashed_;
 		sf::Vector2f mSpriteClipSize_;
 		sf::RenderWindow& mWindow_;

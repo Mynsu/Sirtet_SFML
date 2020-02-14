@@ -1,9 +1,9 @@
 #include "../../pch.h"
 #include "Waiting.h"
 #include <Lib/Common.h>
+#include <Lib/VaultKeyList.h>
 #include "Online.h"
 #include "../../ServiceLocatorMirror.h"
-#include "../VaultKeyList.h"
 #include "../CommandList.h"
 
 bool scene::online::Waiting::IsInstantiated = false;
@@ -42,12 +42,12 @@ void scene::online::Waiting::loadResources( )
 	std::string font( "Fonts/AGENCYB.TTF" );
 	sf::Vector2f centerPos( sf::Vector2f(mWindow_.getSize())*.5f );
 	std::string label0Text( "Waiting" );
-	uint32_t label0FontSize = 16;
+	uint16_t label0FontSize = 16;
 	sf::Vector2f label0Position( centerPos.x, centerPos.y+50.f );
-	uint32_t label1FontSize = 20;
+	uint16_t label1FontSize = 20;
 	sf::Vector2f label1Position( centerPos.x-50.f, centerPos.y );
 	std::string label2Text( "before me." );
-	uint32_t label2FontSize = 16;
+	uint16_t label2FontSize = 16;
 	sf::Vector2f label2Position( centerPos.x+50.f, centerPos.y );
 	mAudioList[(int)AudioIndex::ON_SELECTION] = "Audio/selection.wav";
 
@@ -56,7 +56,7 @@ void scene::online::Waiting::loadResources( )
 	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
 	{
 		// File Not Found Exception
-		gService( )->console( ).printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
+		gService()->console().printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
 	}
 	else
 	{
@@ -77,7 +77,7 @@ void scene::online::Waiting::loadResources( )
 		}
 		else
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 													 varName, scriptPathNName );
 		}
 		lua_pop( lua, 1 );
@@ -87,7 +87,7 @@ void scene::online::Waiting::loadResources( )
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
 			// Type Check Exception
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 													 tableName, scriptPathNName );
 		}
 		else
@@ -107,7 +107,7 @@ void scene::online::Waiting::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -118,7 +118,7 @@ void scene::online::Waiting::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				label0FontSize = (uint32_t)lua_tointeger(lua, TOP_IDX);
+				label0FontSize = (uint16_t)lua_tointeger(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -127,7 +127,7 @@ void scene::online::Waiting::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -147,7 +147,7 @@ void scene::online::Waiting::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -167,7 +167,7 @@ void scene::online::Waiting::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -178,7 +178,7 @@ void scene::online::Waiting::loadResources( )
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 													 tableName, scriptPathNName );
 		}
 		else
@@ -189,7 +189,7 @@ void scene::online::Waiting::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				label1FontSize = (uint32_t)lua_tointeger(lua, TOP_IDX);
+				label1FontSize = (uint16_t)lua_tointeger(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -198,7 +198,7 @@ void scene::online::Waiting::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -218,7 +218,7 @@ void scene::online::Waiting::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -238,7 +238,7 @@ void scene::online::Waiting::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+":"+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -249,7 +249,7 @@ void scene::online::Waiting::loadResources( )
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 													 tableName, scriptPathNName );
 		}
 		else
@@ -269,7 +269,7 @@ void scene::online::Waiting::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -280,7 +280,7 @@ void scene::online::Waiting::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				label2FontSize = (uint32_t)lua_tointeger(lua, TOP_IDX);
+				label2FontSize = (uint16_t)lua_tointeger(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -289,7 +289,7 @@ void scene::online::Waiting::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 													tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -309,7 +309,7 @@ void scene::online::Waiting::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -329,7 +329,7 @@ void scene::online::Waiting::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -340,7 +340,7 @@ void scene::online::Waiting::loadResources( )
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
 		}
 		else
 		{
@@ -349,7 +349,7 @@ void scene::online::Waiting::loadResources( )
 			lua_gettable( lua, 1 );
 			if ( false == lua_istable(lua, TOP_IDX) )
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+innerTableName, scriptPathNName );
 			}
 			else
@@ -369,7 +369,7 @@ void scene::online::Waiting::loadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -407,8 +407,8 @@ void scene::online::Waiting::loadResources( )
 			if ( true == mNet.hasReceived() )
 			{
 				if ( std::optional<std::string> ticket( mNet.getByTag(TAG_TICKET,
-																	   Online::Option::RETURN_TAG_ATTACHED,
-																	   sizeof(uint32_t)) );
+																	Online::Option::RETURN_TAG_ATTACHED,
+																	sizeof(HashedKey)) );
 					 std::nullopt != ticket )
 				{
 					std::string& _ticket = ticket.value();
@@ -416,7 +416,7 @@ void scene::online::Waiting::loadResources( )
 					const char* const ptr = _ticket.data();
 
 					std::string ticketID( "ticket: "+std::to_string(::ntohl(*(HashedKey*)&ptr[std::strlen(TAG_TICKET)])) );
-					gService( )->console( ).print( ticketID, sf::Color::Green );
+					gService()->console().print( ticketID, sf::Color::Green );
 #endif
 					if ( true == mNet.connectToMainServer() )
 					{
@@ -427,19 +427,19 @@ void scene::online::Waiting::loadResources( )
 				}
 				else if ( std::optional<std::string> order( mNet.getByTag(TAG_ORDER_IN_QUEUE,
 																		 Online::Option::FIND_END_TO_BEGIN,
-																		   sizeof(uint32_t)) );
+																		   sizeof(uint16_t)) );
 						  std::nullopt != order )
 				{
-					mOrder = ::ntohl(*(uint32_t*)order.value().data());
+					mOrder = ::ntohs(*(uint16_t*)order.value().data());
 					const std::string _order( std::to_string(mOrder) );
 					mTextLabels[1].setString( _order );
 				}
 				else
 				{
-					gService( )->console( ).printFailure( FailureLevel::FATAL,
+					gService()->console().printFailure( FailureLevel::FATAL,
 														 "Unknown message from the queue server." );
 					mNet.disconnect( );
-					break;
+					return retVal;
 				}
 				mNet.receive( );
 			}
@@ -453,7 +453,7 @@ void scene::online::Waiting::loadResources( )
 					 std::nullopt != nickname )
 				{
 #ifdef _DEBUG
-					gService( )->console( ).print( nickname.value(), sf::Color::Green );
+					gService()->console().print( nickname.value(), sf::Color::Green );
 #endif
 					mNet.setMyNickname( nickname.value() );
 					retVal = ::scene::online::ID::IN_LOBBY;

@@ -6,7 +6,7 @@
 
 struct IOCPEvent
 {
-	static const uint32_t MAX_EVENTS = 1000;
+	static const uint16_t MAX_EVENTS = 1000;
 	OVERLAPPED_ENTRY events[MAX_EVENTS];
 	uint32_t eventCount;
 };
@@ -35,7 +35,7 @@ public:
 			return 0;
 		}
 	}
-	void wait( IOCPEvent& event, int timeoutMs )
+	void wait( IOCPEvent& event, const DWORD timeoutMs )
 	{
 		if ( FALSE == GetQueuedCompletionStatusEx( mhIOCP, event.events, IOCPEvent::MAX_EVENTS,
 											   (PULONG)&event.eventCount,
@@ -47,12 +47,14 @@ public:
 			{
 				event.eventCount = 0;
 			}
-#ifdef _DEBUG
 			else
 			{
+#ifdef _DEBUG
 				__debugbreak( );
-			}
+#else
+				std::cerr << "FATAL: GetQueuedCompletionStatusEx(...) returns an error.";
 #endif
+			}
 		}
 	}
 private:

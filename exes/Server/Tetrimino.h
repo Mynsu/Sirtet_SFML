@@ -13,7 +13,7 @@ namespace model
 	class Tetrimino
 	{
 	public:
-		// Needs to be initialized by Spawn( ).
+		// Needs to be initialized by Spawn().
 		Tetrimino( )
 			: mIsFallingDown( false )
 		{ }
@@ -32,7 +32,7 @@ namespace model
 		// Current blocks within their own local space.
 		LocalSpace blocks( ) const
 		{
-			return mPossibleRotations[ static_cast<int>(mRotationID) ];
+			return mPossibleRotations[(int)mRotationID];
 		}
 		::model::tetrimino::Type type( ) const
 		{
@@ -43,18 +43,18 @@ namespace model
 			return mRotationID;
 		}
 		// Returns true when colliding with the floor or another tetrimino.
-		bool moveDown( const ::model::stage::Grid& grid, const uint8_t diff = 1u )
+		bool moveDown( const ::model::stage::Grid& grid, const uint8_t diff = 1 )
 		{
 			ASSERT_TRUE( diff < ::model::stage::GRID_HEIGHT );
 			mPosition.y += diff;
-			const bool retVal = hasCollidedWith( grid );
+			const bool retVal = hasCollidedWith(grid);
 			if ( true == retVal )
 			{
 				mPosition.y -= diff;
 			}
 			return retVal;
 		}
-		void tryMoveLeft( const ::model::stage::Grid& grid, const uint8_t diff = 1u )
+		void tryMoveLeft( const ::model::stage::Grid& grid, const uint8_t diff = 1 )
 		{
 			ASSERT_TRUE( diff < ::model::stage::GRID_WIDTH );
 			Tetrimino afterMove( *this );
@@ -64,7 +64,7 @@ namespace model
 				*this = afterMove;
 			}
 		}
-		void tryMoveRight( const ::model::stage::Grid& grid, const uint8_t diff = 1u )
+		void tryMoveRight( const ::model::stage::Grid& grid, const uint8_t diff = 1 )
 		{
 			ASSERT_TRUE( diff < ::model::stage::GRID_WIDTH );
 			Tetrimino afterMove( *this );
@@ -86,11 +86,11 @@ namespace model
 		bool mIsFallingDown;
 		// X and y on global coordinate.
 		// Unit: Grid.
-		sf::Vector2< int8_t > mPosition;
+		sf::Vector2<int8_t> mPosition;
 		sf::Color mColor;
 		::model::tetrimino::Type mType;
 		::model::tetrimino::Rotation mRotationID;
-		LocalSpace mPossibleRotations[ (int)::model::tetrimino::Rotation::NONE_MAX ];
-		static sf::Vector2<int8_t> Test[ (int)::model::tetrimino::Rotation::NONE_MAX ][ 4 ];
+		LocalSpace mPossibleRotations[(int)::model::tetrimino::Rotation::NONE_MAX];
+		static sf::Vector2<int8_t> Test[(int)::model::tetrimino::Rotation::NONE_MAX][4];
 	};
 }

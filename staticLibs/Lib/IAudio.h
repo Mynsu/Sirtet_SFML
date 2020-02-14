@@ -1,3 +1,7 @@
+////
+//  Commonly used in exes/Engine, dlls/Game.
+////
+
 #pragma once
 #include <string>
 
@@ -8,8 +12,9 @@ public:
 	void operator=( const IAudio& ) = delete;
 	virtual ~IAudio( ) = default;
 
-	// 0 <= volume <= 100
+	// 0 to 100
 	virtual void setBGMVolume( const float volume ) = 0;
+	// 0 to 100
 	virtual void setSFXVolume( const float volume ) = 0;
 	virtual bool playBGM( const std::string& fileName, const bool isRepeated = false ) = 0;
 	virtual void stopBGM( ) = 0;

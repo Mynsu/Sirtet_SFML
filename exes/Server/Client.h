@@ -35,12 +35,12 @@ public:
 	RoomID roomID( ) const;
 	void setRoomID( const RoomID roomID );
 	const std::string& nickname( ) const;
-	HashedKey nicknameHashed() const;
-	Clock::time_point timeStamp() const
+	HashedKey nicknameHashed( ) const;
+	Clock::time_point timeStamp( ) const
 	{
 		return mTimeStamp[(int)TimeStampIndex::GENERAL];
 	}
-	void resetTimeStamp()
+	void resetTimeStamp( )
 	{
 		mTimeStamp[(int)TimeStampIndex::GENERAL] = Clock::now();
 	}

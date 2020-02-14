@@ -2,9 +2,9 @@
 #include "Room.h"
 #include "Client.h"
 
-const uint32_t UPDATE_USER_LIST_INTERVAL_MS = 1000;
-const uint32_t COUNTDOWN_MS = 3000;
-const int32_t TEMPO_DIFF_MS = -20;
+const uint16_t UPDATE_USER_LIST_INTERVAL_MS = 1000;
+const uint16_t COUNTDOWN_MS = 3000;
+const int16_t TEMPO_DIFF_MS = -20;
 
 Room::Room( const ClientIndex hostIndex )
 	: mHasTempoChanged_( false ), mHasHostChanged_( false ),
@@ -13,9 +13,9 @@ Room::Room( const ClientIndex hostIndex )
 	mParticipants.reserve( PARTICIPANT_CAPACITY );
 	mCandidateParticipants.emplace_back( hostIndex );
 	const Clock::time_point init = Clock::now();
-	for ( auto& it : mAlarms )
+	for ( Clock::time_point& tp : mAlarms )
 	{
-		it = init;
+		tp = init;
 	}
 }
 
@@ -34,16 +34,17 @@ int Room::leave( const ClientIndex index )
 		{
 			mCandidateParticipants.erase( it );
 			wasCandidateParticipant = true;
+#ifdef _DEBUG
+			std::cout << "Observer " << index << " left the room.\n";
+#endif
 			break;
 		}
 	}
 	if ( false == wasCandidateParticipant )
 	{
 #ifdef _DEBUG
-		if ( 1 != mParticipants.erase(index) )
-		{
-			__debugbreak( );
-		}
+		ASSERT_TRUE( 1 == mParticipants.erase(index) );
+		std::cout << "Observer " << index << " left the room.\n";
 #else
 		mParticipants.erase( index );
 #endif
@@ -148,6 +149,7 @@ std::vector<ClientIndex> Room::update( std::vector<Client>& clients )
 #else
 			__assume( 0 );
 #endif
+			break;
 	}
 	return failedIndices;
 }
@@ -190,7 +192,7 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 			break;
 		}
 		case Room::State::READY:
-			if ( true == alarmAfter(COUNTDOWN_MS, AlarmIndex::START) )
+			if ( true == alarmAfterAndReset(COUNTDOWN_MS, AlarmIndex::START) )
 			{
 				std::string tetriminos;
 				for ( const auto& pair : mParticipants )
@@ -198,7 +200,7 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 					const Playing& playing = pair.second;
 					const ::model::tetrimino::Type curTetType = playing.currentTetriminoType();
 					const ::model::tetrimino::Type nextTetType = playing.nextTetriminoType();
-					const uint32_t tempoMs = playing.tempoMs();
+					const uint16_t tempoMs = playing.tempoMs();
 					Packet packet;
 					packet.pack( TAG_MY_NEXT_TETRIMINO, (uint8_t)nextTetType );
 					packet.pack( TAG_MY_TEMPO_MS, tempoMs );
@@ -334,7 +336,7 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 				}
 				if ( true == mHasTempoChanged_ )
 				{
-					const uint32_t tempoMs = pair.second.tempoMs();
+					const uint16_t tempoMs = pair.second.tempoMs();
 					Packet packet;
 					packet.pack( TAG_MY_TEMPO_MS, tempoMs );
 					Socket& socket = clients[pair.first].socket();
@@ -398,7 +400,7 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 #endif
 			break;
 	}
-	if ( true == alarmAfter(UPDATE_USER_LIST_INTERVAL_MS, AlarmIndex::UPDATE_USER_LIST) ||
+	if ( true == alarmAfterAndReset(UPDATE_USER_LIST_INTERVAL_MS, AlarmIndex::UPDATE_USER_LIST) ||
 		true == isAllOver )
 	{
 		std::string userList;

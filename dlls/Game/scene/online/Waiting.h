@@ -26,7 +26,7 @@ namespace scene::online
 			NULL_MAX,
 		};
 		static bool IsInstantiated;
-		uint32_t mOrder;
+		uint16_t mOrder;
 		::scene::online::Waiting::State mState;
 		sf::RenderWindow& mWindow_;
 		Online& mNet;

@@ -7,7 +7,7 @@ public:
 	ServiceLocatorMirror( )
 		: mPtr( nullptr )
 	{
-		ASSERT_FALSE( IsInstantiated );
+		ASSERT_TRUE( false == IsInstantiated );
 		IsInstantiated = true;
 	}
 	ServiceLocatorMirror( const ServiceLocatorMirror& ) = delete;

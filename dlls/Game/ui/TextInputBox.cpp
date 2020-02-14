@@ -12,7 +12,7 @@ bool ui::TextInputBox::processEvent( std::vector<sf::Event>& eventQueue )
 				input > 0x1f && input < 0x7f )
 			{
 				mInputTextFieldString += (char)input;
-				mInputTextField.setString( mInputTextFieldString + '_' );
+				mTextFieldToInput.setString( mInputTextFieldString + '_' );
 			}
 			it = eventQueue.erase(it);
 		}
@@ -31,7 +31,7 @@ bool ui::TextInputBox::processEvent( std::vector<sf::Event>& eventQueue )
 					if ( false == mInputTextFieldString.empty() )
 					{
 						mInputTextFieldString.pop_back( );
-						mInputTextField.setString( mInputTextFieldString + '_' );
+						mTextFieldToInput.setString( mInputTextFieldString + '_' );
 					}
 					break;
 				default:

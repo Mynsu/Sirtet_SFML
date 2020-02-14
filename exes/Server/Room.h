@@ -35,8 +35,7 @@ private:
 		UPDATE_USER_LIST,
 		NONE_MAX,
 	};
-	// Auto reset
-	bool alarmAfter( const uint32_t milliseconds, const AlarmIndex index )
+	bool alarmAfterAndReset( const uint16_t milliseconds, const AlarmIndex index )
 	{
 		bool elapsed = false;
 		const Clock::time_point now = Clock::now();

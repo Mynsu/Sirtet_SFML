@@ -40,7 +40,6 @@
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Console.h" />
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\pch.h" />
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\ServiceLocator.h" />
-    <ClInclude Include="..\..\VaultKeyList.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Audio.cpp" />
@@ -206,6 +205,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <TargetName>$(SolutionName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UnityBuild_Debug|x64'">
     <LinkIncremental>true</LinkIncremental>

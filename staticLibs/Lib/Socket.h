@@ -31,13 +31,13 @@ struct Overlapped : public WSAOVERLAPPED
 		this->ioType = iotype;
 		index = -1;
 	}
-	explicit Overlapped( const uint32_t clientIndex )
+	explicit Overlapped( const uint16_t clientIndex )
 	{
 		ZeroMemory( this, sizeof(Overlapped) );
 		index = clientIndex;
 		ioType = IOType::ACCEPT;
 	}
-	uint32_t index;
+	uint16_t index;
 	IOType ioType;
 };
 
@@ -50,11 +50,11 @@ public:
 		UDP,
 	};
 
-	static const uint32_t RCV_BUF_SIZ = 8192;
+	static const uint16_t RCV_BUF_SIZ = 8192;
 
 	Socket( ) = delete;
 	Socket( const ::Socket::Type type );
-	// !IMPORTANT: DO NOT USE!  Defined to use std::vector.
+	// !IMPORTANT: DO NOT USE!  std::vector requires c'tor.
 	Socket( const Socket& )
 	{
 #ifdef _DEBUG
@@ -65,12 +65,12 @@ public:
 	// Returns SOCKET_ERROR when failed.
 	int bind( const EndPoint& selfEndPoint );
 	// Returns SOCKET_ERROR when failed.
-	int listen( const uint32_t backlogSize )
+	int listen( const uint16_t backlogSize )
 	{
 		return ::listen( mhSocket, backlogSize );
 	}
 	// Returns FALSE when failed.
-	int acceptOverlapped( Socket& candidateClientSocket, const uint32_t candidateClientIndex );
+	int acceptOverlapped( Socket& candidateClientSocket, const uint16_t candidateClientIndex );
 	// Returns SOCKET_ERROR when failed.
 	int updateAcceptContext( Socket& listener );
 	// Returns SOCKET_ERROR when failed.
@@ -102,7 +102,7 @@ public:
 	}
 	// Returns which IO has been completed.
 	// If acceptance has been completed, this returns the index or key of the socket.
-	uint32_t completedIO( LPOVERLAPPED const lpOverlapped, const DWORD cbTransferred );
+	uint16_t completedIO( LPOVERLAPPED const lpOverlapped, const DWORD cbTransferred );
 	char* const receivingBuffer( )
 	{
 		return mReceivingBuffer;
@@ -117,7 +117,7 @@ private:
 	static LPFN_DISCONNECTEX DisconnectEx;
 	static LPFN_GETACCEPTEXSOCKADDRS GetAcceptExSockAddrs;
 	bool mIsReceiving_;
-	uint32_t mRecentlyReceivedSize_;
+	uint16_t mRecentlyReceivedSize_;
 	SOCKET_HANDLE mhSocket;
 	struct AddressBuffer
 	{
@@ -132,5 +132,5 @@ private:
 	SOCKADDR_IN* mpRemoteSockAddr;
 	std::forward_list<Overlapped> mOverlappedStructs;
 	std::string mExtraReceivingBuffer;
-	char mReceivingBuffer[ RCV_BUF_SIZ ];
+	char mReceivingBuffer[RCV_BUF_SIZ];
 };

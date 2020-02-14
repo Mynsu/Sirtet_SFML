@@ -22,7 +22,7 @@ namespace scene
 		// Time Unit: Seconds.
 		const uint8_t mDuration;
 		uint8_t mAlpha_;
-		uint32_t mFPS_, mFrameCount;
+		uint16_t mFPS_, mFrameCountToStart;
 		sf::RenderWindow& mWindow_;
 		::scene::ID mNextScene_;
 		sf::Texture mTexture;

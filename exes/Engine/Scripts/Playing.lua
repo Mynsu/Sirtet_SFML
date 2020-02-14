@@ -1,4 +1,5 @@
 BackgroundColor = 0x29cdb5fa --CYAN
+BlackOutColor = 0x808080ff --GRAY
 PlayerPanel = { x = 130, y = 0, cellSize = 30,
 				color = 0x1f1f1fff,
 				outlineThickness = 11, outlineColor = 0x3f3f3f7f,

@@ -2,11 +2,11 @@
 #include "Client.h"
 #include "Room.h"
 
-#define NULL_HASHED_KEY 0
-#define NULL_ROOM_ID -1
+const uint8_t NULL_HASHED_KEY = 0;
+const uint8_t NULL_ROOM_ID = -1;
 const Clock::duration MIN_REQ_GAP = std::chrono::milliseconds(100);
 const Clock::duration MIN_MOVE_GAP = std::chrono::milliseconds(40);
-const Clock::duration MIN_LAND_GAP = std::chrono::milliseconds(200);
+const Clock::duration MIN_LAND_GAP = std::chrono::milliseconds(100);
 
 Client::Client( const Socket::Type type, const ClientIndex index )
 	: mIndex( index ), mState( State::UNVERIFIED ),
@@ -20,13 +20,7 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 									 std::vector<ClientIndex>& lobby,
 									 std::unordered_map<HashedKey, Room>& rooms )
 {
-#ifdef _DEBUG
-	if ( IOType::RECEIVE != completedIOType && 
-		IOType::SEND != completedIOType	)
-	{
-		__debugbreak( );
-	}
-#endif
+	ASSERT_TRUE ( IOType::RECEIVE == completedIOType || IOType::SEND == completedIOType	);
 	std::vector<ClientIndex> failedIndices;
 	const char* const rcvBuf = mSocket.receivingBuffer();
 	const Clock::time_point now = Clock::now();
@@ -95,9 +89,6 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 								}
 							}
 							mState = Client::State::WAITING_IN_ROOM;
-							////
-							// Generating random room ID
-							////
 							std::random_device rd;
 							std::minstd_rand re( rd() );
 							RoomID roomID = NULL_ROOM_ID;
@@ -106,7 +97,6 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 							{
 								roomID = (RoomID)re();
 							}
-							////
 							mRoomID = roomID;
 							rooms.emplace( roomID, mIndex );
 							std::string response( TAGGED_REQ_CREATE_ROOM );
@@ -130,10 +120,10 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 								return failedIndices;
 							}
 							mTimeStamp[(int)TimeStampIndex::GENERAL] = now;
-							const uint32_t size	= ::ntohl(
-								*(uint32_t*)&rcvBuf[TAGGED_REQ_JOIN_ROOM_LEN]);
+							const uint16_t size	= ::ntohs(
+								*(uint16_t*)&rcvBuf[TAGGED_REQ_JOIN_ROOM_LEN]);
 							const std::string targetNickname(
-								&rcvBuf[TAGGED_REQ_JOIN_ROOM_LEN+sizeof(uint32_t)], size );
+								&rcvBuf[TAGGED_REQ_JOIN_ROOM_LEN+sizeof(uint16_t)], size );
 							ResultJoiningRoom res = ResultJoiningRoom::NONE;
 							if ( targetNickname == mNickname )
 							{
@@ -141,54 +131,39 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 							}
 							else
 							{
-								auto cit = clients.cbegin();
-								while ( clients.cend() != cit )
+								auto clientIt = clients.cbegin();
+								while ( clients.cend() != clientIt )
 								{
-									if ( targetNickname == cit->nickname() )
+									if ( targetNickname == clientIt->nickname() )
 									{
-										const RoomID roomID = cit->roomID();
-										if ( auto rit = rooms.find(roomID);
-											rit != rooms.end() )
+										const RoomID roomID = clientIt->roomID();
+										auto roomIt = rooms.find(roomID);
+										ASSERT_TRUE( roomIt != rooms.end() );
+										res = (ResultJoiningRoom)roomIt->
+											second.tryAccept(mIndex);
+										if ( ResultJoiningRoom::SUCCCEDED == res )
 										{
-											res = (ResultJoiningRoom)rit->
-												second.tryAccept(mIndex);
-											if ( ResultJoiningRoom::SUCCCEDED == res )
+											for ( auto it = lobby.cbegin();
+													lobby.cend() != it; ++it )
 											{
-												for ( auto it = lobby.cbegin();
-													 lobby.cend() != it; ++it )
+												if ( mIndex == *it )
 												{
-													if ( mIndex == *it )
-													{
-														lobby.erase( it );
-														break;
-													}
+													lobby.erase( it );
+													break;
 												}
-												mState = Client::State::WAITING_IN_ROOM;
-												mRoomID = roomID;
 											}
+											mState = Client::State::WAITING_IN_ROOM;
+											mRoomID = roomID;
 										}
-#ifdef _DEBUG
-										// Failure
-										else
-										{
-											__debugbreak( );
-										}
-#endif
 										break;
 									}
-									++cit;
+									++clientIt;
 								}
-								if ( clients.cend() == cit )
+								if ( clients.cend() == clientIt )
 								{
 									res = ResultJoiningRoom::FAILED_DUE_TO_TARGET_NOT_CONNECTING;
 								}
-#ifdef _DEBUG
-								// Failure
-								else if ( ResultJoiningRoom::NONE == res )
-								{
-									__debugbreak( );
-								}
-#endif
+								ASSERT_TRUE( ResultJoiningRoom::NONE != res );
 							}
 							Packet packet;
 							packet.pack( TAGGED_REQ_JOIN_ROOM, (uint8_t)res );
@@ -251,60 +226,47 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 					switch ( req )
 					{
 						case Request::START_GAME:
-							if ( auto it = rooms.find(mRoomID);
-								rooms.end() != it &&
-								it->second.hostIndex() == mIndex )
-							{
+						{
+							auto it = rooms.find(mRoomID);
+							ASSERT_TRUE( rooms.end() != it && it->second.hostIndex() == mIndex );
 #ifdef _DEBUG
-								std::cout << "Client "
+							std::cout << "Client "
 									<< mIndex << " starts the game.\n";
 #endif
-								it->second.start( );
-							}
-#ifdef _DEBUG
-							else
-							{
-								__debugbreak( );
-							}
-#endif
+							it->second.start( );
 							break;
+						}
 						case Request::LEAVE_ROOM:
-							if ( auto it = rooms.find(mRoomID);
-								it != rooms.end() )
+						{
+							auto it = rooms.find(mRoomID);
+							ASSERT_TRUE( rooms.end() != it );
+							mRoomID = NULL_ROOM_ID;
+							mState = State::IN_LOBBY;
+#ifdef _DEBUG
+							std::cout << "Client "
+								<< mIndex << " leaved Room " << it->first << ".\n";
+#endif
+							if ( 0 == it->second.leave(mIndex) )
 							{
-								mRoomID = -1;
-								mState = State::IN_LOBBY;
 #ifdef _DEBUG
-								std::cout << "Client "
-									<< mIndex << " leaved Room " << it->first << ".\n";
+								std::cout << "Room "
+									<< it->first << " has been destructed.\n";
 #endif
-								if ( 0 == it->second.leave(mIndex) )
-								{
-#ifdef _DEBUG
-									std::cout << "Room "
-										<< it->first << " has been destructed.\n";
-#endif
-									rooms.erase( it );
-								}
-								lobby.emplace_back( mIndex );
-								Packet packet;
-								const uint8_t ignored = 1;
-								packet.pack(TAGGED_REQ_LEAVE_ROOM, ignored );
-								if ( -1 == mSocket.sendOverlapped(packet) )
-								{
-									std::cerr << "Failed to tell Client " <<
-										mIndex << " leaved the room.\n";
-									failedIndices.emplace_back( mIndex );
-									return failedIndices;
-								}
+								rooms.erase( it );
 							}
-#ifdef _DEBUG
-							else
+							lobby.emplace_back( mIndex );
+							Packet packet;
+							const uint8_t ignored = 1;
+							packet.pack(TAGGED_REQ_LEAVE_ROOM, ignored );
+							if ( -1 == mSocket.sendOverlapped(packet) )
 							{
-								__debugbreak( );
+								std::cerr << "Failed to tell Client " <<
+									mIndex << " leaved the room.\n";
+								failedIndices.emplace_back( mIndex );
+								return failedIndices;
 							}
-#endif
 							break;
+						}
 						// Exception
 						default:
 							std::cerr << "WARNING: Client "
@@ -349,42 +311,36 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 					switch ( req )
 					{
 						case Request::LEAVE_ROOM:
-							if ( auto it = rooms.find(mRoomID);
-								it != rooms.end() )
+						{
+							auto it = rooms.find(mRoomID);
+							ASSERT_TRUE( rooms.end() != it );
+							mRoomID = NULL_ROOM_ID;
+							mState = State::IN_LOBBY;
+#ifdef _DEBUG
+							std::cout << "Client "
+								<< mIndex << " leaved Room " << it->first << ".\n";
+#endif
+							if ( 0 == it->second.leave(mIndex) )
 							{
-								mRoomID = -1;
-								mState = State::IN_LOBBY;
 #ifdef _DEBUG
-								std::cout << "Client "
-									<< mIndex << " leaved Room " << it->first << ".\n";
+								std::cout << "Room "
+									<< it->first << " has been destructed.\n";
 #endif
-								if ( 0 == it->second.leave(mIndex) )
-								{
-#ifdef _DEBUG
-									std::cout << "Room "
-										<< it->first << " has been destructed.\n";
-#endif
-									rooms.erase( it );
-								}
-								lobby.emplace_back( mIndex );
-								Packet packet;
-								const uint8_t ignored = 1;
-								packet.pack(TAGGED_REQ_LEAVE_ROOM, ignored );
-								if ( -1 == mSocket.sendOverlapped(packet) )
-								{
-									std::cerr << "Failed to tell Client " <<
-										mIndex << " leaved the room.\n";
-									failedIndices.emplace_back( mIndex );
-									return failedIndices;
-								}
+								rooms.erase( it );
 							}
-#ifdef _DEBUG
-							else
+							lobby.emplace_back( mIndex );
+							Packet packet;
+							const uint8_t ignored = 1;
+							packet.pack(TAGGED_REQ_LEAVE_ROOM, ignored );
+							if ( -1 == mSocket.sendOverlapped(packet) )
 							{
-								__debugbreak( );
+								std::cerr << "Failed to tell Client " <<
+									mIndex << " leaved the room.\n";
+								failedIndices.emplace_back( mIndex );
+								return failedIndices;
 							}
-#endif
 							break;
+						}
 						// Exception
 						default:
 							std::cerr << "WARNING: Client "
@@ -415,19 +371,11 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 						hasTimeChecked = true;
 					}
 					hasException = false;
-					if ( auto it = rooms.find(mRoomID);
-						rooms.end() != it )
-					{
-						const ::model::tetrimino::Move move =
-							(::model::tetrimino::Move)rcvBuf[pos+TAG_MY_TETRIMINO_MOVE_LEN];
-						it->second.perceive( mIndex, move );
-					}
-#ifdef _DEBUG
-					else
-					{
-						__debugbreak( );
-					}
-#endif
+					auto it = rooms.find(mRoomID);
+					ASSERT_TRUE( rooms.end() != it );
+					const ::model::tetrimino::Move move =
+						(::model::tetrimino::Move)rcvBuf[pos+TAG_MY_TETRIMINO_MOVE_LEN];
+					it->second.perceive( mIndex, move );
 					++pos;
 				}
 				
@@ -443,17 +391,9 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 					}
 					mTimeStamp[(int)TimeStampIndex::TETRIMINO_LANDED] = now;
 					hasException = false;
-					if ( auto it = rooms.find(mRoomID);
-						rooms.end() != it )
-					{
-						it->second.perceive( mIndex );
-					}
-#ifdef _DEBUG
-					else
-					{
-						__debugbreak( );
-					}
-#endif
+					auto it = rooms.find(mRoomID);
+					ASSERT_TRUE( rooms.end() != it );
+					it->second.perceive( mIndex );
 				}
 
 				// Exception
@@ -484,7 +424,7 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 	return failedIndices;
 }
 
-Client::State Client::state() const
+Client::State Client::state( ) const
 {
 	return mState;
 }
@@ -504,12 +444,12 @@ void Client::setRoomID( const RoomID roomID )
 	mRoomID = roomID;
 }
 
-const std::string& Client::nickname() const
+const std::string& Client::nickname( ) const
 {
 	return mNickname;
 }
 
-HashedKey Client::nicknameHashed() const
+HashedKey Client::nicknameHashed( ) const
 {
 	return mNicknameHashed_;
 }
@@ -518,7 +458,7 @@ void Client::setNickname( std::string& nickname )
 {
 	mNickname.clear( );
 	mNickname = nickname;
-	mNicknameHashed_ = ::util::hash::Digest( nickname.data(), (uint8_t)nickname.size() );
+	mNicknameHashed_ = ::util::hash::Digest(nickname.data(), (uint8_t)nickname.size());
 }
 
 Socket& Client::socket( )

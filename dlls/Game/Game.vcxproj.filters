@@ -170,9 +170,6 @@
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\online\IScene.h">
       <Filter>헤더 파일\scene\online</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\VaultKeyList.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\online\Waiting.h">
       <Filter>헤더 파일\scene\online</Filter>
     </ClInclude>

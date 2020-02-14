@@ -19,10 +19,14 @@ namespace ui
 		}
 		void setPosition( const sf::Vector2f position )
 		{
+			const sf::Vector2f winSize( mWindow_.getSize() );
+			ASSERT_TRUE( position.x < winSize.x && position.y < winSize.y );
 			mSubWindow.setPosition( position );
 		}
 		void setSize( const sf::Vector2f size )
 		{
+			const sf::Vector2f winSize( mWindow_.getSize() );
+			ASSERT_TRUE( size.x < winSize.x && size.y < winSize.y );
 			mSubWindow.setSize( size );
 		}
 		void setColor( const sf::Color color )
@@ -37,29 +41,29 @@ namespace ui
 				result = false;
 				return result;
 			}
-			mTitleLabel.setFont( mFont );
-			mInputTextField.setFont( mFont );
+			mTextLabelForTitle.setFont( mFont );
+			mTextFieldToInput.setFont( mFont );
 			return result;
 		}
 		void setTitleDimension( const sf::Vector2f relativePosition, 
-							   const uint32_t fontSize )
+							   const uint16_t fontSize )
 		{
-			mTitleLabel.setPosition( mSubWindow.getPosition() + relativePosition );
-			mTitleLabel.setCharacterSize( fontSize );
+			mTextLabelForTitle.setPosition( mSubWindow.getPosition() + relativePosition );
+			mTextLabelForTitle.setCharacterSize( fontSize );
 		}
 		void setTitleColor( const sf::Color color )
 		{
-			mTitleLabel.setFillColor( color );
+			mTextLabelForTitle.setFillColor( color );
 		}
 		void setInputTextFieldDimension( const sf::Vector2f relativePosition,
-										const uint32_t fontSize )
+										const uint16_t fontSize )
 		{
-			mInputTextField.setPosition( mSubWindow.getPosition() + relativePosition );
-			mInputTextField.setCharacterSize( fontSize );
+			mTextFieldToInput.setPosition( mSubWindow.getPosition() + relativePosition );
+			mTextFieldToInput.setCharacterSize( fontSize );
 		}
 		void setInputTextFieldColor( const sf::Color color )
 		{
-			mInputTextField.setFillColor( color );
+			mTextFieldToInput.setFillColor( color );
 		}
 		bool isActive( ) const
 		{
@@ -67,9 +71,9 @@ namespace ui
 		}
 		void activate( const std::string& title )
 		{
-			mTitleLabel.setString( title );
+			mTextLabelForTitle.setString( title );
 			mInputTextFieldString.clear( );
-			mInputTextField.setString( mInputTextFieldString + '_' );
+			mTextFieldToInput.setString( mInputTextFieldString + '_' );
 			mIsActive = true;
 		}
 		void deactivate( )
@@ -85,15 +89,15 @@ namespace ui
 		{
 			mWindow_.draw( mBackground );
 			mWindow_.draw( mSubWindow );
-			mWindow_.draw( mTitleLabel );
-			mWindow_.draw( mInputTextField );
+			mWindow_.draw( mTextLabelForTitle );
+			mWindow_.draw( mTextFieldToInput );
 		}
 	private:
 		bool mIsActive;
 		sf::RenderWindow& mWindow_;
 		std::string mInputTextFieldString;
 		sf::Font mFont;
-		sf::Text mTitleLabel, mInputTextField;
+		sf::Text mTextLabelForTitle, mTextFieldToInput;
 		sf::RectangleShape mSubWindow, mBackground;
 	};
 }

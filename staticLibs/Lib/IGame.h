@@ -1,5 +1,5 @@
 ////
-// Game API
+//  Commonly used in exes/Engine, dlls/Game.
 ////
 
 #pragma once

@@ -45,8 +45,7 @@ namespace scene::online
 		void _startGame( const std::string_view& );
 		void leaveRoom( ) const;
 		void _leaveRoom( const std::string_view& );
-		// Also reset.
-		bool alarmAfter( const uint32_t milliseconds, const AlarmIndex index )
+		bool alarmAfterAndReset( const uint16_t milliseconds, const AlarmIndex index )
 		{
 			bool retVal = false;
 			if ( std::chrono::milliseconds(milliseconds) < Clock::now()-mAlarms[(int)index] )
@@ -58,9 +57,10 @@ namespace scene::online
 		}
 		struct
 		{
-			uint32_t panelColor_on, outlineColor_on, framesRotationInterval,
-				myNicknameFontSize, myNicknameColor,
-				otherPlayerNicknameFontSize, otherPlayerNicknameFontColor;
+			uint16_t framesRotationInterval,
+				myNicknameFontSize, otherPlayerNicknameFontSize;
+			uint32_t panelColor_on, outlineColor_on,
+				myNicknameColor, otherPlayerNicknameFontColor;
 			float cellSize, outlineThickness_on, angularVelocity, arcLength, scaleFactor;
 			sf::Vector2f position, positionDifferences[ROOM_CAPACITY-1];
 			sf::Vector2i countdownSpriteClipSize;
@@ -71,7 +71,7 @@ namespace scene::online
 		bool mIsReceiving, mAsHost,
 			mIsStartingGuideVisible_, mIsMouseOverStartButton_, mIsStartButtonPressed_;
 		sf::RenderWindow& mWindow_;
-		uint32_t mFrameCount_rotationInterval;
+		uint32_t mFrameCountCoolToRotateStartButton;
 		Clock::time_point mAlarms[(int)AlarmIndex::NONE_MAX];
 		Online& mNet;
 		std::unique_ptr<::scene::inPlay::IScene> mOverlappedScene;
@@ -79,7 +79,7 @@ namespace scene::online
 		HashedKey mOtherPlayerSlots[ROOM_CAPACITY-1];
 		std::string mAudioList[(int)AudioIndex::NONE_MAX];
 		sf::Font mFont;
-		sf::Text mStartingGuide, mNicknameLabel;
+		sf::Text mTextLabelForStartingGuide, mLabelForNickname;
 		std::unordered_map<HashedKey, ::scene::online::Participant> mParticipants;
 		sf::RectangleShape mBackground;
 		sf::RectangleShape mOtherPlayerSlotBackground;

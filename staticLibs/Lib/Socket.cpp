@@ -8,10 +8,6 @@
 #include "EndPoint.h"
 #include "Packet.h"
 
-////
-//
-////
-
 LPFN_ACCEPTEX Socket::AcceptEx = nullptr;
 LPFN_DISCONNECTEX Socket::DisconnectEx = nullptr;
 LPFN_GETACCEPTEXSOCKADDRS Socket::GetAcceptExSockAddrs = nullptr;
@@ -42,7 +38,7 @@ int Socket::bind( const EndPoint& selfEndPoint )
 	return result;
 }
 
-int Socket::acceptOverlapped( Socket& candidateClientSocket, const uint32_t candidateClientIndex )
+int Socket::acceptOverlapped( Socket& candidateClientSocket, const uint16_t candidateClientIndex )
 {
 	int result = FALSE;
 	if ( nullptr == AcceptEx )
@@ -208,7 +204,7 @@ int Socket::sendOverlapped( char* const data, const size_t size,
 	b.buf = data;
 	b.len = (ULONG)size;
 	Overlapped& overlapped = mOverlappedStructs.emplace_front(IOType::SEND);
-	int result = ::WSASend( mhSocket, &b, 1, NULL, 0, &overlapped, lpRoutine );
+	int result = ::WSASend(mhSocket, &b, 1, NULL, 0, &overlapped, lpRoutine);
 	const int err = WSAGetLastError();
 	if ( 0 == result ||
 		-1 == result && WSA_IO_PENDING == err ||
@@ -231,7 +227,7 @@ int Socket::sendOverlapped( Packet& packet, LPWSAOVERLAPPED_COMPLETION_ROUTINE l
 	b.buf = data.data();
 	b.len = (ULONG)data.size();
 	Overlapped& overlapped = mOverlappedStructs.emplace_front(IOType::SEND);
-	int result = ::WSASend( mhSocket, &b, 1, NULL, 0, &overlapped, lpRoutine );
+	int result = ::WSASend(mhSocket, &b, 1, NULL, 0, &overlapped, lpRoutine);
 	const int err = WSAGetLastError();
 	if ( 0 == result ||
 		-1 == result &&	WSA_IO_PENDING == err ||
@@ -276,10 +272,10 @@ void Socket::reset( const bool isSocketReusable, const Socket::Type type )
 	}
 }
 
-uint32_t Socket::completedIO( LPOVERLAPPED const lpOverlapped,
+uint16_t Socket::completedIO( LPOVERLAPPED const lpOverlapped,
 						   const DWORD cbTransferred )
 {
-	uint32_t retVal = -1;
+	uint16_t retVal = -1;
 	const Overlapped* const ptr = (Overlapped*)lpOverlapped;
 	const IOType ioType = ptr->ioType;
 	switch ( ioType )
@@ -289,10 +285,10 @@ uint32_t Socket::completedIO( LPOVERLAPPED const lpOverlapped,
 			break;
 		case IOType::RECEIVE:
 			mIsReceiving_ = false;
-			mRecentlyReceivedSize_ = cbTransferred;
+			mRecentlyReceivedSize_ = (uint16_t)cbTransferred;
 			[[ fallthrough ]];
 		default:
-			retVal = (uint32_t)ioType;
+			retVal = (uint16_t)ioType;
 			break;
 	}
 	erase( lpOverlapped );
@@ -322,6 +318,7 @@ void Socket::erase( LPOVERLAPPED const lpOverlapped )
 			__debugbreak( );
 		}
 #endif
+		// Necessary to erase something in std::forward_list.
 		auto it2 = mOverlappedStructs.cbegin();
 		while ( lpOverlapped != &*it )
 		{

@@ -33,12 +33,14 @@ namespace model
 		}
 		void setPosition( const sf::Vector2f position )
 		{
+			const sf::Vector2f winSize(mWindow_.getSize());
+			ASSERT_TRUE( position.x < winSize.x && position.y < winSize.y );
 			mPanel.setPosition( position );
 			mPosition_ = position;
 		}
 		void setSize( const float cellSize )
 		{
-			ASSERT_TRUE( 0 < cellSize );
+			ASSERT_TRUE( 0.f < cellSize );
 			mPanel.setSize( sf::Vector2f(::model::stage::GRID_WIDTH*cellSize,
 										 ::model::stage::GRID_HEIGHT*cellSize)  );
 			mCellShape.setSize( sf::Vector2f(cellSize, cellSize) );

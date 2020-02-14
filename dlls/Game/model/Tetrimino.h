@@ -25,7 +25,7 @@ namespace model
 		{
 			ASSERT_TRUE( diff < ::model::stage::GRID_HEIGHT );
 			mPosition.y += diff;
-			const bool retVal = hasCollidedWith( grid );
+			const bool retVal = hasCollidedWith(grid);
 			if ( true == retVal )
 			{
 				mPosition.y -= diff;
@@ -42,7 +42,7 @@ namespace model
 				*this = afterMove;
 			}
 		}
-		void tryMoveRight( const ::model::stage::Grid& grid, const uint8_t diff = 1u )
+		void tryMoveRight( const ::model::stage::Grid& grid, const uint8_t diff = 1 )
 		{
 			ASSERT_TRUE( diff < ::model::stage::GRID_WIDTH );
 			Tetrimino afterMove( *this );
@@ -83,14 +83,14 @@ namespace model
 		}
 		void setSize( const float blockSize )
 		{
-			ASSERT_TRUE( 0 < blockSize );
+			ASSERT_TRUE( 0.f < blockSize );
 			mBlockShape.setSize( sf::Vector2f( blockSize, blockSize ) );
 			mBlockSize_ = blockSize;
 		}
 		// Current blocks within their own local space.
 		::model::tetrimino::LocalSpace blocks( ) const
 		{
-			return mPossibleRotations[ static_cast<int>(mRotationID) ];
+			return mPossibleRotations[(int)mRotationID];
 		}
 		bool isFallingDown( ) const
 		{
@@ -106,11 +106,11 @@ namespace model
 			for ( uint8_t i = 0; i != ::model::tetrimino::LOCAL_SPACE_SIZE; ++i )
 			{
 				if ( mPossibleRotations[(int)mRotationID] &
-					(0x1u<<(::model::tetrimino::LOCAL_SPACE_SIZE-i-1u)) )
+					(0x1u<<(::model::tetrimino::LOCAL_SPACE_SIZE-i-1)) )
 				{
 					// Coordinate transformation
-					const sf::Vector2< int8_t > localPos( i%model::tetrimino::BLOCKS_A_TETRIMINO,
-														 i/model::tetrimino::BLOCKS_A_TETRIMINO );
+					const sf::Vector2<int8_t> localPos( i%model::tetrimino::BLOCKS_A_TETRIMINO,
+														i/model::tetrimino::BLOCKS_A_TETRIMINO );
 					mBlockShape.setPosition( mOrigin_ + sf::Vector2f(mPosition+localPos)*mBlockSize_ );
 					window.draw( mBlockShape );
 				}
@@ -128,8 +128,8 @@ namespace model
 		float mBlockSize_;
 		sf::Vector2f mOrigin_;
 		sf::RectangleShape mBlockShape;
-		::model::tetrimino::LocalSpace mPossibleRotations[ (int)::model::tetrimino::Rotation::NONE_MAX ];
-		static sf::Vector2<int8_t> Test[ (int)::model::tetrimino::Rotation::NONE_MAX ][ 4 ];
-		static sf::Color Colors[ (int)::model::tetrimino::Type::NONE_MAX ];
+		::model::tetrimino::LocalSpace mPossibleRotations[(int)::model::tetrimino::Rotation::NONE_MAX];
+		static sf::Vector2<int8_t> Test[(int)::model::tetrimino::Rotation::NONE_MAX][4];
+		static sf::Color Colors[(int)::model::tetrimino::Type::NONE_MAX];
 	};
 }

@@ -107,7 +107,6 @@
     <ClInclude Include="scene\online\InLobby.h" />
     <ClInclude Include="scene\online\InRoom.h" />
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\online\Waiting.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\VaultKeyList.h" />
     <ClInclude Include="scene\online\Online.h" />
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\vfx\Combo.h" />
     <ClInclude Include="model\Stage.h" />

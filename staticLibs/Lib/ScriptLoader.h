@@ -14,28 +14,25 @@ namespace util::script
 	// Load data from a .lua script file.
 	// Value type is std::variant<bool, int, float, std::string>, which you can customize.
 	// This throws std::runtime_error when failing to open the script file.
-	template < typename Value=std::variant<bool,int,float,std::string>, typename Str, typename... Strs,
-		std::enable_if_t<std::is_same_v<std::decay_t<Str>,std::string>>* = nullptr >
+	template <typename Value=std::variant<bool,int,float,std::string>, typename Str, typename... Strs,
+		std::enable_if_t<std::is_same_v<std::decay_t<Str>,std::string>>* = nullptr>
 		static const std::unordered_map<Str, Value> LoadFromScript( Str scriptPathNName, Strs... variables )
 	{
+		std::unordered_map<Str, Value> retVals;
 		lua_State* lua = luaL_newstate();
 		if ( true == luaL_dofile(lua, scriptPathNName.data()) )
 		{
 			lua_close( lua );
 #ifdef GAME_EXPORTS
-			gService( )->console( ).printFailure( FailureLevel::FATAL, "File Not Found: "+scriptPathNName );
+			gService()->console().printFailure( FailureLevel::FATAL, "File Not Found: "+scriptPathNName );
 #else
-			gService._console( ).printFailure( FailureLevel::FATAL, "File Not Found: "+scriptPathNName );
+			gService._console().printFailure( FailureLevel::FATAL, "File Not Found: "+scriptPathNName );
 #endif
-
-#ifdef _DEBUG
-			__debugbreak( );
-#endif
+			return retVals;
 		}
 		luaopen_base( lua );
 
 		Str expansion[] = { variables... };
-		std::unordered_map<Str, Value> retVals;
 		for ( const auto str : expansion )
 		{
 			const int TOP_IDX = -1;
@@ -63,16 +60,13 @@ namespace util::script
 						{
 							const std::string msg( "Overflow or underflow occurs." );
 #ifdef GAME_EXPORTS
-							gService( )->console( ).printFailure( FailureLevel::FATAL,
+							gService()->console().printFailure( FailureLevel::FATAL,
 																			msg + str + scriptPathNName );
 #else
-							gService._console( ).printFailure( FailureLevel::FATAL,
+							gService._console().printFailure( FailureLevel::FATAL,
 																	  msg + str + scriptPathNName );
 #endif
-
-#ifdef _DEBUG
-							__debugbreak( );
-#endif
+							continue;
 						}
 						retVals.emplace( str, (float)number );
 					}
@@ -90,6 +84,7 @@ namespace util::script
 #else
 					__assume( 0 );
 #endif
+					break;
 			}
 		}
 		lua_close( lua );

@@ -18,15 +18,16 @@ public:
 		mData += tag;
 		if ( true == includingTotalSize )
 		{
-			const uint32_t size = ::htonl((uint32_t)data.size());
+			const uint16_t size = ::htons((uint16_t)data.size());
 			mData.append( (char*)&size, sizeof(size) );
 		}
 		mData += data;
 		mHasSomethingToSend = true;
 	}
-	template < typename T, std::enable_if_t<std::is_integral_v<T>>* = nullptr >
+	template <typename T, std::enable_if_t<std::is_integral_v<T>>* = nullptr>
 	void pack( const Tag tag, T data )
 	{
+		static_assert( sizeof(T) <= sizeof(uint64_t) );
 		mData += tag;
 		switch ( sizeof(T) )
 		{
@@ -48,9 +49,7 @@ public:
 				break;
 			}
 			default:
-#ifdef _DEBUG
-				__debugbreak( );
-#else
+#ifndef _DEBUG
 				__assume( 0 );
 #endif
 				break;

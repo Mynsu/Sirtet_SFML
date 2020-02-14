@@ -3,10 +3,10 @@
 #include "Client.h"
 #include "Tetrimino.h"
 
-const uint32_t CLIENT_CAPACITY = 100;
-const uint32_t BACKLOG_SIZ = CLIENT_CAPACITY/2;
-const uint32_t ROOM_CAPACITY = 25;
-const uint32_t LOBBY_CAPACITY = 100;
+const uint16_t CLIENT_CAPACITY = 100;
+const uint16_t BACKLOG_SIZ = CLIENT_CAPACITY/2;
+const uint16_t ROOM_CAPACITY = 25;
+const uint16_t LOBBY_CAPACITY = 100;
 const ClientIndex LISTENER_IDX = CLIENT_CAPACITY;
 const Clock::duration TCP_TIMED_WAIT_DELAY_SEC = std::chrono::seconds(30);
 const Clock::duration TICKET_SUBMISSION_TIME_LIMIT = std::chrono::seconds(2);
@@ -20,7 +20,7 @@ void ProcessSignal( int signal )
 	}
 }
 
-int main()
+int main( )
 {
 	signal( SIGINT, &ProcessSignal );
 
@@ -32,10 +32,6 @@ int main()
 	SYSTEM_INFO sysInfo;
 	GetSystemInfo( &sysInfo );
 	IOCP iocp( 2*sysInfo.dwNumberOfProcessors + 2 );
-
-	////
-	//
-	////
 
 	Socket listener( Socket::Type::TCP );
 	{
@@ -72,16 +68,12 @@ int main()
 		}
 	}
 
-	////
-	//
-	////
-
-	uint32_t numOfAcceptancePending = 0;
+	uint16_t numOfAcceptancePending = 0;
 	std::vector<Client> clients;
 	clients.reserve( CLIENT_CAPACITY );
 	std::unordered_set<ClientIndex> clientIndicesNotAccepted;
 	clientIndicesNotAccepted.reserve( CLIENT_CAPACITY );
-	for ( uint32_t i = 0; i != CLIENT_CAPACITY; ++i )
+	for ( uint16_t i = 0; i != CLIENT_CAPACITY; ++i )
 	{
 		Client& client = clients.emplace_back(Socket::Type::TCP, i);
 		Socket& socket = client.socket();
@@ -123,18 +115,14 @@ int main()
 		}
 	}
 
-	////
-	//
-	////
-
-	uint32_t population = 0;
-	// NOTE: std::vector with cache runs faster than std::list.
+	uint16_t population = 0;
+	// NOTE: std::vector is as fast as std::forward_list and much easier in erasing something in it.
 	std::vector<ClientIndex> lobby;
 	lobby.reserve( LOBBY_CAPACITY );
 	std::unordered_map<HashedKey, Room> rooms;
 	rooms.reserve( ROOM_CAPACITY );
 	auto forceDisconnection =
-		[ &iocp, &clients, &clientIndicesNotAccepted, &population, &lobby, &rooms ]( const ClientIndex index ) -> bool
+		[&iocp, &clients, &clientIndicesNotAccepted, &population, &lobby, &rooms]( const ClientIndex index ) -> bool
 	{
 		bool result = true;
 		Client& client = clients[index];
@@ -176,8 +164,8 @@ int main()
 			<< population << "/" << CLIENT_CAPACITY << " connections.)\n";
 		return result;
 	};
-	ClientIndex queueServerIdx = -1;
-	std::cout << "###############\n### MAIN SERVER\n###############\n\nWhat would the queue server say?" << std::endl;
+	ClientIndex queueServerIdx = UINT16_MAX;
+	std::cout << "###############\n### MAIN SERVER\n###############\n\nQ. What would the queue server say?" << std::endl;
 	std::string sign;
 	std::cin >> sign;
 	const HashedKey encryptedSign = ::util::hash::Digest( sign.data(), (uint8_t)sign.size() );
@@ -188,12 +176,12 @@ int main()
 	while ( true == IsWorking )
 	{
 		iocp.wait( event, 1 );
-		for ( uint32_t i = 0; i != event.eventCount; ++i )
+		for ( uint16_t i = 0; i != event.eventCount; ++i )
 		{
 			const OVERLAPPED_ENTRY& ev = event.events[i];
-			////
-			// When event comes from listener,
-			////
+////
+// When event comes from listener,
+////
 			if ( LISTENER_IDX == (ClientIndex)ev.lpCompletionKey )
 			{
 				const ClientIndex candidateIdx = listener.completedIO(ev.lpOverlapped,
@@ -231,9 +219,9 @@ int main()
 				clients[clientIdx].resetTimeStamp();
 				connectionsNotSubmittingTicket.emplace( clientIdx );
 			}
-			////
-			// When event comes from the queue server,
-			////
+////
+// When event comes from the queue server,
+////
 			else if ( queueServerIdx == (ClientIndex)ev.lpCompletionKey )
 			{
 				if ( auto it = clientIndicesNotAccepted.find(queueServerIdx);
@@ -287,7 +275,6 @@ int main()
 					{
 						case IOType::RECEIVE:
 						{
-// TODO: getline
 							const char* const rcvBuf = socketToQueueServer.receivingBuffer();
 							const std::string_view strView( rcvBuf );
 							// When the queue server asked how many clients keep connecting,
@@ -320,7 +307,7 @@ int main()
 							}
 							else
 							{
-								uint32_t off = 0;
+								uint16_t off = 0;
 								// When having received copies of the issued ticket,
 								constexpr uint8_t TAG_TICKET_LEN = ::util::hash::Measure(TAG_TICKET);
 								while ( true )
@@ -330,7 +317,7 @@ int main()
 									{
 										break;
 									}
- 									const uint32_t beginPos = (uint32_t)tagPos + TAG_TICKET_LEN;
+ 									const uint16_t beginPos = (uint16_t)tagPos + TAG_TICKET_LEN;
 									off += sizeof(Ticket);
 									const Ticket id = ::ntohl(*(Ticket*)&rcvBuf[beginPos]);
 									tickets.emplace_back( id );
@@ -339,7 +326,6 @@ int main()
 #endif
 								}
 							}
-							//TODO: 끊임없이 받기 걸어두고 싶다.
 							if ( -1 == socketToQueueServer.receiveOverlapped() )
 							{
 								// Exception
@@ -379,9 +365,9 @@ int main()
 					}
 				}
 			}
-			////
-			// When event comes from clients,
-			////
+////
+// When event comes from clients,
+////
 			else
 			{
 				const ClientIndex clientIdx = (ClientIndex)ev.lpCompletionKey;
@@ -474,7 +460,7 @@ int main()
 							{
 								connectionsNotSubmittingTicket.erase( clientIdx );
 								tickets.erase( it );
-//TODO: 닉네임
+//TODO: DB로부터 닉네임 가져오기.
 								std::string nickname( "nickname" );
 								nickname += std::to_string( clientIdx );
 								{
@@ -508,7 +494,7 @@ int main()
 								}
 							}
 							// When the queue server connects as a client,
-							else if ( -1 == queueServerIdx &&
+							else if ( UINT16_MAX == queueServerIdx &&
 									 encryptedSign == ::ntohl(*(HashedKey*)rcvBuf) )
 							{
 								queueServerIdx = clientIdx;
@@ -551,7 +537,7 @@ int main()
 							// the sign doesn't match the one from the queue server,
 							else
 							{
-								if ( -1 == queueServerIdx )
+								if ( UINT16_MAX == queueServerIdx )
 								{
 									std::cerr << "WARNING: The sign doesn't match the one from the queue server.\n";
 								}
@@ -680,8 +666,8 @@ cleanUp:
 	//	 		  Otherwise overlapped I/O still runs on O/S background.
 	std::cout << "Server gets closed.\n";
 	listener.close( );
-	uint32_t areClientsPending = 0;
-	for ( auto& client : clients )
+	uint16_t areClientsPending = 0;
+	for ( Client& client : clients )
 	{
 		Socket& socket = client.socket();
 		socket.close( );
@@ -695,7 +681,7 @@ cleanUp:
 	{
 		IOCPEvent event;
 		iocp.wait( event, 100 );
-		for ( uint32_t i = 0; i != event.eventCount; ++i )
+		for ( uint16_t i = 0; i != event.eventCount; ++i )
 		{
 			const OVERLAPPED_ENTRY& ev = event.events[i];
 			const ClientIndex evIdx = (ClientIndex)ev.lpCompletionKey;

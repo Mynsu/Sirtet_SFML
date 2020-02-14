@@ -24,7 +24,7 @@
 #include <Lib/Packet.h>
 
 using Clock = std::chrono::high_resolution_clock;
-using ClientIndex = uint32_t;
+using ClientIndex = uint16_t;
 using Ticket = HashedKey;
 using RoomID = uint32_t;
 

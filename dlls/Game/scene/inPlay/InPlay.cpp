@@ -1,7 +1,7 @@
 #include "../../pch.h"
 #include "InPlay.h"
+#include <Lib/VaultKeyList.h>
 #include "../../ServiceLocatorMirror.h"
-#include "../VaultKeyList.h"
 #include "Ready.h"
 #include "Playing.h"
 #include "GameOver.h"
@@ -12,9 +12,12 @@ bool ::scene::inPlay::InPlay::IsInstantiated = false;
 ::scene::inPlay::InPlay::InPlay( sf::RenderWindow& window )
 	: mWindow_( window )
 {
-	ASSERT_FALSE( IsInstantiated );
+	ASSERT_TRUE( false == IsInstantiated );
 
-	mFPS_ = (uint32_t)gService( )->vault( )[HK_FORE_FPS];
+	auto& vault = gService()->vault();
+	const auto it = vault.find(HK_FORE_FPS);
+	ASSERT_TRUE( vault.end() != it );
+	mFPS_ = (uint16_t)it->second;
 	setScene( ::scene::inPlay::ID::READY );
 	loadResources( );
 
@@ -82,16 +85,16 @@ void scene::inPlay::InPlay::setScene( const ::scene::inPlay::ID nextInPlaySceneI
 	switch ( nextInPlaySceneID )
 	{
 		case ::scene::inPlay::ID::READY:
-			mCurrentScene = std::make_unique< ::scene::inPlay::Ready >( mWindow_, mBackground );
+			mCurrentScene = std::make_unique<::scene::inPlay::Ready>(mWindow_, mBackground);
 			break;
 		case ::scene::inPlay::ID::PLAYING:
-			mCurrentScene = std::make_unique< ::scene::inPlay::Playing >( mWindow_, mBackground, mOverlappedScene );
+			mCurrentScene = std::make_unique<::scene::inPlay::Playing>(mWindow_, mBackground, mOverlappedScene);
 			break;
 		case ::scene::inPlay::ID::GAME_OVER:
-			mCurrentScene = std::make_unique< ::scene::inPlay::GameOver >( mWindow_, mBackground, mOverlappedScene );
+			mCurrentScene = std::make_unique<::scene::inPlay::GameOver>(mWindow_, mBackground, mOverlappedScene);
 			break;
 		case ::scene::inPlay::ID::ASSERTION:
-			mOverlappedScene = std::make_unique< ::scene::inPlay::Assertion >( mWindow_ );
+			mOverlappedScene = std::make_unique<::scene::inPlay::Assertion>(mWindow_);
 			break;
 	}
 }

@@ -19,8 +19,8 @@ namespace scene::inPlay
 			NULL_MAX,
 		};
 		const uint8_t TARGET_ALPHA;
+		uint16_t mFPS_, mFrameCountToMainMenu;
 		uint32_t mFade;
-		uint32_t mFPS_, mFrameCount;
 		sf::RenderWindow& mWindow_;
 		sf::RectangleShape& mBackgroundRect_;
 		sf::Texture mTexture;

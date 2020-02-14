@@ -1,7 +1,6 @@
 ////
-// Vault Key List
-////
-// Shared by exes/Engine, dlls/Game.
+// Key to vault, global variable container.
+// Commonly used in exes/Engine, dlls/Game.
 ////
 
 #pragma once
@@ -13,6 +12,6 @@ constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS", 7 );
 constexpr HashedKey HK_BACK_FPS = ::util::hash::Digest( "backFPS", 7 );
 // Key to the switch.  When it becomes 0, game loop terminates promptly.
 constexpr HashedKey HK_IS_RUNNING = ::util::hash::Digest( "isRunning", 9 );
-
+// Key to whether the window gains focus or not.
 constexpr char _HK_HAS_GAINED_FOCUS[] = "hasGainedFocus";
 constexpr HashedKey HK_HAS_GAINED_FOCUS = ::util::hash::Digest( _HK_HAS_GAINED_FOCUS, ::util::hash::Measure(_HK_HAS_GAINED_FOCUS) );

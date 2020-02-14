@@ -206,19 +206,19 @@ void Console::initialize( )
 		// File Not Found Exception
 		printScriptError( ExceptionType::FILE_NOT_FOUND, varName2, scriptPathNName );
 	}
-	mCurrentInputTextField.setFont( mFont );
-	mCurrentInputTextField.setCharacterSize( mFontSize );
-	mCurrentInputTextField.setFillColor( sf::Color(currentInputFontColor) );
-	mCurrentInputTextField.setString( mCurrentInput );
-	mHistoryTextLabel.setFont( mFont );
-	mHistoryTextLabel.setCharacterSize( mFontSize );
+	mTextFieldForCurrentInput.setFont( mFont );
+	mTextFieldForCurrentInput.setCharacterSize( mFontSize );
+	mTextFieldForCurrentInput.setFillColor( sf::Color(currentInputFontColor) );
+	mTextFieldForCurrentInput.setString( mCurrentInput );
+	mTextLabelForHistory.setFont( mFont );
+	mTextLabelForHistory.setCharacterSize( mFontSize );
 
 	const float margin = 30.f;
 	const float consoleHeight =	(float)(mFontSize*(mLinesShown+1));
 	mConsoleBackground.setPosition( sf::Vector2f(margin, winSize.y-consoleHeight-margin) );
 	mConsoleBackground.setSize( sf::Vector2f(winSize.x-margin*2, consoleHeight+margin) );
 	const sf::Vector2f curTfPos( margin+5.f, winSize.y-margin-(float)mFontSize-5.f );
-	mCurrentInputTextField.setPosition( curTfPos );
+	mTextFieldForCurrentInput.setPosition( curTfPos );
 }
 
 void Console::print( const std::string& message, const sf::Color color )
@@ -238,12 +238,10 @@ void Console::printFailure( const FailureLevel failureLevel, const std::string& 
 			ss << "FATAL: " << message;
 			break;
 		default:
-#ifdef _DEBUG
-			__debugbreak( );
-#else
+#ifndef _DEBUG
 			__assume(0);
-			break;
 #endif
+			break;
 	}
 	print( ss.str(), sf::Color::Red );
 }
@@ -269,16 +267,16 @@ void Console::removeCommand( const HashedKey command )
 void Console::draw( sf::RenderWindow& window )
 {
 	window.draw( mConsoleBackground );
-	window.draw( mCurrentInputTextField );
-	sf::Vector2f textFieldPos( mCurrentInputTextField.getPosition() );
-	uint32_t count = 0;
+	window.draw( mTextFieldForCurrentInput );
+	sf::Vector2f textFieldPos( mTextFieldForCurrentInput.getPosition() );
+	uint8_t count = 0;
 	for ( auto crit = mHistory.crbegin(); mHistory.crend() != crit; ++crit )
 	{
 		textFieldPos -= sf::Vector2f(sf::Vector2u(0, mFontSize));
-		mHistoryTextLabel.setPosition( textFieldPos );
-		mHistoryTextLabel.setString( crit->first );
-		mHistoryTextLabel.setFillColor( crit->second );
-		window.draw( mHistoryTextLabel );
+		mTextLabelForHistory.setPosition( textFieldPos );
+		mTextLabelForHistory.setString( crit->first );
+		mTextLabelForHistory.setFillColor( crit->second );
+		window.draw( mTextLabelForHistory );
 		if ( mLinesShown <= ++count )
 		{
 			break;
@@ -306,7 +304,7 @@ void Console::handleEvent( std::vector<sf::Event>& eventQueue )
 					 input > 0x1f && input < 0x7f )
 				{
 					mCurrentInput += (char)input;
-					mCurrentInputTextField.setString( mCurrentInput + '_' );
+					mTextFieldForCurrentInput.setString( mCurrentInput + '_' );
 				}
 			}
 			else if ( sf::Event::KeyPressed == it->type )
@@ -320,22 +318,22 @@ void Console::handleEvent( std::vector<sf::Event>& eventQueue )
 						print( mCurrentInput );
 						mCommand.processCommand( mCurrentInput );
 						mCurrentInput.clear( );
-						mCurrentInputTextField.setString( mCurrentInput + '_' );
+						mTextFieldForCurrentInput.setString( mCurrentInput + '_' );
 						break;
 					case sf::Keyboard::Backspace:
 						if ( false == mCurrentInput.empty() )
 						{
 							mCurrentInput.pop_back( );
-							mCurrentInputTextField.setString( mCurrentInput + '_' );
+							mTextFieldForCurrentInput.setString( mCurrentInput + '_' );
 						}
 						break;
 					case sf::Keyboard::Up:
 						mCurrentInput = mHistory.back().first;
-						mCurrentInputTextField.setString( mCurrentInput + '_' );
+						mTextFieldForCurrentInput.setString( mCurrentInput + '_' );
 						break;
 					case sf::Keyboard::Down:
 						mCurrentInput.clear( );
-						mCurrentInputTextField.setString( mCurrentInput + '_' );
+						mTextFieldForCurrentInput.setString( mCurrentInput + '_' );
 						break;
 					default:
 						break;

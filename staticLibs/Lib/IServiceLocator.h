@@ -1,5 +1,5 @@
 ////
-// Game API
+//  Commonly used in exes/Engine, dlls/Game.
 ////
 
 #pragma once
@@ -15,7 +15,7 @@ public:
 	virtual ~IServiceLocator( ) = default;
 
 	virtual IConsole& console( ) = 0;
-	virtual auto vault( ) -> std::unordered_map< HashedKey, Dword >& = 0;
+	virtual auto vault( ) -> std::unordered_map<HashedKey, Dword>& = 0;
 	virtual auto audio( ) -> IAudio& = 0;
 protected:
 	IServiceLocator( ) = default;

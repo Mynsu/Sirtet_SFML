@@ -31,6 +31,4 @@ namespace util::hash
 		}
 		return retHash ^ (retHash>>16);
 	}
-
-
 }

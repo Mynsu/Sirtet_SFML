@@ -9,7 +9,7 @@ public:
 	ServiceLocator( )
 		: mAudio( std::make_unique<Audio>() )
 	{
-		ASSERT_FALSE( IsInstantiated );
+		ASSERT_TRUE( false == IsInstantiated );
 
 		WSAData w;
 		WSAStartup( MAKEWORD(2, 2), &w );
@@ -56,7 +56,6 @@ public:
 	}
 private:
 	static bool IsInstantiated;
-//TODO: 콘솔을 개발용으로만 둘까, 콘솔에 유저 권한을 둘까?
 	std::unique_ptr<IAudio> mAudio;
 	Console mConsole;
 	std::unordered_map<HashedKey, Dword> mVault;

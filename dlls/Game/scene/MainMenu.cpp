@@ -1,7 +1,7 @@
 #include "../pch.h"
 #include "MainMenu.h"
+#include <Lib/VaultKeyList.h>
 #include "../ServiceLocatorMirror.h"
-#include "../VaultKeyList.h"
 
 bool ::scene::MainMenu::IsInstantiated = false;
 
@@ -9,7 +9,7 @@ bool ::scene::MainMenu::IsInstantiated = false;
 	: mIsCursorOnButton( false ), mWindow_( window ),
 	mNextSceneID( ::scene::ID::AS_IS )
 {
-	ASSERT_FALSE( IsInstantiated );
+	ASSERT_TRUE( false == IsInstantiated );
 
 	loadResources( );
 
@@ -45,15 +45,15 @@ void scene::MainMenu::loadResources( )
 	mDrawingInfo.buttonOnlinePosition.x = 150.f;
 	mDrawingInfo.buttonOnlinePosition.y = 300.f;
 	std::string fontPathNName( "Fonts/AGENCYB.ttf" );
-	uint32_t fontSize = 30;
+	uint16_t fontSize = 30;
 	sf::Vector2f copyrightPosition( 150.f, 150.f );
 	std::string copyright;
 
-	lua_State* lua = luaL_newstate( );
+	lua_State* lua = luaL_newstate();
 	const std::string scriptPathNName( "Scripts/MainMenu.lua" );
 	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
 	{
-		gService( )->console( ).printFailure( FailureLevel::FATAL, "File Not Found: "+scriptPathNName );
+		gService()->console().printFailure( FailureLevel::FATAL, "File Not Found: "+scriptPathNName );
 	}
 	else
 	{
@@ -64,7 +64,7 @@ void scene::MainMenu::loadResources( )
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
 		}
 		else
 		{
@@ -83,7 +83,7 @@ void scene::MainMenu::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -93,7 +93,7 @@ void scene::MainMenu::loadResources( )
 			lua_gettable( lua, 1 );
 			if ( false == lua_istable(lua, TOP_IDX) )
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+innerTableName, scriptPathNName );
 			}
 			else
@@ -107,7 +107,7 @@ void scene::MainMenu::loadResources( )
 					const int32_t temp = (int32_t)lua_tointeger(lua, TOP_IDX);
 					if ( 0 > temp )
 					{
-						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+						gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
 																			tableName+':'+field, scriptPathNName );
 					}
 					else
@@ -122,7 +122,7 @@ void scene::MainMenu::loadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+innerTableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -136,7 +136,7 @@ void scene::MainMenu::loadResources( )
 					const int32_t temp = (int32_t)lua_tointeger(lua, TOP_IDX);
 					if ( 0 > temp )
 					{
-						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+						gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
 																 tableName+':'+field, scriptPathNName );
 					}
 					else
@@ -151,7 +151,7 @@ void scene::MainMenu::loadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+innerTableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -165,7 +165,7 @@ void scene::MainMenu::loadResources( )
 					const int32_t temp = (int32_t)lua_tointeger(lua, TOP_IDX);
 					if ( 0 > temp )
 					{
-						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+						gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
 																 tableName+':'+field, scriptPathNName );
 					}
 					else
@@ -180,7 +180,7 @@ void scene::MainMenu::loadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+innerTableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -194,7 +194,7 @@ void scene::MainMenu::loadResources( )
 					const int32_t temp = (int32_t)lua_tointeger(lua, TOP_IDX);
 					if ( 0 > temp )
 					{
-						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+						gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
 																 tableName+':'+field, scriptPathNName );
 					}
 					else
@@ -209,7 +209,7 @@ void scene::MainMenu::loadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+innerTableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -223,7 +223,7 @@ void scene::MainMenu::loadResources( )
 					const float temp = (float)lua_tonumber(lua, TOP_IDX);
 					if ( 0 > temp )
 					{
-						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+						gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
 																 tableName+':'+field, scriptPathNName );
 					}
 					else
@@ -238,7 +238,7 @@ void scene::MainMenu::loadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+innerTableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -252,7 +252,7 @@ void scene::MainMenu::loadResources( )
 					const float temp = (float)lua_tonumber(lua, TOP_IDX);
 					if ( 0 > temp )
 					{
-						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+						gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
 																 tableName+':'+field, scriptPathNName );
 					}
 					else
@@ -267,7 +267,7 @@ void scene::MainMenu::loadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+innerTableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -279,7 +279,7 @@ void scene::MainMenu::loadResources( )
 			lua_gettable( lua, 1 );
 			if ( false == lua_istable(lua, TOP_IDX) )
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+innerTableName, scriptPathNName );
 			}
 			else
@@ -293,7 +293,7 @@ void scene::MainMenu::loadResources( )
 					const int32_t temp = (int32_t)lua_tointeger(lua, TOP_IDX);
 					if ( 0 > temp )
 					{
-						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+						gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
 																 tableName+':'+field, scriptPathNName );
 					}
 					else
@@ -308,7 +308,7 @@ void scene::MainMenu::loadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+innerTableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -322,7 +322,7 @@ void scene::MainMenu::loadResources( )
 					const int32_t temp = (int32_t)lua_tointeger(lua, TOP_IDX);
 					if ( 0 > temp )
 					{
-						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+						gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
 																 tableName+':'+field, scriptPathNName );
 					}
 					else
@@ -337,7 +337,7 @@ void scene::MainMenu::loadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+innerTableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -351,7 +351,7 @@ void scene::MainMenu::loadResources( )
 					const int32_t temp = (int32_t)lua_tointeger(lua, TOP_IDX);
 					if ( 0 > temp )
 					{
-						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+						gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
 																 tableName+':'+field, scriptPathNName );
 					}
 					else
@@ -366,7 +366,7 @@ void scene::MainMenu::loadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+innerTableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -380,7 +380,7 @@ void scene::MainMenu::loadResources( )
 					const int32_t temp = (int32_t)lua_tointeger(lua, TOP_IDX);
 					if ( 0 > temp )
 					{
-						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+						gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
 																 tableName+':'+field, scriptPathNName );
 					}
 					else
@@ -395,7 +395,7 @@ void scene::MainMenu::loadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+innerTableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -409,7 +409,7 @@ void scene::MainMenu::loadResources( )
 					const float temp = (float)lua_tonumber(lua, TOP_IDX);
 					if ( 0 > temp )
 					{
-						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+						gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
 																 tableName+':'+field, scriptPathNName );
 					}
 					else
@@ -424,7 +424,7 @@ void scene::MainMenu::loadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+innerTableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -438,7 +438,7 @@ void scene::MainMenu::loadResources( )
 					const float temp = (float)lua_tonumber(lua, TOP_IDX);
 					if ( 0 > temp )
 					{
-						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+						gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
 																 tableName+':'+field, scriptPathNName );
 					}
 					else
@@ -453,7 +453,7 @@ void scene::MainMenu::loadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+innerTableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -465,7 +465,7 @@ void scene::MainMenu::loadResources( )
 			lua_gettable( lua, 1 );
 			if ( false == lua_istable(lua, TOP_IDX) )
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+innerTableName, scriptPathNName );
 			}
 			else
@@ -479,7 +479,7 @@ void scene::MainMenu::loadResources( )
 					const int32_t temp = (int32_t)lua_tointeger(lua, TOP_IDX);
 					if ( 0 > temp )
 					{
-						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+						gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
 																 tableName+':'+field, scriptPathNName );
 					}
 					else
@@ -494,7 +494,7 @@ void scene::MainMenu::loadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+innerTableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -508,7 +508,7 @@ void scene::MainMenu::loadResources( )
 					const int32_t temp = (int32_t)lua_tointeger(lua, TOP_IDX);
 					if ( 0 > temp )
 					{
-						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+						gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
 																 tableName+':'+field, scriptPathNName );
 					}
 					else
@@ -523,7 +523,7 @@ void scene::MainMenu::loadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+innerTableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -537,7 +537,7 @@ void scene::MainMenu::loadResources( )
 					const int32_t temp = (int32_t)lua_tointeger(lua, TOP_IDX);
 					if ( 0 > temp )
 					{
-						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+						gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
 																 tableName+':'+field, scriptPathNName );
 					}
 					else
@@ -552,7 +552,7 @@ void scene::MainMenu::loadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+innerTableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -566,7 +566,7 @@ void scene::MainMenu::loadResources( )
 					const int32_t temp = (int32_t)lua_tointeger(lua, TOP_IDX);
 					if ( 0 > temp )
 					{
-						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+						gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
 																 tableName+':'+field, scriptPathNName );
 					}
 					else
@@ -581,7 +581,7 @@ void scene::MainMenu::loadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+innerTableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -595,7 +595,7 @@ void scene::MainMenu::loadResources( )
 					const float temp = (float)lua_tonumber(lua, TOP_IDX);
 					if ( 0 > temp )
 					{
-						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+						gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
 																 tableName+':'+field, scriptPathNName );
 					}
 					else
@@ -610,7 +610,7 @@ void scene::MainMenu::loadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+innerTableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -624,7 +624,7 @@ void scene::MainMenu::loadResources( )
 					const float temp = (float)lua_tonumber(lua, TOP_IDX);
 					if ( 0 > temp )
 					{
-						gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+						gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
 																 tableName+':'+field, scriptPathNName );
 					}
 					else
@@ -639,7 +639,7 @@ void scene::MainMenu::loadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+innerTableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -652,7 +652,7 @@ void scene::MainMenu::loadResources( )
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 													 tableName, scriptPathNName );
 		}
 		else
@@ -672,7 +672,7 @@ void scene::MainMenu::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -683,10 +683,10 @@ void scene::MainMenu::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				const uint32_t temp = (uint32_t)lua_tointeger(lua, TOP_IDX);
+				const uint16_t temp = (uint16_t)lua_tointeger(lua, TOP_IDX);
 				if ( temp < 0 )
 				{
-					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+					gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
 															 tableName+':'+field, scriptPathNName );
 				}
 				else
@@ -701,7 +701,7 @@ void scene::MainMenu::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -715,7 +715,7 @@ void scene::MainMenu::loadResources( )
 				const float temp = (float)lua_tonumber(lua, TOP_IDX);
 				if ( temp < 0 )
 				{
-					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+					gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
 															 tableName+':'+field, scriptPathNName );
 				}
 				else
@@ -730,7 +730,7 @@ void scene::MainMenu::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -744,7 +744,7 @@ void scene::MainMenu::loadResources( )
 				const float temp = (float)lua_tonumber(lua, TOP_IDX);
 				if ( temp < 0 )
 				{
-					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+					gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
 															 tableName+':'+field, scriptPathNName );
 				}
 				else
@@ -759,7 +759,7 @@ void scene::MainMenu::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -779,7 +779,7 @@ void scene::MainMenu::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -790,7 +790,7 @@ void scene::MainMenu::loadResources( )
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
 		}
 		else
 		{
@@ -799,7 +799,7 @@ void scene::MainMenu::loadResources( )
 			lua_gettable( lua, 1 );
 			if ( false == lua_istable(lua, TOP_IDX) )
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+innerTableName, scriptPathNName );
 			}
 			else
@@ -819,7 +819,7 @@ void scene::MainMenu::loadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -831,7 +831,7 @@ void scene::MainMenu::loadResources( )
 			lua_gettable( lua, 1 );
 			if ( false == lua_istable(lua, TOP_IDX) )
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+innerTableName, scriptPathNName );
 			}
 			else
@@ -851,7 +851,7 @@ void scene::MainMenu::loadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -865,15 +865,12 @@ void scene::MainMenu::loadResources( )
 	if ( false == mTexture.loadFromFile(spritePathNName) )
 	{
 		// Exception: When there's not even the default file,
-		gService( )->console( ).printFailure( FailureLevel::FATAL, "File Not Found: "+spritePathNName );
-#ifdef _DEBUG
-		__debugbreak( );
-#endif
+		gService()->console().printFailure( FailureLevel::FATAL, "File Not Found: "+spritePathNName );
 	}
 	mSprite.setTexture( mTexture );
 	if ( false == mFont.loadFromFile(fontPathNName) )
 	{
-		gService( )->console( ).printFailure( FailureLevel::FATAL, "File Not Found: "+fontPathNName );
+		gService()->console().printFailure( FailureLevel::FATAL, "File Not Found: "+fontPathNName );
 	}
 	mCopyright.setCharacterSize( fontSize );
 	mCopyright.setFont( mFont );
@@ -888,19 +885,14 @@ void scene::MainMenu::loadResources( )
 
 ::scene::ID scene::MainMenu::update( std::vector<sf::Event>& eventQueue )
 {
-	for ( const auto& it : eventQueue )
+	for ( const sf::Event& it : eventQueue )
 	{
 		if ( sf::Event::KeyPressed == it.type &&
 			sf::Keyboard::Escape == it.key.code )
 		{
 			auto& vault = gService()->vault();
 			const auto it = vault.find(HK_IS_RUNNING);
-#ifdef _DEBUG
-			if ( vault.end() == it )
-			{
-				__debugbreak( );
-			}
-#endif
+			ASSERT_TRUE( vault.end() != it );
 			it->second = 0;
 		}
 	}
@@ -912,19 +904,13 @@ void ::scene::MainMenu::draw( )
 {
 	bool hasGainedFocus = false;
 	auto& vault = gService()->vault();
-	if ( const auto it = vault.find(HK_HAS_GAINED_FOCUS);
-		vault.end() != it )
 	{
+		const auto it = vault.find(HK_HAS_GAINED_FOCUS);
+		ASSERT_TRUE( vault.end() != it );
 		hasGainedFocus = (bool)it->second;
 	}
-#ifdef _DEBUG
-	else
-	{
-		__debugbreak( );
-	}
-#endif
 
-	if ( true == hasGainedFocus && false == gService()->console( ).isVisible() )
+	if ( true == hasGainedFocus && false == gService()->console().isVisible() )
 	{
 		const sf::Vector2f mousePos( sf::Mouse::getPosition()-mWindow_.getPosition() );
 		const sf::FloatRect boundLogo( mDrawingInfo.logoDestinationPosition,

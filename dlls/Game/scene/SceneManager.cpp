@@ -1,9 +1,9 @@
 #include "../pch.h"
 #include "SceneManager.h"
 #include <Lib/ScriptLoader.h>
+#include <Lib/VaultKeyList.h>
 #include "../ServiceLocatorMirror.h"
 #include "CommandList.h"
-#include "../VaultKeyList.h"
 #include "Intro.h"
 #include "MainMenu.h"
 #include "inPlay/InPlay.h"
@@ -15,16 +15,10 @@ void ::scene::SceneManager::lastInit( sf::RenderWindow* const window )
 {
 	mWindow = window;
 
-	//
-	// Registering commands
-	///
 #ifdef _DEV
-	gService( )->console( ).addCommand( CMD_CHANGE_SCENE, std::bind(&SceneManager::chscnto, this, std::placeholders::_1) );
-	gService( )->console( ).addCommand( CMD_RELOAD, std::bind(&SceneManager::refresh, this, std::placeholders::_1) );
+	gService()->console().addCommand( CMD_CHANGE_SCENE, std::bind(&SceneManager::chscnto, this, std::placeholders::_1) );
+	gService()->console().addCommand( CMD_RELOAD, std::bind(&SceneManager::refresh, this, std::placeholders::_1) );
 
-	//
-	// Starting scene
-	///
 	::scene::ID startScene = ::scene::ID::INTRO;
 	const std::string scriptPathNName( "Scripts/_OnlyDuringDev.lua" );
 	const std::string varName( "StartScene" );
@@ -32,23 +26,20 @@ void ::scene::SceneManager::lastInit( sf::RenderWindow* const window )
 	if ( const auto it = result.find(varName);
 		result.cend() != it )
 	{
-		// When its type is interger which can be cast to enum type,
+		// Type check
 		if ( true == std::holds_alternative<int>(it->second) )
 		{
 			startScene = (::scene::ID)std::get<int>(it->second);
 		}
-		// Type Check Exception
 		else
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, varName, scriptPathNName );
 		}
 	}
-	/// Variable Not Found Exception
-	///else { // Nothing to do }
 	setScene( startScene );
 #else
 	// NOTE: equals setScene( ::scene::ID::INTRO ).
-	mCurrentScene = std::make_unique< ::scene::Intro >( *window, mSetScene_ );
+	mCurrentScene = std::make_unique<::scene::Intro>( *window, mSetScene_ );
 #endif
 }
 
@@ -60,18 +51,16 @@ void ::scene::SceneManager::setScene( const ::scene::ID nextScene )
 	switch ( nextScene )
 	{
 		case ::scene::ID::INTRO:
-			mCurrentScene = std::make_unique< ::scene::Intro >( *mWindow );
+			mCurrentScene = std::make_unique<::scene::Intro>(*mWindow);
 			break;
 		case ::scene::ID::MAIN_MENU:
-			mCurrentScene = std::make_unique< ::scene::MainMenu >( *mWindow );
+			mCurrentScene = std::make_unique<::scene::MainMenu>(*mWindow);
 			break;
 		case ::scene::ID::SINGLE_PLAY:
-			//TODO: inPlay를 localPlay로 개명.
-			mCurrentScene = std::make_unique< ::scene::inPlay::InPlay >( *mWindow );
+			mCurrentScene = std::make_unique<::scene::inPlay::InPlay>(*mWindow);
 			break;
-//TODO:싱글 플레이 하위 씬들도 여기에 추가.
 		case ::scene::ID::ONLINE_BATTLE:
-			mCurrentScene = std::make_unique< ::scene::online::Online >( *mWindow );
+			mCurrentScene = std::make_unique<::scene::online::Online>(*mWindow);
 			break;
 		default:
 #ifdef _DEBUG
@@ -79,6 +68,7 @@ void ::scene::SceneManager::setScene( const ::scene::ID nextScene )
 #else
 			__assume( 0 );
 #endif
+			break;
 	}
 }
 
@@ -88,14 +78,14 @@ void ::scene::SceneManager::chscnto( const std::string_view& args )
 	if ( args[0] < '0' || '9' < args[0] )
 	{
 		// Exception
-		gService( )->console( ).printFailure( FailureLevel::WARNING, "Invalid Scene ID" );
+		gService()->console().printFailure( FailureLevel::WARNING, "Invalid Scene ID" );
 		return;
 	}
 	const ::scene::ID nextScene = (::scene::ID)std::atoi( args.data() );
 	// Exception: When the current scene id equals with the next scene id,
 	if ( nextScene == mCurrentScene->currentScene() )
 	{
-		gService( )->console( ).print( "We are already where you want to go." );
+		gService()->console().print( "We are already where you want to go." );
 		return;
 	}
 	setScene( nextScene );

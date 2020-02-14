@@ -27,15 +27,15 @@ public:
 	::model::tetrimino::Rotation currentTetriminoRotationID( ) const;
 	sf::Vector2<int8_t> currentTetriminoPosition( ) const;
 	::model::tetrimino::Type nextTetriminoType( ) const;
-	uint32_t tempoMs( ) const;
+	uint16_t tempoMs( ) const;
 	void setRelativeTempoMs( const int32_t milliseconds );
 	std::string serializedStage( ) const;
 	uint8_t numOfLinesCleared( ) const;
-	bool isGameOver() const;
+	bool isGameOver( ) const;
 private:
 	void reloadTetrimino( )
 	{
-		mCurrentTetrimino = mNextTetriminos.front( );
+		mCurrentTetrimino = mNextTetriminos.front();
 		mNextTetriminos.pop( );
 		mNextTetriminos.emplace( ::model::Tetrimino::Spawn() );
 	}
@@ -47,7 +47,7 @@ private:
 		NONE_MAX,
 	};
 	// This function doesn't reset the alarm.
-	bool alarmAfter( const uint32_t milliseconds, const AlarmIndex index )
+	bool alarmAfter( const uint16_t milliseconds, const AlarmIndex index )
 	{
 		bool elapsed = false;
 		if ( std::chrono::milliseconds(milliseconds) < Clock::now()-mAlarms[(int)index] )
@@ -58,12 +58,12 @@ private:
 	}
 	void resetAlarm( const AlarmIndex index )
 	{
-		mAlarms[(int)index] = Clock::now( );
+		mAlarms[(int)index] = Clock::now();
 	}
 	bool mHasTetriminoLandedOnClient, mHasTetriminoLandedOnServer, mIsGameOver_;
 	uint8_t mNumOfLinesCleared;
-	uint32_t mTempoMs;
-	Clock::time_point mAlarms[ (int)AlarmIndex::NONE_MAX ];
+	uint16_t mTempoMs;
+	Clock::time_point mAlarms[(int)AlarmIndex::NONE_MAX];
 	::model::tetrimino::Move mMoveToUpdate;
 	UpdateResult mUpdateResult;
 	::model::Tetrimino mCurrentTetrimino;

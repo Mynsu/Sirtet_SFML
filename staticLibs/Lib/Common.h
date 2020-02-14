@@ -12,9 +12,9 @@ const uint16_t QUEUE_SERVER_PORT = 10000;
 const uint16_t MAIN_SERVER_PORT = 54321;
 // Used as a salt in encrpyting the genuine client's version.
 // Recommended to be renewed periodically for security.
-#define VERSION 200211
-#define SALT VERSION
-#define MAX_KEY_STRETCHING 5000
+const uint16_t MAX_KEY_STRETCHING = 5000;
+const uint32_t VERSION = 200211;
+const uint32_t SALT = VERSION;
 
 namespace model
 {
@@ -35,7 +35,7 @@ namespace model
 			sf::Color color;
 		};
 
-		using Grid = std::array< std::array<Cell, ::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT >;
+		using Grid = std::array<std::array<Cell, ::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT>;
 	}
 
 	namespace tetrimino
@@ -80,10 +80,10 @@ namespace model
 
 enum class _Tag
 {
-	// !IMPORTANT: 0 equals '\0' that might cause an error.
 	////
 	// Connection
 	////
+	// !IMPORTANT: 0 equals '\0' that might cause an error.
 	INVITATION = 1,
 	POPULATION,
 	TICKET,
@@ -103,7 +103,6 @@ enum class _Tag
 	////
 	// Inplay
 	////
-	//TODO: ÇÑ Ãþ ´õ µÑ±î?
 	MY_NEXT_TETRIMINO,
 	MY_TEMPO_MS,
 	MY_STAGE,
@@ -126,7 +125,7 @@ using Tag = char[];
 
 // Attached to HashedKey.
 constexpr Tag TAG_INVITATION = { (char)_Tag::INVITATION, ':', '\0' };
-// Attached to uint32_t.
+// Attached to uint16_t.
 constexpr Tag TAG_POPULATION = { (char)_Tag::POPULATION, ':', '\0' };
 // The queue server sends encrypted data attached by this tag to the both of them,
 // the main server and ...
@@ -136,7 +135,7 @@ constexpr Tag TAG_POPULATION = { (char)_Tag::POPULATION, ':', '\0' };
 // Attached to HashedKey.
 constexpr Tag TAG_TICKET = { (char)_Tag::TICKET, ':', '\0' };
 // The queue server sends the client's order attached by this tag.
-// Attached to uint32_t.
+// Attached to uint16_t.
 constexpr Tag TAG_ORDER_IN_QUEUE = { (char)_Tag::ORDER_IN_QUEUE, ':', '\0' };
 // Attached to std::string
 constexpr Tag TAG_MY_NICKNAME = { (char)_Tag::MY_NICKNAME, ':', '\0' };
@@ -158,7 +157,7 @@ enum class Request
 
 // Attached to char(for Request).
 constexpr Tag TAG_REQUEST = { (char)_Tag::REQUEST, ':', '\0' };
-const uint8_t TAG_REQUEST_LEN = ::util::hash::Measure( TAG_REQUEST );
+const uint8_t TAG_REQUEST_LEN = ::util::hash::Measure(TAG_REQUEST);
 // Attached to nothing.
 constexpr Tag TAGGED_REQ_USER_LIST_IN_LOBBY = { (char)_Tag::REQUEST, ':', (char)Request::UPDATE_USER_LIST, '\0' };
 // Attached to nothing.
@@ -176,7 +175,6 @@ constexpr uint8_t TAGGED_REQ_JOIN_ROOM_LEN = ::util::hash::Measure(TAGGED_REQ_JO
 enum class ResultJoiningRoom
 {
 	FAILED_BY_SERVER_ERROR = -1,
-	///
 	// !IMPORTANT: 0 equals '\0' that might cause an error.
 	SUCCCEDED = 1,
 	FAILED_DUE_TO_SELF_TARGET,
@@ -195,7 +193,7 @@ enum class Notification
 	HOST_CHANGED,
 };
 
-// Attached to uint32_t(for the total size) and repeated pairs of <uint8_t,std::string>.
+// Attached to uint16_t(for the total size) and repeated pairs of <uint8_t,std::string>.
 constexpr Tag TAGGED_NOTI_UPDATE_USER_LIST = { (char)_Tag::NOTIFICATION, ':', (char)Notification::UPDATE_USER_LIST, '\0' };
 // Attached to HashedKey.
 constexpr Tag TAGGED_NOTI_HOST_CHANGED = { (char)_Tag::NOTIFICATION, ':', (char)Notification::HOST_CHANGED, '\0' };
@@ -206,22 +204,19 @@ constexpr Tag TAGGED_NOTI_HOST_CHANGED = { (char)_Tag::NOTIFICATION, ':', (char)
 
 // Attached to uint8_t(for ::model::tetrimino::Type).
 constexpr Tag TAG_MY_NEXT_TETRIMINO = { (char)_Tag::MY_NEXT_TETRIMINO, ':', '\0' };
-// Attached to uint32_t(for milliseconds).
+// Attached to uint16_t(for milliseconds).
 constexpr Tag TAG_MY_TEMPO_MS = { (char)_Tag::MY_TEMPO_MS, ':', '\0' };
 // Attached to Grid.
 constexpr Tag TAG_MY_STAGE = { (char)_Tag::MY_STAGE, ':', '\0' };
 // Attached to uint8_t(for ::model::tetrimino::Move).
 constexpr Tag TAG_MY_TETRIMINO_MOVE = { (char)_Tag::MY_TETRIMINO_MOVE, ':', '\0' };
-const uint8_t TAG_MY_TETRIMINO_MOVE_LEN = ::util::hash::Measure( TAG_MY_TETRIMINO_MOVE );
+const uint8_t TAG_MY_TETRIMINO_MOVE_LEN = ::util::hash::Measure(TAG_MY_TETRIMINO_MOVE);
 // Attached to nothing.
 constexpr Tag TAG_MY_TETRIMINO_LANDED_ON_CLIENT = { (char)_Tag::MY_TETRIMINO_LANDED_ON_CLIENT, ':', '\0' };
-// Attached to uint32_t(for the total size) and repeated pairs of <HashedKey,uint8_t>.
-
+// Attached to uint16_t(for the total size) and repeated pairs of <HashedKey,uint8_t>.
 constexpr Tag TAG_NEW_CURRENT_TETRIMINOS = { (char)_Tag::NEW_CURRENT_TETRIMINOS, ':', '\0' };
-// Attached to uint32_t(for the total size) and repeated tuples of <HashedKey,uint8_t,sf::Vector2<int8_t>>.
+// Attached to uint16_t(for the total size) and repeated tuples of <HashedKey,uint8_t,sf::Vector2<int8_t>>.
 constexpr Tag TAG_CURRENT_TETRIMINOS_MOVE = { (char)_Tag::CURRENT_TETRIMINOS_MOVE, ':', '\0' };
-/// Attached to uint8_t(for ::model::tetrimino::Type).
-///constexpr Tag TAG_NEXT_TETRIMINOS = { (char)_Tag::NEXT_TETRIMINOS, ':', '\0' };
 // Attached to std::string(for Grid).
 constexpr Tag TAG_STAGES = { (char)_Tag::STAGES, ':', '\0' };
 // Attached to uint8_t.

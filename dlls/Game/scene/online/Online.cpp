@@ -1,8 +1,8 @@
 #include "../../pch.h"
 #include "Online.h"
 #include <Lib/Common.h>
+#include <Lib/VaultKeyList.h>
 #include "../../ServiceLocatorMirror.h"
-#include "../VaultKeyList.h"
 #include "Waiting.h"
 #include "InLobby.h"
 #include "InRoom.h"
@@ -12,33 +12,42 @@ bool ::scene::online::Online::IsInstantiated = false;
 namespace
 {
 	const uint8_t SECONDS_TO_MAIN_MENU = 3;
-	const uint32_t RECEIVING_WAIT_MS = 100;
+	const uint16_t RECEIVING_WAIT_MS = 100;
 	bool IsReceiving;
 	int ReceivingResult;
 	int ReceivingError;
-	std::unique_ptr< Socket > SocketToServer;
-	std::unique_ptr< std::thread > ThreadToReceive;
+	std::unique_ptr<Socket> SocketToServer;
+	std::unique_ptr<std::thread> ThreadToReceive;
 	std::condition_variable CvForResumingRcv;
-	std::mutex ReceivingMutex;
+	std::mutex MutexForConditionVariable, MutexForReceivingResult;
 
 	void Receive( Socket& socket )
 	{
 		IsReceiving = true;
 		while ( true == IsReceiving )
 		{
-			ReceivingResult = socket.receiveBlocking();
-			ReceivingError = WSAGetLastError();
-			if ( -1 == ReceivingResult && WSAETIMEDOUT == ReceivingError )
+			int rcvRes = socket.receiveBlocking();
+			int rcvErr = WSAGetLastError();
+			if ( -1 == rcvRes && WSAETIMEDOUT == rcvErr )
 			{
 				// Trying to receive again
 			}
-			else if ( 0 < ReceivingResult )
+			else if ( 0 < rcvRes )
 			{
-				std::unique_lock uLock( ReceivingMutex );
+				{
+					std::scoped_lock lock( MutexForReceivingResult );
+					ReceivingResult = rcvRes;
+				}
+				std::unique_lock uLock( MutexForConditionVariable );
 				CvForResumingRcv.wait( uLock );
 			}
 			else
 			{
+				{
+					std::scoped_lock lock( MutexForReceivingResult );
+					ReceivingResult = rcvRes;
+					ReceivingError = rcvErr;
+				}
  				break;
 			}
 		}
@@ -51,13 +60,17 @@ namespace
 }
 
 scene::online::Online::Online( sf::RenderWindow& window )
-	: mFrameCount_disconnection( 0 ), mMyNicknameHashed_( 0 ),
+	: mFrameCountToMainMenu( 0 ), mMyNicknameHashed_( 0 ),
 	mWindow_( window )
 {
-	ASSERT_FALSE( IsInstantiated );
+	ASSERT_TRUE( false == IsInstantiated );
 
 	ReceivingResult = -2;
-	mFPS_ = (uint32_t)gService()->vault()[HK_FORE_FPS];
+	ReceivingError = 0;
+	auto& vault = gService()->vault();
+	const auto it = vault.find(HK_FORE_FPS);
+	ASSERT_TRUE( vault.end() != it );
+	mFPS_ = (uint16_t)it->second;
 	setScene( ::scene::online::ID::WAITING );
 	loadResources( );
 
@@ -87,39 +100,39 @@ void ::scene::online::Online::loadResources( )
 	bool isPathDefault = true;
 	bool isWDefault = true;
 	bool isHDefault = true;
-	lua_State* lua = luaL_newstate( );
-	char scriptPathNName[] = "Scripts/Online.lua";
-	if ( true == luaL_dofile(lua, scriptPathNName) )
+	lua_State* lua = luaL_newstate();
+	const std::string scriptPathNName( "Scripts/Online.lua" );
+	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
 	{
 		// File Not Found Exception
-		gService( )->console( ).printFailure( FailureLevel::FATAL, std::string("File Not Found: ")+scriptPathNName );
+		gService()->console().printFailure( FailureLevel::FATAL, "File Not Found: "+scriptPathNName );
 		lua_close( lua );
 	}
 	else
 	{
 		luaL_openlibs( lua );
 		const int TOP_IDX = -1;
-		const std::string tableName0( "DisconnectionSprite" );
-		lua_getglobal( lua, tableName0.data() );
+		std::string tableName( "DisconnectionSprite" );
+		lua_getglobal( lua, tableName.data() );
 		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName0, scriptPathNName );
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
 		}
 		else
 		{
-			const char field0[ ] = "path";
-			lua_pushstring( lua, field0 );
+			std::string field( "path" );
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			int type = lua_type( lua, TOP_IDX );
+			int type = lua_type(lua, TOP_IDX);
 			// Type check
 			if ( LUA_TSTRING == type )
 			{
 				if ( false == mTexture.loadFromFile(lua_tostring(lua, TOP_IDX)) )
 				{
 					// File Not Found Exception
-					gService( )->console( ).printScriptError( ExceptionType::FILE_NOT_FOUND,
-						tableName0+':'+field0, scriptPathNName );
+					gService()->console().printScriptError( ExceptionType::FILE_NOT_FOUND,
+						tableName+':'+field, scriptPathNName );
 				}
 				else
 				{
@@ -129,24 +142,24 @@ void ::scene::online::Online::loadResources( )
 			// Type Check Exception
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					tableName0+':'+field0, scriptPathNName );
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
+					tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			const char field1[ ] = "clipWidth";
-			lua_pushstring( lua, field1 );
+			field = "clipWidth";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			type = lua_type( lua, TOP_IDX );
+			type = lua_type(lua, TOP_IDX);
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				const float temp = static_cast<float>(lua_tointeger(lua, TOP_IDX));
+				const float temp = (float)lua_tonumber(lua, TOP_IDX);
 				// Range Check Exception
 				if ( 0 > temp )
 				{
-					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
-						tableName0+':'+field1, scriptPathNName );
+					gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
+						tableName+':'+field, scriptPathNName );
 				}
 				// When the value looks OK,
 				else
@@ -158,24 +171,24 @@ void ::scene::online::Online::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					tableName0+':'+field1, scriptPathNName );
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
+					tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
-			const char field2[ ] = "clipHeight";
-			lua_pushstring( lua, field2 );
+			field = "clipHeight";
+			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			type = lua_type( lua, TOP_IDX );
+			type = lua_type(lua, TOP_IDX);
 			// Type check
 			if ( LUA_TNUMBER == type )
 			{
-				const float temp = static_cast<float>(lua_tointeger(lua, TOP_IDX));
+				const float temp = (float)lua_tonumber(lua, TOP_IDX);
 				// Range Check Exception
 				if ( 0 > temp )
 				{
-					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
-						tableName0+':'+field2, scriptPathNName );
+					gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
+						tableName+':'+field, scriptPathNName );
 				}
 				// When the value looks OK,
 				else
@@ -187,8 +200,8 @@ void ::scene::online::Online::loadResources( )
 			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
-					tableName0+':'+field2, scriptPathNName );
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
+					tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 2 );
 		}
@@ -197,20 +210,17 @@ void ::scene::online::Online::loadResources( )
 
 	if ( true == isPathDefault )
 	{
-		const char defaultFilePathNName[ ] = "Images/Online.png";
+		std::string defaultFilePathNName( "Images/Online.png" );
 		if ( false == mTexture.loadFromFile(defaultFilePathNName) )
 		{
 			// Exception: When there's not even the default file,
-			gService( )->console( ).printFailure( FailureLevel::FATAL, std::string( "File Not Found: " )+defaultFilePathNName );
-#ifdef _DEBUG
-			__debugbreak( );
-#endif
+			gService()->console().printFailure( FailureLevel::FATAL, std::string( "File Not Found: " )+defaultFilePathNName );
 		}
 	}
 
 	if ( true == isWDefault || true == isHDefault )
 	{
-		gService( )->console( ).print( "Default: width 256, height 128" );
+		gService()->console().print( "Default: width 256, height 128" );
 	}
 
 	mSprite.setTexture( mTexture );
@@ -223,7 +233,7 @@ void ::scene::online::Online::loadResources( )
 {
 	::scene::ID retVal = ::scene::ID::AS_IS;
 
-	if ( 0 == mFrameCount_disconnection )
+	if ( 0 == mFrameCountToMainMenu )
 	{
 		const ::scene::online::ID nextSceneID = mCurrentScene->update( eventQueue );
 		if ( ::scene::online::ID::AS_IS < nextSceneID )
@@ -235,7 +245,7 @@ void ::scene::online::Online::loadResources( )
 			retVal = ::scene::ID::MAIN_MENU;
 		}
 	}
-	else if ( SECONDS_TO_MAIN_MENU*mFPS_ < mFrameCount_disconnection )
+	else if ( SECONDS_TO_MAIN_MENU*mFPS_ < mFrameCountToMainMenu )
 	{
 		retVal = ::scene::ID::MAIN_MENU;
 	}
@@ -244,27 +254,27 @@ void ::scene::online::Online::loadResources( )
 
 void ::scene::online::Online::draw( )
 {
-	if ( 0 == mFrameCount_disconnection )
+	if ( 0 == mFrameCountToMainMenu )
 	{
 		mCurrentScene->draw( );
 	}
 	else
 	{
 		mWindow_.draw( mSprite );
-		++mFrameCount_disconnection;
+		++mFrameCountToMainMenu;
 	}
 }
 
-void scene::online::Online::connectToQueueServer()
+void scene::online::Online::connectToQueueServer( )
 {
 	SocketToServer = std::make_unique<Socket>(Socket::Type::TCP);
 	if ( -1 == SocketToServer->bind(EndPoint::Any) )
 	{
 		// Exception
-		gService( )->console( ).printFailure( FailureLevel::WARNING,
+		gService()->console().printFailure( FailureLevel::WARNING,
 											 "Failed to bind a to-queue-server socket.\n" );
 		// Triggering
-		mFrameCount_disconnection = 1;
+		mFrameCountToMainMenu = 1;
 		return;
 	}
 	// NOTE: Socket option should be set after binding it.
@@ -274,29 +284,29 @@ void scene::online::Online::connectToQueueServer()
 	{
 		// Exception
 		std::string msg( "setsockopt error: " );
-		gService( )->console( ).printFailure( FailureLevel::WARNING,
+		gService()->console().printFailure( FailureLevel::WARNING,
 											 msg+std::to_string(WSAGetLastError()) );
 		// Triggering
-		mFrameCount_disconnection = 1;
+		mFrameCountToMainMenu = 1;
 		return;
 	}
 	if ( -1 == SocketToServer->connect(EndPoint(QUEUE_SERVER_IP_ADDRESS, QUEUE_SERVER_PORT)) )
 	{
 		// Exception
-		gService( )->console( ).printFailure( FailureLevel::WARNING,
+		gService()->console().printFailure( FailureLevel::WARNING,
 											 "Failed to connect to the queue server.\n" );
 		// Triggering
-		mFrameCount_disconnection = 1;
+		mFrameCountToMainMenu = 1;
 		return;
 	}
-	gService( )->console( ).print( "Succeeded to connect to the queue server.",
+	gService()->console().print( "Succeeded to connect to the queue server.",
 								  sf::Color::Green );
 }
 
 void scene::online::Online::disconnect( )
 {
 	// Triggering
-	mFrameCount_disconnection = 1;
+	mFrameCountToMainMenu = 1;
 }
 
 bool scene::online::Online::connectToMainServer( )
@@ -316,9 +326,9 @@ bool scene::online::Online::connectToMainServer( )
 	if ( -1 == SocketToServer->bind(EndPoint::Any) )
 	{
 		// Exception
-		gService( )->console( ).printFailure( FailureLevel::WARNING, "Failed to bind a to-main-server socket.\n" );
+		gService()->console().printFailure( FailureLevel::WARNING, "Failed to bind a to-main-server socket.\n" );
 		// Triggering
-		mFrameCount_disconnection = 1;
+		mFrameCountToMainMenu = 1;
 		result = false;
 		return result;
 	}
@@ -328,9 +338,9 @@ bool scene::online::Online::connectToMainServer( )
 	{
 		// Exception
 		std::string msg( "setsockopt error: " );
-		gService( )->console( ).printFailure( FailureLevel::WARNING, msg+std::to_string(WSAGetLastError()) );
+		gService()->console().printFailure( FailureLevel::WARNING, msg+std::to_string(WSAGetLastError()) );
 		// Triggering
-		mFrameCount_disconnection = 1;
+		mFrameCountToMainMenu = 1;
 		result = false;
 		return result;
 	}
@@ -339,22 +349,22 @@ bool scene::online::Online::connectToMainServer( )
 	{
 		// Exception
 		std::string msg( "setsockopt error: " );
-		gService( )->console( ).printFailure( FailureLevel::WARNING, msg+std::to_string(WSAGetLastError()) );
+		gService()->console().printFailure( FailureLevel::WARNING, msg+std::to_string(WSAGetLastError()) );
 		// Triggering
-		mFrameCount_disconnection = 1;
+		mFrameCountToMainMenu = 1;
 		result = false;
 		return result;
 	}
 	if ( -1 == SocketToServer->connect(EndPoint(MAIN_SERVER_IP_ADDRESS, MAIN_SERVER_PORT)) )
 	{
 		// Exception
-		gService( )->console( ).printFailure( FailureLevel::WARNING, "Failed to connect to the main server.\n" );
+		gService()->console().printFailure( FailureLevel::WARNING, "Failed to connect to the main server.\n" );
 		// Triggering
-		mFrameCount_disconnection = 1;
+		mFrameCountToMainMenu = 1;
 		result = false;
 		return result;
 	}
-	gService( )->console( ).print( "Succeeded to connect to the main server.", sf::Color::Green );
+	gService()->console().print( "Succeeded to connect to the main server.", sf::Color::Green );
 	return true;
 }
 
@@ -382,17 +392,12 @@ void scene::online::Online::send( Packet& packet )
 
 void scene::online::Online::receive( )
 {
-	if ( 0 == ReceivingResult ||
-		-1 == ReceivingResult && WSAETIMEDOUT != ReceivingError )
 	{
-		gService()->console().printFailure( FailureLevel::WARNING, "Can't receive." );
-		// Triggering
-		mFrameCount_disconnection = 1;
-		return;
+		std::scoped_lock lock( MutexForReceivingResult );
+		ReceivingResult = -2;
+		ReceivingError = 0;
 	}
 
-	ReceivingResult = -2;
-	ReceivingError = 0;
 	if ( nullptr == ThreadToReceive )
 	{
 		ThreadToReceive = std::make_unique<std::thread>(&Receive, std::ref(*SocketToServer));
@@ -405,18 +410,27 @@ void scene::online::Online::receive( )
 
 bool scene::online::Online::hasReceived( )
 {
-	if ( 0 < ReceivingResult )
+	int rcvRes, rcvErr;
+	{
+		std::scoped_lock lock( MutexForReceivingResult );
+		rcvRes = ReceivingResult;
+		rcvErr = ReceivingError;
+	}
+	if ( 0 < rcvRes )
 	{
 		return true;
 	}
 	else
 	{
-		if ( 0 == ReceivingResult ||
-			-1 == ReceivingResult && WSAETIMEDOUT != ReceivingError )
+		if ( 0 == rcvRes )
 		{
-			gService( )->console( ).printFailure( FailureLevel::FATAL, "Failed to receive." );
-			// Triggering
-			mFrameCount_disconnection = 1;
+			gService()->console().printFailure( FailureLevel::WARNING, "Server disconnected." );
+			disconnect( );
+		}
+		else if ( -1 == rcvRes && WSAETIMEDOUT != rcvErr )
+		{
+			gService()->console().printFailure( FailureLevel::WARNING, "Failed to receive." );
+			disconnect( );
 		}
 		return false;
 	}
@@ -424,7 +438,7 @@ bool scene::online::Online::hasReceived( )
 
 std::optional<std::string> scene::online::Online::getByTag( const Tag tag,
 														   const Online::Option option,
-														   uint32_t bodySize ) const
+														   uint16_t bodySize ) const
 {
 	ASSERT_FALSE( 0 == bodySize && Online::Option::RETURN_TAG_ATTACHED != option );
 	ASSERT_TRUE( 0 < ReceivingResult );
@@ -441,7 +455,7 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag,
 		}
 		else
 		{
-			const uint32_t tagLen =	(uint32_t)std::strlen(tag);
+			const uint8_t tagLen =	(uint8_t)std::strlen(tag);
 			_retVal.append( extraRcvBuf, tagLen, extraRcvBuf.size()-tagLen );
 		}
 		return _retVal;
@@ -449,17 +463,17 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag,
 
 	const char* const rcvBuf = SocketToServer->receivingBuffer();
 	std::string_view strView( rcvBuf, ReceivingResult );
-	uint32_t beginPos = -1;
+	uint16_t beginPos = -1;
 	if ( option & Option::FIND_END_TO_BEGIN )
 	{
-		uint32_t off = 0;
+		uint16_t off = 0;
 		while ( true )
 		{
 			size_t pos = strView.find(tag, off);
 			if ( std::string_view::npos != pos )
 			{
-				beginPos = (uint32_t)pos;
-				off = (uint32_t)++pos;
+				beginPos = (uint16_t)pos;
+				off = (uint16_t)++pos;
 			}
 			else
 			{
@@ -472,15 +486,15 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag,
 		if ( const size_t pos = strView.find(tag);
 			std::string_view::npos != pos )
 		{
-			beginPos = (uint32_t)pos;
+			beginPos = (uint16_t)pos;
 		}
 	}
-	if ( -1 == beginPos )
+	if ( UINT16_MAX == beginPos )
 	{
 		return std::nullopt;
 	}
 	
-	const uint32_t tagLen = (uint32_t)std::strlen(tag);
+	const uint8_t tagLen = (uint8_t)std::strlen(tag);
 	if ( option & Option::RETURN_TAG_ATTACHED )
 	{
 		_retVal.append( &rcvBuf[beginPos], tagLen );
@@ -489,31 +503,29 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag,
 			return _retVal;
 		}
 	}
-	uint32_t& curPos = beginPos;
+	uint16_t& curPos = beginPos;
 	curPos += tagLen;
-	if ( -1 == bodySize )
+	if ( UINT16_MAX == bodySize )
 	{
-		const uint32_t sight = Socket::RCV_BUF_SIZ - curPos;
-		if ( sizeof(uint32_t) <= sight )
+		const uint16_t sight = Socket::RCV_BUF_SIZ - curPos;
+		if ( sizeof(uint16_t) <= sight )
 		{
-			bodySize = ::ntohl(*(uint32_t*)&rcvBuf[curPos]);
+			bodySize = ::ntohs(*(uint16_t*)&rcvBuf[curPos]);
 		}
 		else
 		{
-			char _bodySize[sizeof(uint32_t)] = { '\0' };
+			char _bodySize[sizeof(uint16_t)] = { '\0' };
 			if ( 0 != sight )
 			{
-				::memcpy_s( _bodySize, sizeof(uint32_t), &rcvBuf[curPos], sight );
+				::memcpy_s( _bodySize, sizeof(uint16_t), &rcvBuf[curPos], sight );
 			}
-			if ( -1 == ::recv(SocketToServer->handle(), &_bodySize[sight], sizeof(uint32_t)-sight, 0) )
-			{
-				__debugbreak();
-			}
-			bodySize = ::ntohl(*(uint32_t*)_bodySize);
+			// Fetching a part from receiving buffer on O/S level.
+			ASSERT_TRUE( -1 != ::recv(SocketToServer->handle(), &_bodySize[sight], sizeof(uint16_t)-sight, 0) );
+			bodySize = ::ntohs(*(uint16_t*)_bodySize);
 		}
-		curPos += sizeof(uint32_t);
+		curPos += sizeof(uint16_t);
 	}
-	const uint32_t sight = Socket::RCV_BUF_SIZ - curPos;
+	const uint16_t sight = Socket::RCV_BUF_SIZ - curPos;
 	if ( bodySize <= sight )
 	{
 		_retVal.append( &rcvBuf[curPos], bodySize );
@@ -524,10 +536,8 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag,
 		extraRcvBuf += _retVal; 
 		char* _extraRcvBuf = extraRcvBuf.data();
 		_extraRcvBuf += tagLen;
-		if ( -1 == ::recv(SocketToServer->handle(), _extraRcvBuf, bodySize, 0) )
-		{
-			__debugbreak();
-		}
+		// Fetching a part from receiving buffer on O/S level.
+		ASSERT_TRUE( -1 != ::recv(SocketToServer->handle(), _extraRcvBuf, bodySize, 0) );
 		_retVal.append( _extraRcvBuf, bodySize );
 	}
 
@@ -563,16 +573,16 @@ void scene::online::Online::setScene( const::scene::online::ID nextSceneID )
 	switch ( nextSceneID )
 	{
 		case ::scene::online::ID::WAITING:
-			mCurrentScene = std::make_unique< ::scene::online::Waiting >( mWindow_, *this );
+			mCurrentScene = std::make_unique<::scene::online::Waiting>( mWindow_, *this );
 			break;
 		case ::scene::online::ID::IN_LOBBY:
-			mCurrentScene = std::make_unique< ::scene::online::InLobby >( mWindow_, *this );
+			mCurrentScene = std::make_unique<::scene::online::InLobby>( mWindow_, *this );
 			break;
 		case ::scene::online::ID::IN_ROOM_AS_HOST:
-			mCurrentScene = std::make_unique< ::scene::online::InRoom >( mWindow_, *this, true );
+			mCurrentScene = std::make_unique<::scene::online::InRoom>( mWindow_, *this, true );
 			break;
 		case ::scene::online::ID::IN_ROOM:
-			mCurrentScene = std::make_unique< ::scene::online::InRoom >( mWindow_, *this );
+			mCurrentScene = std::make_unique<::scene::online::InRoom>( mWindow_, *this );
 			break;
 		default:
 #ifdef _DEBUG
@@ -580,5 +590,6 @@ void scene::online::Online::setScene( const::scene::online::ID nextSceneID )
 #else
 			__assume( 0 );
 #endif
+			break;
 	}
 }

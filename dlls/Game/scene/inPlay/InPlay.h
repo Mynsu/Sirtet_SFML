@@ -19,10 +19,10 @@ namespace scene::inPlay
 	private:
 		void setScene( const ::scene::inPlay::ID nextInPlaySceneID );
 		static bool IsInstantiated;
-		uint32_t mFPS_;
+		uint16_t mFPS_;
 		sf::RenderWindow& mWindow_;
-		std::unique_ptr< ::scene::inPlay::IScene > mCurrentScene;
-		std::unique_ptr< ::scene::inPlay::IScene > mOverlappedScene;
+		std::unique_ptr<::scene::inPlay::IScene> mCurrentScene;
+		std::unique_ptr<::scene::inPlay::IScene> mOverlappedScene;
 		sf::RectangleShape mBackground;
 	};
 }

@@ -1,13 +1,13 @@
 #include "../../pch.h"
 #include "InLobby.h"
 #include <Lib/Common.h>
+#include <Lib/VaultKeyList.h>
 #include "../../ServiceLocatorMirror.h"
 #include "../CommandList.h"
 #include "Online.h"
-#include "../VaultKeyList.h"
 
-const uint32_t UPDATE_USER_LIST_INTERVAL = 300;
-const uint32_t REQUEST_DELAY = 60;
+const uint16_t UPDATE_USER_LIST_INTERVAL = 300;
+const uint16_t REQUEST_DELAY = 60;
 const float ERROR_RANGE = 5.f;
 const float SPEED_NICKNAME_MOVE = .5f;
 std::mutex MutexForGuideText, MutexForMovingPoints;
@@ -16,8 +16,8 @@ bool scene::online::InLobby::IsInstantiated = false;
 
 scene::online::InLobby::InLobby( sf::RenderWindow& window, ::scene::online::Online& net )
 	: mIsReceiving( false ), mHasJoined( false ), mIsLoading( true ),
-	mGuideTextIndex( 0 ), mEnteringRoom( 0 ),
-	mFrameCount_update( 30 ), mFrameCount_requestDelay( 0 ),
+	mIndexForGuideText( 0 ), mEnteringRoom( 0 ),
+	mFrameCountUserListUpdateInterval( 30 ), mFrameCountRequestDelay( 0 ),
 	mWindow_( window ), mNet( net ),
 	mTextInputBox( window )
 {
@@ -36,9 +36,9 @@ scene::online::InLobby::InLobby( sf::RenderWindow& window, ::scene::online::Onli
 #ifdef _DEV
 	IServiceLocator* const service = gService();
 	ASSERT_NOT_NULL( service );
-	service->console( ).addCommand( CMD_CREATE_ROOM, std::bind(&scene::online::InLobby::_createRoom,
+	service->console().addCommand( CMD_CREATE_ROOM, std::bind(&scene::online::InLobby::_createRoom,
 																	  this, std::placeholders::_1) );
-	service->console( ).addCommand( CMD_JOIN_ROOM, std::bind(&scene::online::InLobby::joinRoom,
+	service->console().addCommand( CMD_JOIN_ROOM, std::bind(&scene::online::InLobby::joinRoom,
 																		 this, std::placeholders::_1) );
 #endif
 
@@ -48,8 +48,8 @@ scene::online::InLobby::InLobby( sf::RenderWindow& window, ::scene::online::Onli
 scene::online::InLobby::~InLobby( )
 {
 #ifdef _DEV
-	gService( )->console( ).removeCommand( CMD_CREATE_ROOM );
-	gService( )->console( ).removeCommand( CMD_JOIN_ROOM );
+	gService()->console().removeCommand( CMD_CREATE_ROOM );
+	gService()->console().removeCommand( CMD_JOIN_ROOM );
 #endif
 	IsInstantiated = false;
 }
@@ -78,7 +78,7 @@ void scene::online::InLobby::loadResources( )
 	mGuideTexts.clear( );
 	mGuideTexts.emplace_back( "Double click to create a room." );
 	mGuideTexts.emplace_back( "Right click to join a room." );
-	uint32_t guideTextFontSize = 20;
+	uint16_t guideTextFontSize = 20;
 	std::string guideTextFont( "Fonts/AGENCYB.TTF" );
 	uint32_t shade = 0x0000007f;
 	sf::Vector2f subWindowPosition( 300.f, 200.f );
@@ -86,22 +86,26 @@ void scene::online::InLobby::loadResources( )
 	uint32_t subWindowColor = 0xffff00ff;
 	std::string subWindowTitleFont( "Fonts/AGENCYB.TTF" );
 	sf::Vector2f subWindowTitleRelativePosition( 20.f, 10.f );
-	uint32_t subWindowTitleFontSize = 30;
+	uint16_t subWindowTitleFontSize = 30;
 	uint32_t subWindowTitleFontColor = 0xffffffff;
 	sf::Vector2f subWindowInputTextFieldRelativePosition( 20.f, 60.f );
-	uint32_t subWindowInputTextFieldFontSize = 25;
+	uint16_t subWindowInputTextFieldFontSize = 25;
 	uint32_t subWindowInputTextFieldFontColor = 0xffffffff;
 	mDrawingInfo.roomColor = sf::Color(0x3f3f3fff);
 	mDrawingInfo.totalDistanceUsersBoxToRoom = 0.f;
 	mDrawingInfo.remainingDistanceUsersBoxToRoom = 0.f;
 	mAudioList[(int)AudioIndex::ON_SELECTION] = "Audio/selection.wav";
+	
+	//
+	// From 'InLobby.lua'.
+	//
 
-	lua_State* lua = luaL_newstate( );
+	lua_State* lua = luaL_newstate();
 	std::string scriptPathNName( "Scripts/InLobby.lua" );
 	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
 	{
 		// File Not Found Exception
-		gService( )->console( ).printFailure( FailureLevel::FATAL, "File Not Found: "+scriptPathNName );
+		gService()->console().printFailure( FailureLevel::FATAL, "File Not Found: "+scriptPathNName );
 	}
 	else
 	{
@@ -122,7 +126,7 @@ void scene::online::InLobby::loadResources( )
 		}
 		else
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 													 varName, scriptPathNName );
 		}
 		lua_pop( lua, 1 );
@@ -141,7 +145,7 @@ void scene::online::InLobby::loadResources( )
 		}
 		else
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 													 varName, scriptPathNName );
 		}
 		lua_pop( lua, 1 );
@@ -150,7 +154,7 @@ void scene::online::InLobby::loadResources( )
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 													 tableName, scriptPathNName );
 		}
 		else
@@ -161,7 +165,7 @@ void scene::online::InLobby::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				mDrawingInfo.nicknameFontSize = (uint32_t)lua_tointeger(lua, TOP_IDX);
+				mDrawingInfo.nicknameFontSize = (uint16_t)lua_tointeger(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -170,7 +174,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -190,7 +194,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -210,7 +214,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -221,7 +225,7 @@ void scene::online::InLobby::loadResources( )
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 													 tableName, scriptPathNName );
 		}
 		else
@@ -242,7 +246,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -263,7 +267,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -284,7 +288,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -305,7 +309,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -325,7 +329,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -345,7 +349,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -365,7 +369,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -376,7 +380,7 @@ void scene::online::InLobby::loadResources( )
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 													 tableName, scriptPathNName );
 		}
 		else
@@ -406,7 +410,7 @@ void scene::online::InLobby::loadResources( )
 					}
 					else
 					{
-						gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+						gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 																 tableName+":...", scriptPathNName );
 					}
 					lua_pop( lua, 1 );
@@ -426,7 +430,7 @@ void scene::online::InLobby::loadResources( )
 					}
 					else
 					{
-						gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+						gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 																 tableName+":...", scriptPathNName );
 					}
 					mDrawingInfo.movingPoints.emplace_back( point );
@@ -447,7 +451,7 @@ void scene::online::InLobby::loadResources( )
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
 			// Type Check Exception
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 													 tableName, scriptPathNName );
 		}
 		else
@@ -467,7 +471,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -487,7 +491,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -507,7 +511,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -527,7 +531,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -538,7 +542,7 @@ void scene::online::InLobby::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				guideTextFontSize = (uint32_t)lua_tointeger(lua, TOP_IDX);
+				guideTextFontSize = (uint16_t)lua_tointeger(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -547,7 +551,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -559,7 +563,7 @@ void scene::online::InLobby::loadResources( )
 		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 													 tableName, scriptPathNName );
 		}
 		else
@@ -592,7 +596,7 @@ void scene::online::InLobby::loadResources( )
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
 			// Type Check Exception
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 													 tableName, scriptPathNName );
 		}
 		else
@@ -612,7 +616,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -632,7 +636,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -652,7 +656,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -672,7 +676,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -692,7 +696,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -712,7 +716,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -732,7 +736,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -752,7 +756,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -772,7 +776,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -783,7 +787,7 @@ void scene::online::InLobby::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				subWindowTitleFontSize = (uint32_t)lua_tointeger(lua, TOP_IDX);
+				subWindowTitleFontSize = (uint16_t)lua_tointeger(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -792,7 +796,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -812,7 +816,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -832,7 +836,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -852,7 +856,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -863,7 +867,7 @@ void scene::online::InLobby::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TNUMBER == type )
 			{
-				subWindowInputTextFieldFontSize = (uint32_t)lua_tointeger(lua, TOP_IDX);
+				subWindowInputTextFieldFontSize = (uint16_t)lua_tointeger(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -872,7 +876,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -892,7 +896,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -903,7 +907,7 @@ void scene::online::InLobby::loadResources( )
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
 		}
 		else
 		{
@@ -912,7 +916,7 @@ void scene::online::InLobby::loadResources( )
 			lua_gettable( lua, 1 );
 			if ( false == lua_istable(lua, TOP_IDX) )
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+innerTableName, scriptPathNName );
 			}
 			else
@@ -932,7 +936,7 @@ void scene::online::InLobby::loadResources( )
 				}
 				else
 				{
-					gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 															 tableName+':'+field, scriptPathNName );
 				}
 				lua_pop( lua, 1 );
@@ -944,17 +948,11 @@ void scene::online::InLobby::loadResources( )
 	lua_close( lua );
 
 	mBackground.setFillColor( sf::Color(backgroundColor) );
-	if ( auto it = mUserList.find(mNet.myNickname());
-		mUserList.end() != it )
 	{
+		auto it = mUserList.find(mNet.myNickname());
+		ASSERT_TRUE( mUserList.end() != it );
 		it->second.first.setFillColor( sf::Color(myNicknameColor) );
 	}
-#ifdef _DEBUG
-	else
-	{
-		__debugbreak( );
-	}
-#endif
 	::math::Vector<2> dir( mDrawingInfo.usersBoxPosition-
 								::math::Vector<2>(0.f, 0.f) );
 	mDrawingInfo.accelerationUsersBoxLeftTop0 = dir.normalize();
@@ -973,10 +971,10 @@ void scene::online::InLobby::loadResources( )
 	mUsersBox.setOutlineThickness( mDrawingInfo.usersBoxOutlineThickness );
 	mUsersBox.setOutlineColor( mDrawingInfo.usersBoxOutlineColor );
 	mFont.loadFromFile( guideTextFont );
-	mGuideTextLabel.setPosition( guideTextLabelPosition );
-	mGuideTextLabel.setFillColor( sf::Color(guideTextColor) );
-	mGuideTextLabel.setCharacterSize( guideTextFontSize );
-	mGuideTextLabel.setFont( mFont );
+	mTextLabelForGuide.setPosition( guideTextLabelPosition );
+	mTextLabelForGuide.setFillColor( sf::Color(guideTextColor) );
+	mTextLabelForGuide.setCharacterSize( guideTextFontSize );
+	mTextLabelForGuide.setFont( mFont );
 	mTextInputBox.setBackgroundColor( sf::Color(shade) );
 	mTextInputBox.setPosition( subWindowPosition );
 	mTextInputBox.setSize( subWindowSize );
@@ -992,19 +990,19 @@ void scene::online::InLobby::loadResources( )
 											 subWindowInputTextFieldFontSize );
 	mTextInputBox.setInputTextFieldColor( sf::Color(subWindowInputTextFieldFontColor) );
 
-	////
 	//
-	////
+	// From 'InRoom.lua'.
+	//
 
 	mDrawingInfo.roomPosition.mComponents[0] = 100.f;
 	mDrawingInfo.roomPosition.mComponents[1] = 0.f;
 	float cellSize = 30.f;
 	scriptPathNName = "Scripts/InRoom.lua";
-	lua = luaL_newstate( );
+	lua = luaL_newstate();
 	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
 	{
 		// File Not Found Exception
-		gService( )->console( ).printFailure( FailureLevel::FATAL, "File Not Found: "+scriptPathNName );
+		gService()->console().printFailure( FailureLevel::FATAL, "File Not Found: "+scriptPathNName );
 	}
 	else
 	{
@@ -1015,7 +1013,7 @@ void scene::online::InLobby::loadResources( )
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
 			// Type Check Exception
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 													 tableName, scriptPathNName );
 		}
 		else
@@ -1035,7 +1033,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -1055,7 +1053,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -1075,7 +1073,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -1095,7 +1093,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 
@@ -1114,7 +1112,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -1134,7 +1132,7 @@ void scene::online::InLobby::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -1178,17 +1176,17 @@ void scene::online::InLobby::loadResources( )
 	if ( true == mNet.hasReceived() )
 	{
 		mIsReceiving = false;
-		if ( std::optional<std::string> resultCreatingRoom( mNet.getByTag(TAGGED_REQ_CREATE_ROOM,
-															   Online::Option::RETURN_TAG_ATTACHED,
-															   0) );
+		if ( const std::optional<std::string> resultCreatingRoom( mNet.getByTag(TAGGED_REQ_CREATE_ROOM,
+																				Online::Option::RETURN_TAG_ATTACHED,
+																				0) );
 			std::nullopt != resultCreatingRoom )
 		{
 			mEnteringRoom = -1;
 			mUserList.clear( );
 		}
-		else if ( std::optional<std::string> resultJoiningRoom( mNet.getByTag(TAGGED_REQ_JOIN_ROOM,
-																			 Online::Option::DEFAULT,
-																			 sizeof(uint8_t)) );
+		else if ( const std::optional<std::string> resultJoiningRoom( mNet.getByTag(TAGGED_REQ_JOIN_ROOM,
+																					Online::Option::DEFAULT,
+																					sizeof(uint8_t)) );
 				 std::nullopt != resultJoiningRoom )
 		{
 			const ResultJoiningRoom res = (ResultJoiningRoom)*resultJoiningRoom.value().data();
@@ -1220,15 +1218,15 @@ void scene::online::InLobby::loadResources( )
 			}
 		}
 		
-		if ( std::optional<std::string> userList( mNet.getByTag(TAGGED_REQ_USER_LIST_IN_LOBBY,
-															   Online::Option::DEFAULT,
-																-1) );
+		if ( const std::optional<std::string> userList( mNet.getByTag(TAGGED_REQ_USER_LIST_IN_LOBBY,
+																	Online::Option::DEFAULT,
+																	-1) );
 			std::nullopt != userList )
 		{
 			const std::string& _userList( userList.value() );
 			const char* const ptr = _userList.data();
-			const uint32_t userListSize = (uint32_t)_userList.size();
-			uint32_t curPos = 0;
+			const uint16_t userListSize = (uint16_t)_userList.size();
+			uint16_t curPos = 0;
 			// NOTE: Faster than std::set or std::unordered_set.
 			std::vector<std::string> curUsers;
 			while ( userListSize != curPos )
@@ -1280,7 +1278,7 @@ void scene::online::InLobby::loadResources( )
 		mIsReceiving = true;
 	}
 
-	if ( UPDATE_USER_LIST_INTERVAL <= mFrameCount_update )
+	if ( UPDATE_USER_LIST_INTERVAL <= mFrameCountUserListUpdateInterval )
 	{
 		std::string req( TAGGED_REQ_USER_LIST_IN_LOBBY );
 		mNet.send( req.data(), (int)req.size() );
@@ -1297,9 +1295,9 @@ void scene::online::InLobby::loadResources( )
 		}
 	}
 
-	if ( REQUEST_DELAY <= mFrameCount_requestDelay )
+	if ( REQUEST_DELAY <= mFrameCountRequestDelay )
 	{
-		mFrameCount_requestDelay = 0;
+		mFrameCountRequestDelay = 0;
 	}
 
 	for ( auto it = eventQueue.cbegin(); eventQueue.cend() != it; )
@@ -1414,23 +1412,23 @@ void scene::online::InLobby::draw( )
 		}
 	}
 	mWindow_.draw( mUsersBox );
-	if ( UPDATE_USER_LIST_INTERVAL <= mFrameCount_update )
+	if ( UPDATE_USER_LIST_INTERVAL <= mFrameCountUserListUpdateInterval )
 	{
-		mFrameCount_update = 0;
+		mFrameCountUserListUpdateInterval = 0;
 		std::scoped_lock lock( MutexForGuideText );
 		const uint8_t size = (uint8_t)mGuideTexts.size();
 		if ( 0 != size )
 		{
-			if ( size <= ++mGuideTextIndex )
+			if ( size <= ++mIndexForGuideText )
 			{
-				mGuideTextIndex = 0;
+				mIndexForGuideText = 0;
 			}
-			mGuideTextLabel.setString( mGuideTexts[mGuideTextIndex] );
+			mTextLabelForGuide.setString( mGuideTexts[mIndexForGuideText] );
 		}
 	}
 	if ( 0 == mEnteringRoom )
 	{
-		mWindow_.draw( mGuideTextLabel );
+		mWindow_.draw( mTextLabelForGuide );
 	}
 	{
 		std::scoped_lock lock( MutexForMovingPoints );
@@ -1439,26 +1437,26 @@ void scene::online::InLobby::draw( )
 		{
 			while ( true )
 			{
-				auto& tf = pair.second;
-				const sf::Vector2f dir( mDrawingInfo.movingPoints[tf.second] - tf.first.getPosition() );
+				auto& textFieldAndDestination = pair.second;
+				const sf::Vector2f dir( mDrawingInfo.movingPoints[textFieldAndDestination.second] - textFieldAndDestination.first.getPosition() );
 				math::Vector<2> v( dir.x, dir.y );
 				const float mag = v.magnitude();
 				if ( mag <= ERROR_RANGE )
 				{
-					if ( numOfMovingPoints-1 == tf.second )
+					if ( numOfMovingPoints-1 == textFieldAndDestination.second )
 					{
-						tf.second = 0;
+						textFieldAndDestination.second = 0;
 					}
 					else
 					{
-						++tf.second;
+						++textFieldAndDestination.second;
 					}
 				}
 				else
 				{
 					const math::Vector<2> nv( v.normalize()*SPEED_NICKNAME_MOVE );
-					tf.first.move( nv.mComponents[0], nv.mComponents[1] );
-					mWindow_.draw( tf.first );
+					textFieldAndDestination.first.move( nv.mComponents[0], nv.mComponents[1] );
+					mWindow_.draw( textFieldAndDestination.first );
 					break;
 				}
 			}
@@ -1468,22 +1466,22 @@ void scene::online::InLobby::draw( )
 	{
 		mTextInputBox.draw( );
 	}
-	++mFrameCount_update;
-	if ( 0 != mFrameCount_requestDelay )
+	++mFrameCountUserListUpdateInterval;
+	if ( 0 != mFrameCountRequestDelay )
 	{
-		++mFrameCount_requestDelay;
+		++mFrameCountRequestDelay;
 	}
 }
 
 void scene::online::InLobby::createRoom( )
 {
-	if ( 0 != mFrameCount_requestDelay )
+	if ( 0 != mFrameCountRequestDelay )
 	{
 		gService()->console().print( "Retry to create a room later.", sf::Color::Green );
 		return;
 	}
 	// Triggering
-	mFrameCount_requestDelay = 1;
+	mFrameCountRequestDelay = 1;
 	std::string request( TAGGED_REQ_CREATE_ROOM );
 	mNet.send( request.data(), (int)request.size() );
 }
@@ -1495,7 +1493,7 @@ void scene::online::InLobby::_createRoom( const std::string_view& )
 
 void scene::online::InLobby::joinRoom( const std::string_view& arg )
 {
-	if ( 0 != mFrameCount_requestDelay )
+	if ( 0 != mFrameCountRequestDelay )
 	{
 		gService()->console().print( "Retry to join the room later.", sf::Color::Green );
 		return;
@@ -1513,7 +1511,7 @@ void scene::online::InLobby::joinRoom( const std::string_view& arg )
 		return;
 	}
 	// Triggering
-	mFrameCount_requestDelay = 1;
+	mFrameCountRequestDelay = 1;
 	Packet packet;
 	std::string otherNickname( arg );
 	packet.pack( TAGGED_REQ_JOIN_ROOM, otherNickname );

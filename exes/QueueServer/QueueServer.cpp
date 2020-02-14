@@ -1,14 +1,11 @@
 ﻿#include "pch.h"
 #include <Lib/Common.h>
 
+using ClientIndex = uint16_t;
 using Ticket = HashedKey;
-using ClientIndex = uint32_t;
 const uint16_t CAPACITY = 100;
 const uint16_t BACKLOG_SIZ = CAPACITY/2;
-// Capacity in the main server defaults to 10000.
-// You can resize it indirectly here without re-compliing or rescaling the main server.
-// !IMPORTANT: This must be less than the real capacity of the server.
-const uint16_t MAIN_SERVER_CAPACITY = 5;
+const uint16_t mainServerCapacity = 2;
 const ClientIndex MAIN_SERVER_INDEX = CAPACITY;
 const ClientIndex LISTENER_IDX = CAPACITY + 1;
 const Clock::duration IDENTIFICATION_TIME_LIMIT = std::chrono::seconds(2);
@@ -24,7 +21,7 @@ void ProcessSignal( int signal )
 		IsWorking = false;
 	}
 }
-inline void PrintLeavingWithError( const uint32_t clientIndex, const uint32_t population )
+inline void PrintLeavingWithError( const uint16_t clientIndex, const uint16_t population )
 {
 	std::cout << "Client " << clientIndex << " left due to an error. (Now " <<
 		population << '/' << CAPACITY << " connections.)\n";
@@ -86,7 +83,7 @@ inline bool ResetAndReconnectToMainServer( std::unique_ptr<Socket>& socketToMain
 		result = false;
 		return result;
 	}
-	std::cout << "\nWhat should I say to the main server to let him know I'm the queue server?" << std::endl;
+	std::cout << "\nQ. What should I say to the main server to let him know I'm the queue server?" << std::endl;
 	std::string sign;
 	std::cin >> sign;
 	const HashedKey encryptedSign = ::util::hash::Digest(sign.data(), (uint8_t)sign.size());
@@ -152,10 +149,6 @@ int main( )
 
 	IOCP iocp( 2 );
 
-	////
-	//
-	////
-
 	std::cout << "\n###############\n### QUEUE SERVER\n###############\n";
 	// This make it possible to replace the socket immediately, differently from DisconnectEx(...).
 	std::unique_ptr<Socket> socketToMainServer;
@@ -168,10 +161,12 @@ int main( )
 	std::bitset<(int)Status::NONE_MAX> statusAgainstMainServer;
 	statusAgainstMainServer.set( Status::WAITING_FOR_IDENTIFICATION, 1 );
 	statusAgainstMainServer.set( Status::WAITING_FOR_POPULATION, 1 );
-
-	////
-	//
-	////
+	std::cout << "Q. Tell me how much the maximum capacity the main server has." << std::endl;
+	// Capacity in the main server defaults to 100.
+	// You can resize it indirectly here without re-compliing or rescaling the main server.
+	// !IMPORTANT: This must be less than the real capacity of the server.
+	uint16_t mainServerCapacity = 2;
+	std::cin >> mainServerCapacity;
 
 	Socket listener( Socket::Type::TCP );
 	{
@@ -225,15 +220,11 @@ int main( )
 		}
 	}
 
-	////
-	//
-	////
-
-	uint32_t numOfAcceptancePending = 0;
+	uint16_t numOfAcceptancePending = 0;
 	std::unordered_set<ClientIndex> clientIndicesNotAccepted;
 	std::vector<Client> clients;
 	clients.reserve( CAPACITY );
-	for ( uint32_t i = 0; i != CAPACITY; ++i )
+	for ( uint16_t i = 0; i != CAPACITY; ++i )
 	{
 		Client& client = clients.emplace_back(Socket::Type::TCP);
 		Socket& socket = client.socket();
@@ -273,13 +264,9 @@ int main( )
 		}
 	}
 
-	////
-	//
-	////
-
-	uint32_t population = 0;
+	uint16_t population = 0;
 	auto forceDisconnection =
-		[ &iocp, &clients, &clientIndicesNotAccepted, &population ]( const ClientIndex index ) -> bool
+		[&iocp, &clients, &clientIndicesNotAccepted, &population]( const ClientIndex index ) -> bool
 	{
 		bool result = true;
 		Socket& clientSocket = clients[index].socket();
@@ -295,7 +282,7 @@ int main( )
 		clientIndicesNotAccepted.emplace( index );
 		return result;
 	};
-	uint32_t roomInMainServer = 0;
+	uint16_t roomInMainServer = 0;
 	uint32_t seedForInvitation = 0;
 	HashedKey invitations[2];
 	Clock::time_point lastTimeNotifyingQueue;
@@ -307,12 +294,12 @@ int main( )
 	while ( true == IsWorking )
 	{
 		iocp.wait( event, 100 );
-		for ( uint32_t i = 0; i != event.eventCount; ++i )
+		for ( uint16_t i = 0; i != event.eventCount; ++i )
 		{
 			const OVERLAPPED_ENTRY& ev = event.events[i];
-			////
-			// When event comes from listener,
-			////
+////
+// When event comes from listener,
+////
 			if ( LISTENER_IDX == (ClientIndex)ev.lpCompletionKey )
 			{
 				const ClientIndex candidateIdx = listener.completedIO(ev.lpOverlapped,
@@ -352,9 +339,9 @@ int main( )
 				clients[clientIdx].resetTimeStamp( );
 				connectionsUnidentified.emplace( clientIdx );
 			}
-			////
-			// When event comes from the main server,
-			////
+////
+// When event comes from the main server,
+////
 			else if ( MAIN_SERVER_INDEX == (ClientIndex)ev.lpCompletionKey )
 			{
 				const IOType cmpl = (IOType)socketToMainServer->completedIO(ev.lpOverlapped,
@@ -395,36 +382,19 @@ int main( )
 								const char* const rcvBuf = socketToMainServer->receivingBuffer();
 								// NOTE: Assuming that there's a message about nothing but population in and from the main server.
 								constexpr uint8_t TAG_POPULATION_LEN = ::util::hash::Measure(TAG_POPULATION);
-								const uint32_t pop = ::ntohl(*(uint32_t*)&rcvBuf[TAG_POPULATION_LEN]);
+								const uint16_t pop = ::ntohs(*(uint16_t*)&rcvBuf[TAG_POPULATION_LEN]);
 								// When population is out of range,
-								if ( pop<0 || MAIN_SERVER_CAPACITY<pop )
+								if ( pop<0 || mainServerCapacity<pop )
 								{
-									// Asking again the main server how many clients are there.
-									Packet packet;
-									const uint8_t ignored = 1;
-									packet.pack( TAG_POPULATION, ignored );
-									if ( -1 == socketToMainServer->sendOverlapped(packet) )
-									{
-										std::cerr << "WARNING: Failed to ask the main server how many clients are there.\n";
-										if ( false == ResetAndReconnectToMainServer(socketToMainServer, iocp) )
-										{
-											goto cleanUp;
-										}
-										statusAgainstMainServer.set( Status::WAITING_FOR_IDENTIFICATION, 1 );
-									}
-									statusAgainstMainServer.set( Status::WAITING_FOR_POPULATION, 1 );
-#ifdef _DEBUG
-									std::cout << "Asked again the main server how many clients are there.\n";
-#endif
+									roomInMainServer = 0;
 								}
 								else
 								{
-									roomInMainServer = (int)MAIN_SERVER_CAPACITY-pop;
+									roomInMainServer = (int)mainServerCapacity-pop;
 #ifdef _DEBUG
 									std::cout << "Room in the main server: " << roomInMainServer << std::endl;
 #endif
 								}
-								//TODO: 받기 항상 걸어두고 싶다.
 								if ( -1 == socketToMainServer->receiveOverlapped() )
 								{
 									std::cerr << "WARNING: Failed to receive population in the main server.\n";
@@ -448,9 +418,9 @@ int main( )
 					}
 				}
 			}
-			////
-			// When event comes from a client
-			////
+////
+// When event comes from a client
+////
 			else
 			{
 				const ClientIndex clientIdx = (ClientIndex)ev.lpCompletionKey;
@@ -708,40 +678,43 @@ int main( )
 				--roomInMainServer;
 			}
 			it = queue.erase(it);
+			lastTimeAskingPop = now;
 		}
 
-		// Notifying their own order in the queue line.
-		uint32_t order = 1;
-		for ( auto it = queue.cbegin(); queue.cend() != it &&
-										NOTIFYING_QUEUE_INTERVAL < now-lastTimeNotifyingQueue; )
 		{
-			// Reset
-			lastTimeNotifyingQueue = now;
-
-			Packet packet;
-			packet.pack( TAG_ORDER_IN_QUEUE, order );
-			++order;
-			Socket& clientSocket = clients[*it].socket();
-			if ( -1 == clientSocket.sendOverlapped(packet) )
+			// Notifying their own order in the queue line.
+			uint16_t order = 0;
+			for ( auto it = queue.cbegin(); queue.cend() != it &&
+											NOTIFYING_QUEUE_INTERVAL < now-lastTimeNotifyingQueue; )
 			{
-				// Exception
-				std::cerr << "WARNING: Failed to send its order to Client " << *it
-					<< " waiting in the queue line.\n";
-				if ( false == forceDisconnection(*it) )
+				Packet packet;
+				packet.pack( TAG_ORDER_IN_QUEUE, ++order );
+				Socket& clientSocket = clients[*it].socket();
+				if ( -1 == clientSocket.sendOverlapped(packet) )
 				{
 					// Exception
-					// Break twice
-					goto cleanUp;
+					std::cerr << "WARNING: Failed to send its order to Client " << *it
+						<< " waiting in the queue line.\n";
+					if ( false == forceDisconnection(*it) )
+					{
+						// Exception
+						// Break twice
+						goto cleanUp;
+					}
+					PrintLeavingWithError( *it, population );
+					it = queue.erase(it);
+					continue;
 				}
-				PrintLeavingWithError( *it, population );
-				it = queue.erase(it);
-				continue;
-			}
 #ifdef _DEBUG
-			std::cout << "Sending its order to the client " << *it <<
-				" waiting in the queue line succeeded.\n";
+				std::cout << "Sending its order to the client " << *it <<
+					" waiting in the queue line succeeded.\n";
 #endif
-			++it;
+				++it;
+			}
+			if ( 0 != order )
+			{
+				lastTimeNotifyingQueue = now;
+			}
 		}
 
 		// When there's no more room in the main server,
@@ -800,8 +773,8 @@ cleanUp:
 	std::cout << "Server gets closed.\n";
 	socketToMainServer->close( );
 	listener.close( );
-	uint32_t areClientsPending = 0;
-	for ( auto& client : clients )
+	uint16_t areClientsPending = 0;
+	for ( Client& client : clients )
 	{
 		Socket& socket = client.socket();
 		socket.close( );
@@ -816,8 +789,7 @@ cleanUp:
 	{
 		IOCPEvent event;
 		iocp.wait( event, 100 );
-		// 궁금: 소켓 닫으면 이벤트 발생?
-		for ( uint32_t i = 0; i != event.eventCount; ++i )
+		for ( uint16_t i = 0; i != event.eventCount; ++i )
 		{
 			const OVERLAPPED_ENTRY& ev = event.events[i];
 			const ClientIndex idx = (ClientIndex)ev.lpCompletionKey;

@@ -10,7 +10,9 @@ namespace scene::inPlay
 	class Playing final : public ::scene::inPlay::IScene
 	{
 	public:
-		Playing( sf::RenderWindow& window, sf::Drawable& shapeOrSprite, const std::unique_ptr<::scene::inPlay::IScene>& overlappedScene );
+		Playing( sf::RenderWindow& window,
+				sf::Drawable& shapeOrSprite,
+				const std::unique_ptr<::scene::inPlay::IScene>& overlappedScene );
 		~Playing( ) = default;
 
 		void loadResources( ) override;
@@ -24,10 +26,15 @@ namespace scene::inPlay
 			NONE_MAX,
 		};
 		void reloadTetrimino( );
+		struct
+		{
+			uint32_t blackOutColor;
+			float cellSize_;
+		} mDrawingInfo;
 		uint8_t mNumOfLinesCleared;
-		uint32_t mFrameCount_fallDown, mFrameCount_clearingInterval_, mFrameCount_clearingVfx_, mFrameCount_gameOver;
+		uint16_t mFrameCountSoftDropInterval, mFrameCountClearingInterval_,
+			mFrameCountVfxDuration_, mFrameCountCoolToGameOver;
 		float mTempo;
-		float mCellSize_;
 		sf::RenderWindow& mWindow_;
 		sf::RectangleShape& mBackgroundRect_;
 		const std::unique_ptr<::scene::inPlay::IScene>& mOverlappedScene_;

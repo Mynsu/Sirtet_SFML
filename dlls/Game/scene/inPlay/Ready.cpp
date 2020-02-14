@@ -1,19 +1,19 @@
 #include "../../pch.h"
 #include "Ready.h"
+#include <Lib/VaultKeyList.h>
 #include "../../ServiceLocatorMirror.h"
 #include "Playing.h"
-#include "../VaultKeyList.h"
 
 ::scene::inPlay::Ready::Ready( sf::RenderWindow& window, sf::Drawable& shapeOrSprite )
-	: mFPS_( 60u ), mFrameCount( mFPS_ * 3 ),
-	mWindow_( window ), mBackgroundRect_( static_cast< sf::RectangleShape& >( shapeOrSprite ) ),
+	: mFPS_( 60 ), mFrameCountToStart( mFPS_ * 3 ),
+	mWindow_( window ), mBackgroundRect_( (sf::RectangleShape&)shapeOrSprite ),
 	mSpriteClipSize_( 256.f, 256.f )
 {
-	if ( const auto it = gService()->vault().find(HK_FORE_FPS); gService()->vault().cend() != it )
-	{
-		mFPS_ = it->second;
-		mFrameCount = mFPS_ * 3;
-	}
+	auto& vault = gService()->vault();
+	const auto it = vault.find(HK_FORE_FPS);
+	ASSERT_TRUE( vault.cend() != it );
+	mFPS_ = it->second;
+	mFrameCountToStart = mFPS_ * 3;
 
 	loadResources( );
 }
@@ -23,12 +23,12 @@ void ::scene::inPlay::Ready::loadResources( )
 	uint32_t backgroundColor = 0x29cdb5'7fu;
 	std::string countdownSpritePathNName( "Images/Countdown.png" );
 
-	lua_State* lua = luaL_newstate( );
+	lua_State* lua = luaL_newstate();
 	const std::string scriptPathNName( "Scripts/Ready.lua" );
 	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
 	{
 		// File Not Found Exception
-		gService( )->console( ).printFailure( FailureLevel::FATAL,
+		gService()->console().printFailure( FailureLevel::FATAL,
 											 "File Not Found: "+scriptPathNName );
 	}
 	else
@@ -50,7 +50,7 @@ void ::scene::inPlay::Ready::loadResources( )
 		}
 		else
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 													 varName, scriptPathNName );
 		}
 		lua_pop( lua, 1 );
@@ -59,7 +59,7 @@ void ::scene::inPlay::Ready::loadResources( )
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 													 tableName, scriptPathNName );
 		}
 		else
@@ -79,7 +79,7 @@ void ::scene::inPlay::Ready::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														 tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -93,7 +93,7 @@ void ::scene::inPlay::Ready::loadResources( )
 				const float temp = (float)lua_tointeger(lua, TOP_IDX);
 				if ( 0 > temp )
 				{
-					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+					gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
 															tableName+':'+field, scriptPathNName );
 				}
 				else
@@ -108,7 +108,7 @@ void ::scene::inPlay::Ready::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -122,7 +122,7 @@ void ::scene::inPlay::Ready::loadResources( )
 				const float temp = (float)lua_tonumber(lua, TOP_IDX);
 				if ( 0 > temp )
 				{
-					gService( )->console( ).printScriptError( ExceptionType::RANGE_CHECK,
+					gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
 															tableName+':'+field, scriptPathNName );
 				}
 				else
@@ -137,7 +137,7 @@ void ::scene::inPlay::Ready::loadResources( )
 			}
 			else
 			{
-				gService( )->console( ).printScriptError( ExceptionType::TYPE_CHECK,
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 														tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
@@ -149,11 +149,8 @@ void ::scene::inPlay::Ready::loadResources( )
 	if ( false == mTexture.loadFromFile(countdownSpritePathNName) )
 	{
 		// Exception: When there's not even the default file,
-		gService( )->console( ).printFailure( FailureLevel::FATAL,
+		gService()->console().printFailure( FailureLevel::FATAL,
 												"File Not Found: "+countdownSpritePathNName );
-#ifdef _DEBUG
-		__debugbreak( );
-#endif
 	}
 
 	mBackgroundRect_.setFillColor( sf::Color(backgroundColor) );
@@ -163,10 +160,7 @@ void ::scene::inPlay::Ready::loadResources( )
 
 ::scene::inPlay::ID scene::inPlay::Ready::update( std::vector<sf::Event>& )
 {
-	// NOTE: moved into 'draw( ).'
-	///--mFrameCount;
-
-	if ( 0 == mFrameCount )
+	if ( 0 == mFrameCountToStart )
 	{
 		return ::scene::inPlay::ID::PLAYING;
 	}
@@ -176,17 +170,17 @@ void ::scene::inPlay::Ready::loadResources( )
 
 void ::scene::inPlay::Ready::draw( )
 {
-	////
+	//
 	// Background
-	////
+	//
 	mWindow_.draw( mBackgroundRect_ );
 
-	////
+	//
 	// Countdown
-	////
+	//
 	const sf::Vector2i cast( mSpriteClipSize_ );
-	mSprite.setTextureRect( sf::IntRect( 0, cast.y*( mFrameCount/mFPS_ ), cast.x, cast.y ) );
+	mSprite.setTextureRect( sf::IntRect( 0, cast.y*( mFrameCountToStart/mFPS_ ), cast.x, cast.y ) );
 	mWindow_.draw( mSprite );
 
-	--mFrameCount;
+	--mFrameCountToStart;
 }
