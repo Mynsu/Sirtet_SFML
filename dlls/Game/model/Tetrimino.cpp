@@ -3,58 +3,27 @@
 #include <Lib/Common.h>
 #include "../ServiceLocatorMirror.h"
 
-model::Tetrimino::Tetrimino( )
-	: mIsFallingDown( false )
-{
-	mBlockShape.setOutlineThickness( -2.f );
-	LoadResources( );
-}
-
-model::Tetrimino::Tetrimino( const Tetrimino& arg )
-	: mIsFallingDown( false ), mType( arg.mType ),
-	mRotationID( arg.mRotationID ), mPosition( arg.mPosition )
-{
-	mBlockShape.setFillColor( arg.mBlockShape.getFillColor() );
-	mBlockShape.setOutlineThickness( -2.f );
-	mBlockShape.setOutlineColor( arg.mBlockShape.getOutlineColor() );
-	for ( uint8_t i = 0; i != (uint8_t)::model::tetrimino::Rotation::NONE_MAX; ++i )
-	{
-		mPossibleRotations[i] = arg.mPossibleRotations[i];
-	}
-}
-
-void model::Tetrimino::operator=( const Tetrimino& arg )
-{
-	mType = arg.mType;
-	mRotationID = arg.mRotationID;
-	mPosition = arg.mPosition;
-	mBlockShape.setFillColor( arg.mBlockShape.getFillColor() );
-	mBlockShape.setOutlineColor( arg.mBlockShape.getOutlineColor() );
-	for ( uint8_t i = 0; i != (uint8_t)::model::tetrimino::Rotation::NONE_MAX; ++i )
-	{
-		mPossibleRotations[i] = arg.mPossibleRotations[i];
-	}
-}
-
 sf::Vector2<int8_t> model::Tetrimino::Test[(int)::model::tetrimino::Rotation::NONE_MAX][4] =
-	{ 
-		{ {1,0}, {1,-1}, {0,2}, {1,2} },
-		{ {-1,0}, {-1,1}, {0,-2}, {-1,-2} },
-		{ {-1,0}, {-1,-1}, {0,2}, {-1,2} },
-		{ {1,0}, {1,1}, {0,-2}, {1,-2} },
-	};
+{ 
+	{ {1,0}, {1,-1}, {0,2}, {1,2} },
+	{ {-1,0}, {-1,1}, {0,-2}, {-1,-2} },
+	{ {-1,0}, {-1,-1}, {0,2}, {-1,2} },
+	{ {1,0}, {1,1}, {0,-2}, {1,-2} },
+};
+
+sf::Color model::Tetrimino::OutlineColor( 0xffffffff );
 
 using Type = ::model::tetrimino::Type;
 sf::Color model::Tetrimino::Colors[(int)Type::NONE_MAX] =
-	{
-		sf::Color::Cyan,
-		sf::Color::Blue,
-		sf::Color(0xffa500ff),// Orange
-		sf::Color::Red,
-		sf::Color::Green,
-		sf::Color(0x562f72ff),// Purple - Old Citadel
-		sf::Color::Yellow
-	};
+{
+	sf::Color::Cyan,
+	sf::Color::Blue,
+	sf::Color(0xffa500ff),// Orange
+	sf::Color::Red,
+	sf::Color::Green,
+	sf::Color(0x562f72ff),// Purple - Old Citadel
+	sf::Color::Yellow
+};
 
 void model::Tetrimino::LoadResources( )
 {
@@ -63,7 +32,7 @@ void model::Tetrimino::LoadResources( )
 	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
 	{
 		gService()->console().printFailure( FailureLevel::FATAL,
-											 "File Not Found: "+scriptPathNName );
+										   "File Not Found: "+scriptPathNName );
 	}
 	else
 	{
@@ -75,7 +44,7 @@ void model::Tetrimino::LoadResources( )
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-													 tableName, scriptPathNName );
+												   tableName, scriptPathNName );
 		}
 		else
 		{
@@ -90,12 +59,12 @@ void model::Tetrimino::LoadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-														tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPathNName );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -110,12 +79,12 @@ void model::Tetrimino::LoadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-														tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPathNName );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -130,12 +99,12 @@ void model::Tetrimino::LoadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-														tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPathNName );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -150,12 +119,12 @@ void model::Tetrimino::LoadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-														tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPathNName );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -170,12 +139,12 @@ void model::Tetrimino::LoadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-														tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPathNName );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -190,12 +159,12 @@ void model::Tetrimino::LoadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-														tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPathNName );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
 
@@ -210,14 +179,33 @@ void model::Tetrimino::LoadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-														tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPathNName );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPathNName );
 			}
 			lua_pop( lua, 1 );
+		}
+		lua_pop( lua, 1 );
+
+		std::string varName( "BlockOutlineColor" );
+		lua_getglobal(lua, varName.data() );
+		int type = lua_type(lua, TOP_IDX);
+		if ( LUA_TNUMBER == type )
+		{
+			OutlineColor = sf::Color((uint32_t)lua_tointeger(lua, TOP_IDX));
+		}
+		else if ( LUA_TNIL == type )
+		{
+			gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+												   varName, scriptPathNName );
+		}
+		else
+		{
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
+												   varName, scriptPathNName );
 		}
 		lua_pop( lua, 1 );
 	}
@@ -231,7 +219,7 @@ void model::Tetrimino::LoadResources( )
 		std::random_device rD;
 		std::minstd_rand rE( rD() );
 		std::uniform_int_distribution shapeDist( (int)::model::tetrimino::Type::I,
-												 (int)::model::tetrimino::Type::NONE_MAX-1 );
+			(int)::model::tetrimino::Type::NONE_MAX-1 );
 		type = (::model::tetrimino::Type)shapeDist(rE);
 	}
 	::model::Tetrimino retVal;
@@ -244,7 +232,7 @@ void model::Tetrimino::LoadResources( )
 			retVal.mPossibleRotations[2] = 0b0010'0010'0010'0010;
 			retVal.mPossibleRotations[3] = 0b0000'1111'0000'0000;
 			retVal.mRotationID = (::model::tetrimino::Rotation)1;
-			retVal.setColor( Colors[(int)Type::I], sf::Color(0xffffffff) );
+			retVal.setColor( Colors[(int)Type::I], OutlineColor );
 			break;
 		case ::model::tetrimino::Type::J:
 			retVal.mPossibleRotations[0] = 0b1000'1110'0000'0000;
@@ -252,7 +240,7 @@ void model::Tetrimino::LoadResources( )
 			retVal.mPossibleRotations[2] = 0b0000'1110'0010'0000;
 			retVal.mPossibleRotations[3] = 0b0110'0100'0100'0000;
 			retVal.mRotationID = (::model::tetrimino::Rotation)0;
-			retVal.setColor( Colors[(int)Type::J], sf::Color(0xffffffff) );
+			retVal.setColor( Colors[(int)Type::J], OutlineColor );
 			break;
 		case ::model::tetrimino::Type::L:
 			retVal.mPossibleRotations[0] = 0b0010'1110'0000'0000;
@@ -260,7 +248,7 @@ void model::Tetrimino::LoadResources( )
 			retVal.mPossibleRotations[2] = 0b0000'1110'1000'0000;
 			retVal.mPossibleRotations[3] = 0b0100'0100'0110'0000;
 			retVal.mRotationID = (::model::tetrimino::Rotation)0;
-			retVal.setColor( Colors[(int)Type::L], sf::Color(0xffffffff) );
+			retVal.setColor( Colors[(int)Type::L], OutlineColor );
 			break;
 		case ::model::tetrimino::Type::N:
 			retVal.mPossibleRotations[0] = 0b1100'0110'0000'0000;
@@ -268,7 +256,7 @@ void model::Tetrimino::LoadResources( )
 			retVal.mPossibleRotations[2] = 0b0000'1100'0110'0000;
 			retVal.mPossibleRotations[3] = 0b0010'0110'0100'0000;
 			retVal.mRotationID = (::model::tetrimino::Rotation)0;
-			retVal.setColor( Colors[(int)Type::N], sf::Color(0xffffffff) );
+			retVal.setColor( Colors[(int)Type::N], OutlineColor );
 			break;
 		case ::model::tetrimino::Type::S:
 			retVal.mPossibleRotations[0] = 0b0110'1100'0000'0000;
@@ -276,7 +264,7 @@ void model::Tetrimino::LoadResources( )
 			retVal.mPossibleRotations[2] = 0b0000'0110'1100'0000;
 			retVal.mPossibleRotations[3] = 0b1000'1100'0100'0000;
 			retVal.mRotationID = (::model::tetrimino::Rotation)0;
-			retVal.setColor( Colors[(int)Type::S], sf::Color(0xffffffff) );
+			retVal.setColor( Colors[(int)Type::S], OutlineColor );
 			break;
 		case ::model::tetrimino::Type::T:
 			retVal.mPossibleRotations[0] = 0b0100'1110'0000'0000;
@@ -284,7 +272,7 @@ void model::Tetrimino::LoadResources( )
 			retVal.mPossibleRotations[2] = 0b0000'1110'0100'0000;
 			retVal.mPossibleRotations[3] = 0b0100'0110'0100'0000;
 			retVal.mRotationID = (::model::tetrimino::Rotation)0;
-			retVal.setColor( Colors[(int)Type::T], sf::Color(0xffffffff) );
+			retVal.setColor( Colors[(int)Type::T], OutlineColor );
 			break;
 		case ::model::tetrimino::Type::O:
 		{
@@ -294,7 +282,7 @@ void model::Tetrimino::LoadResources( )
 			retVal.mPossibleRotations[2] = localspace;
 			retVal.mPossibleRotations[3] = localspace;
 			retVal.mRotationID = (::model::tetrimino::Rotation)0;
-			retVal.setColor( Colors[(int)Type::O], sf::Color(0xffffffff) );
+			retVal.setColor( Colors[(int)Type::O], OutlineColor );
 			break;
 		}
 		default:
@@ -305,10 +293,42 @@ void model::Tetrimino::LoadResources( )
 #endif
 			break;
 	}
+	retVal.mBlockShape.setOutlineThickness( -2.f );
 	retVal.mPosition.x = ::model::stage::GRID_WIDTH/2 - 1;
 	retVal.mPosition.y = 0;
 
 	return retVal;
+}
+
+model::Tetrimino::Tetrimino( )
+	: mIsFallingDown( false )
+{}
+
+model::Tetrimino::Tetrimino( const Tetrimino& arg )
+	: mIsFallingDown( false ), mType( arg.mType ),
+	mRotationID( arg.mRotationID ), mPosition( arg.mPosition )
+{
+	mBlockShape.setFillColor( arg.mBlockShape.getFillColor() );
+	mBlockShape.setOutlineThickness( arg.mBlockShape.getOutlineThickness() );
+	mBlockShape.setOutlineColor( arg.mBlockShape.getOutlineColor() );
+	for ( uint8_t i = 0; i != (uint8_t)::model::tetrimino::Rotation::NONE_MAX; ++i )
+	{
+		mPossibleRotations[i] = arg.mPossibleRotations[i];
+	}
+}
+
+void model::Tetrimino::operator=( const Tetrimino& arg )
+{
+	mType = arg.mType;
+	mRotationID = arg.mRotationID;
+	mPosition = arg.mPosition;
+	mBlockShape.setFillColor( arg.mBlockShape.getFillColor() );
+	mBlockShape.setOutlineThickness( arg.mBlockShape.getOutlineThickness() );
+	mBlockShape.setOutlineColor( arg.mBlockShape.getOutlineColor() );
+	for ( uint8_t i = 0; i != (uint8_t)::model::tetrimino::Rotation::NONE_MAX; ++i )
+	{
+		mPossibleRotations[i] = arg.mPossibleRotations[i];
+	}
 }
 
 void model::Tetrimino::tryRotate( const ::model::stage::Grid& grid )

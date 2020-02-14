@@ -1,5 +1,6 @@
 --BackgroundColor = 0x8ae5ffff --SKY
 BackgroundColor = 0x29cdb5fa --CYAN
+CellOutlineColor = 0x0000007f
 Font = "Fonts/AGENCYR.TTF"
 PlayerPanel = { x = 100, y = 0, cellSize = 30,
 				color = 0x1f1f1fff,

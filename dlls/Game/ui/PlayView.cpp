@@ -101,6 +101,9 @@ void ui::PlayView::LoadResources( )
 		}
 		lua_pop( lua, 1 );
 	}
+	lua_close( lua );
+
+	::model::Tetrimino::LoadResources( );
 }
 
 ui::PlayView::PlayView( sf::RenderWindow& window, ::scene::online::Online& net, const bool isPlayable )
@@ -114,9 +117,7 @@ ui::PlayView::PlayView( sf::RenderWindow& window, ::scene::online::Online& net, 
 	mAlarms{ Clock::time_point::max() },
 	mTexture_countdown( std::make_unique<sf::Texture>() ), mVfxCombo( window ),
 	mStage( window ), mNextTetriminoPanel( window )
-{
-	::ui::PlayView::LoadResources( );
-}
+{ }
 
 ui::PlayView::PlayView( const PlayView& another )
 	: mHasTetriminoLandedOnClient( false ), mHasTetriminoLandedOnServer( false ),

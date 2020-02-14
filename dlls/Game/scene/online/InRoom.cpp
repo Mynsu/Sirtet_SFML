@@ -66,6 +66,7 @@ void scene::online::InRoom::loadResources( )
 	float myPanelOutlineThickness = 11.0;
 	uint32_t myPanelOutlineColor = 0x3f3f3f'7f;
 	float myStageCellSize = 30.0;
+	mDrawingInfo.cellOutlineColor = 0x0000007f;
 	mDrawingInfo.myNicknameFontSize = 30;
 	mDrawingInfo.myNicknameColor = 0xffa500ff; // Orange
 	mDrawingInfo.otherPlayerNicknameFontSize = 10;
@@ -126,6 +127,25 @@ void scene::online::InRoom::loadResources( )
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 													 varName, scriptPathNName );
+		}
+		lua_pop( lua, 1 );
+
+		varName = "CellOutlineColor";
+		lua_getglobal( lua, varName.data() );
+		type = lua_type(lua, TOP_IDX);
+		if ( LUA_TNUMBER == type )
+		{
+			mDrawingInfo.cellOutlineColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
+		}
+		else if ( LUA_TNIL == type )
+		{
+			gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+												   varName, scriptPathNName );
+		}
+		else
+		{
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
+												   varName, scriptPathNName );
 		}
 		lua_pop( lua, 1 );
 
@@ -1101,7 +1121,6 @@ void scene::online::InRoom::loadResources( )
 	}
 	lua_close( lua );
 
-	const uint32_t cellOutlineColor = 0x0000007f;
 	mBackground.setSize( sf::Vector2f(mWindow_.getSize()) );
 	mBackground.setFillColor( sf::Color(backgroundColor) );
 	{
@@ -1111,7 +1130,7 @@ void scene::online::InRoom::loadResources( )
 		::model::Stage& stage = playView.stage();
 		stage.setPosition( myPanelPosition );
 		stage.setSize( myStageCellSize );
-		stage.setColor( sf::Color(myPanelColor), sf::Color(cellOutlineColor) );
+		stage.setColor( sf::Color(myPanelColor), sf::Color(mDrawingInfo.cellOutlineColor) );
 		stage.setOutline( myPanelOutlineThickness, sf::Color(myPanelOutlineColor) );
 		if ( false == playView.loadCountdownSprite(mDrawingInfo.countdownSpritePathNName) )
 		{
@@ -1135,7 +1154,7 @@ void scene::online::InRoom::loadResources( )
 		// Making the bound enough to contain a mouse cursor.
 		mDrawingInfo.nextTetriminoPanelBound.width += 5.f;
 		mDrawingInfo.nextTetriminoPanelBound.height += 5.f;
-		nextTetPanel.setColor( sf::Color(nextTetriminoPanelColor), sf::Color(cellOutlineColor) );
+		nextTetPanel.setColor( sf::Color(nextTetriminoPanelColor), sf::Color(mDrawingInfo.cellOutlineColor) );
 		nextTetPanel.setOutline( nextTetriminoPanelOutlineThickness, sf::Color(nextTetriminoPanelOutlineColor) );
 	}
 	mDrawingInfo.positionDifferences[0] =
@@ -1172,6 +1191,8 @@ void scene::online::InRoom::loadResources( )
 	mTextLabelForStartingGuide.setOrigin( center );
 	mTextLabelForStartingGuide.setPosition( startingGuidePosition );
 	mTextLabelForStartingGuide.setFillColor( sf::Color(startingGuideFontColor) );
+
+	::ui::PlayView::LoadResources( );
 }
 
 ::scene::online::ID scene::online::InRoom::update( std::vector<sf::Event>& eventQueue )

@@ -102,9 +102,6 @@
     <ClCompile Include="scene\online\InLobby.cpp">
       <Filter>소스 파일\scene\online</Filter>
     </ClCompile>
-    <ClCompile Include="scene\online\InRoom.cpp">
-      <Filter>소스 파일\scene\online</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\ui\PlayView.cpp">
       <Filter>소스 파일\ui</Filter>
     </ClCompile>
@@ -113,6 +110,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\ui\TextInputBox.cpp">
       <Filter>소스 파일\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="scene\online\InRoom.cpp">
+      <Filter>소스 파일\scene\online</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -19,6 +19,7 @@ namespace ui
 		void operator=( const PlayView& ) = delete;
 		virtual ~PlayView( ) = default;
 		
+		static void LoadResources( );
 		bool loadCountdownSprite( std::string& filePathNName );
 		void setCountdownSpriteDimension( const sf::Vector2f origin,
 										 const float cellSize,
@@ -42,7 +43,6 @@ namespace ui
 			LANDED_ON_SERVER,
 			NONE_MAX,
 		};
-		static void LoadResources( );
 		// This function doesn't reset the alarm.
 		bool alarmAfter( const uint16_t milliseconds, const AlarmIndex index )
 		{

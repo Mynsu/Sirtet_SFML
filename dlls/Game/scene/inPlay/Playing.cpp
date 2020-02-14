@@ -20,14 +20,15 @@ const uint16_t LINE_CLEAR_CHK_INTERVAL_MS = 100;
 	mWindow_( window ), mBackgroundRect_( (sf::RectangleShape&)shapeOrSprite ),
 	mOverlappedScene_( overlappedScene ),
 	mNextTetriminoPanel( window ),
-	mVfxCombo( window ), mCurrentTetrimino( ::model::Tetrimino::Spawn( ) ), mStage( window )
+	mVfxCombo( window ), mStage( window )
 {
-	gService()->audio().stopBGM( );
-	mNextTetriminos.emplace( ::model::Tetrimino::Spawn( ) );
-	mNextTetriminos.emplace( ::model::Tetrimino::Spawn( ) );
-	mNextTetriminos.emplace( ::model::Tetrimino::Spawn( ) );
-	
 	loadResources( );
+	gService()->audio().stopBGM( );
+	mCurrentTetrimino = ::model::Tetrimino::Spawn();
+	mNextTetriminos.emplace( ::model::Tetrimino::Spawn() );
+	mNextTetriminos.emplace( ::model::Tetrimino::Spawn() );
+	mNextTetriminos.emplace( ::model::Tetrimino::Spawn() );
+	
 	mNextTetriminoPanel.setTetrimino( mNextTetriminos.front() );
 }
 
@@ -575,6 +576,8 @@ void ::scene::inPlay::Playing::loadResources( )
 		mNextTetriminoPanel.setTetrimino( mNextTetriminos.front() );
 	}
 	mDrawingInfo.cellSize_ = stageCellSize;
+
+	::model::Tetrimino::LoadResources( );
 }
 
 ::scene::inPlay::ID scene::inPlay::Playing::update( std::vector<sf::Event>& eventQueue )
@@ -706,8 +709,8 @@ void ::scene::inPlay::Playing::loadResources( )
 		if ( true == mStage.isOver( ) )
 		{
 			mStage.blackout( );
-			const sf::Color GRAY( mDrawingInfo.blackOutColor );
-			mCurrentTetrimino.setColor( GRAY, GRAY );
+			const sf::Color color( mDrawingInfo.blackOutColor );
+			mCurrentTetrimino.setColor( color, color );
 			// Triggering.
 			mFrameCountCoolToGameOver = 1;
 		}

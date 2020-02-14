@@ -18,6 +18,7 @@ namespace model
 		void operator=( const Tetrimino& arg );
 		virtual ~Tetrimino( ) = default;
 
+		static void LoadResources( );
 		static Tetrimino Spawn( ::model::tetrimino::Type type = ::model::tetrimino::Type::NONE_MAX );
 		
 		// Returns true when colliding with the floor or another tetrimino.
@@ -117,7 +118,6 @@ namespace model
 			}
 		}
 	private:
-		static void LoadResources( );
 		bool hasCollidedWith( const ::model::stage::Grid& grid ) const;
 		bool mIsFallingDown;
 		// X and y on global coordinate.
@@ -130,6 +130,7 @@ namespace model
 		sf::RectangleShape mBlockShape;
 		::model::tetrimino::LocalSpace mPossibleRotations[(int)::model::tetrimino::Rotation::NONE_MAX];
 		static sf::Vector2<int8_t> Test[(int)::model::tetrimino::Rotation::NONE_MAX][4];
+		static sf::Color OutlineColor;
 		static sf::Color Colors[(int)::model::tetrimino::Type::NONE_MAX];
 	};
 }

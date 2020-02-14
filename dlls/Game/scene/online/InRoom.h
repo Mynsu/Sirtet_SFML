@@ -59,7 +59,7 @@ namespace scene::online
 		{
 			uint16_t framesRotationInterval,
 				myNicknameFontSize, otherPlayerNicknameFontSize;
-			uint32_t panelColor_on, outlineColor_on,
+			uint32_t cellOutlineColor, panelColor_on, outlineColor_on,
 				myNicknameColor, otherPlayerNicknameFontColor;
 			float cellSize, outlineThickness_on, angularVelocity, arcLength, scaleFactor;
 			sf::Vector2f position, positionDifferences[ROOM_CAPACITY-1];
