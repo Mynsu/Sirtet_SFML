@@ -34,7 +34,7 @@ private:
 		initialize( );
 	}
 	bool mVisible;
-	uint8_t mLinesShown;
+	uint8_t mMaxLinesShown, mReverseIndexInHistory;
 	uint16_t mFontSize;
 	std::string mCurrentInput;
 	Command mCommand;

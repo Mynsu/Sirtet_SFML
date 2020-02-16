@@ -3,7 +3,7 @@
 #include <Lib/ScriptLoader.h>
 
 Console::Console( ) :
-	mVisible( false ), mFontSize( 30 ), mLinesShown( 9 )
+	mVisible( false ), mFontSize( 30 ), mMaxLinesShown( 9 ), mReverseIndexInHistory( 0 )
 {
 	mExceptionTypes[(int)ExceptionType::VARIABLE_NOT_FOUND]
 		= "Variable Not Found: ";
@@ -24,7 +24,7 @@ void Console::initialize( )
 	mFontSize = 30;
 	uint32_t currentInputFontColor = 0xffffffff;
 	sf::Vector2u winSize( 800, 600 );
-	mLinesShown = 9;
+	mMaxLinesShown = 9;
 
 	const std::string scriptPathNName( "Scripts/Console.lua" );
 	const std::string varName0( "VisibleOnStart" );
@@ -186,7 +186,7 @@ void Console::initialize( )
 		// Type check
 		if ( true == std::holds_alternative<int>(it->second) )
 		{
-			mLinesShown = (uint8_t)std::get<int>(it->second);
+			mMaxLinesShown = (uint8_t)std::get<int>(it->second);
 		}
 		// Type Check Exception
 		else
@@ -214,7 +214,7 @@ void Console::initialize( )
 	mTextLabelForHistory.setCharacterSize( mFontSize );
 
 	const float margin = 30.f;
-	const float consoleHeight =	(float)(mFontSize*(mLinesShown+1));
+	const float consoleHeight =	(float)(mFontSize*(mMaxLinesShown+1));
 	mConsoleBackground.setPosition( sf::Vector2f(margin, winSize.y-consoleHeight-margin) );
 	mConsoleBackground.setSize( sf::Vector2f(winSize.x-margin*2, consoleHeight+margin) );
 	const sf::Vector2f curTfPos( margin+5.f, winSize.y-margin-(float)mFontSize-5.f );
@@ -277,7 +277,7 @@ void Console::draw( sf::RenderWindow& window )
 		mTextLabelForHistory.setString( crit->first );
 		mTextLabelForHistory.setFillColor( crit->second );
 		window.draw( mTextLabelForHistory );
-		if ( mLinesShown <= ++count )
+		if ( mMaxLinesShown <= ++count )
 		{
 			break;
 		}
@@ -319,6 +319,7 @@ void Console::handleEvent( std::vector<sf::Event>& eventQueue )
 						mCommand.processCommand( mCurrentInput );
 						mCurrentInput.clear( );
 						mTextFieldForCurrentInput.setString( mCurrentInput + '_' );
+						mReverseIndexInHistory = 0;
 						break;
 					case sf::Keyboard::Backspace:
 						if ( false == mCurrentInput.empty() )
@@ -328,9 +329,20 @@ void Console::handleEvent( std::vector<sf::Event>& eventQueue )
 						}
 						break;
 					case sf::Keyboard::Up:
-						mCurrentInput = mHistory.back().first;
-						mTextFieldForCurrentInput.setString( mCurrentInput + '_' );
+					{
+						auto it = mHistory.crbegin();
+						if ( mHistory.crend() != it )
+						{
+							it += mReverseIndexInHistory++;
+							if ( mHistory.size() <= mReverseIndexInHistory )
+							{
+								mReverseIndexInHistory = 0;
+							}
+							mCurrentInput = it->first;
+							mTextFieldForCurrentInput.setString( mCurrentInput + '_' );
+						}
 						break;
+					}
 					case sf::Keyboard::Down:
 						mCurrentInput.clear( );
 						mTextFieldForCurrentInput.setString( mCurrentInput + '_' );
