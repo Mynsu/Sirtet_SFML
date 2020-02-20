@@ -458,7 +458,7 @@ void Client::setNickname( std::string& nickname )
 {
 	mNickname.clear( );
 	mNickname = nickname;
-	mNicknameHashed_ = ::util::hash::Digest(nickname.data(), (uint8_t)nickname.size());
+	mNicknameHashed_ = ::util::hash::Digest2(nickname.data());
 }
 
 Socket& Client::socket( )

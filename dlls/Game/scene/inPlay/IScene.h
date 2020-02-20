@@ -12,6 +12,7 @@ namespace scene::inPlay
 		READY,
 		PLAYING,
 		GAME_OVER,
+		ALL_LEVELS_CLEARED,
 		ASSERTION,
 	};
 

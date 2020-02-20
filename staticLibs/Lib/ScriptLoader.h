@@ -16,17 +16,17 @@ namespace util::script
 	// This throws std::runtime_error when failing to open the script file.
 	template <typename Value=std::variant<bool,int,float,std::string>, typename Str, typename... Strs,
 		std::enable_if_t<std::is_same_v<std::decay_t<Str>,std::string>>* = nullptr>
-		static const std::unordered_map<Str, Value> LoadFromScript( Str scriptPathNName, Strs... variables )
+		static const std::unordered_map<Str, Value> LoadFromScript( Str scriptPath, Strs... variables )
 	{
 		std::unordered_map<Str, Value> retVals;
 		lua_State* lua = luaL_newstate();
-		if ( true == luaL_dofile(lua, scriptPathNName.data()) )
+		if ( true == luaL_dofile(lua, scriptPath.data()) )
 		{
 			lua_close( lua );
 #ifdef GAME_EXPORTS
-			gService()->console().printFailure( FailureLevel::FATAL, "File Not Found: "+scriptPathNName );
+			gService()->console().printFailure( FailureLevel::FATAL, "File Not Found: "+scriptPath );
 #else
-			gService._console().printFailure( FailureLevel::FATAL, "File Not Found: "+scriptPathNName );
+			gService._console().printFailure( FailureLevel::FATAL, "File Not Found: "+scriptPath );
 #endif
 			return retVals;
 		}
@@ -60,11 +60,11 @@ namespace util::script
 						{
 							const std::string msg( "Overflow or underflow occurs." );
 #ifdef GAME_EXPORTS
-							gService()->console().printFailure( FailureLevel::FATAL,
-																			msg + str + scriptPathNName );
+							gService()->console().printFailure( FailureLevel::WARNING,
+																			msg + str + scriptPath );
 #else
-							gService._console().printFailure( FailureLevel::FATAL,
-																	  msg + str + scriptPathNName );
+							gService._console().printFailure( FailureLevel::WARNING,
+																	  msg + str + scriptPath );
 #endif
 							continue;
 						}

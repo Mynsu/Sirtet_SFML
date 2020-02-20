@@ -101,11 +101,11 @@ void ::scene::online::Online::loadResources( )
 	bool isWDefault = true;
 	bool isHDefault = true;
 	lua_State* lua = luaL_newstate();
-	const std::string scriptPathNName( "Scripts/Online.lua" );
-	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
+	const std::string scriptPath( "Scripts/Online.lua" );
+	if ( true == luaL_dofile(lua, scriptPath.data()) )
 	{
-		// File Not Found Exception
-		gService()->console().printFailure( FailureLevel::FATAL, "File Not Found: "+scriptPathNName );
+		gService()->console().printFailure( FailureLevel::FATAL,
+										   "File Not Found: "+scriptPath );
 		lua_close( lua );
 	}
 	else
@@ -117,7 +117,7 @@ void ::scene::online::Online::loadResources( )
 		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPath );
 		}
 		else
 		{
@@ -132,7 +132,7 @@ void ::scene::online::Online::loadResources( )
 				{
 					// File Not Found Exception
 					gService()->console().printScriptError( ExceptionType::FILE_NOT_FOUND,
-						tableName+':'+field, scriptPathNName );
+						tableName+':'+field, scriptPath );
 				}
 				else
 				{
@@ -143,7 +143,7 @@ void ::scene::online::Online::loadResources( )
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-					tableName+':'+field, scriptPathNName );
+					tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -159,7 +159,7 @@ void ::scene::online::Online::loadResources( )
 				if ( 0 > temp )
 				{
 					gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
-						tableName+':'+field, scriptPathNName );
+						tableName+':'+field, scriptPath );
 				}
 				// When the value looks OK,
 				else
@@ -172,7 +172,7 @@ void ::scene::online::Online::loadResources( )
 			else if ( LUA_TNIL != type )
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-					tableName+':'+field, scriptPathNName );
+					tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -188,7 +188,7 @@ void ::scene::online::Online::loadResources( )
 				if ( 0 > temp )
 				{
 					gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
-						tableName+':'+field, scriptPathNName );
+						tableName+':'+field, scriptPath );
 				}
 				// When the value looks OK,
 				else
@@ -201,7 +201,7 @@ void ::scene::online::Online::loadResources( )
 			else if ( LUA_TNIL != type )
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-					tableName+':'+field, scriptPathNName );
+					tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 2 );
 		}
@@ -210,11 +210,12 @@ void ::scene::online::Online::loadResources( )
 
 	if ( true == isPathDefault )
 	{
-		std::string defaultFilePathNName( "Images/Online.png" );
-		if ( false == mTexture.loadFromFile(defaultFilePathNName) )
+		std::string defaultFilePath( "Images/Online.png" );
+		if ( false == mTexture.loadFromFile(defaultFilePath) )
 		{
 			// Exception: When there's not even the default file,
-			gService()->console().printFailure( FailureLevel::FATAL, std::string( "File Not Found: " )+defaultFilePathNName );
+			gService()->console().printFailure( FailureLevel::WARNING,
+											   "File Not Found: "+defaultFilePath );
 		}
 	}
 
@@ -547,7 +548,7 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag,
 void scene::online::Online::setMyNickname( std::string& myNickname )
 {
 	mMyNickname = myNickname;
-	mMyNicknameHashed_ = ::util::hash::Digest( myNickname.data(), (uint8_t)myNickname.size() );
+	mMyNicknameHashed_ = ::util::hash::Digest2(myNickname.data());
 }
 
 const std::string& scene::online::Online::myNickname( ) const
@@ -560,12 +561,10 @@ HashedKey scene::online::Online::myNicknameHashed( ) const
 	return mMyNicknameHashed_;
 }
 
-#ifdef _DEV
 ::scene::ID scene::online::Online::currentScene( ) const
 {
 	return ::scene::ID::ONLINE_BATTLE;
 }
-#endif
 
 void scene::online::Online::setScene( const::scene::online::ID nextSceneID )
 {

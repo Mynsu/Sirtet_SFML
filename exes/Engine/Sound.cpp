@@ -1,22 +1,22 @@
 #include "pch.h"
-#include "Audio.h"
+#include "Sound.h"
 
-bool Audio::IsInstantiated = false;
-const uint8_t Audio::MAX_NUM_OF_BUFFERS;
+bool Sound::IsInstantiated = false;
+const uint8_t Sound::MAX_NUM_OF_BUFFERS;
 
-Audio::Audio( )
+Sound::Sound( )
 {
 	IsInstantiated = true;
 	setBGMVolume( 10.f );
 	setSFXVolume( 20.f );
 }
 
-Audio::~Audio( )
+Sound::~Sound( )
 {
 	IsInstantiated = false;
 }
 
-bool Audio::playBGM( const std::string& fileName, const bool isRepeated )
+bool Sound::playBGM( const std::string& fileName, const bool isRepeated )
 {
 	bool isLoadSuccessful = true;
 	if ( false == mSoundBufferForBGM.loadFromFile(fileName) )
@@ -31,14 +31,14 @@ bool Audio::playBGM( const std::string& fileName, const bool isRepeated )
 	return isLoadSuccessful;
 }
 
-bool Audio::playSFX( const std::string& fileName )
+bool Sound::playSFX( const std::string& fileName )
 {
 	bool isLoadSuccessful = true;
 	if ( MAX_NUM_OF_BUFFERS < (uint8_t)mSoundBuffersForSFX.size() )
 	{
 		mSoundBuffersForSFX.clear();
 	}
-	const HashedKey fileNameHashed = ::util::hash::Digest(fileName.data(), (uint8_t)fileName.size());
+	const HashedKey fileNameHashed = ::util::hash::Digest2(fileName.data());
 	auto result = mSoundBuffersForSFX.emplace(fileNameHashed, sf::SoundBuffer());
 	if ( true == result.second )
 	{

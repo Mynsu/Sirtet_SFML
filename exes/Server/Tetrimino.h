@@ -15,15 +15,15 @@ namespace model
 	public:
 		// Needs to be initialized by Spawn().
 		Tetrimino( )
-			: mIsFallingDown( false )
+			: mIsHardDropping( false )
 		{ }
 		virtual ~Tetrimino( ) = default;
 
 		static ::model::Tetrimino Spawn( );
 
-		bool isFallingDown( ) const
+		bool isHardDropping( ) const
 		{
-			return mIsFallingDown;
+			return mIsHardDropping;
 		}
 		sf::Vector2<int8_t> position( ) const
 		{
@@ -77,13 +77,13 @@ namespace model
 		// Rotates counter-clockwise.
 		void tryRotate( const ::model::stage::Grid& grid );
 		void land( ::model::stage::Grid& grid );
-		void fallDown( const bool isFallingDown = true )
+		void hardDrop( const bool isHardDropping = true )
 		{
-			mIsFallingDown = isFallingDown;
+			mIsHardDropping = isHardDropping;
 		}
 	private:
 		bool hasCollidedWith( const ::model::stage::Grid& grid ) const;
-		bool mIsFallingDown;
+		bool mIsHardDropping;
 		// X and y on global coordinate.
 		// Unit: Grid.
 		sf::Vector2<int8_t> mPosition;

@@ -21,15 +21,14 @@
 void ::scene::inPlay::Ready::loadResources( )
 {
 	uint32_t backgroundColor = 0x29cdb5'7fu;
-	std::string countdownSpritePathNName( "Images/Countdown.png" );
+	std::string countdownSpritePath( "Images/Countdown.png" );
 
 	lua_State* lua = luaL_newstate();
-	const std::string scriptPathNName( "Scripts/Ready.lua" );
-	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
+	const std::string scriptPath( "Scripts/Ready.lua" );
+	if ( true == luaL_dofile(lua, scriptPath.data()) )
 	{
-		// File Not Found Exception
 		gService()->console().printFailure( FailureLevel::FATAL,
-											 "File Not Found: "+scriptPathNName );
+											 "File Not Found: "+scriptPath );
 	}
 	else
 	{
@@ -46,12 +45,12 @@ void ::scene::inPlay::Ready::loadResources( )
 		else if ( LUA_TNIL == type )
 		{
 			gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-												   varName, scriptPathNName );
+												   varName, scriptPath );
 		}
 		else
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-													 varName, scriptPathNName );
+													 varName, scriptPath );
 		}
 		lua_pop( lua, 1 );
 
@@ -60,7 +59,7 @@ void ::scene::inPlay::Ready::loadResources( )
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-													 tableName, scriptPathNName );
+													 tableName, scriptPath );
 		}
 		else
 		{
@@ -70,17 +69,17 @@ void ::scene::inPlay::Ready::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TSTRING == type )
 			{
-				countdownSpritePathNName = lua_tostring(lua, TOP_IDX);
+				countdownSpritePath = lua_tostring(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -94,7 +93,7 @@ void ::scene::inPlay::Ready::loadResources( )
 				if ( 0 > temp )
 				{
 					gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
-															tableName+':'+field, scriptPathNName );
+															tableName+':'+field, scriptPath );
 				}
 				else
 				{
@@ -104,12 +103,12 @@ void ::scene::inPlay::Ready::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -123,7 +122,7 @@ void ::scene::inPlay::Ready::loadResources( )
 				if ( 0 > temp )
 				{
 					gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
-															tableName+':'+field, scriptPathNName );
+															tableName+':'+field, scriptPath );
 				}
 				else
 				{
@@ -133,12 +132,12 @@ void ::scene::inPlay::Ready::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 		}
@@ -146,11 +145,11 @@ void ::scene::inPlay::Ready::loadResources( )
 	}
 	lua_close( lua );
 
-	if ( false == mTexture.loadFromFile(countdownSpritePathNName) )
+	if ( false == mTexture.loadFromFile(countdownSpritePath) )
 	{
 		// Exception: When there's not even the default file,
-		gService()->console().printFailure( FailureLevel::FATAL,
-												"File Not Found: "+countdownSpritePathNName );
+		gService()->console().printFailure( FailureLevel::WARNING,
+												"File Not Found: "+countdownSpritePath );
 	}
 
 	mBackgroundRect_.setFillColor( sf::Color(backgroundColor) );

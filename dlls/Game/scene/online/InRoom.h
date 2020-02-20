@@ -35,7 +35,7 @@ namespace scene::online
 			ALL_OVER_FREEZE,
 			NONE_MAX,
 		};
-		enum class AudioIndex
+		enum class SoundIndex
 		{
 			ON_SELECTION,
 			GAME_OVER,
@@ -65,7 +65,7 @@ namespace scene::online
 			sf::Vector2f position, positionDifferences[ROOM_CAPACITY-1];
 			sf::Vector2i countdownSpriteClipSize;
 			sf::FloatRect nextTetriminoPanelBound;
-			std::string countdownSpritePathNName;
+			std::string countdownSpritePath;
 		} mDrawingInfo;
 		static bool IsInstantiated;
 		bool mIsReceiving, mAsHost,
@@ -75,9 +75,9 @@ namespace scene::online
 		Clock::time_point mAlarms[(int)AlarmIndex::NONE_MAX];
 		Online& mNet;
 		std::unique_ptr<::scene::inPlay::IScene> mOverlappedScene;
-		// When empty, the value should be 0 == EMPTY_SLOT.
+		// When empty, the value should be 0 == NULL_EMPTY_SLOT.
 		HashedKey mOtherPlayerSlots[ROOM_CAPACITY-1];
-		std::string mAudioList[(int)AudioIndex::NONE_MAX];
+		std::string mSoundPaths[(int)SoundIndex::NONE_MAX];
 		sf::Font mFont;
 		sf::Text mTextLabelForStartingGuide, mLabelForNickname;
 		std::unordered_map<HashedKey, ::scene::online::Participant> mParticipants;

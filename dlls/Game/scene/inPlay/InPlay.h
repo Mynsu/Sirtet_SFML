@@ -7,15 +7,18 @@ namespace scene::inPlay
 	class InPlay final : public ::scene::IScene
 	{
 	public:
-		InPlay( sf::RenderWindow& window );
+		InPlay( sf::RenderWindow& window,
+			   const ::scene::inPlay::ID initScene = ::scene::inPlay::ID::READY );
 		~InPlay( );
 
 		void loadResources( ) override;
 		::scene::ID update( std::vector<sf::Event>& eventQueue ) override;
 		void draw( ) override;
-#ifdef _DEV
 		::scene::ID currentScene( ) const override;
-#endif
+		void setScene( const uint8_t sceneID ) override
+		{
+			setScene( (::scene::inPlay::ID)sceneID );
+		}
 	private:
 		void setScene( const ::scene::inPlay::ID nextInPlaySceneID );
 		static bool IsInstantiated;

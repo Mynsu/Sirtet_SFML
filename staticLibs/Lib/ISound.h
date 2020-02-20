@@ -5,12 +5,12 @@
 #pragma once
 #include <string>
 
-class IAudio
+class ISound
 {
 public:
-	IAudio( const IAudio& ) = delete;
-	void operator=( const IAudio& ) = delete;
-	virtual ~IAudio( ) = default;
+	ISound( const ISound& ) = delete;
+	void operator=( const ISound& ) = delete;
+	virtual ~ISound( ) = default;
 
 	// 0 to 100
 	virtual void setBGMVolume( const float volume ) = 0;
@@ -20,5 +20,5 @@ public:
 	virtual void stopBGM( ) = 0;
 	virtual bool playSFX( const std::string& fileName ) = 0;
 protected:
-	IAudio( ) = default;
+	ISound( ) = default;
 };

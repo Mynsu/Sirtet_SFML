@@ -16,14 +16,13 @@ bool model::Stage::isOver( ) const
 	return retVal;
 }
 
-void model::Stage::blackout( )
+void model::Stage::blackout( const sf::Color color )
 {
-	const sf::Color GRAY( 0x808080ff );
 	for ( auto& row : mGrid )
 	{
 		for ( model::stage::Cell& cell : row )
 		{
-			cell.color = GRAY;
+			cell.color = color;
 		}
 	}
 }

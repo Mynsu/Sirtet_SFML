@@ -63,8 +63,8 @@ namespace model
 
 		enum class Move
 		{
-			FALL_DOWN,
-			DOWN,
+			HARD_DROP,
+			DOWN, // Soft drop
 			LEFT,
 			RIGHT,
 			ROTATE,
@@ -157,7 +157,7 @@ enum class Request
 
 // Attached to char(for Request).
 constexpr Tag TAG_REQUEST = { (char)_Tag::REQUEST, ':', '\0' };
-const uint8_t TAG_REQUEST_LEN = ::util::hash::Measure(TAG_REQUEST);
+constexpr uint8_t TAG_REQUEST_LEN = ::util::hash::Measure(TAG_REQUEST);
 // Attached to nothing.
 constexpr Tag TAGGED_REQ_USER_LIST_IN_LOBBY = { (char)_Tag::REQUEST, ':', (char)Request::UPDATE_USER_LIST, '\0' };
 // Attached to nothing.

@@ -6,10 +6,11 @@
 #include "Playing.h"
 #include "GameOver.h"
 #include "Assertion.h"
+#include "AllClear.h"
 
 bool ::scene::inPlay::InPlay::IsInstantiated = false;
 
-::scene::inPlay::InPlay::InPlay( sf::RenderWindow& window )
+::scene::inPlay::InPlay::InPlay( sf::RenderWindow& window, const ::scene::inPlay::ID initScene )
 	: mWindow_( window )
 {
 	ASSERT_TRUE( false == IsInstantiated );
@@ -18,7 +19,7 @@ bool ::scene::inPlay::InPlay::IsInstantiated = false;
 	const auto it = vault.find(HK_FORE_FPS);
 	ASSERT_TRUE( vault.end() != it );
 	mFPS_ = (uint16_t)it->second;
-	setScene( ::scene::inPlay::ID::READY );
+	setScene( initScene );
 	loadResources( );
 
 	IsInstantiated = true;
@@ -33,6 +34,10 @@ void scene::inPlay::InPlay::loadResources( )
 {
 	mBackground.setSize( sf::Vector2f(mWindow_.getSize()) );
 	mCurrentScene->loadResources( );
+	if ( nullptr != mOverlappedScene )
+	{
+		mOverlappedScene->loadResources( );
+	}
 }
 
 ::scene::ID scene::inPlay::InPlay::update( std::vector<sf::Event>& eventQueue )
@@ -73,28 +78,46 @@ void ::scene::inPlay::InPlay::draw( )
 	}
 }
 
-#ifdef _DEV
 ::scene::ID scene::inPlay::InPlay::currentScene( ) const
 {
 	return ::scene::ID::SINGLE_PLAY;
 }
-#endif
 
 void scene::inPlay::InPlay::setScene( const ::scene::inPlay::ID nextInPlaySceneID )
 {
 	switch ( nextInPlaySceneID )
 	{
 		case ::scene::inPlay::ID::READY:
+			mCurrentScene.reset( );
 			mCurrentScene = std::make_unique<::scene::inPlay::Ready>(mWindow_, mBackground);
 			break;
 		case ::scene::inPlay::ID::PLAYING:
+			mCurrentScene.reset( );
 			mCurrentScene = std::make_unique<::scene::inPlay::Playing>(mWindow_, mBackground, mOverlappedScene);
 			break;
 		case ::scene::inPlay::ID::GAME_OVER:
+			mCurrentScene.reset( );
 			mCurrentScene = std::make_unique<::scene::inPlay::GameOver>(mWindow_, mBackground, mOverlappedScene);
 			break;
+		case ::scene::inPlay::ID::ALL_LEVELS_CLEARED:
+			if ( nullptr == mCurrentScene )
+			{
+				mCurrentScene = std::make_unique<::scene::inPlay::Playing>(mWindow_, mBackground, mOverlappedScene);
+			}
+			mOverlappedScene = std::make_unique<::scene::inPlay::AllClear>(mWindow_);
+			break;
 		case ::scene::inPlay::ID::ASSERTION:
+			if ( nullptr == mCurrentScene )
+			{
+				mCurrentScene = std::make_unique<::scene::inPlay::Playing>(mWindow_, mBackground, mOverlappedScene);
+			}
 			mOverlappedScene = std::make_unique<::scene::inPlay::Assertion>(mWindow_);
 			break;
+		default:
+#ifdef _DEBUG
+			__debugbreak( );
+#else
+			__assume( 0 );
+#endif
 	}
 }

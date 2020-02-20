@@ -9,7 +9,7 @@
 const uint16_t UPDATE_USER_LIST_INTERVAL = 300;
 const uint16_t REQUEST_DELAY = 60;
 const float ERROR_RANGE = 5.f;
-const float SPEED_NICKNAME_MOVE = .5f;
+const float SPEED_OF_NICKNAME_MOVE = .5f;
 std::mutex MutexForGuideText, MutexForMovingPoints;
 
 bool scene::online::InLobby::IsInstantiated = false;
@@ -94,18 +94,18 @@ void scene::online::InLobby::loadResources( )
 	mDrawingInfo.roomColor = sf::Color(0x3f3f3fff);
 	mDrawingInfo.totalDistanceUsersBoxToRoom = 0.f;
 	mDrawingInfo.remainingDistanceUsersBoxToRoom = 0.f;
-	mAudioList[(int)AudioIndex::ON_SELECTION] = "Audio/selection.wav";
+	mSoundPaths[(int)SoundIndex::ON_SELECTION] = "Sounds/selection.wav";
 	
 	//
 	// From 'InLobby.lua'.
 	//
 
 	lua_State* lua = luaL_newstate();
-	std::string scriptPathNName( "Scripts/InLobby.lua" );
-	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
+	std::string scriptPath( "Scripts/InLobby.lua" );
+	if ( true == luaL_dofile(lua, scriptPath.data()) )
 	{
-		// File Not Found Exception
-		gService()->console().printFailure( FailureLevel::FATAL, "File Not Found: "+scriptPathNName );
+		gService()->console().printFailure( FailureLevel::FATAL,
+										   "File Not Found: "+scriptPath );
 	}
 	else
 	{
@@ -122,12 +122,12 @@ void scene::online::InLobby::loadResources( )
 		else if ( LUA_TNIL == type )
 		{
 			gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-												   varName, scriptPathNName );
+												   varName, scriptPath );
 		}
 		else
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-													 varName, scriptPathNName );
+													 varName, scriptPath );
 		}
 		lua_pop( lua, 1 );
 
@@ -141,12 +141,12 @@ void scene::online::InLobby::loadResources( )
 		else if ( LUA_TNIL == type )
 		{
 			gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-												   varName, scriptPathNName );
+												   varName, scriptPath );
 		}
 		else
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-													 varName, scriptPathNName );
+													 varName, scriptPath );
 		}
 		lua_pop( lua, 1 );
 
@@ -155,7 +155,7 @@ void scene::online::InLobby::loadResources( )
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-													 tableName, scriptPathNName );
+													 tableName, scriptPath );
 		}
 		else
 		{
@@ -170,12 +170,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -190,12 +190,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -210,12 +210,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 		}
@@ -226,7 +226,7 @@ void scene::online::InLobby::loadResources( )
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-													 tableName, scriptPathNName );
+													 tableName, scriptPath );
 		}
 		else
 		{
@@ -242,12 +242,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -263,12 +263,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -284,12 +284,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 			
@@ -305,12 +305,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -325,12 +325,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -345,12 +345,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -365,12 +365,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 		}
@@ -381,7 +381,7 @@ void scene::online::InLobby::loadResources( )
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-													 tableName, scriptPathNName );
+													 tableName, scriptPath );
 		}
 		else
 		{
@@ -406,12 +406,12 @@ void scene::online::InLobby::loadResources( )
 					else if ( LUA_TNIL == type )
 					{
 						gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-															   tableName+":...", scriptPathNName );
+															   tableName+":...", scriptPath );
 					}
 					else
 					{
 						gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-																 tableName+":...", scriptPathNName );
+																 tableName+":...", scriptPath );
 					}
 					lua_pop( lua, 1 );
 
@@ -426,12 +426,12 @@ void scene::online::InLobby::loadResources( )
 					else if ( LUA_TNIL == type )
 					{
 						gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-															   tableName+":...", scriptPathNName );
+															   tableName+":...", scriptPath );
 					}
 					else
 					{
 						gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-																 tableName+":...", scriptPathNName );
+																 tableName+":...", scriptPath );
 					}
 					mDrawingInfo.movingPoints.emplace_back( point );
 					++i;
@@ -452,7 +452,7 @@ void scene::online::InLobby::loadResources( )
 		{
 			// Type Check Exception
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-													 tableName, scriptPathNName );
+													 tableName, scriptPath );
 		}
 		else
 		{
@@ -467,12 +467,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -487,12 +487,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -507,12 +507,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -527,12 +527,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -547,12 +547,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 		}
@@ -564,7 +564,7 @@ void scene::online::InLobby::loadResources( )
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-													 tableName, scriptPathNName );
+													 tableName, scriptPath );
 		}
 		else
 		{
@@ -597,7 +597,7 @@ void scene::online::InLobby::loadResources( )
 		{
 			// Type Check Exception
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-													 tableName, scriptPathNName );
+													 tableName, scriptPath );
 		}
 		else
 		{
@@ -612,12 +612,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -632,12 +632,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -652,12 +652,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -672,12 +672,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -692,12 +692,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -712,12 +712,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -732,12 +732,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -752,12 +752,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -772,12 +772,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -792,12 +792,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -812,12 +812,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -832,12 +832,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -852,12 +852,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -872,12 +872,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -892,22 +892,22 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 		}
 		lua_pop( lua, 1 );
 
-		tableName = "Audio";
+		tableName = "Sound";
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPath );
 		}
 		else
 		{
@@ -917,7 +917,7 @@ void scene::online::InLobby::loadResources( )
 			if ( false == lua_istable(lua, TOP_IDX) )
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+innerTableName, scriptPathNName );
+														 tableName+':'+innerTableName, scriptPath );
 			}
 			else
 			{
@@ -927,17 +927,17 @@ void scene::online::InLobby::loadResources( )
 				int type = lua_type(lua, TOP_IDX);
 				if ( LUA_TSTRING == type )
 				{
-					mAudioList[(int)AudioIndex::ON_SELECTION] = lua_tostring(lua, TOP_IDX);
+					mSoundPaths[(int)SoundIndex::ON_SELECTION] = lua_tostring(lua, TOP_IDX);
 				}
 				else if ( LUA_TNIL == type )
 				{
 					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-														   tableName+':'+field, scriptPathNName );
+														   tableName+':'+field, scriptPath );
 				}
 				else
 				{
 					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-															 tableName+':'+field, scriptPathNName );
+															 tableName+':'+field, scriptPath );
 				}
 				lua_pop( lua, 1 );
 			}
@@ -982,7 +982,7 @@ void scene::online::InLobby::loadResources( )
 	if ( false == mTextInputBox.loadFont(subWindowTitleFont) )
 	{
 		gService()->console().printScriptError(ExceptionType::FILE_NOT_FOUND,
-											   subWindowTitleFont, scriptPathNName );
+											   subWindowTitleFont, scriptPath );
 	}
 	mTextInputBox.setTitleDimension( subWindowTitleRelativePosition, subWindowTitleFontSize );
 	mTextInputBox.setTitleColor( sf::Color(subWindowTitleFontColor) );
@@ -997,12 +997,12 @@ void scene::online::InLobby::loadResources( )
 	mDrawingInfo.roomPosition.mComponents[0] = 100.f;
 	mDrawingInfo.roomPosition.mComponents[1] = 0.f;
 	float cellSize = 30.f;
-	scriptPathNName = "Scripts/InRoom.lua";
+	scriptPath = "Scripts/InRoom.lua";
 	lua = luaL_newstate();
-	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
+	if ( true == luaL_dofile(lua, scriptPath.data()) )
 	{
-		// File Not Found Exception
-		gService()->console().printFailure( FailureLevel::FATAL, "File Not Found: "+scriptPathNName );
+		gService()->console().printFailure( FailureLevel::FATAL,
+										   "File Not Found: "+scriptPath );
 	}
 	else
 	{
@@ -1014,7 +1014,7 @@ void scene::online::InLobby::loadResources( )
 		{
 			// Type Check Exception
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-													 tableName, scriptPathNName );
+													 tableName, scriptPath );
 		}
 		else
 		{
@@ -1029,12 +1029,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -1049,12 +1049,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -1069,12 +1069,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -1089,12 +1089,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 
 			field = "outlineThickness";
@@ -1108,12 +1108,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -1128,12 +1128,12 @@ void scene::online::InLobby::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 		}
@@ -1288,10 +1288,10 @@ void scene::online::InLobby::loadResources( )
 		true == mTextInputBox.processEvent(eventQueue) )
 	{
 		joinRoom( mTextInputBox.inputString() );
-		if ( false == gService()->audio().playSFX(mAudioList[(int)AudioIndex::ON_SELECTION]) )
+		if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::ON_SELECTION]) )
 		{
 			gService()->console().printFailure(FailureLevel::WARNING,
-											   "File Not Found: "+mAudioList[(int)AudioIndex::ON_SELECTION] );
+											   "File Not Found: "+mSoundPaths[(int)SoundIndex::ON_SELECTION] );
 		}
 	}
 
@@ -1305,10 +1305,10 @@ void scene::online::InLobby::loadResources( )
 		if ( sf::Event::EventType::KeyPressed == it->type &&
 			sf::Keyboard::Escape == it->key.code )
 		{
-			if ( false == gService()->audio().playSFX(mAudioList[(int)AudioIndex::ON_SELECTION]) )
+			if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::ON_SELECTION]) )
 			{
 				gService()->console().printFailure(FailureLevel::WARNING,
-												   "File Not Found: "+mAudioList[(int)AudioIndex::ON_SELECTION] );
+												   "File Not Found: "+mSoundPaths[(int)SoundIndex::ON_SELECTION] );
 			}
 			retVal = ::scene::online::ID::MAIN_MENU;
 			it = eventQueue.erase(it);
@@ -1324,10 +1324,10 @@ void scene::online::InLobby::loadResources( )
 					100.f > diff.magnitude() )
 				{
 					createRoom( );
-					if ( false == gService()->audio().playSFX(mAudioList[(int)AudioIndex::ON_SELECTION]) )
+					if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::ON_SELECTION]) )
 					{
 						gService()->console().printFailure(FailureLevel::WARNING,
-														   "File Not Found: "+mAudioList[(int)AudioIndex::ON_SELECTION] );
+														   "File Not Found: "+mSoundPaths[(int)SoundIndex::ON_SELECTION] );
 					}
 				}
 				mLatestMouseEvent.latestClickTime = now;
@@ -1454,7 +1454,7 @@ void scene::online::InLobby::draw( )
 				}
 				else
 				{
-					const math::Vector<2> nv( v.normalize()*SPEED_NICKNAME_MOVE );
+					const math::Vector<2> nv( v.normalize()*SPEED_OF_NICKNAME_MOVE );
 					textFieldAndDestination.first.move( nv.mComponents[0], nv.mComponents[1] );
 					mWindow_.draw( textFieldAndDestination.first );
 					break;

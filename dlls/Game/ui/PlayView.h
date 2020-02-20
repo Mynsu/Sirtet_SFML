@@ -20,7 +20,7 @@ namespace ui
 		virtual ~PlayView( ) = default;
 		
 		static void LoadResources( );
-		bool loadCountdownSprite( std::string& filePathNName );
+		bool loadCountdownSprite( std::string& filePath );
 		void setCountdownSpriteDimension( const sf::Vector2f origin,
 										 const float cellSize,
 										 const sf::Vector2i clipSize );
@@ -68,13 +68,13 @@ namespace ui
 			PLAYING,
 			WAITING_OR_OVER,
 		};
-		enum class AudioIndex
+		enum class SoundIndex
 		{
 			TETRIMINO_LOCKED,
 			LINE_CLEARED,
 			NONE_MAX,
 		};
-		static std::string AudioList[(int)AudioIndex::NONE_MAX];
+		static std::string SoundPaths[(int)SoundIndex::NONE_MAX];
 		State mState_;
 		sf::Vector2i countdownSpriteSize_;
 		sf::RenderWindow& mWindow_;

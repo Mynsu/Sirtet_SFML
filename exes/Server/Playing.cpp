@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "Playing.h"
 
-const uint8_t FALLING_DOWN_INTERVAL_MS = 17;
-const uint8_t FALLING_DOWN_SPEED = 3;
+const uint8_t HARD_DROP_DELTA_TIME_MS = 17;
+const uint8_t HARD_DROP_SPEED = 3;
 const uint16_t ASYNC_TOLERANCE_MS = 2500;
 const uint16_t GAME_OVER_CHK_INTERVAL_MS = 250;
 
@@ -68,17 +68,17 @@ bool Playing::update( )
 	}
 
 	bool hasTetriminoLandedOnServer = false;
-	if ( true == mCurrentTetrimino.isFallingDown() )
+	if ( true == mCurrentTetrimino.isHardDropping() )
 	{
-		if ( true == alarmAfter(FALLING_DOWN_INTERVAL_MS, AlarmIndex::TETRIMINO_DOWN) )
+		if ( true == alarmAfter(HARD_DROP_DELTA_TIME_MS, AlarmIndex::TETRIMINO_DOWN) )
 		{
 			resetAlarm( AlarmIndex::TETRIMINO_DOWN );
-			for ( uint8_t i = 0; FALLING_DOWN_SPEED != i; ++i )
+			for ( uint8_t i = 0; HARD_DROP_SPEED != i; ++i )
 			{
 				hasTetriminoLandedOnServer = mCurrentTetrimino.moveDown(mStage.cgrid());
 				if ( true == hasTetriminoLandedOnServer )
 				{
-					mCurrentTetrimino.fallDown( false );
+					mCurrentTetrimino.hardDrop( false );
 					goto last;
 				}
 			}
@@ -90,8 +90,8 @@ bool Playing::update( )
 	{
 		switch ( mMoveToUpdate )
 		{
-			case ::model::tetrimino::Move::FALL_DOWN:
-				mCurrentTetrimino.fallDown( );
+			case ::model::tetrimino::Move::HARD_DROP:
+				mCurrentTetrimino.hardDrop( );
 				[[ fallthrough ]];
 			case ::model::tetrimino::Move::DOWN:
 				hasTetriminoLandedOnServer = mCurrentTetrimino.moveDown(mStage.cgrid());

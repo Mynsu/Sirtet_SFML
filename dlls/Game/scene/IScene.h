@@ -8,11 +8,11 @@ namespace scene
 	enum class ID
 	{
 		AS_IS = -1,
-		INTRO,
-		MAIN_MENU,
-		SINGLE_PLAY,
-		ONLINE_BATTLE,
-		MAX,
+		INTRO = 0,
+		MAIN_MENU = 1,
+		SINGLE_PLAY = 2,
+			ALL_LEVELS_CLEARED = 21,
+		ONLINE_BATTLE = 3,
 	};
 
 	class IScene
@@ -25,9 +25,8 @@ namespace scene
 		virtual void loadResources( ) = 0;
 		virtual ::scene::ID update( std::vector<sf::Event>& eventQueue ) = 0;
 		virtual void draw( ) = 0;
-#ifdef _DEV
 		virtual ::scene::ID currentScene( ) const = 0;
-#endif
+		virtual void setScene( const uint8_t sceneID ) = 0;
 
 		// NOTE: Protected constructor prevents users from instantiating the abstract class.
 	protected:

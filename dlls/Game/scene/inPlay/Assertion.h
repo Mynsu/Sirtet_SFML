@@ -13,14 +13,14 @@ namespace scene::inPlay
 		::scene::inPlay::ID update( std::vector<sf::Event>& eventQueue ) override;
 		void draw( ) override;
 	private:
-		enum class AudioIndex
+		enum class SoundIndex
 		{
 			ON_SELECTION,
 			NULL_MAX,
 		};
 		uint16_t mFPS_, mFrameCountToCancel;
 		sf::RenderWindow& mWindow_;
-		std::string mAudioList[(int)AudioIndex::NULL_MAX];
+		std::string mSoundPaths[(int)SoundIndex::NULL_MAX];
 		sf::Font mFont;
 		sf::Text mTextLabelForGuide;
 		sf::RectangleShape mBackground;

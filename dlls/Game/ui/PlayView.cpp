@@ -4,34 +4,33 @@
 #include "../scene/online/Online.h"
 #include "../ServiceLocatorMirror.h"
 
-const uint8_t FALLING_DOWN_SPEED = 3;
+const uint8_t HARD_DROP_SPEED = 3;
 const uint16_t INPUT_DELAY_MS = 40;
 const uint16_t ASYNC_TOLERANCE_MS = 2500;
-std::string ui::PlayView::AudioList[(int)AudioIndex::NONE_MAX];
+std::string ui::PlayView::SoundPaths[(int)SoundIndex::NONE_MAX];
 
 void ui::PlayView::LoadResources( )
 {
-	AudioList[(int)AudioIndex::TETRIMINO_LOCKED] = "Audio/tetriminoLocked.wav";
-	AudioList[(int)AudioIndex::LINE_CLEARED] = "Audio/lineCleared.wav";
+	SoundPaths[(int)SoundIndex::TETRIMINO_LOCKED] = "Sounds/tetriminoLocked.wav";
+	SoundPaths[(int)SoundIndex::LINE_CLEARED] = "Sounds/lineCleared.wav";
 
 	lua_State* lua = luaL_newstate( );
-	const std::string scriptPathNName( "Scripts/Playing.lua" );
-	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
+	const std::string scriptPath( "Scripts/Playing.lua" );
+	if ( true == luaL_dofile(lua, scriptPath.data()) )
 	{
-		// File Not Found Exception
 		gService()->console().printFailure( FailureLevel::FATAL,
-											 "File Not Found: "+scriptPathNName );
+											 "File Not Found: "+scriptPath );
 	}
 	else
 	{
 		luaL_openlibs( lua );
 		const int TOP_IDX = -1;
 
-		std::string tableName( "Audio" );
+		std::string tableName( "Sound" );
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPath );
 		}
 		else
 		{
@@ -41,7 +40,7 @@ void ui::PlayView::LoadResources( )
 			if ( false == lua_istable(lua, TOP_IDX) )
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+innerTableName, scriptPathNName );
+														 tableName+':'+innerTableName, scriptPath );
 			}
 			else
 			{
@@ -51,17 +50,17 @@ void ui::PlayView::LoadResources( )
 				int type = lua_type(lua, TOP_IDX);
 				if ( LUA_TSTRING == type )
 				{
-					AudioList[(int)AudioIndex::TETRIMINO_LOCKED] = lua_tostring(lua, TOP_IDX);
+					SoundPaths[(int)SoundIndex::TETRIMINO_LOCKED] = lua_tostring(lua, TOP_IDX);
 				}
 				else if ( LUA_TNIL == type )
 				{
 					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-														   tableName+':'+field, scriptPathNName );
+														   tableName+':'+field, scriptPath );
 				}
 				else
 				{
 					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-															 tableName+':'+field, scriptPathNName );
+															 tableName+':'+field, scriptPath );
 				}
 				lua_pop( lua, 1 );
 			}
@@ -73,7 +72,7 @@ void ui::PlayView::LoadResources( )
 			if ( false == lua_istable(lua, TOP_IDX) )
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+innerTableName, scriptPathNName );
+														 tableName+':'+innerTableName, scriptPath );
 			}
 			else
 			{
@@ -83,17 +82,17 @@ void ui::PlayView::LoadResources( )
 				int type = lua_type(lua, TOP_IDX);
 				if ( LUA_TSTRING == type )
 				{
-					AudioList[(int)AudioIndex::LINE_CLEARED] = lua_tostring(lua, TOP_IDX);
+					SoundPaths[(int)SoundIndex::LINE_CLEARED] = lua_tostring(lua, TOP_IDX);
 				}
 				else if ( LUA_TNIL == type )
 				{
 					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-														   tableName+':'+field, scriptPathNName );
+														   tableName+':'+field, scriptPath );
 				}
 				else
 				{
 					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-															 tableName+':'+field, scriptPathNName );
+															 tableName+':'+field, scriptPath );
 				}
 				lua_pop( lua, 1 );
 			}
@@ -248,14 +247,14 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
 			}
 		}
 		
-		if ( true == mCurrentTetrimino.isFallingDown() )
+		if ( true == mCurrentTetrimino.isHardDropping() )
 		{
-			for ( uint8_t i = 0; FALLING_DOWN_SPEED != i; ++i )
+			for ( uint8_t i = 0; HARD_DROP_SPEED != i; ++i )
 			{
 				mHasTetriminoLandedOnClient = mCurrentTetrimino.moveDown(mStage.cgrid());
 				if ( true == mHasTetriminoLandedOnClient )
 				{
-					mCurrentTetrimino.fallDown( false );
+					mCurrentTetrimino.hardDrop( false );
 					const uint8_t ignored = 1;
 					packet.pack( TAG_MY_TETRIMINO_LANDED_ON_CLIENT, ignored );
 					goto last;
@@ -278,9 +277,9 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
 								mFrameCountInputDelay = 0;
 								if ( false == mHasTetriminoLandedOnServer )
 								{
-									packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::FALL_DOWN );
+									packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::HARD_DROP );
 								}
-								mCurrentTetrimino.fallDown( );
+								mCurrentTetrimino.hardDrop( );
 								resetAlarm( AlarmIndex::TETRIMINO_DOWN );
 							}
 							it = eventQueue.erase(it);
@@ -371,10 +370,10 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
 	{
 		if ( true == mHasTetriminoLandedOnServer )
 		{
-			if ( false == gService()->audio().playSFX(AudioList[(int)AudioIndex::TETRIMINO_LOCKED]) )
+			if ( false == gService()->sound().playSFX(SoundPaths[(int)SoundIndex::TETRIMINO_LOCKED]) )
 			{
 				gService()->console().printFailure(FailureLevel::WARNING,
-												   "File Not Found: "+AudioList[(int)AudioIndex::TETRIMINO_LOCKED] );
+												   "File Not Found: "+SoundPaths[(int)SoundIndex::TETRIMINO_LOCKED] );
 			}
 			mHasTetriminoLandedOnServer = false;
 			mHasTetriminoLandedOnClient = false;
@@ -428,10 +427,10 @@ void ui::PlayView::setNumOfLinesCleared( const uint8_t numOfLinesCleared )
 {
 	ASSERT_TRUE( numOfLinesCleared <= ::model::tetrimino::BLOCKS_A_TETRIMINO );
 	mNumOfLinesCleared = numOfLinesCleared;
-	if ( false == gService()->audio().playSFX(AudioList[(int)AudioIndex::LINE_CLEARED]) )
+	if ( false == gService()->sound().playSFX(SoundPaths[(int)SoundIndex::LINE_CLEARED]) )
 	{
 		gService()->console().printFailure(FailureLevel::WARNING,
-										   "File Not Found: "+AudioList[(int)AudioIndex::LINE_CLEARED] );
+										   "File Not Found: "+SoundPaths[(int)SoundIndex::LINE_CLEARED] );
 	}
 	mFrameCountVfxDuration = mFPS_;
 }

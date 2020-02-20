@@ -1,13 +1,13 @@
 #pragma once
 #include "pch.h" // Commonly included headers, not pch.
 #include "Console.h"
-#include "Audio.h"
+#include "Sound.h"
 
 class ServiceLocator final : public IServiceLocator
 {
 public:
 	ServiceLocator( )
-		: mAudio( std::make_unique<Audio>() )
+		: mSound( std::make_unique<Sound>() )
 	{
 		ASSERT_TRUE( false == IsInstantiated );
 
@@ -41,13 +41,13 @@ public:
 	{
 		return mVault;
 	}
-	void registerAudio( std::unique_ptr<IAudio>& audioService )
+	void registerSound( std::unique_ptr<ISound>& soundService )
 	{
-		mAudio = std::move(audioService);
+		mSound = std::move(soundService);
 	}
-	auto audio( ) -> IAudio&
+	auto sound( ) -> ISound&
 	{
-		return *mAudio;
+		return *mSound;
 	}
 	void release( )
 	{
@@ -56,7 +56,7 @@ public:
 	}
 private:
 	static bool IsInstantiated;
-	std::unique_ptr<IAudio> mAudio;
+	std::unique_ptr<ISound> mSound;
 	Console mConsole;
 	std::unordered_map<HashedKey, Dword> mVault;
 };

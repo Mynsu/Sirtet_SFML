@@ -28,11 +28,11 @@ sf::Color model::Tetrimino::Colors[(int)Type::NONE_MAX] =
 void model::Tetrimino::LoadResources( )
 {
 	lua_State* lua = luaL_newstate();
-	const std::string scriptPathNName( "Scripts/Tetrimino.lua" );
-	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
+	const std::string scriptPath( "Scripts/Tetrimino.lua" );
+	if ( true == luaL_dofile(lua, scriptPath.data()) )
 	{
 		gService()->console().printFailure( FailureLevel::FATAL,
-										   "File Not Found: "+scriptPathNName );
+										   "File Not Found: "+scriptPath );
 	}
 	else
 	{
@@ -44,7 +44,7 @@ void model::Tetrimino::LoadResources( )
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-												   tableName, scriptPathNName );
+												   tableName, scriptPath );
 		}
 		else
 		{
@@ -59,12 +59,12 @@ void model::Tetrimino::LoadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -79,12 +79,12 @@ void model::Tetrimino::LoadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -99,12 +99,12 @@ void model::Tetrimino::LoadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -119,12 +119,12 @@ void model::Tetrimino::LoadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -139,12 +139,12 @@ void model::Tetrimino::LoadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -159,12 +159,12 @@ void model::Tetrimino::LoadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -179,12 +179,12 @@ void model::Tetrimino::LoadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 		}
@@ -200,12 +200,12 @@ void model::Tetrimino::LoadResources( )
 		else if ( LUA_TNIL == type )
 		{
 			gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-												   varName, scriptPathNName );
+												   varName, scriptPath );
 		}
 		else
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-												   varName, scriptPathNName );
+												   varName, scriptPath );
 		}
 		lua_pop( lua, 1 );
 	}
@@ -301,11 +301,11 @@ void model::Tetrimino::LoadResources( )
 }
 
 model::Tetrimino::Tetrimino( )
-	: mIsFallingDown( false )
+	: mIsHardDropping( false )
 {}
 
 model::Tetrimino::Tetrimino( const Tetrimino& arg )
-	: mIsFallingDown( false ), mType( arg.mType ),
+	: mIsHardDropping( false ), mType( arg.mType ),
 	mRotationID( arg.mRotationID ), mPosition( arg.mPosition )
 {
 	mBlockShape.setFillColor( arg.mBlockShape.getFillColor() );

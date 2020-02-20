@@ -8,27 +8,27 @@ namespace util::hash
 {
 	constexpr uint8_t Measure( const char* str )
 	{
-		return ('\0'==*str)? 0u: 1+Measure( ++str );
+		return ('\0'==*str)? 0: 1+Measure( ++str );
 	}
 
-	constexpr HashedKey Digest( const char* arg, const uint8_t len )
+	template <int N>
+	constexpr HashedKey Digest( const char (&str)[N] )
 	{
 		HashedKey retHash = 0;
-		for ( uint8_t i = 0; i != len; ++i )
+		for ( uint8_t i = 0; N != i; ++i )
 		{
-			retHash += 65599*retHash + arg[i];
+			retHash = str[i] + (retHash<<6) + (retHash<<16) - retHash;
 		}
-		return retHash ^ (retHash>>16);
+		return retHash & 0x7fffffff;
 	}
 
-	constexpr HashedKey Digest( uint32_t arg )
+	inline HashedKey Digest2( const char* str )
 	{
 		HashedKey retHash = 0;
-		while ( 0 != arg )
+		while ( *str )
 		{
-			retHash += 65599*retHash + 48 + arg%10;
-			arg /= 10;
+			retHash = *str++ + (retHash<<6) + (retHash<<16) - retHash;
 		}
-		return retHash ^ (retHash>>16);
+		return retHash & 0x7fffffff;
 	}
 }

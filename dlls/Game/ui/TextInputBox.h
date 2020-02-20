@@ -33,10 +33,10 @@ namespace ui
 		{
 			mSubWindow.setFillColor( color );
 		}
-		bool loadFont( const std::string& fontPathNName )
+		bool loadFont( const std::string& fontPath )
 		{
 			bool result = true;
-			if ( false == mFont.loadFromFile(fontPathNName) )
+			if ( false == mFont.loadFromFile(fontPath) )
 			{
 				result = false;
 				return result;

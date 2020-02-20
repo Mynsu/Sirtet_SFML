@@ -20,9 +20,9 @@ void ::scene::SceneManager::lastInit( sf::RenderWindow* const window )
 	gService()->console().addCommand( CMD_RELOAD, std::bind(&SceneManager::refresh, this, std::placeholders::_1) );
 
 	::scene::ID startScene = ::scene::ID::INTRO;
-	const std::string scriptPathNName( "Scripts/_OnlyDuringDev.lua" );
+	const std::string scriptPath( "Scripts/_OnlyDuringDev.lua" );
 	const std::string varName( "StartScene" );
-	const auto result = ::util::script::LoadFromScript(scriptPathNName, varName);
+	const auto result = ::util::script::LoadFromScript(scriptPath, varName);
 	if ( const auto it = result.find(varName);
 		result.cend() != it )
 	{
@@ -33,7 +33,7 @@ void ::scene::SceneManager::lastInit( sf::RenderWindow* const window )
 		}
 		else
 		{
-			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, varName, scriptPathNName );
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, varName, scriptPath );
 		}
 	}
 	setScene( startScene );
@@ -63,10 +63,24 @@ void ::scene::SceneManager::setScene( const ::scene::ID nextScene )
 			mCurrentScene = std::make_unique<::scene::online::Online>(*mWindow);
 			break;
 		default:
+			if ( (int)nextScene/10 == (int)::scene::ID::SINGLE_PLAY )
+			{
+				if ( nullptr == mCurrentScene ||
+					::scene::ID::SINGLE_PLAY != mCurrentScene->currentScene() )
+				{
+					mCurrentScene =
+						std::make_unique<::scene::inPlay::InPlay>(*mWindow,	(::scene::inPlay::ID)((int)nextScene%10));
+				}
+				else
+				{
+					mCurrentScene->setScene( (uint8_t)nextScene%10 );
+				}
+			}
 #ifdef _DEBUG
-			__debugbreak( );
-#else
-			__assume( 0 );
+			else
+			{
+				__debugbreak( );
+			}
 #endif
 			break;
 	}

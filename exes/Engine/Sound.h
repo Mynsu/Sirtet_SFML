@@ -1,11 +1,11 @@
 #pragma once
-#include "Lib/IAudio.h"
+#include "Lib/ISound.h"
 
-class Audio final : public IAudio
+class Sound final : public ISound
 {
 public:
-	Audio( );
-	~Audio( );
+	Sound( );
+	~Sound( );
 
 	// 0 to 100
 	void setBGMVolume( const float volume ) override

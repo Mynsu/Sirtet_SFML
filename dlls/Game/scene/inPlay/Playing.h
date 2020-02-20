@@ -19,26 +19,41 @@ namespace scene::inPlay
 		::scene::inPlay::ID update( std::vector<sf::Event>& eventQueue ) override;
 		void draw( ) override;
 	private:
-		enum class AudioIndex
+		enum class SoundIndex
 		{
 			TETRIMINO_LOCKED,
 			LINE_CLEARED,
+			LEVEL_CLEARED,
 			NONE_MAX,
 		};
 		void reloadTetrimino( );
+		struct Mission
+		{
+			uint8_t numOfLinesToClear;
+			float tempoOnStart;
+		};
 		struct
 		{
 			uint32_t blackOutColor;
-			float cellSize_;
+			float cellSize_, gapBetweenScoreLetter, animationSpeed;
+			sf::Vector2i scoreSpriteClipSize;
+			sf::Vector2f scorePosition;
 		} mDrawingInfo;
-		uint8_t mNumOfLinesCleared;
+		uint8_t mNumOfLinesRecentlyCleared, mCurrentLevel;
+		int8_t mNumOfLinesRemainingToLevelClear;
 		uint16_t mFrameCountSoftDropInterval, mFrameCountClearingInterval_,
-			mFrameCountVfxDuration_, mFrameCountCoolToGameOver;
+			mFrameCountVfxDuration_,
+			mFrameCountCoolToGameOver, mFrameCountCoolToNextLevel, mFrameCountCoolAllLevelsCleared;
+		int16_t mAnimationDamper1, mAnimationDamper10;
 		float mTempo;
 		sf::RenderWindow& mWindow_;
 		sf::RectangleShape& mBackgroundRect_;
 		const std::unique_ptr<::scene::inPlay::IScene>& mOverlappedScene_;
-		std::string mAudioList[(int)AudioIndex::NONE_MAX];
+		// Missions to each level.
+		std::vector<Mission> mMissions;
+		std::string mSoundPaths[(int)SoundIndex::NONE_MAX];
+		sf::Texture mTextureForScore;
+		sf::Sprite mSpriteForScore;
 		::ui::NextTetriminoPanel mNextTetriminoPanel;
 		::vfx::Combo mVfxCombo;
 		::model::Tetrimino mCurrentTetrimino;

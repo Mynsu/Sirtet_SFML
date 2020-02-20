@@ -20,7 +20,7 @@ namespace scene::online
 			TICKETING,
 			SUBMITTING_TICKET,
 		};
-		enum class AudioIndex
+		enum class SoundIndex
 		{
 			ON_SELECTION,
 			NULL_MAX,
@@ -30,7 +30,7 @@ namespace scene::online
 		::scene::online::Waiting::State mState;
 		sf::RenderWindow& mWindow_;
 		Online& mNet;
-		std::string mAudioList[(int)AudioIndex::NULL_MAX];
+		std::string mSoundPaths[(int)SoundIndex::NULL_MAX];
 		sf::Font mFont;
 		sf::Text mTextLabels[3];
 	};

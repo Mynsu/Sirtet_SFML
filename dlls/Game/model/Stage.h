@@ -17,7 +17,7 @@ namespace model
 		}
 		uint8_t tryClearRow( );
 		bool isOver( ) const;
-		void blackout( );
+		void blackout( const sf::Color color );
 		void clear( );
 		::model::stage::Grid& grid( )
 		{

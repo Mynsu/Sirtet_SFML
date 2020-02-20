@@ -14,25 +14,25 @@ scene::inPlay::GameOver::GameOver( sf::RenderWindow& window, sf::Drawable& shape
 	ASSERT_TRUE( vault.end() != it );
 	mFPS_ = (uint16_t)it->second;
 	loadResources( );
-	if ( false == gService()->audio().playBGM(mAudioList[(int)AudioIndex::BGM]) )
+	if ( false == gService()->sound().playBGM(mSoundPaths[(int)SoundIndex::BGM]) )
 	{
 		gService()->console().printFailure(FailureLevel::WARNING,
-										   "File Not Found: "+mAudioList[(int)AudioIndex::BGM] );
+										   "File Not Found: "+mSoundPaths[(int)SoundIndex::BGM] );
 	}
 }
 
 void scene::inPlay::GameOver::loadResources( )
 {
 	sf::Vector2f imageSize( 512.f, 256.f );
-	std::string imagePathNName( "Images/GameOver.png" );
-	mAudioList[(int)AudioIndex::BGM] = "Audio/gameOver.wav";
+	std::string imagePath( "Images/GameOver.png" );
+	mSoundPaths[(int)SoundIndex::BGM] = "Sounds/gameOver.wav";
 
 	lua_State* lua = luaL_newstate();
-	const std::string scriptPathNName( "Scripts/GameOver.lua" );
-	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
+	const std::string scriptPath( "Scripts/GameOver.lua" );
+	if ( true == luaL_dofile(lua, scriptPath.data()) )
 	{
-		// File Not Found Exception
-		gService()->console().printFailure( FailureLevel::FATAL, "File Not Found: "+scriptPathNName );
+		gService()->console().printFailure( FailureLevel::FATAL,
+										   "File Not Found: "+scriptPath );
 	}
 	else
 	{
@@ -42,7 +42,7 @@ void scene::inPlay::GameOver::loadResources( )
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPath );
 		}
 		else
 		{
@@ -52,17 +52,17 @@ void scene::inPlay::GameOver::loadResources( )
 			int type = lua_type(lua, TOP_IDX);
 			if ( LUA_TSTRING == type )
 			{
-				imagePathNName = lua_tostring(lua, TOP_IDX);
+				imagePath = lua_tostring(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -76,7 +76,7 @@ void scene::inPlay::GameOver::loadResources( )
 				if ( 0 > temp )
 				{
 					gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
-															tableName+':'+field, scriptPathNName );
+															tableName+':'+field, scriptPath );
 				}
 				else
 				{
@@ -86,12 +86,12 @@ void scene::inPlay::GameOver::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -105,7 +105,7 @@ void scene::inPlay::GameOver::loadResources( )
 				if ( 0 > temp )
 				{
 					gService()->console().printScriptError( ExceptionType::RANGE_CHECK,
-															tableName+':'+field, scriptPathNName );
+															tableName+':'+field, scriptPath );
 				}
 				else
 				{
@@ -115,22 +115,22 @@ void scene::inPlay::GameOver::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 		}
 		lua_pop( lua, 1 );
 
-		tableName = "Audio";
+		tableName = "Sound";
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPath );
 		}
 		else
 		{
@@ -140,7 +140,7 @@ void scene::inPlay::GameOver::loadResources( )
 			if ( false == lua_istable(lua, TOP_IDX) )
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+innerTableName, scriptPathNName );
+														 tableName+':'+innerTableName, scriptPath );
 			}
 			else
 			{
@@ -150,17 +150,17 @@ void scene::inPlay::GameOver::loadResources( )
 				int type = lua_type(lua, TOP_IDX);
 				if ( LUA_TSTRING == type )
 				{
-					mAudioList[(int)AudioIndex::BGM] = lua_tostring(lua, TOP_IDX);
+					mSoundPaths[(int)SoundIndex::BGM] = lua_tostring(lua, TOP_IDX);
 				}
 				else if ( LUA_TNIL == type )
 				{
 					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-														   tableName+':'+field, scriptPathNName );
+														   tableName+':'+field, scriptPath );
 				}
 				else
 				{
 					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-															 tableName+':'+field, scriptPathNName );
+															 tableName+':'+field, scriptPath );
 				}
 				lua_pop( lua, 1 );
 			}
@@ -170,9 +170,10 @@ void scene::inPlay::GameOver::loadResources( )
 	}
 	lua_close( lua );
 
-	if ( false == mTexture.loadFromFile(imagePathNName) )
+	if ( false == mTexture.loadFromFile(imagePath) )
 	{
-		gService()->console().printFailure( FailureLevel::FATAL, "File Not Found: "+imagePathNName );
+		gService()->console().printFailure( FailureLevel::WARNING,
+										   "File Not Found: "+imagePath );
 	}
 
 	mSprite.setTexture( mTexture );

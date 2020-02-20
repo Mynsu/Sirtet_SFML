@@ -6,29 +6,36 @@
 #include "Assertion.h"
 
 const float TEMPO_DIFF_RATIO = 0.02f;
-// Disposition per frame when a tetrimino falls down.
-const uint8_t FALLING_DOWN_SPEED = 3;
+// Disposition per frame when a tetrimino falls down, hard drops.
+const uint8_t HARD_DROP_SPEED = 3;
 const uint16_t LINE_CLEAR_CHK_INTERVAL_MS = 100;
+const uint16_t COOL_TIME_TO_NEXT_LEVEL_OR_OVER_MS = 1000;
+const uint16_t COOL_TIME_ALL_LEVELS_CLEARED_MS = 1000;
+const uint16_t ANIMATION_SPEED_MS = 34;
+
 
 ::scene::inPlay::Playing::Playing( sf::RenderWindow& window,
 								   sf::Drawable& shapeOrSprite,
 								   const std::unique_ptr<::scene::inPlay::IScene>& overlappedScene )
-	: mNumOfLinesCleared( 0 ),
+	: mNumOfLinesRecentlyCleared( 0 ), mCurrentLevel( 1 ),
+	mNumOfLinesRemainingToLevelClear( 7 ),
 	mFrameCountSoftDropInterval( 0 ), mFrameCountClearingInterval_( 0 ),
-	mFrameCountVfxDuration_( 0 ), mFrameCountCoolToGameOver( 0 ),
+	mFrameCountVfxDuration_( 0 ),
+	mFrameCountCoolToGameOver( 0 ), mFrameCountCoolToNextLevel( 0 ), mFrameCountCoolAllLevelsCleared( 0 ),
+	mAnimationDamper1( 0 ), mAnimationDamper10( 0 ),
 	mTempo( 0.75f ),
 	mWindow_( window ), mBackgroundRect_( (sf::RectangleShape&)shapeOrSprite ),
 	mOverlappedScene_( overlappedScene ),
 	mNextTetriminoPanel( window ),
 	mVfxCombo( window ), mStage( window )
 {
+	mSpriteForScore.setTexture( mTextureForScore );
 	loadResources( );
-	gService()->audio().stopBGM( );
+	gService()->sound().stopBGM( );
 	mCurrentTetrimino = ::model::Tetrimino::Spawn();
 	mNextTetriminos.emplace( ::model::Tetrimino::Spawn() );
 	mNextTetriminos.emplace( ::model::Tetrimino::Spawn() );
 	mNextTetriminos.emplace( ::model::Tetrimino::Spawn() );
-	
 	mNextTetriminoPanel.setTetrimino( mNextTetriminos.front() );
 }
 
@@ -42,7 +49,7 @@ void ::scene::inPlay::Playing::loadResources( )
 	float stagePanelOutlineThickness = 11.0;
 	uint32_t stagePanelOutlineColor = 0x3f3f3f'7f;
 	uint32_t stageCellOutlineColor = 0x000000'7f;
-	std::string vfxComboSpritePathNName( "Vfxs/Combo.png" );
+	std::string vfxComboSpritePath( "Vfxs/Combo.png" );
 	sf::Vector2i vfxComboClipSize( 256, 256 );
 	sf::Vector2f nextTetPanelPosition( 525.0, 70.0 );
 	float nextTetPanelCellSize = 30.0;
@@ -50,16 +57,23 @@ void ::scene::inPlay::Playing::loadResources( )
 	float nextTetPanelOutlineThickness = 5.0;
 	uint32_t nextTetPanelOutlineColor = 0x000000'7f;
 	uint32_t nextTetPanelCellOutlineColor = 0x000000'7f;
-	mAudioList[(int)AudioIndex::TETRIMINO_LOCKED] = "Audio/tetriminoLocked.wav";
-	mAudioList[(int)AudioIndex::LINE_CLEARED] = "Audio/lineCleared.wav";
+	mSoundPaths[(int)SoundIndex::TETRIMINO_LOCKED] = "Sounds/tetriminoLocked.wav";
+	mSoundPaths[(int)SoundIndex::LINE_CLEARED] = "Sounds/lineCleared.wav";
+	mSoundPaths[(int)SoundIndex::LEVEL_CLEARED] = "Sounds/levelCleared.wav";
+	std::string scoreSpritePath( "Images/Score.png" );
+	mDrawingInfo.scoreSpriteClipSize.x = 128;
+	mDrawingInfo.scoreSpriteClipSize.y = 128;
+	mDrawingInfo.scorePosition.x = 450.f;
+	mDrawingInfo.scorePosition.y = 350.f;
+	mDrawingInfo.gapBetweenScoreLetter = 60.f;
+	mDrawingInfo.animationSpeed = 1.f;
 
 	lua_State* lua = luaL_newstate();
-	const std::string scriptPathNName( "Scripts/Playing.lua" );
-	if ( true == luaL_dofile(lua, scriptPathNName.data()) )
+	const std::string scriptPath( "Scripts/Playing.lua" );
+	if ( true == luaL_dofile(lua, scriptPath.data()) )
 	{
-		// File Not Found Exception
 		gService()->console().printFailure( FailureLevel::FATAL,
-											 "File Not Found: "+scriptPathNName );
+											 "File Not Found: "+scriptPath );
 	}
 	else
 	{
@@ -76,12 +90,12 @@ void ::scene::inPlay::Playing::loadResources( )
 		else if ( LUA_TNIL == type )
 		{
 			gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-												   varName, scriptPathNName );
+												   varName, scriptPath );
 		}
 		else
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-													 varName, scriptPathNName );
+													 varName, scriptPath );
 		}
 		lua_pop( lua, 1 );
 
@@ -95,12 +109,12 @@ void ::scene::inPlay::Playing::loadResources( )
 		else if ( LUA_TNIL == type )
 		{
 			gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-												   varName, scriptPathNName );
+												   varName, scriptPath );
 		}
 		else
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-													 varName, scriptPathNName );
+													 varName, scriptPath );
 		}
 		lua_pop( lua, 1 );
 
@@ -109,7 +123,7 @@ void ::scene::inPlay::Playing::loadResources( )
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-													 tableName, scriptPathNName );
+													 tableName, scriptPath );
 		}
 		else
 		{
@@ -124,12 +138,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -144,12 +158,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -164,12 +178,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -184,12 +198,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -204,12 +218,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -224,12 +238,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -244,12 +258,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 		}
@@ -261,7 +275,7 @@ void ::scene::inPlay::Playing::loadResources( )
 		if ( false == lua_istable( lua, TOP_IDX ) )
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-													tableName, scriptPathNName );
+													tableName, scriptPath );
 		}
 		else
 		{
@@ -271,17 +285,17 @@ void ::scene::inPlay::Playing::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TSTRING == type )
 			{
-				vfxComboSpritePathNName = lua_tostring(lua, TOP_IDX);
+				vfxComboSpritePath = lua_tostring(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+field, scriptPathNName );
+														 tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -296,12 +310,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -316,12 +330,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 		}
@@ -333,7 +347,7 @@ void ::scene::inPlay::Playing::loadResources( )
 		if ( false == lua_istable( lua, TOP_IDX ) )
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-													 tableName, scriptPathNName );
+													 tableName, scriptPath );
 		}
 		else
 		{
@@ -348,12 +362,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -368,12 +382,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -388,12 +402,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -408,12 +422,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -428,12 +442,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -448,12 +462,12 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 
@@ -468,22 +482,22 @@ void ::scene::inPlay::Playing::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPathNName );
+														tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 		}
 		lua_pop( lua, 1 );
 
-		tableName = "Audio";
+		tableName = "Sound";
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPath );
 		}
 		else
 		{
@@ -493,7 +507,7 @@ void ::scene::inPlay::Playing::loadResources( )
 			if ( false == lua_istable(lua, TOP_IDX) )
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+innerTableName, scriptPathNName );
+														 tableName+':'+innerTableName, scriptPath );
 			}
 			else
 			{
@@ -503,17 +517,17 @@ void ::scene::inPlay::Playing::loadResources( )
 				int type = lua_type(lua, TOP_IDX);
 				if ( LUA_TSTRING == type )
 				{
-					mAudioList[(int)AudioIndex::TETRIMINO_LOCKED] = lua_tostring(lua, TOP_IDX);
+					mSoundPaths[(int)SoundIndex::TETRIMINO_LOCKED] = lua_tostring(lua, TOP_IDX);
 				}
 				else if ( LUA_TNIL == type )
 				{
 					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-														   tableName+':'+field, scriptPathNName );
+														   tableName+':'+field, scriptPath );
 				}
 				else
 				{
 					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-															 tableName+':'+field, scriptPathNName );
+															 tableName+':'+field, scriptPath );
 				}
 				lua_pop( lua, 1 );
 			}
@@ -525,7 +539,7 @@ void ::scene::inPlay::Playing::loadResources( )
 			if ( false == lua_istable(lua, TOP_IDX) )
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+innerTableName, scriptPathNName );
+														 tableName+':'+innerTableName, scriptPath );
 			}
 			else
 			{
@@ -535,19 +549,273 @@ void ::scene::inPlay::Playing::loadResources( )
 				int type = lua_type(lua, TOP_IDX);
 				if ( LUA_TSTRING == type )
 				{
-					mAudioList[(int)AudioIndex::LINE_CLEARED] = lua_tostring(lua, TOP_IDX);
+					mSoundPaths[(int)SoundIndex::LINE_CLEARED] = lua_tostring(lua, TOP_IDX);
 				}
 				else if ( LUA_TNIL == type )
 				{
 					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-														   tableName+':'+field, scriptPathNName );
+														   tableName+':'+field, scriptPath );
 				}
 				else
 				{
 					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-															 tableName+':'+field, scriptPathNName );
+															 tableName+':'+field, scriptPath );
 				}
 				lua_pop( lua, 1 );
+			}
+			lua_pop( lua, 1 );
+
+			innerTableName = "levelCleared";
+			lua_pushstring( lua, innerTableName.data() );
+			lua_gettable( lua, 1 );
+			if ( false == lua_istable(lua, TOP_IDX) )
+			{
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
+													   tableName+':'+innerTableName, scriptPath );
+			}
+			else
+			{
+				std::string field( "path" );
+				lua_pushstring( lua, field.data() );
+				lua_gettable( lua, 2 );
+				int type = lua_type(lua, TOP_IDX);
+				if ( LUA_TSTRING == type )
+				{
+					mSoundPaths[(int)SoundIndex::LEVEL_CLEARED] = lua_tostring(lua, TOP_IDX);
+				}
+				else if ( LUA_TNIL == type )
+				{
+					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+														   tableName+':'+field, scriptPath );
+				}
+				else
+				{
+					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
+														   tableName+':'+field, scriptPath );
+				}
+				lua_pop( lua, 1 );
+			}
+			lua_pop( lua, 1 );
+		}
+		lua_pop( lua, 1 );
+		
+		tableName = "Missions";
+		lua_getglobal( lua, tableName.data() );
+		if ( false == lua_istable(lua, TOP_IDX) )
+		{
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
+												   tableName, scriptPath );
+		}
+		else
+		{
+			// NOTE: Mutex isn't being used now.
+			mMissions.clear( );
+			uint8_t lvIndex = 0;
+			while ( true )
+			{
+				lua_pushinteger( lua, ++lvIndex );
+				lua_gettable( lua, 1 );
+				if ( false == lua_istable(lua, TOP_IDX) )
+				{
+					lua_pop( lua, 1 );
+					break;
+				}
+				else
+				{
+					uint8_t innerIdx = 1;
+					Mission mission;
+					lua_pushinteger( lua, innerIdx );
+					lua_gettable( lua, 2 );
+					type = lua_type(lua, TOP_IDX);
+					if ( LUA_TNUMBER == type )
+					{
+						mission.numOfLinesToClear = (uint8_t)lua_tointeger(lua, TOP_IDX);
+					}
+					else if ( LUA_TNIL == type )
+					{
+						gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+															   tableName+":...", scriptPath );
+					}
+					else
+					{
+						gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
+															   tableName+":...", scriptPath );
+					}
+					lua_pop( lua, 1 );
+
+					++innerIdx;
+					lua_pushinteger( lua, innerIdx );
+					lua_gettable( lua, 2 );
+					type = lua_type(lua, TOP_IDX);
+					if ( LUA_TNUMBER == type )
+					{
+						mission.tempoOnStart = (float)lua_tonumber(lua, TOP_IDX);
+					}
+					else if ( LUA_TNIL == type )
+					{
+						gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+															   tableName+":...", scriptPath );
+					}
+					else
+					{
+						gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
+															   tableName+":...", scriptPath );
+					}
+					lua_pop( lua, 1 );
+
+					mMissions.emplace_back( mission );
+				}
+				lua_pop( lua, 1 );
+			}
+		}
+		lua_pop( lua, 1 );
+
+		tableName = "Score";
+		lua_getglobal( lua, tableName.data() );
+		if ( false == lua_istable(lua, TOP_IDX) )
+		{
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
+												   tableName, scriptPath );
+		}
+		else
+		{
+			std::string field( "path" );
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			if ( LUA_TSTRING == type )
+			{
+				scoreSpritePath = lua_tostring(lua, TOP_IDX);
+			}
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPath );
+			}
+			else
+			{
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
+													   tableName+':'+field, scriptPath );
+			}
+			lua_pop( lua, 1 );
+
+			field = "clipWidth";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			if ( LUA_TNUMBER == type )
+			{
+				mDrawingInfo.scoreSpriteClipSize.x = (int)lua_tointeger(lua, TOP_IDX);
+			}
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPath );
+			}
+			else
+			{
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
+													   tableName+':'+field, scriptPath );
+			}
+			lua_pop( lua, 1 );
+
+			field = "clipHeight";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			if ( LUA_TNUMBER == type )
+			{
+				mDrawingInfo.scoreSpriteClipSize.y = (int)lua_tointeger(lua, TOP_IDX);
+			}
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPath );
+			}
+			else
+			{
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
+													   tableName+':'+field, scriptPath );
+			}
+			lua_pop( lua, 1 );
+
+			field = "x";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			if ( LUA_TNUMBER == type )
+			{
+				mDrawingInfo.scorePosition.x = (float)lua_tonumber(lua, TOP_IDX);
+			}
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPath );
+			}
+			else
+			{
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
+													   tableName+':'+field, scriptPath );
+			}
+			lua_pop( lua, 1 );
+
+			field = "y";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			if ( LUA_TNUMBER == type )
+			{
+				mDrawingInfo.scorePosition.y = (float)lua_tonumber(lua, TOP_IDX);
+			}
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPath );
+			}
+			else
+			{
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
+													   tableName+':'+field, scriptPath );
+			}
+			lua_pop( lua, 1 );
+
+			field = "gap";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			if ( LUA_TNUMBER == type )
+			{
+				mDrawingInfo.gapBetweenScoreLetter = (float)lua_tonumber(lua, TOP_IDX);
+			}
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPath );
+			}
+			else
+			{
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
+													   tableName+':'+field, scriptPath );
+			}
+			lua_pop( lua, 1 );
+
+			field = "animationSpeed";
+			lua_pushstring( lua, field.data() );
+			lua_gettable( lua, 1 );
+			type = lua_type(lua, TOP_IDX);
+			if ( LUA_TNUMBER == type )
+			{
+				mDrawingInfo.animationSpeed = (float)lua_tonumber(lua, TOP_IDX);
+			}
+			else if ( LUA_TNIL == type )
+			{
+				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+													   tableName+':'+field, scriptPath );
+			}
+			else
+			{
+				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
+													   tableName+':'+field, scriptPath );
 			}
 			lua_pop( lua, 1 );
 		}
@@ -555,10 +823,10 @@ void ::scene::inPlay::Playing::loadResources( )
 	}
 	lua_close( lua );
 
-	if ( false == mVfxCombo.loadResources( vfxComboSpritePathNName ) )
+	if ( false == mVfxCombo.loadResources( vfxComboSpritePath ) )
 	{
-		gService()->console().printFailure( FailureLevel::FATAL,
-												"File Not Found: "+vfxComboSpritePathNName );
+		gService()->console().printFailure( FailureLevel::WARNING,
+												"File Not Found: "+vfxComboSpritePath );
 	}
 	mBackgroundRect_.setFillColor( sf::Color(backgroundColor) );
 	mCurrentTetrimino.setOrigin( stagePanelPosition );
@@ -576,38 +844,72 @@ void ::scene::inPlay::Playing::loadResources( )
 		mNextTetriminoPanel.setTetrimino( mNextTetriminos.front() );
 	}
 	mDrawingInfo.cellSize_ = stageCellSize;
+	mNumOfLinesRemainingToLevelClear = mMissions[mCurrentLevel-1].numOfLinesToClear;
+	mTempo = mMissions[mCurrentLevel-1].tempoOnStart;
+	if ( false == mTextureForScore.loadFromFile(scoreSpritePath) )
+	{
+		gService()->console().printFailure( FailureLevel::WARNING,
+										   "File Not Found: "+scoreSpritePath );
+	}
 
 	::model::Tetrimino::LoadResources( );
 }
 
 ::scene::inPlay::ID scene::inPlay::Playing::update( std::vector<sf::Event>& eventQueue )
 {
+	::scene::inPlay::ID retVal = ::scene::inPlay::ID::AS_IS;
 	uint16_t fps = 60;
 	{
 		auto& vault = gService()->vault();
 		const auto it = vault.find(HK_FORE_FPS);
 		ASSERT_TRUE( vault.end() != it );
-		fps = it->second;
-		if ( fps < mFrameCountCoolToGameOver )
+		fps = (uint16_t)it->second;
+
+		if ( fps*COOL_TIME_ALL_LEVELS_CLEARED_MS/1000 < mFrameCountCoolAllLevelsCleared )
 		{
-			return ::scene::inPlay::ID::GAME_OVER;
+			mFrameCountCoolAllLevelsCleared = 0;
+			return retVal;
+		}
+		else if ( 0 != mFrameCountCoolAllLevelsCleared )
+		{
+			return retVal;
+		}
+
+		if ( fps*COOL_TIME_TO_NEXT_LEVEL_OR_OVER_MS/1000 < mFrameCountCoolToNextLevel )
+		{
+			mFrameCountCoolToNextLevel = 0;
+			++mCurrentLevel;
+			mNumOfLinesRemainingToLevelClear = mMissions[mCurrentLevel-1].numOfLinesToClear;
+			mTempo = mMissions[mCurrentLevel-1].tempoOnStart;
+			mStage.clear( );
+			reloadTetrimino( );
+			return retVal;
+		}
+		else if ( 0 != mFrameCountCoolToNextLevel )
+		{
+			return retVal;
+		}
+
+		if ( fps*COOL_TIME_TO_NEXT_LEVEL_OR_OVER_MS/1000 < mFrameCountCoolToGameOver )
+		{
+			retVal = ::scene::inPlay::ID::GAME_OVER;
+			return retVal;
 		}
 		else if ( 0 != mFrameCountCoolToGameOver )
 		{
-			return ::scene::inPlay::ID::AS_IS;
+			return retVal;
 		}
 	}
 
-	::scene::inPlay::ID retVal = ::scene::inPlay::ID::AS_IS;
 	bool hasTetriminoLanded = false;
-	if ( true == mCurrentTetrimino.isFallingDown( ) )
+	if ( true == mCurrentTetrimino.isHardDropping( ) )
 	{
-		for ( uint8_t i = 0; i != FALLING_DOWN_SPEED; ++i )
+		for ( uint8_t i = 0; i != HARD_DROP_SPEED; ++i )
 		{
 			hasTetriminoLanded = mCurrentTetrimino.moveDown(mStage.cgrid());
 			if ( true == hasTetriminoLanded )
 			{
-				mCurrentTetrimino.fallDown( false );
+				mCurrentTetrimino.hardDrop( false );
 				// NOTE: Break the loop and stop stuff in the 1st if-scope immediately.
 				goto last;
 			}
@@ -623,7 +925,7 @@ void ::scene::inPlay::Playing::loadResources( )
 				switch ( it->key.code )
 				{
 					case sf::Keyboard::Space:
-						mCurrentTetrimino.fallDown( );
+						mCurrentTetrimino.hardDrop( );
 						mFrameCountSoftDropInterval = 0;
 						it = eventQueue.erase(it);
 						break;
@@ -680,10 +982,10 @@ void ::scene::inPlay::Playing::loadResources( )
 	if ( true == hasTetriminoLanded )
 	{
 		mCurrentTetrimino.land( mStage.grid() );
-		if ( false == gService()->audio().playSFX(mAudioList[(int)AudioIndex::TETRIMINO_LOCKED]) )
+		if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::TETRIMINO_LOCKED]) )
 		{
 			gService()->console().printFailure(FailureLevel::WARNING,
-											   "File Not Found: "+mAudioList[(int)AudioIndex::TETRIMINO_LOCKED] );
+											   "File Not Found: "+mSoundPaths[(int)SoundIndex::TETRIMINO_LOCKED] );
 		}
 		reloadTetrimino( );
 	}
@@ -692,25 +994,63 @@ void ::scene::inPlay::Playing::loadResources( )
 	// NOTE: It's better to check that every several frames than every frame.
 	if ( (uint16_t)fps*LINE_CLEAR_CHK_INTERVAL_MS/1000 < mFrameCountClearingInterval_ )
 	{
-		const uint8_t numOfLinesCleared = mStage.tryClearRow();
 		mFrameCountClearingInterval_ = 0;
+		const uint8_t numOfLinesCleared = mStage.tryClearRow();
 		if ( 0 != numOfLinesCleared )
 		{
-			mNumOfLinesCleared = numOfLinesCleared;
-			mTempo -= TEMPO_DIFF_RATIO;
-			// Triggering.
-			mFrameCountVfxDuration_ = 1;
-			if ( false == gService()->audio().playSFX(mAudioList[(int)AudioIndex::LINE_CLEARED]) )
+			mNumOfLinesRecentlyCleared = numOfLinesCleared;
+			if ( 0 < mNumOfLinesRemainingToLevelClear &&
+				mNumOfLinesRemainingToLevelClear <= numOfLinesCleared )
 			{
-				gService()->console().printFailure(FailureLevel::WARNING,
-												   "File Not Found: "+mAudioList[(int)AudioIndex::LINE_CLEARED] );
+				mNumOfLinesRemainingToLevelClear -= numOfLinesCleared;
+				if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::LEVEL_CLEARED]) )
+				{
+					gService()->console().printFailure(FailureLevel::WARNING,
+													   "File Not Found: "+mSoundPaths[(int)SoundIndex::LEVEL_CLEARED] );
+				}
+				if ( mMissions.size() == mCurrentLevel )
+				{
+					// Triggering.
+					mFrameCountCoolAllLevelsCleared = 1;
+					retVal = ::scene::inPlay::ID::ALL_LEVELS_CLEARED;
+					return retVal;
+				}
+				else
+				{
+					// Triggering.
+					mFrameCountCoolToNextLevel = 1;
+				}
+			}
+			else
+			{
+				if ( 0 < mNumOfLinesRemainingToLevelClear )
+				{
+					const uint8_t digit10 = mNumOfLinesRemainingToLevelClear/10;
+					mNumOfLinesRemainingToLevelClear -= numOfLinesCleared;
+					if ( digit10 != mNumOfLinesRemainingToLevelClear/10 )
+					{
+						mAnimationDamper10 = mDrawingInfo.scoreSpriteClipSize.y;
+					}
+					mAnimationDamper1 = numOfLinesCleared;
+					if ( mNumOfLinesRemainingToLevelClear < 0 )
+					{
+						mAnimationDamper1 += mNumOfLinesRemainingToLevelClear;
+					}
+					mAnimationDamper1 *= mDrawingInfo.scoreSpriteClipSize.y;
+				}
+				mTempo -= TEMPO_DIFF_RATIO;
+				// Triggering.
+				mFrameCountVfxDuration_ = 1;
+				if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::LINE_CLEARED]) )
+				{
+					gService()->console().printFailure(FailureLevel::WARNING,
+													   "File Not Found: "+mSoundPaths[(int)SoundIndex::LINE_CLEARED] );
+				}
 			}
 		}
-		if ( true == mStage.isOver( ) )
+		else if ( true == mStage.isOver() )
 		{
-			mStage.blackout( );
-			const sf::Color color( mDrawingInfo.blackOutColor );
-			mCurrentTetrimino.setColor( color, color );
+			mStage.blackout( sf::Color(mDrawingInfo.blackOutColor) );
 			// Triggering.
 			mFrameCountCoolToGameOver = 1;
 		}
@@ -723,11 +1063,46 @@ void ::scene::inPlay::Playing::draw( )
 {
 	mWindow_.draw( mBackgroundRect_ );
 	mStage.draw( );
-	mCurrentTetrimino.draw( mWindow_ );
+	if ( 0 != mFrameCountCoolToNextLevel )
+	{
+		++mFrameCountCoolToNextLevel;
+	}
+	else if ( 0 != mFrameCountCoolToGameOver )
+	{
+		++mFrameCountCoolToGameOver;
+	}
+	else
+	{
+		mCurrentTetrimino.draw( mWindow_ );
+	}
 	mNextTetriminoPanel.draw( );
+	{
+		uint8_t score = mNumOfLinesRemainingToLevelClear;
+		if ( score < 0 )
+		{
+			score = 0;
+		}
+		mSpriteForScore.setTextureRect(	sf::IntRect(0, (score/10)*mDrawingInfo.scoreSpriteClipSize.y+mAnimationDamper10,
+													mDrawingInfo.scoreSpriteClipSize.x,
+													mDrawingInfo.scoreSpriteClipSize.y) );
+		mSpriteForScore.setPosition( mDrawingInfo.scorePosition );
+		mWindow_.draw( mSpriteForScore );
+		mSpriteForScore.setTextureRect(	sf::IntRect(0, (score%10)*mDrawingInfo.scoreSpriteClipSize.y+mAnimationDamper1,
+													mDrawingInfo.scoreSpriteClipSize.x,
+													mDrawingInfo.scoreSpriteClipSize.y) );
+		mSpriteForScore.setPosition( mDrawingInfo.scorePosition +
+									sf::Vector2f(mDrawingInfo.gapBetweenScoreLetter, 0.f) );
+		mWindow_.draw( mSpriteForScore );
+		mSpriteForScore.setTextureRect(	sf::IntRect(0, mDrawingInfo.scoreSpriteClipSize.y*14,
+													mDrawingInfo.scoreSpriteClipSize.x,
+													mDrawingInfo.scoreSpriteClipSize.y) );
+		mSpriteForScore.setPosition( mDrawingInfo.scorePosition +
+									sf::Vector2f(mDrawingInfo.gapBetweenScoreLetter+30.f, 75.f) );
+		mWindow_.draw( mSpriteForScore );
+	}
 	if ( 0 != mFrameCountVfxDuration_ )
 	{
-		mVfxCombo.draw( mNumOfLinesCleared );
+		mVfxCombo.draw( mNumOfLinesRecentlyCleared );
 		++mFrameCountVfxDuration_;
 	}
 	
@@ -741,9 +1116,20 @@ void ::scene::inPlay::Playing::draw( )
 	}
 	++mFrameCountSoftDropInterval;
 	++mFrameCountClearingInterval_;
-	if ( 0 != mFrameCountCoolToGameOver )
+	if ( 0 != mFrameCountCoolAllLevelsCleared )
 	{
-		++mFrameCountCoolToGameOver;
+		++mFrameCountCoolAllLevelsCleared;
+	}
+	{
+		const int16_t delta = (int16_t)(2*mDrawingInfo.animationSpeed);
+		if ( 0 != mAnimationDamper1 )
+		{
+			mAnimationDamper1 -= delta;
+		}
+		if ( 0 != mAnimationDamper10 )
+		{
+			mAnimationDamper10 -= delta;
+		}
 	}
 }
 

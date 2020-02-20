@@ -1,2 +1,2 @@
-Audio = { tetriminoLocked = { path = "Audio/tetriminoLocked.wav" },
-		   lineCleared = { path = "Audio/lineCleared.wav" } }
+Sound = { tetriminoLocked = { path = "Sounds/tetriminoLocked.wav" },
+		   lineCleared = { path = "Sounds/lineCleared.wav" } }

@@ -1,5 +1,5 @@
-Audio = { BGM = { path = "Audio/korobeiniki.flac" },
-		  onSelection = { path = "Audio/selection.wav" } }
+Sound = { BGM = { path = "Sounds/korobeiniki.flac" },
+		  onSelection = { path = "Sounds/selection.wav" } }
 Sprite = { path = "Images/MainMenu.png",
 		   logo = { sourceX = 0, sourceY = 0, clipWidth = 256, clipHeight = 256, destinationX = 474, destinationY = 302 },
 		   buttonSingle = { sourceX = 0, sourceY = 256, clipWidth = 256, clipHeight = 128, destinationX = 150, destinationY = 150 },

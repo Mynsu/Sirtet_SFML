@@ -13,7 +13,7 @@ namespace scene::inPlay
 		::scene::inPlay::ID update( std::vector<sf::Event>& eventQueue ) override;
 		void draw( ) override;
 	private:
-		enum class AudioIndex
+		enum class SoundIndex
 		{
 			BGM,
 			NULL_MAX,
@@ -24,7 +24,7 @@ namespace scene::inPlay
 		sf::RenderWindow& mWindow_;
 		sf::RectangleShape& mBackgroundRect_;
 		sf::Texture mTexture;
-		std::string mAudioList[(int)AudioIndex::NULL_MAX];
+		std::string mSoundPaths[(int)SoundIndex::NULL_MAX];
 		sf::Sprite mSprite;
 	};
 }

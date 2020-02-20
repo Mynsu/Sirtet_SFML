@@ -14,19 +14,19 @@ Console::Console( ) :
 	mExceptionTypes[(int)ExceptionType::RANGE_CHECK]
 		= "Range Check: ";
 
-	addCommand( ::util::hash::Digest("refreshcon", 10), std::bind(&Console::refresh, this, std::placeholders::_1) );
+	addCommand( ::util::hash::Digest("refreshcon"), std::bind(&Console::refresh, this, std::placeholders::_1) );
 }
 
 void Console::initialize( )
 {
 	uint32_t color = 0x0000ffff;
-	std::string fontPathNName( "Fonts/AGENCYB.TTF" );
+	std::string fontPath( "Fonts/AGENCYB.TTF" );
 	mFontSize = 30;
 	uint32_t currentInputFontColor = 0xffffffff;
 	sf::Vector2u winSize( 800, 600 );
 	mMaxLinesShown = 9;
 
-	const std::string scriptPathNName( "Scripts/Console.lua" );
+	const std::string scriptPath( "Scripts/Console.lua" );
 	const std::string varName0( "VisibleOnStart" );
 	const std::string varName1( "Color" );
 	const std::string varName2( "Font" );
@@ -35,7 +35,7 @@ void Console::initialize( )
 	const std::string varName5( "WinWidth" );
 	const std::string varName6( "WinHeight" );
 	const std::string varName7( "LinesShown" );
-	const auto result = ::util::script::LoadFromScript( scriptPathNName, varName0,
+	const auto result = ::util::script::LoadFromScript( scriptPath, varName0,
 													   varName1,
 													   varName2, varName3,	varName4,
 													   varName5, varName6,
@@ -51,13 +51,13 @@ void Console::initialize( )
 		// Type Check Exception
 		else
 		{
-			printScriptError( ExceptionType::TYPE_CHECK, varName0, scriptPathNName );
+			printScriptError( ExceptionType::TYPE_CHECK, varName0, scriptPath );
 		}
 	}
 	// Variable Not Found Exception
 	else
 	{
-		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName0, scriptPathNName );
+		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName0, scriptPath );
 	}
 
 	if ( const auto it = result.find(varName1);
@@ -71,13 +71,13 @@ void Console::initialize( )
 		// Type Check Exception
 		else
 		{
-			printScriptError( ExceptionType::TYPE_CHECK, varName1, scriptPathNName );
+			printScriptError( ExceptionType::TYPE_CHECK, varName1, scriptPath );
 		}
 	}
 	// Variable Not Found Exception
 	else
 	{
-		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName1, scriptPathNName );
+		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName1, scriptPath );
 	}
 
 	if ( const auto it = result.find(varName2);
@@ -86,18 +86,18 @@ void Console::initialize( )
 		// Type check
 		if ( true == std::holds_alternative<std::string>(it->second) )
 		{
-			fontPathNName = std::get<std::string>(it->second);
+			fontPath = std::get<std::string>(it->second);
 		}
 		// Type Check Exception
 		else
 		{
-			printScriptError( ExceptionType::TYPE_CHECK, varName2, scriptPathNName );
+			printScriptError( ExceptionType::TYPE_CHECK, varName2, scriptPath );
 		}
 	}
 	// Variable Not Found Exception
 	else
 	{
-		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName2, scriptPathNName );
+		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName2, scriptPath );
 	}
 
 	if ( const auto it = result.find(varName3);
@@ -111,13 +111,13 @@ void Console::initialize( )
 		// Type Check Exception
 		else
 		{
-			printScriptError( ExceptionType::TYPE_CHECK, varName3, scriptPathNName );
+			printScriptError( ExceptionType::TYPE_CHECK, varName3, scriptPath );
 		}
 	}
 	// Variable Not Found Exception
 	else
 	{
-		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName3, scriptPathNName );
+		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName3, scriptPath );
 	}
 
 	if ( const auto it = result.find(varName4);
@@ -131,13 +131,13 @@ void Console::initialize( )
 		// Type Check Exception
 		else
 		{
-			printScriptError( ExceptionType::TYPE_CHECK, varName4, scriptPathNName );
+			printScriptError( ExceptionType::TYPE_CHECK, varName4, scriptPath );
 		}
 	}
 	// Variable Not Found Exception
 	else
 	{
-		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName4, scriptPathNName );
+		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName4, scriptPath );
 	}
 
 	if ( const auto it = result.find(varName5);
@@ -151,13 +151,13 @@ void Console::initialize( )
 		// Type Check Exception
 		else
 		{
-			printScriptError( ExceptionType::TYPE_CHECK, varName5, scriptPathNName );
+			printScriptError( ExceptionType::TYPE_CHECK, varName5, scriptPath );
 		}
 	}
 	// Variable Not Found Exception
 	else
 	{
-		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName5, scriptPathNName );
+		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName5, scriptPath );
 	}
 
 	if ( const auto it = result.find(varName6);
@@ -171,13 +171,13 @@ void Console::initialize( )
 		// Type Check Exception
 		else
 		{
-			printScriptError( ExceptionType::TYPE_CHECK, varName6, scriptPathNName );
+			printScriptError( ExceptionType::TYPE_CHECK, varName6, scriptPath );
 		}
 	}
 	// Variable Not Found Exception
 	else
 	{
-		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName6, scriptPathNName );
+		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName6, scriptPath );
 	}
 
 	if ( const auto it = result.find(varName7);
@@ -191,20 +191,20 @@ void Console::initialize( )
 		// Type Check Exception
 		else
 		{
-			printScriptError( ExceptionType::TYPE_CHECK, varName7, scriptPathNName );
+			printScriptError( ExceptionType::TYPE_CHECK, varName7, scriptPath );
 		}
 	}
 	// Variable Not Found Exception
 	else
 	{
-		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName7, scriptPathNName );
+		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName7, scriptPath );
 	}
 
 	mConsoleBackground.setFillColor( sf::Color(color) );
-	if ( false == mFont.loadFromFile(fontPathNName) )
+	if ( false == mFont.loadFromFile(fontPath) )
 	{
 		// File Not Found Exception
-		printScriptError( ExceptionType::FILE_NOT_FOUND, varName2, scriptPathNName );
+		printScriptError( ExceptionType::FILE_NOT_FOUND, varName2, scriptPath );
 	}
 	mTextFieldForCurrentInput.setFont( mFont );
 	mTextFieldForCurrentInput.setCharacterSize( mFontSize );

@@ -20,14 +20,15 @@ void scene::inPlay::Assertion::loadResources( )
 	uint16_t fontSize = 50;
 	uint32_t backgroundColor = 0x0000007f;
 	uint32_t fontColor = 0x000000'af;
-	std::string fontPathNName( "Fonts/AGENCYR.ttf" );
-	mAudioList[(int)AudioIndex::ON_SELECTION] = "Audio/selection.wav";
+	std::string fontPath( "Fonts/AGENCYR.ttf" );
+	mSoundPaths[(int)SoundIndex::ON_SELECTION] = "Sounds/selection.wav";
 
 	lua_State* lua = luaL_newstate();
-	const std::string scriptPathNName( "Scripts/Assertion.lua" );
-	if ( true == luaL_dofile(lua, scriptPathNName.data()))
+	const std::string scriptPath( "Scripts/Assertion.lua" );
+	if ( true == luaL_dofile(lua, scriptPath.data()))
 	{
-		gService()->console().printFailure( FailureLevel::FATAL, "File Not Found: "+scriptPathNName );
+		gService()->console().printFailure( FailureLevel::FATAL,
+										   "File Not Found: "+scriptPath );
 	}
 	else
 	{
@@ -44,12 +45,12 @@ void scene::inPlay::Assertion::loadResources( )
 		else if ( LUA_TNIL == type )
 		{
 			gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-												   varName, scriptPathNName );
+												   varName, scriptPath );
 		}
 		else
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-												   varName, scriptPathNName );
+												   varName, scriptPath );
 		}
 		lua_pop( lua, 1 );
 
@@ -57,7 +58,7 @@ void scene::inPlay::Assertion::loadResources( )
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPath );
 		}
 		else
 		{
@@ -67,17 +68,17 @@ void scene::inPlay::Assertion::loadResources( )
 			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TSTRING == type )
 			{
-				fontPathNName = lua_tostring(lua, TOP_IDX);
+				fontPath = lua_tostring(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError(ExceptionType::TYPE_CHECK,
-													   tableName+':'+field, scriptPathNName);
+													   tableName+':'+field, scriptPath);
 			}
 			lua_pop( lua, 1 );
 
@@ -92,12 +93,12 @@ void scene::inPlay::Assertion::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError(ExceptionType::TYPE_CHECK,
-													   tableName+':'+field, scriptPathNName);
+													   tableName+':'+field, scriptPath);
 			}
 			lua_pop( lua, 1 );
 
@@ -112,22 +113,22 @@ void scene::inPlay::Assertion::loadResources( )
 			else if ( LUA_TNIL == type )
 			{
 				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPathNName );
+													   tableName+':'+field, scriptPath );
 			}
 			else
 			{
 				gService()->console().printScriptError(ExceptionType::TYPE_CHECK,
-													   tableName+':'+field, scriptPathNName);
+													   tableName+':'+field, scriptPath);
 			}
 			lua_pop( lua, 1 );
 		}
 		lua_pop( lua, 1 );
 
-		tableName = "Audio";
+		tableName = "Sound";
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPathNName );
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPath );
 		}
 		else
 		{
@@ -137,7 +138,7 @@ void scene::inPlay::Assertion::loadResources( )
 			if ( false == lua_istable(lua, TOP_IDX) )
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														 tableName+':'+innerTableName, scriptPathNName );
+														 tableName+':'+innerTableName, scriptPath );
 			}
 			else
 			{
@@ -147,17 +148,17 @@ void scene::inPlay::Assertion::loadResources( )
 				int type = lua_type(lua, TOP_IDX);
 				if ( LUA_TSTRING == type )
 				{
-					mAudioList[(int)AudioIndex::ON_SELECTION] = lua_tostring(lua, TOP_IDX);
+					mSoundPaths[(int)SoundIndex::ON_SELECTION] = lua_tostring(lua, TOP_IDX);
 				}
 				else if ( LUA_TNIL == type )
 				{
 					gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-														   tableName+':'+field, scriptPathNName );
+														   tableName+':'+field, scriptPath );
 				}
 				else
 				{
 					gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-															 tableName+':'+field, scriptPathNName );
+															 tableName+':'+field, scriptPath );
 				}
 				lua_pop( lua, 1 );
 			}
@@ -168,9 +169,10 @@ void scene::inPlay::Assertion::loadResources( )
 	lua_close( lua );
 
 	mBackground.setFillColor( sf::Color(backgroundColor) );
-	if ( false == mFont.loadFromFile(fontPathNName) )
+	if ( false == mFont.loadFromFile(fontPath) )
 	{
-		gService()->console().printFailure( FailureLevel::FATAL, "File Not Found: "+fontPathNName );
+		gService()->console().printFailure( FailureLevel::WARNING,
+										   "File Not Found: "+fontPath );
 	}
 	mTextLabelForGuide.setCharacterSize( fontSize );
 	mTextLabelForGuide.setFillColor( sf::Color(fontColor) );
@@ -196,10 +198,10 @@ void scene::inPlay::Assertion::loadResources( )
 			if ( sf::Event::KeyPressed == it->type &&
 				sf::Keyboard::Escape == it->key.code )
 			{
-				if ( false == gService()->audio().playSFX(mAudioList[(int)AudioIndex::ON_SELECTION]) )
+				if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::ON_SELECTION]) )
 				{
 					gService()->console().printFailure(FailureLevel::WARNING,
-													   "File Not Found: "+mAudioList[(int)AudioIndex::ON_SELECTION] );
+													   "File Not Found: "+mSoundPaths[(int)SoundIndex::ON_SELECTION] );
 				}
 				it = eventQueue.erase(it);
 				retVal = ::scene::inPlay::ID::EXIT;

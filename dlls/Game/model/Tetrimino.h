@@ -93,13 +93,13 @@ namespace model
 		{
 			return mPossibleRotations[(int)mRotationID];
 		}
-		bool isFallingDown( ) const
+		bool isHardDropping( ) const
 		{
-			return mIsFallingDown;
+			return mIsHardDropping;
 		}
-		void fallDown( const bool isFallingDown = true )
+		void hardDrop( const bool isHardDropping = true )
 		{
-			mIsFallingDown = isFallingDown;
+			mIsHardDropping = isHardDropping;
 		}
 
 		void draw( sf::RenderWindow& window )
@@ -119,7 +119,7 @@ namespace model
 		}
 	private:
 		bool hasCollidedWith( const ::model::stage::Grid& grid ) const;
-		bool mIsFallingDown;
+		bool mIsHardDropping;
 		// X and y on global coordinate.
 		// Unit: Grid.
 		sf::Vector2<int8_t> mPosition;

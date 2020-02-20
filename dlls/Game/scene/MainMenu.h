@@ -12,11 +12,11 @@ namespace scene
 		void loadResources( ) override;
 		::scene::ID update( std::vector<sf::Event>& eventQueue ) override;
 		void draw( ) override;
-#ifdef _DEV
 		::scene::ID currentScene( ) const override;
-#endif
+		void setScene( const uint8_t sceneID ) override
+		{}
 	private:
-		enum class AudioIndex
+		enum class SoundIndex
 		{
 			BGM,
 			ON_SELECTION,
@@ -28,7 +28,7 @@ namespace scene
 		bool mIsCursorOnButton;
 		sf::RenderWindow& mWindow_;
 		::scene::ID mNextSceneID;
-		std::string mAudioList[(int)AudioIndex::NONE_MAX];
+		std::string mSoundPaths[(int)SoundIndex::NONE_MAX];
 		struct
 		{
 			sf::Vector2i logoSourcePosition, logoClipSize,

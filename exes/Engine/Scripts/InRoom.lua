@@ -19,5 +19,5 @@ OtherPlayerSlot = { x = 600, y = 400, cellSize = 8,
 					outlineThickness_on = 5, outlineColor_on = 0x3f3f3f7f,
 					nicknameFontSize = 20, nicknameFontColor = 0xffffffff }
 StartingGuide = { x = 600, y = 100, fontSize = 40, fontColor = 0xffffffff }
-Audio = { onSelection = { path = "Audio/selection.wav" },
-		  gameOver = { path = "Audio/gameOver.wav" } }
+Sound = { onSelection = { path = "Sounds/selection.wav" },
+		  gameOver = { path = "Sounds/gameOver.wav" } }

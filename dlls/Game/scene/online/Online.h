@@ -20,6 +20,9 @@ namespace scene::online
 		void loadResources( ) override;
 		::scene::ID update( std::vector<sf::Event>& eventQueue ) override;
 		void draw( ) override;
+		::scene::ID currentScene( ) const override;
+		void setScene( const uint8_t sceneID ) override
+		{}
 
 		void connectToQueueServer( );
 		void disconnect( );
@@ -36,9 +39,6 @@ namespace scene::online
 		void setMyNickname( std::string& myNickname );
 		const std::string& myNickname( ) const;
 		HashedKey myNicknameHashed( ) const;
-#ifdef _DEV
-		::scene::ID currentScene( ) const override;
-#endif
 	private:
 		void setScene( const ::scene::online::ID nextSceneID );
 		static bool IsInstantiated;
