@@ -6,8 +6,8 @@ namespace model
 	class Stage
 	{
 	public:
-		Stage( sf::RenderWindow& window )
-			: mCellSize_( 30.f ), mWindow_( window )
+		Stage( )
+			: mCellSize_( 30.f )
 		{}
 		virtual ~Stage( ) = default;
 
@@ -33,8 +33,6 @@ namespace model
 		}
 		void setPosition( const sf::Vector2f position )
 		{
-			const sf::Vector2f winSize(mWindow_.getSize());
-			ASSERT_TRUE( position.x < winSize.x && position.y < winSize.y );
 			mPanel.setPosition( position );
 			mPosition_ = position;
 		}
@@ -57,17 +55,16 @@ namespace model
 			mPanel.setOutlineThickness( thickness );
 			mPanel.setOutlineColor( color );
 		}
-		void draw( );
+		void draw( sf::RenderWindow& window );
 	private:
 		float mCellSize_;
-		sf::RenderWindow& mWindow_;
 		sf::Vector2f mPosition_;
 		sf::RectangleShape mPanel, mCellShape;
 		//0
 		//1
-		//o
-		//o
-		//o
+		//.
+		//.
+		//.
 		//19 == ::model::stage::GRID_HEIGHT
 		::model::stage::Grid mGrid;
 	};

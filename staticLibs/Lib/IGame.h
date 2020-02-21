@@ -27,7 +27,7 @@ protected:
 private:
 	// NOTE: Only is this called in the friendly(?) pseudo-unnamed function '_2943305454(...)',
 	//		 which leads to safe usage.
-	virtual void setWindow( sf::RenderWindow* const window ) = 0;
+	virtual void init( sf::RenderWindow& window ) = 0;
 };
 
 // Just alias.

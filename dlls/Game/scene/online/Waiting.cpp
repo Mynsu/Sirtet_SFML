@@ -10,11 +10,11 @@ bool scene::online::Waiting::IsInstantiated = false;
 
 scene::online::Waiting::Waiting( sf::RenderWindow& window, Online& net )
 	: mOrder( 0 ),
-	mState( ::scene::online::Waiting::State::TICKETING ),
-	mWindow_( window ), mNet( net )
+	mState( ::scene::online::Waiting::State::TICKETING )
 {
 	ASSERT_TRUE( false == IsInstantiated );
 
+	loadResources( window );
 	net.connectToQueueServer( );
 	net.receive( );
 	using WallClock = std::chrono::system_clock;
@@ -37,10 +37,10 @@ scene::online::Waiting::~Waiting( )
 	IsInstantiated = false;
 }
 
-void scene::online::Waiting::loadResources( )
+void scene::online::Waiting::loadResources( sf::RenderWindow& window )
 {
 	std::string font( "Fonts/AGENCYB.TTF" );
-	sf::Vector2f centerPos( sf::Vector2f(mWindow_.getSize())*.5f );
+	sf::Vector2f centerPos( sf::Vector2f(window.getSize())*.5f );
 	std::string label0Text( "Waiting" );
 	uint16_t label0FontSize = 16;
 	sf::Vector2f label0Position( centerPos.x, centerPos.y+50.f );
@@ -398,15 +398,17 @@ void scene::online::Waiting::loadResources( )
 	mTextLabels[2].setPosition( label2Position );
 }
 
-::scene::online::ID scene::online::Waiting::update( std::vector<sf::Event>& eventQueue )
+::scene::online::ID scene::online::Waiting::update( std::vector<sf::Event>& eventQueue,
+												   ::scene::online::Online& net,
+												   sf::RenderWindow& )
 {
 	::scene::online::ID retVal = ::scene::online::ID::AS_IS;
 	switch ( mState )
 	{
 		case State::TICKETING:
-			if ( true == mNet.hasReceived() )
+			if ( true == net.hasReceived() )
 			{
-				if ( std::optional<std::string> ticket( mNet.getByTag(TAG_TICKET,
+				if ( std::optional<std::string> ticket( net.getByTag(TAG_TICKET,
 																	Online::Option::RETURN_TAG_ATTACHED,
 																	sizeof(HashedKey)) );
 					 std::nullopt != ticket )
@@ -418,14 +420,14 @@ void scene::online::Waiting::loadResources( )
 					std::string ticketID( "ticket: "+std::to_string(::ntohl(*(HashedKey*)&ptr[std::strlen(TAG_TICKET)])) );
 					gService()->console().print( ticketID, sf::Color::Green );
 #endif
-					if ( true == mNet.connectToMainServer() )
+					if ( true == net.connectToMainServer() )
 					{
 						// Sending to the main server the ticket, which the main server will verify.
-						mNet.send( _ticket.data(), (int)_ticket.size() );
+						net.send( _ticket.data(), (int)_ticket.size() );
 						mState = State::SUBMITTING_TICKET;
 					}
 				}
-				else if ( std::optional<std::string> order( mNet.getByTag(TAG_ORDER_IN_QUEUE,
+				else if ( std::optional<std::string> order( net.getByTag(TAG_ORDER_IN_QUEUE,
 																		 Online::Option::FIND_END_TO_BEGIN,
 																		   sizeof(uint16_t)) );
 						  std::nullopt != order )
@@ -438,16 +440,16 @@ void scene::online::Waiting::loadResources( )
 				{
 					gService()->console().printFailure( FailureLevel::FATAL,
 														 "Unknown message from the queue server." );
-					mNet.disconnect( );
+					net.disconnect( );
 					return retVal;
 				}
-				mNet.receive( );
+				net.receive( );
 			}
 			break;
 		case State::SUBMITTING_TICKET:
-			if ( true == mNet.hasReceived() )
+			if ( true == net.hasReceived() )
 			{
-				if ( std::optional<std::string> nickname( mNet.getByTag(TAG_MY_NICKNAME,
+				if ( std::optional<std::string> nickname( net.getByTag(TAG_MY_NICKNAME,
 																		Online::Option::DEFAULT,
 																		-1) );
 					 std::nullopt != nickname )
@@ -455,12 +457,12 @@ void scene::online::Waiting::loadResources( )
 #ifdef _DEBUG
 					gService()->console().print( nickname.value(), sf::Color::Green );
 #endif
-					mNet.setMyNickname( nickname.value() );
+					net.setMyNickname( nickname.value() );
 					retVal = ::scene::online::ID::IN_LOBBY;
 				}
 				else
 				{
-					mNet.disconnect( );
+					net.disconnect( );
 				}
 			}
 			break;
@@ -493,10 +495,10 @@ void scene::online::Waiting::loadResources( )
 	return retVal;
 }
 
-void scene::online::Waiting::draw( )
+void scene::online::Waiting::draw( sf::RenderWindow& window )
 {
 	for ( sf::Text& textLabel : mTextLabels )
 	{
-		mWindow_.draw( textLabel );
+		window.draw( textLabel );
 	}
 }

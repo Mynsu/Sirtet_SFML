@@ -9,7 +9,7 @@ public:
 	void operator=( const Console& ) = delete;
 	Console( Console&& ) = delete;
 	virtual ~Console( ) = default;
-	
+
 	void print( const std::string& message, const sf::Color color = sf::Color::White ) override;
 	void printFailure( const FailureLevel failureLevel, const std::string& message ) override;
 	void printScriptError( const ExceptionType exceptionType, const std::string& variableName, const std::string& scriptName ) override;

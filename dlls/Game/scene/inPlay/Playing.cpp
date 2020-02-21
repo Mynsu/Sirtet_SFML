@@ -24,13 +24,11 @@ const uint16_t ANIMATION_SPEED_MS = 34;
 	mFrameCountCoolToGameOver( 0 ), mFrameCountCoolToNextLevel( 0 ), mFrameCountCoolAllLevelsCleared( 0 ),
 	mAnimationDamper1( 0 ), mAnimationDamper10( 0 ),
 	mTempo( 0.75f ),
-	mWindow_( window ), mBackgroundRect_( (sf::RectangleShape&)shapeOrSprite ),
-	mOverlappedScene_( overlappedScene ),
-	mNextTetriminoPanel( window ),
-	mVfxCombo( window ), mStage( window )
+	mBackgroundRect_( (sf::RectangleShape&)shapeOrSprite ),
+	mOverlappedScene_( overlappedScene )
 {
 	mSpriteForScore.setTexture( mTextureForScore );
-	loadResources( );
+	loadResources( window );
 	gService()->sound().stopBGM( );
 	mCurrentTetrimino = ::model::Tetrimino::Spawn();
 	mNextTetriminos.emplace( ::model::Tetrimino::Spawn() );
@@ -39,7 +37,7 @@ const uint16_t ANIMATION_SPEED_MS = 34;
 	mNextTetriminoPanel.setTetrimino( mNextTetriminos.front() );
 }
 
-void ::scene::inPlay::Playing::loadResources( )
+void ::scene::inPlay::Playing::loadResources( sf::RenderWindow& )
 {
 	uint32_t backgroundColor = 0x29cdb5'fa; // CYAN
 	mDrawingInfo.blackOutColor = 0x808080ff; // GRAY
@@ -1060,10 +1058,10 @@ void ::scene::inPlay::Playing::loadResources( )
 	return retVal;
 }
 
-void ::scene::inPlay::Playing::draw( )
+void ::scene::inPlay::Playing::draw( sf::RenderWindow& window )
 {
-	mWindow_.draw( mBackgroundRect_ );
-	mStage.draw( );
+	window.draw( mBackgroundRect_ );
+	mStage.draw( window );
 	if ( 0 != mFrameCountCoolToNextLevel )
 	{
 		++mFrameCountCoolToNextLevel;
@@ -1074,9 +1072,9 @@ void ::scene::inPlay::Playing::draw( )
 	}
 	else
 	{
-		mCurrentTetrimino.draw( mWindow_ );
+		mCurrentTetrimino.draw( window );
 	}
-	mNextTetriminoPanel.draw( );
+	mNextTetriminoPanel.draw( window );
 	{
 		uint8_t score = mNumOfLinesRemainingToLevelClear;
 		if ( score < 0 )
@@ -1087,23 +1085,23 @@ void ::scene::inPlay::Playing::draw( )
 													mDrawingInfo.scoreSpriteClipSize.x,
 													mDrawingInfo.scoreSpriteClipSize.y) );
 		mSpriteForScore.setPosition( mDrawingInfo.scorePosition );
-		mWindow_.draw( mSpriteForScore );
+		window.draw( mSpriteForScore );
 		mSpriteForScore.setTextureRect(	sf::IntRect(0, (score%10)*mDrawingInfo.scoreSpriteClipSize.y+mAnimationDamper1,
 													mDrawingInfo.scoreSpriteClipSize.x,
 													mDrawingInfo.scoreSpriteClipSize.y) );
 		mSpriteForScore.setPosition( mDrawingInfo.scorePosition +
 									sf::Vector2f(mDrawingInfo.gapBetweenScoreLetter, 0.f) );
-		mWindow_.draw( mSpriteForScore );
+		window.draw( mSpriteForScore );
 		mSpriteForScore.setTextureRect(	sf::IntRect(0, mDrawingInfo.scoreSpriteClipSize.y*14,
 													mDrawingInfo.scoreSpriteClipSize.x,
 													mDrawingInfo.scoreSpriteClipSize.y) );
 		mSpriteForScore.setPosition( mDrawingInfo.scorePosition +
 									sf::Vector2f(mDrawingInfo.gapBetweenScoreLetter+30.f, 75.f) );
-		mWindow_.draw( mSpriteForScore );
+		window.draw( mSpriteForScore );
 	}
 	if ( 0 != mFrameCountVfxDuration_ )
 	{
-		mVfxCombo.draw( mNumOfLinesRecentlyCleared );
+		mVfxCombo.draw( window, mNumOfLinesRecentlyCleared );
 		++mFrameCountVfxDuration_;
 	}
 	

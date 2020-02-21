@@ -4,7 +4,7 @@
 #include "../../ServiceLocatorMirror.h"
 
 scene::inPlay::Assertion::Assertion( sf::RenderWindow& window )
-	: mFrameCountToCancel( 0 ), mFPS_( 60 ), mWindow_( window )
+	: mFrameCountToCancel( 0 ), mFPS_( 60 )
 {
 	auto& vault = gService()->vault();
 	const auto it = vault.find(HK_FORE_FPS);
@@ -12,10 +12,10 @@ scene::inPlay::Assertion::Assertion( sf::RenderWindow& window )
 	mFPS_ = (uint16_t)it->second;
 	mBackground.setSize( sf::Vector2f(window.getSize()) );
 	mTextLabelForGuide.setString( "Press ESC to quit." );
-	loadResources( );
+	loadResources( window );
 }
 
-void scene::inPlay::Assertion::loadResources( )
+void scene::inPlay::Assertion::loadResources( sf::RenderWindow& window )
 {
 	uint16_t fontSize = 50;
 	uint32_t backgroundColor = 0x0000007f;
@@ -180,7 +180,7 @@ void scene::inPlay::Assertion::loadResources( )
 	const sf::FloatRect bound( mTextLabelForGuide.getLocalBounds() );
 	const sf::Vector2f size( bound.width, bound.height );
 	mTextLabelForGuide.setOrigin( size*0.5f );
-	mTextLabelForGuide.setPosition( sf::Vector2f(mWindow_.getSize())*0.5f );
+	mTextLabelForGuide.setPosition( sf::Vector2f(window.getSize())*0.5f );
 }
 
 ::scene::inPlay::ID scene::inPlay::Assertion::update( std::vector<sf::Event>& eventQueue )
@@ -216,9 +216,9 @@ void scene::inPlay::Assertion::loadResources( )
 	return retVal;
 }
 
-void scene::inPlay::Assertion::draw( )
+void scene::inPlay::Assertion::draw( sf::RenderWindow& window )
 {
-	mWindow_.draw( mBackground );
-	mWindow_.draw( mTextLabelForGuide );
+	window.draw( mBackground );
+	window.draw( mTextLabelForGuide );
 	++mFrameCountToCancel;
 }

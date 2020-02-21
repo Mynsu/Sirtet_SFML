@@ -23,10 +23,10 @@ namespace scene::inPlay
 		void operator=( const IScene& ) = delete;
 		virtual ~IScene( ) = default;
 		
-		virtual void loadResources( ) = 0;
+		virtual void loadResources( sf::RenderWindow& window ) = 0;
 		// Returns 0 when doing nothing, -1 when coming back, 1 when going on.
 		virtual ::scene::inPlay::ID update( std::vector<sf::Event>& eventQueue ) = 0;
-		virtual void draw( ) = 0;
+		virtual void draw( sf::RenderWindow& window ) = 0;
 
 		// NOTE: Protected constructor prevents users from instantiating the abstract class.
 	protected:

@@ -7,8 +7,8 @@ const uint8_t Sound::MAX_NUM_OF_BUFFERS;
 Sound::Sound( )
 {
 	IsInstantiated = true;
-	setBGMVolume( 10.f );
-	setSFXVolume( 20.f );
+	setBGMVolume( 2.f );
+	setSFXVolume( 4.f );
 }
 
 Sound::~Sound( )

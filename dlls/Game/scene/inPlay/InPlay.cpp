@@ -20,7 +20,7 @@ bool ::scene::inPlay::InPlay::IsInstantiated = false;
 	ASSERT_TRUE( vault.end() != it );
 	mFPS_ = (uint16_t)it->second;
 	setScene( initScene );
-	loadResources( );
+	loadResources( window );
 
 	IsInstantiated = true;
 }
@@ -30,13 +30,13 @@ bool ::scene::inPlay::InPlay::IsInstantiated = false;
 	IsInstantiated = false;
 }
 
-void scene::inPlay::InPlay::loadResources( )
+void scene::inPlay::InPlay::loadResources( sf::RenderWindow& window )
 {
-	mBackground.setSize( sf::Vector2f(mWindow_.getSize()) );
-	mCurrentScene->loadResources( );
+	mBackground.setSize( sf::Vector2f(window.getSize()) );
+	mCurrentScene->loadResources( window );
 	if ( nullptr != mOverlappedScene )
 	{
-		mOverlappedScene->loadResources( );
+		mOverlappedScene->loadResources( window );
 	}
 }
 
@@ -69,12 +69,12 @@ void scene::inPlay::InPlay::loadResources( )
 	return retVal;
 }
 
-void ::scene::inPlay::InPlay::draw( )
+void ::scene::inPlay::InPlay::draw( sf::RenderWindow& window )
 {
-	mCurrentScene->draw( );
+	mCurrentScene->draw( window );
 	if ( nullptr != mOverlappedScene )
 	{
-		mOverlappedScene->draw( );
+		mOverlappedScene->draw( window );
 	}
 }
 

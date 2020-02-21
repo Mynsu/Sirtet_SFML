@@ -5,13 +5,12 @@
 bool ::scene::inPlay::AllClear::IsInstantiated = false;
 
 scene::inPlay::AllClear::AllClear( sf::RenderWindow& window )
-	: mWindow_( window )
 {
 	ASSERT_TRUE( false == IsInstantiated );
 
 	mDrawingInfo.confettiSpriteClipRow = mDrawingInfo.confettiSpriteClipColumn = 0;
 	mSprite.setTexture(mTexture);
-	loadResources( );
+	loadResources( window );
 	if ( false == gService()->sound().playBGM(mBGMPath) )
 	{
 		gService()->console().printFailure(FailureLevel::WARNING,
@@ -26,7 +25,7 @@ scene::inPlay::AllClear::~AllClear( )
 	IsInstantiated = false;
 }
 
-void scene::inPlay::AllClear::loadResources( )
+void scene::inPlay::AllClear::loadResources( sf::RenderWindow& )
 {
 	mDrawingInfo.confettiSpriteClipRowMax_ = mDrawingInfo.confettiSpriteClipColumnMax_ = 8;
 	mDrawingInfo.confettiRelativePlaySpeed = 1.0f;
@@ -242,7 +241,7 @@ void scene::inPlay::AllClear::loadResources( )
 	return ::scene::inPlay::ID::AS_IS;
 }
 
-void scene::inPlay::AllClear::draw( )
+void scene::inPlay::AllClear::draw( sf::RenderWindow& window )
 {
 	const Clock::time_point now = Clock::now();
 	if ( Clock::duration(std::chrono::milliseconds((int)(30*mDrawingInfo.confettiRelativePlaySpeed)))
@@ -264,5 +263,5 @@ void scene::inPlay::AllClear::draw( )
 											mDrawingInfo.confettiSpriteClipSize.x,
 											mDrawingInfo.confettiSpriteClipSize.y) );
 	}
-	mWindow_.draw( mSprite );
+	window.draw( mSprite );
 }

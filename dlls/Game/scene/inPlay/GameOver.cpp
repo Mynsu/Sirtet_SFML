@@ -6,14 +6,14 @@
 scene::inPlay::GameOver::GameOver( sf::RenderWindow& window, sf::Drawable& shapeOrSprite,
 								   std::unique_ptr<::scene::inPlay::IScene>& overlappedScene )
 	: TARGET_ALPHA( 0x7fu ), mFade( 0xffu ), mFrameCountToMainMenu( 0 ),
-	mWindow_( window ), mBackgroundRect_( (sf::RectangleShape&)shapeOrSprite )
+	mBackgroundRect_( (sf::RectangleShape&)shapeOrSprite )
 {
 	overlappedScene.reset( );
 	auto& vault = gService()->vault();
 	const auto it = vault.find(HK_FORE_FPS);
 	ASSERT_TRUE( vault.end() != it );
 	mFPS_ = (uint16_t)it->second;
-	loadResources( );
+	loadResources( window );
 	if ( false == gService()->sound().playBGM(mSoundPaths[(int)SoundIndex::BGM]) )
 	{
 		gService()->console().printFailure(FailureLevel::WARNING,
@@ -21,7 +21,7 @@ scene::inPlay::GameOver::GameOver( sf::RenderWindow& window, sf::Drawable& shape
 	}
 }
 
-void scene::inPlay::GameOver::loadResources( )
+void scene::inPlay::GameOver::loadResources( sf::RenderWindow& window )
 {
 	sf::Vector2f imageSize( 512.f, 256.f );
 	std::string imagePath( "Images/GameOver.png" );
@@ -179,7 +179,7 @@ void scene::inPlay::GameOver::loadResources( )
 	mSprite.setTexture( mTexture );
 	mSprite.setTextureRect( sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(imageSize)) );
 	mSprite.setOrigin( imageSize*0.5f );
-	mSprite.setPosition( sf::Vector2f(mWindow_.getSize())*0.5f );
+	mSprite.setPosition( sf::Vector2f(window.getSize())*0.5f );
 }
 
 ::scene::inPlay::ID scene::inPlay::GameOver::update( std::vector<sf::Event>& )
@@ -201,7 +201,7 @@ void scene::inPlay::GameOver::loadResources( )
 	return retVal;
 }
 
-void scene::inPlay::GameOver::draw( )
+void scene::inPlay::GameOver::draw( sf::RenderWindow& window )
 {
 	// Cyan
 	if ( TARGET_ALPHA < mFade )
@@ -209,11 +209,11 @@ void scene::inPlay::GameOver::draw( )
 		const uint32_t BACKGROUND_RGB = 0x29cdb500;
 		mFade -= 2u;
 		mBackgroundRect_.setFillColor( sf::Color(BACKGROUND_RGB | mFade) );
-		mWindow_.draw( mBackgroundRect_ );
+		window.draw( mBackgroundRect_ );
 	}
 	else
 	{
-		mWindow_.draw( mBackgroundRect_ );
-		mWindow_.draw( mSprite );
+		window.draw( mBackgroundRect_ );
+		window.draw( mSprite );
 	}
 }

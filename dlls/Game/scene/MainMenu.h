@@ -9,9 +9,9 @@ namespace scene
 		MainMenu( sf::RenderWindow& window );
 		~MainMenu( );
 
-		void loadResources( ) override;
+		void loadResources( sf::RenderWindow& window ) override;
 		::scene::ID update( std::vector<sf::Event>& eventQueue ) override;
-		void draw( ) override;
+		void draw( sf::RenderWindow& window ) override;
 		::scene::ID currentScene( ) const override;
 		void setScene( const uint8_t sceneID ) override
 		{}
@@ -26,7 +26,6 @@ namespace scene
 		// That's the difference from the class filled with static functions, or on singleton pattern and the like.
 		static bool IsInstantiated;
 		bool mIsCursorOnButton;
-		sf::RenderWindow& mWindow_;
 		::scene::ID mNextSceneID;
 		std::string mSoundPaths[(int)SoundIndex::NONE_MAX];
 		struct

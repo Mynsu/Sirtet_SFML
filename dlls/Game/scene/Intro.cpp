@@ -10,7 +10,6 @@ bool ::scene::Intro::IsInstantiated = false;
 	: mDuration( 2 ),
 	mAlpha_( 0x00 ),
 	mFrameCountToStart( 0 ),	mFPS_( 60 ),
-	mWindow_( window ),
 	mNextScene_( ::scene::ID::MAIN_MENU )
 {
 	ASSERT_TRUE( false == IsInstantiated );
@@ -19,8 +18,7 @@ bool ::scene::Intro::IsInstantiated = false;
 	{
 		mFPS_ = (uint16_t)it->second;
 	}
-
-	loadResources( );
+	loadResources( window );
 
 	IsInstantiated = true;
 }
@@ -30,7 +28,7 @@ bool ::scene::Intro::IsInstantiated = false;
 	IsInstantiated = false;
 }
 
-void scene::Intro::loadResources( )
+void scene::Intro::loadResources( sf::RenderWindow& window )
 {
 	std::string scriptPath( "Scripts/Intro.lua" );
 	std::string varName0( "Image" );
@@ -63,7 +61,7 @@ void scene::Intro::loadResources( )
 										   "File Not Found: "+introImagePath );
 	}
 	mSprite.setTexture( mTexture );
-	const sf::Vector2u winSize( mWindow_.getSize() );
+	const sf::Vector2u winSize( window.getSize() );
 	mSprite.setTextureRect( sf::IntRect(0, 0, winSize.x, winSize.y) );
 
 	if ( const auto it = result.find(varName1);
@@ -95,7 +93,7 @@ void scene::Intro::loadResources( )
 	return ::scene::ID::AS_IS;
 }
 
-void ::scene::Intro::draw( )
+void ::scene::Intro::draw( sf::RenderWindow& window )
 {
 	//
 	// Fade In & Out
@@ -133,7 +131,7 @@ void ::scene::Intro::draw( )
 		}
 	}
 	mSprite.setColor( sf::Color( MAX_RGBA, MAX_RGBA, MAX_RGBA, mAlpha_ ) );
-	mWindow_.draw( mSprite );
+	window.draw( mSprite );
 
 	++mFrameCountToStart;
 }

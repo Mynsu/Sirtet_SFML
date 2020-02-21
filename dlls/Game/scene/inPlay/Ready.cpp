@@ -6,7 +6,7 @@
 
 ::scene::inPlay::Ready::Ready( sf::RenderWindow& window, sf::Drawable& shapeOrSprite )
 	: mFPS_( 60 ), mFrameCountToStart( mFPS_ * 3 ),
-	mWindow_( window ), mBackgroundRect_( (sf::RectangleShape&)shapeOrSprite ),
+	mBackgroundRect_( (sf::RectangleShape&)shapeOrSprite ),
 	mSpriteClipSize_( 256.f, 256.f )
 {
 	auto& vault = gService()->vault();
@@ -15,10 +15,10 @@
 	mFPS_ = it->second;
 	mFrameCountToStart = mFPS_ * 3;
 
-	loadResources( );
+	loadResources( window );
 }
 
-void ::scene::inPlay::Ready::loadResources( )
+void ::scene::inPlay::Ready::loadResources( sf::RenderWindow& window )
 {
 	uint32_t backgroundColor = 0x29cdb5'7fu;
 	std::string countdownSpritePath( "Images/Countdown.png" );
@@ -154,7 +154,7 @@ void ::scene::inPlay::Ready::loadResources( )
 
 	mBackgroundRect_.setFillColor( sf::Color(backgroundColor) );
 	mSprite.setTexture( mTexture );
-	mSprite.setPosition( (sf::Vector2f(mWindow_.getSize())-mSpriteClipSize_)*0.5f );
+	mSprite.setPosition( (sf::Vector2f(window.getSize())-mSpriteClipSize_)*0.5f );
 }
 
 ::scene::inPlay::ID scene::inPlay::Ready::update( std::vector<sf::Event>& )
@@ -167,19 +167,19 @@ void ::scene::inPlay::Ready::loadResources( )
 	return ::scene::inPlay::ID::AS_IS;
 }
 
-void ::scene::inPlay::Ready::draw( )
+void ::scene::inPlay::Ready::draw( sf::RenderWindow& window )
 {
 	//
 	// Background
 	//
-	mWindow_.draw( mBackgroundRect_ );
+	window.draw( mBackgroundRect_ );
 
 	//
 	// Countdown
 	//
 	const sf::Vector2i cast( mSpriteClipSize_ );
 	mSprite.setTextureRect( sf::IntRect( 0, cast.y*( mFrameCountToStart/mFPS_ ), cast.x, cast.y ) );
-	mWindow_.draw( mSprite );
+	window.draw( mSprite );
 
 	--mFrameCountToStart;
 }

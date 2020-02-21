@@ -14,13 +14,11 @@ private:
 public:
 	// NOTE: Called in compile-time, thus another initialization should be done in runtime.
 	GameLocal( )
-		: mWindow( nullptr )
 	{
 		IsInstantiated = true;
 	}
 	~GameLocal( )
 	{
-		mWindow = nullptr;
 		IsInstantiated = false;
 	};
 
@@ -33,13 +31,11 @@ public:
 		mSceneManager.draw( );
 	}
 private:
-	void setWindow( sf::RenderWindow* const window )
+	void init( sf::RenderWindow& window )
 	{
-		mWindow = window;
-		mSceneManager.lastInit( window );
+		mSceneManager.init( window );
 	}
 
-	sf::RenderWindow* mWindow;
 	::scene::SceneManager mSceneManager;
 };
 
@@ -47,14 +43,14 @@ bool GameLocal::IsInstantiated = false;
 
 // NOTE: In this way an instance will be created in compile-time,
 //		 but often needs another initialization in runtime.
-std::unique_ptr< IGame > _Game( std::make_unique< GameLocal >( ) );
+std::unique_ptr<IGame> _Game( std::make_unique<GameLocal>() );
 
 // Pseudo-unnamed function
 inline void _2943305454( const EngineComponents engine )
 {
+	// Prerequisite for _Game->init( ).
 	gService.mPtr = engine.service;
-	// !IMPORTANT: Call this only after all the engine components has been linked, or assigned like above.
-	_Game->setWindow( engine.window );
+	_Game->init( *engine.window );
 }
 
 extern "C" const GameComponents GetGameAPI( const EngineComponents engine )

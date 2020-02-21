@@ -18,21 +18,21 @@ scene::online::InLobby::InLobby( sf::RenderWindow& window, ::scene::online::Onli
 	: mIsReceiving( false ), mHasJoined( false ), mIsLoading( true ),
 	mIndexForGuideText( 0 ), mEnteringRoom( 0 ),
 	mFrameCountUserListUpdateInterval( 30 ), mFrameCountRequestDelay( 0 ),
-	mWindow_( window ), mNet( net ),
+	mNet( net ),
 	mTextInputBox( window )
 {
 	ASSERT_TRUE( false == IsInstantiated );
 
-	const sf::Vector2f winSize( mWindow_.getSize() );
+	const sf::Vector2f winSize( window.getSize() );
 	mBackground.setSize( winSize );
-	const std::string& myNickname = mNet.myNickname();
+	const std::string& myNickname = net.myNickname();
 	sf::Text tf( myNickname, mFont );
 	tf.setOrigin( 0.5f, 0.5f );
 	tf.setPosition(	winSize*.5f );
 	tf.setFillColor( sf::Color(0xffa500ff) ); // Orange
 	mUserList.emplace( myNickname, std::make_pair(tf,0) );
 	mLatestMouseEvent.latestClickTime = Clock::time_point::min();
-	loadResources( );
+	loadResources( window );
 #ifdef _DEV
 	IServiceLocator* const service = gService();
 	ASSERT_NOT_NULL( service );
@@ -54,7 +54,7 @@ scene::online::InLobby::~InLobby( )
 	IsInstantiated = false;
 }
 
-void scene::online::InLobby::loadResources( )
+void scene::online::InLobby::loadResources( sf::RenderWindow& window )
 {
 	uint32_t backgroundColor = 0x29cdb5fa; // Cyan
 	mDrawingInfo.usersBoxAnimationSpeed = 3.f;
@@ -95,6 +95,7 @@ void scene::online::InLobby::loadResources( )
 	mDrawingInfo.totalDistanceUsersBoxToRoom = 0.f;
 	mDrawingInfo.remainingDistanceUsersBoxToRoom = 0.f;
 	mSoundPaths[(int)SoundIndex::ON_SELECTION] = "Sounds/selection.wav";
+	mDrawingInfo.centerPosition = sf::Vector2f(window.getSize()/2u);
 	
 	//
 	// From 'InLobby.lua'.
@@ -958,10 +959,10 @@ void scene::online::InLobby::loadResources( )
 	mDrawingInfo.accelerationUsersBoxLeftTop0 = dir.normalize();
 	mDrawingInfo.accelerationUsersBoxLeftTop0 *=
 		mDrawingInfo.usersBoxAnimationSpeed;
-	mUsersBox.setSize( sf::Vector2f(mWindow_.getSize()) );
+	mUsersBox.setSize( sf::Vector2f(window.getSize()) );
 	float mag = dir.magnitude();
-	float ratio =	mDrawingInfo.usersBoxAnimationSpeed/mag;
-	const sf::Vector2f winSize( mWindow_.getSize() );
+	float ratio = mDrawingInfo.usersBoxAnimationSpeed/mag;
+	const sf::Vector2f winSize( window.getSize() );
 	dir = mDrawingInfo.usersBoxSize - ::math::Vector<2>(winSize.x, winSize.y);
 	mag = dir.magnitude();
 	float animationSpeed = mag*ratio;
@@ -1159,7 +1160,9 @@ void scene::online::InLobby::loadResources( )
 	mDrawingInfo.relativeAccelerationUsersBoxRightBottomToRoom *= animationSpeed;
 }
 
-::scene::online::ID scene::online::InLobby::update( std::vector<sf::Event>& eventQueue )
+::scene::online::ID scene::online::InLobby::update( std::vector<sf::Event>& eventQueue,
+												   ::scene::online::Online& net,
+												   sf::RenderWindow& )
 {
 	::scene::online::ID retVal = ::scene::online::ID::AS_IS;
 	if ( 2 == mEnteringRoom )
@@ -1173,10 +1176,10 @@ void scene::online::InLobby::loadResources( )
 		return retVal;
 	}
 
-	if ( true == mNet.hasReceived() )
+	if ( true == net.hasReceived() )
 	{
 		mIsReceiving = false;
-		if ( const std::optional<std::string> resultCreatingRoom( mNet.getByTag(TAGGED_REQ_CREATE_ROOM,
+		if ( const std::optional<std::string> resultCreatingRoom( net.getByTag(TAGGED_REQ_CREATE_ROOM,
 																				Online::Option::RETURN_TAG_ATTACHED,
 																				0) );
 			std::nullopt != resultCreatingRoom )
@@ -1184,7 +1187,7 @@ void scene::online::InLobby::loadResources( )
 			mEnteringRoom = -1;
 			mUserList.clear( );
 		}
-		else if ( const std::optional<std::string> resultJoiningRoom( mNet.getByTag(TAGGED_REQ_JOIN_ROOM,
+		else if ( const std::optional<std::string> resultJoiningRoom( net.getByTag(TAGGED_REQ_JOIN_ROOM,
 																					Online::Option::DEFAULT,
 																					sizeof(uint8_t)) );
 				 std::nullopt != resultJoiningRoom )
@@ -1218,7 +1221,7 @@ void scene::online::InLobby::loadResources( )
 			}
 		}
 		
-		if ( const std::optional<std::string> userList( mNet.getByTag(TAGGED_REQ_USER_LIST_IN_LOBBY,
+		if ( const std::optional<std::string> userList( net.getByTag(TAGGED_REQ_USER_LIST_IN_LOBBY,
 																	Online::Option::DEFAULT,
 																	-1) );
 			std::nullopt != userList )
@@ -1258,14 +1261,13 @@ void scene::online::InLobby::loadResources( )
 					++it;
 				}
 			}
-			const sf::Vector2f center( mWindow_.getSize() );
 			const sf::Vector2f offset( 20.f, 0.f );
 			float mul = 0.f;
 			for ( const std::string& nickname : curUsers )
 			{
 				sf::Text tf( nickname, mFont );
 				tf.setFillColor( sf::Color(mDrawingInfo.nicknameColor) );
-				tf.setPosition( center*.5f + offset*mul );
+				tf.setPosition( mDrawingInfo.centerPosition + offset*mul );
 				mUserList.emplace( nickname, std::make_pair(tf, 0) );
 				mul += 1.f;
 			}
@@ -1274,14 +1276,14 @@ void scene::online::InLobby::loadResources( )
 	
 	if ( false == mIsReceiving )
 	{
-		mNet.receive( );
+		net.receive( );
 		mIsReceiving = true;
 	}
 
 	if ( UPDATE_USER_LIST_INTERVAL <= mFrameCountUserListUpdateInterval )
 	{
 		std::string req( TAGGED_REQ_USER_LIST_IN_LOBBY );
-		mNet.send( req.data(), (int)req.size() );
+		net.send( req.data(), (int)req.size() );
 	}
 
 	if ( true == mTextInputBox.isActive() && 
@@ -1348,9 +1350,9 @@ void scene::online::InLobby::loadResources( )
 	return retVal;
 }
 
-void scene::online::InLobby::draw( )
+void scene::online::InLobby::draw( sf::RenderWindow& window )
 {
-	mWindow_.draw( mBackground );
+	window.draw( mBackground );
 	if ( true == mIsLoading )
 	{
 		sf::Vector2f pos( mUsersBox.getPosition() );
@@ -1411,7 +1413,7 @@ void scene::online::InLobby::draw( )
 			mEnteringRoom *= 2;
 		}
 	}
-	mWindow_.draw( mUsersBox );
+	window.draw( mUsersBox );
 	if ( UPDATE_USER_LIST_INTERVAL <= mFrameCountUserListUpdateInterval )
 	{
 		mFrameCountUserListUpdateInterval = 0;
@@ -1428,7 +1430,7 @@ void scene::online::InLobby::draw( )
 	}
 	if ( 0 == mEnteringRoom )
 	{
-		mWindow_.draw( mTextLabelForGuide );
+		window.draw( mTextLabelForGuide );
 	}
 	{
 		std::scoped_lock lock( MutexForMovingPoints );
@@ -1456,7 +1458,7 @@ void scene::online::InLobby::draw( )
 				{
 					const math::Vector<2> nv( v.normalize()*SPEED_OF_NICKNAME_MOVE );
 					textFieldAndDestination.first.move( nv.mComponents[0], nv.mComponents[1] );
-					mWindow_.draw( textFieldAndDestination.first );
+					window.draw( textFieldAndDestination.first );
 					break;
 				}
 			}
@@ -1464,7 +1466,7 @@ void scene::online::InLobby::draw( )
 	}
 	if ( true == mTextInputBox.isActive() )
 	{
-		mTextInputBox.draw( );
+		mTextInputBox.draw( window );
 	}
 	++mFrameCountUserListUpdateInterval;
 	if ( 0 != mFrameCountRequestDelay )

@@ -21,14 +21,15 @@ scene::online::InRoom::InRoom( sf::RenderWindow& window, Online& net, const bool
 	: mIsReceiving( false ), mAsHost( asHost ),
 	mIsStartingGuideVisible_( true ),
 	mIsMouseOverStartButton_( false ), mIsStartButtonPressed_( false ),
-	mFrameCountCoolToRotateStartButton( 0 ), mAlarms{ Clock::time_point::max() },
-	mWindow_( window ), mNet( net ),
-	mOtherPlayerSlots{ NULL_EMPTY_SLOT }
+	mFrameCountCoolToRotateStartButton( 0 ),
+	mMyNicknameHashed( net.myNicknameHashed() ), mMyNickname( net.myNickname() ),
+	mNet( net ),
+	mAlarms{ Clock::time_point::max() }, mOtherPlayerSlots{ NULL_EMPTY_SLOT }
 {
 	ASSERT_TRUE( false == IsInstantiated );
 	
 	mParticipants.reserve( ROOM_CAPACITY );
-	mParticipants.emplace( mNet.myNicknameHashed(), Participant(mNet.myNickname(), ::ui::PlayView(mWindow_, mNet)) );
+	mParticipants.emplace( net.myNicknameHashed(), Participant(net.myNickname(), ::ui::PlayView()) );
 	IServiceLocator* const service = gService();
 	ASSERT_NOT_NULL( service );
 	service->console().addCommand( CMD_LEAVE_ROOM, std::bind( &scene::online::InRoom::_leaveRoom,
@@ -38,7 +39,7 @@ scene::online::InRoom::InRoom( sf::RenderWindow& window, Online& net, const bool
 		service->console().addCommand( CMD_START_GAME, std::bind( &scene::online::InRoom::_startGame,
 																	 this, std::placeholders::_1 ) );
 	}
-	loadResources( );
+	loadResources( window );
 
 	IsInstantiated = true;
 }
@@ -57,7 +58,7 @@ scene::online::InRoom::~InRoom( )
 	IsInstantiated = false;
 }
 
-void scene::online::InRoom::loadResources( )
+void scene::online::InRoom::loadResources( sf::RenderWindow& window )
 {
 	uint32_t backgroundColor = 0x8ae5ff'ff;
 	std::string fontPath( "Fonts/AGENCYR.TTF" );
@@ -1121,10 +1122,10 @@ void scene::online::InRoom::loadResources( )
 	}
 	lua_close( lua );
 
-	mBackground.setSize( sf::Vector2f(mWindow_.getSize()) );
+	mBackground.setSize( sf::Vector2f(window.getSize()) );
 	mBackground.setFillColor( sf::Color(backgroundColor) );
 	{
-		auto it = mParticipants.find(mNet.myNicknameHashed());
+		auto it = mParticipants.find(mMyNicknameHashed);
 		ASSERT_TRUE( mParticipants.end() != it );
 		::ui::PlayView& playView = it->second.playView;
 		::model::Stage& stage = playView.stage();
@@ -1195,15 +1196,17 @@ void scene::online::InRoom::loadResources( )
 	::ui::PlayView::LoadResources( );
 }
 
-::scene::online::ID scene::online::InRoom::update( std::vector<sf::Event>& eventQueue )
+::scene::online::ID scene::online::InRoom::update( std::vector<sf::Event>& eventQueue,
+												  ::scene::online::Online& net,
+												  sf::RenderWindow& window )
 {
 	::scene::online::ID nextSceneID = ::scene::online::ID::AS_IS;
-	const HashedKey myNicknameHashed = mNet.myNicknameHashed();
-	if ( true == mNet.hasReceived() )
+	const HashedKey myNicknameHashed = net.myNicknameHashed();
+	if ( true == net.hasReceived() )
 	{
 		mIsReceiving = false;
 
-		if ( const std::optional<std::string> hasLeftOrKicked( mNet.getByTag(TAGGED_REQ_LEAVE_ROOM,
+		if ( const std::optional<std::string> hasLeftOrKicked( net.getByTag(TAGGED_REQ_LEAVE_ROOM,
 																			 Online::Option::RETURN_TAG_ATTACHED,
 																			 0) );
 			std::nullopt != hasLeftOrKicked )
@@ -1212,7 +1215,7 @@ void scene::online::InRoom::loadResources( )
 			return nextSceneID;
 		}
 
-		if ( const std::optional<std::string> userList( mNet.getByTag(TAGGED_NOTI_UPDATE_USER_LIST,
+		if ( const std::optional<std::string> userList( net.getByTag(TAGGED_NOTI_UPDATE_USER_LIST,
 																	 Online::Option::DEFAULT,
 																	 -1) );
 			std::nullopt != userList )
@@ -1258,7 +1261,7 @@ void scene::online::InRoom::loadResources( )
 			}
 			for ( const auto& pair : users )
 			{
-				mParticipants.emplace( pair.first, Participant(pair.second, ::ui::PlayView(mWindow_, mNet, false)) );
+				mParticipants.emplace( pair.first, Participant(pair.second, ::ui::PlayView(false)) );
 				uint8_t slotIdx = 0;
 				while ( ROOM_CAPACITY-1 != slotIdx )
 				{
@@ -1292,20 +1295,20 @@ void scene::online::InRoom::loadResources( )
 			}
 		}
 
-		if ( const std::optional<std::string> hostChanged( mNet.getByTag(TAGGED_NOTI_HOST_CHANGED,
+		if ( const std::optional<std::string> hostChanged( net.getByTag(TAGGED_NOTI_HOST_CHANGED,
 																		 Online::Option::DEFAULT,
 																		 sizeof(HashedKey)) );
 			std::nullopt != hostChanged	)
 		{
 			const std::string& _newHostNicknameHashed = hostChanged.value();
 			const HashedKey newHostNicknameHashed = ::ntohl(*(HashedKey*)_newHostNicknameHashed.data());
-			if ( newHostNicknameHashed == mNet.myNicknameHashed() )
+			if ( newHostNicknameHashed == net.myNicknameHashed() )
 			{
 				mAsHost = true;
 			}
 		}
 
-		if ( const std::optional<std::string> gettingReady( mNet.getByTag(TAGGED_REQ_GET_READY,
+		if ( const std::optional<std::string> gettingReady( net.getByTag(TAGGED_REQ_GET_READY,
 																		Online::Option::RETURN_TAG_ATTACHED,
 																		0) );
 			std::nullopt != gettingReady )
@@ -1318,7 +1321,7 @@ void scene::online::InRoom::loadResources( )
 			gService()->sound().stopBGM( );
 		}
 
-		if ( const std::optional<std::string> gamesOver( mNet.getByTag(TAG_GAMES_OVER,
+		if ( const std::optional<std::string> gamesOver( net.getByTag(TAG_GAMES_OVER,
 																	Online::Option::DEFAULT,
 																	-1) );
 			std::nullopt != gamesOver )
@@ -1339,7 +1342,7 @@ void scene::online::InRoom::loadResources( )
 			}
 		}
 
-		if ( const std::optional<std::string> newCurrentTetriminos( mNet.getByTag(TAG_NEW_CURRENT_TETRIMINOS,
+		if ( const std::optional<std::string> newCurrentTetriminos( net.getByTag(TAG_NEW_CURRENT_TETRIMINOS,
 																				Online::Option::DEFAULT,
 																				-1) );
 			std::nullopt != newCurrentTetriminos )
@@ -1361,7 +1364,7 @@ void scene::online::InRoom::loadResources( )
 			}
 		}
 
-		if ( const std::optional<std::string> currentTetriminosMove( mNet.getByTag(TAG_CURRENT_TETRIMINOS_MOVE,
+		if ( const std::optional<std::string> currentTetriminosMove( net.getByTag(TAG_CURRENT_TETRIMINOS_MOVE,
 																				Online::Option::DEFAULT,
 																				-1) );
 			std::nullopt != currentTetriminosMove )
@@ -1392,7 +1395,7 @@ void scene::online::InRoom::loadResources( )
 			}
 		}
 
-		if ( const std::optional<std::string> stages( mNet.getByTag(TAG_STAGES,
+		if ( const std::optional<std::string> stages( net.getByTag(TAG_STAGES,
 																	Online::Option::DEFAULT,
 																	-1) );
 			std::nullopt != stages )
@@ -1415,7 +1418,7 @@ void scene::online::InRoom::loadResources( )
 			}
 		}
 
-		if ( const std::optional<std::string> numsOfLinesCleared( mNet.getByTag(TAG_NUMS_OF_LINES_CLEARED,
+		if ( const std::optional<std::string> numsOfLinesCleared( net.getByTag(TAG_NUMS_OF_LINES_CLEARED,
 																				Online::Option::DEFAULT,
 																				-1) );
 			std::nullopt != numsOfLinesCleared )
@@ -1438,7 +1441,7 @@ void scene::online::InRoom::loadResources( )
 			}
 		}
 
-		if ( const std::optional<std::string> allOver( mNet.getByTag(TAG_ALL_OVER,
+		if ( const std::optional<std::string> allOver( net.getByTag(TAG_ALL_OVER,
 																	Online::Option::RETURN_TAG_ATTACHED,
 																	0) );
 					std::nullopt != allOver )
@@ -1454,12 +1457,12 @@ void scene::online::InRoom::loadResources( )
 
 	for ( auto& pair : mParticipants )
 	{
-		pair.second.playView.update( eventQueue );
+		pair.second.playView.update( eventQueue, net );
 	}
 
 	if ( false == mIsReceiving )
 	{
-		mNet.receive( );
+		net.receive( );
 		mIsReceiving = true;
 	}
 
@@ -1524,7 +1527,7 @@ void scene::online::InRoom::loadResources( )
 		else if ( sf::Event::EventType::KeyPressed == it->type &&
 					sf::Keyboard::Escape == it->key.code )
 		{
-			mOverlappedScene = std::make_unique<::scene::inPlay::Assertion>(mWindow_);
+			mOverlappedScene = std::make_unique<::scene::inPlay::Assertion>(window);
 			it = eventQueue.erase(it);
 		}
 		else
@@ -1536,17 +1539,16 @@ void scene::online::InRoom::loadResources( )
 	return nextSceneID;
 }
 
-void scene::online::InRoom::draw( )
+void scene::online::InRoom::draw( sf::RenderWindow& window )
 {
-	mWindow_.draw( mBackground );
-	const HashedKey myNicknameHashed = mNet.myNicknameHashed();
+	window.draw( mBackground );
 	{
-		const auto it = mParticipants.find(myNicknameHashed);
+		const auto it = mParticipants.find(mMyNicknameHashed);
 		ASSERT_TRUE( mParticipants.end() != it );
 		if ( true == mAsHost )
 		{
 			::ui::NextTetriminoPanel& nextTetPanel = it->second.playView.nextTetriminoPanel();
-			const sf::Vector2f mousePos( sf::Mouse::getPosition()-mWindow_.getPosition() );
+			const sf::Vector2f mousePos( sf::Mouse::getPosition()-window.getPosition() );
 			if ( true == mDrawingInfo.nextTetriminoPanelBound.contains(mousePos) )
 			{
 				if ( false == mIsMouseOverStartButton_ )
@@ -1592,17 +1594,17 @@ void scene::online::InRoom::draw( )
 				mIsMouseOverStartButton_ = false;
 			}
 		}
-		it->second.playView.draw();
+		it->second.playView.draw( window );
 		if ( true == mIsStartingGuideVisible_ )
 		{
-			mWindow_.draw( mTextLabelForStartingGuide );
+			window.draw( mTextLabelForStartingGuide );
 		}
 		const sf::Vector2f margin( 10.f, 0.f );
-		mLabelForNickname.setString( mNet.myNickname() );
+		mLabelForNickname.setString( mMyNickname );
 		mLabelForNickname.setCharacterSize( mDrawingInfo.myNicknameFontSize );
 		mLabelForNickname.setPosition( it->second.playView.stage().position() + margin );
 		mLabelForNickname.setFillColor( sf::Color(mDrawingInfo.myNicknameColor) );
-		mWindow_.draw( mLabelForNickname );
+		window.draw( mLabelForNickname );
 	}
 	
 	for ( uint8_t i = 0; ROOM_CAPACITY-1 != i; ++i )
@@ -1612,24 +1614,24 @@ void scene::online::InRoom::draw( )
 		if ( NULL_EMPTY_SLOT == mOtherPlayerSlots[i] )
 		{
 			mOtherPlayerSlotBackground.setPosition( pos );
-			mWindow_.draw( mOtherPlayerSlotBackground );
+			window.draw( mOtherPlayerSlotBackground );
 		}
 		else
 		{
 			const auto it = mParticipants.find(mOtherPlayerSlots[i]);
 			ASSERT_TRUE( mParticipants.end() != it );
-			it->second.playView.draw( );
+			it->second.playView.draw( window );
 			mLabelForNickname.setString( it->second.nickname );
 			mLabelForNickname.setCharacterSize( mDrawingInfo.otherPlayerNicknameFontSize );
 			mLabelForNickname.setFillColor( sf::Color(mDrawingInfo.otherPlayerNicknameFontColor) );
 			mLabelForNickname.setPosition( pos + margin );
-			mWindow_.draw( mLabelForNickname );
+			window.draw( mLabelForNickname );
 		}
 	}
 
 	if ( nullptr != mOverlappedScene )
 	{
-		mOverlappedScene->draw( );
+		mOverlappedScene->draw( window );
 	}
 }
 

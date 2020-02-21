@@ -6,7 +6,7 @@ namespace ui
 	{
 	public:
 		TextInputBox( sf::RenderWindow& window )
-			: mIsActive( false ), mWindow_( window )
+			: mIsActive( false )
 		{
 			mBackground.setSize( sf::Vector2f(window.getSize()) );
 			mSubWindow.setSize( sf::Vector2f(200, 100) );
@@ -19,14 +19,10 @@ namespace ui
 		}
 		void setPosition( const sf::Vector2f position )
 		{
-			const sf::Vector2f winSize( mWindow_.getSize() );
-			ASSERT_TRUE( position.x < winSize.x && position.y < winSize.y );
 			mSubWindow.setPosition( position );
 		}
 		void setSize( const sf::Vector2f size )
 		{
-			const sf::Vector2f winSize( mWindow_.getSize() );
-			ASSERT_TRUE( size.x < winSize.x && size.y < winSize.y );
 			mSubWindow.setSize( size );
 		}
 		void setColor( const sf::Color color )
@@ -85,16 +81,15 @@ namespace ui
 		{
 			return mInputTextFieldString;
 		}
-		void draw( )
+		void draw( sf::RenderWindow& window )
 		{
-			mWindow_.draw( mBackground );
-			mWindow_.draw( mSubWindow );
-			mWindow_.draw( mTextLabelForTitle );
-			mWindow_.draw( mTextFieldToInput );
+			window.draw( mBackground );
+			window.draw( mSubWindow );
+			window.draw( mTextLabelForTitle );
+			window.draw( mTextFieldToInput );
 		}
 	private:
 		bool mIsActive;
-		sf::RenderWindow& mWindow_;
 		std::string mInputTextFieldString;
 		sf::Font mFont;
 		sf::Text mTextLabelForTitle, mTextFieldToInput;

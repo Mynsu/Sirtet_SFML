@@ -11,9 +11,9 @@ namespace scene::inPlay
 			   const ::scene::inPlay::ID initScene = ::scene::inPlay::ID::READY );
 		~InPlay( );
 
-		void loadResources( ) override;
+		void loadResources( sf::RenderWindow& window ) override;
 		::scene::ID update( std::vector<sf::Event>& eventQueue ) override;
-		void draw( ) override;
+		void draw( sf::RenderWindow& window ) override;
 		::scene::ID currentScene( ) const override;
 		void setScene( const uint8_t sceneID ) override
 		{

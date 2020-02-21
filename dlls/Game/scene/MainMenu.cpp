@@ -6,12 +6,12 @@
 bool ::scene::MainMenu::IsInstantiated = false;
 
 ::scene::MainMenu::MainMenu( sf::RenderWindow& window )
-	: mIsCursorOnButton( false ), mWindow_( window ),
+	: mIsCursorOnButton( false ),
 	mNextSceneID( ::scene::ID::AS_IS )
 {
 	ASSERT_TRUE( false == IsInstantiated );
 
-	loadResources( );
+	loadResources( window );
 
 	IsInstantiated = true;
 }
@@ -21,7 +21,7 @@ bool ::scene::MainMenu::IsInstantiated = false;
 	IsInstantiated = false;
 }
 
-void scene::MainMenu::loadResources( )
+void scene::MainMenu::loadResources( sf::RenderWindow& )
 {
 	std::string spritePath( "Images/MainMenu.png" );
 	mSoundPaths[(int)SoundIndex::BGM] = "Sounds/korobeiniki.mp3";
@@ -903,7 +903,7 @@ void scene::MainMenu::loadResources( )
 	return mNextSceneID;
 }
 
-void ::scene::MainMenu::draw( )
+void ::scene::MainMenu::draw( sf::RenderWindow& window )
 {
 	bool hasGainedFocus = false;
 	auto& vault = gService()->vault();
@@ -915,7 +915,7 @@ void ::scene::MainMenu::draw( )
 
 	if ( true == hasGainedFocus && false == gService()->console().isVisible() )
 	{
-		const sf::Vector2f mousePos( sf::Mouse::getPosition()-mWindow_.getPosition() );
+		const sf::Vector2f mousePos( sf::Mouse::getPosition()-window.getPosition() );
 		const sf::FloatRect boundLogo( mDrawingInfo.logoDestinationPosition,
 									  sf::Vector2f(mDrawingInfo.logoClipSize) );
 		if ( true == boundLogo.contains(mousePos) )
@@ -925,9 +925,9 @@ void ::scene::MainMenu::draw( )
 										  mDrawingInfo.logoSourcePosition.y );
 			mSprite.setTextureRect( sf::IntRect(sourcePos, mDrawingInfo.logoClipSize) );
 			mSprite.setPosition( mDrawingInfo.logoDestinationPosition );
-			mWindow_.draw( mSprite );
+			window.draw( mSprite );
 			// Copyright
-			mWindow_.draw( mCopyright );
+			window.draw( mCopyright );
 		}
 		else if ( const sf::FloatRect boundButtonSingle(mDrawingInfo.buttonSinglePosition,
 														sf::Vector2f(mDrawingInfo.buttonSingleClipSize));
@@ -937,7 +937,7 @@ void ::scene::MainMenu::draw( )
 			mSprite.setTextureRect( sf::IntRect(mDrawingInfo.logoSourcePosition,
 												mDrawingInfo.logoClipSize) );
 			mSprite.setPosition( mDrawingInfo.logoDestinationPosition );
-			mWindow_.draw( mSprite );
+			window.draw( mSprite );
 			if ( true == sf::Mouse::isButtonPressed(sf::Mouse::Left) )
 			{
 				mNextSceneID = ::scene::ID::SINGLE_PLAY;
@@ -947,11 +947,11 @@ void ::scene::MainMenu::draw( )
 										 mDrawingInfo.buttonSingleSourcePosition.y );
 			mSprite.setTextureRect( sf::IntRect(sourcePos, mDrawingInfo.buttonSingleClipSize) );
 			mSprite.setPosition( mDrawingInfo.buttonSinglePosition );
-			mWindow_.draw( mSprite );
+			window.draw( mSprite );
 			mSprite.setTextureRect( sf::IntRect(mDrawingInfo.buttonOnlineSourcePosition,
 												mDrawingInfo.buttonOnlineClipSize) );
 			mSprite.setPosition( mDrawingInfo.buttonOnlinePosition );
-			mWindow_.draw( mSprite );
+			window.draw( mSprite );
 			if ( false == mIsCursorOnButton )
 			{
 				mIsCursorOnButton = true;
@@ -970,7 +970,7 @@ void ::scene::MainMenu::draw( )
 			mSprite.setTextureRect( sf::IntRect(mDrawingInfo.logoSourcePosition,
 												mDrawingInfo.logoClipSize) );
 			mSprite.setPosition( mDrawingInfo.logoDestinationPosition );
-			mWindow_.draw( mSprite );
+			window.draw( mSprite );
 			if ( true == sf::Mouse::isButtonPressed(sf::Mouse::Left) )
 			{
 				mNextSceneID = ::scene::ID::ONLINE_BATTLE;
@@ -979,12 +979,12 @@ void ::scene::MainMenu::draw( )
 			mSprite.setTextureRect( sf::IntRect(mDrawingInfo.buttonSingleSourcePosition,
 												mDrawingInfo.buttonSingleClipSize) );
 			mSprite.setPosition( mDrawingInfo.buttonSinglePosition );
-			mWindow_.draw( mSprite );
+			window.draw( mSprite );
 			const sf::Vector2i sourcePos( mDrawingInfo.buttonOnlineSourcePosition.x + mDrawingInfo.buttonOnlineClipSize.x,
 										 mDrawingInfo.buttonOnlineSourcePosition.y );
 			mSprite.setTextureRect( sf::IntRect(sourcePos, mDrawingInfo.buttonOnlineClipSize) );
 			mSprite.setPosition( mDrawingInfo.buttonOnlinePosition );
-			mWindow_.draw( mSprite );
+			window.draw( mSprite );
 			if ( false == mIsCursorOnButton )
 			{
 				mIsCursorOnButton = true;
@@ -1006,16 +1006,16 @@ defaultLabel:
 		mSprite.setTextureRect( sf::IntRect(mDrawingInfo.logoSourcePosition,
 											mDrawingInfo.logoClipSize) );
 		mSprite.setPosition( mDrawingInfo.logoDestinationPosition );
-		mWindow_.draw( mSprite );
+		window.draw( mSprite );
 		mNextSceneID = ::scene::ID::AS_IS;
 		mSprite.setPosition( mDrawingInfo.buttonSinglePosition );
 		mSprite.setTextureRect( sf::IntRect(mDrawingInfo.buttonSingleSourcePosition,
 											mDrawingInfo.buttonSingleClipSize) );
-		mWindow_.draw( mSprite );
+		window.draw( mSprite );
 		mSprite.setPosition( mDrawingInfo.buttonOnlinePosition );
 		mSprite.setTextureRect( sf::IntRect(mDrawingInfo.buttonOnlineSourcePosition,
 											mDrawingInfo.buttonOnlineClipSize) );
-		mWindow_.draw( mSprite );
+		window.draw( mSprite );
 		mIsCursorOnButton = false;
 	}
 }

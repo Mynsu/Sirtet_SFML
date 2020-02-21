@@ -13,7 +13,7 @@ namespace ui
 	class PlayView
 	{
 	public:
-		PlayView( sf::RenderWindow& window, ::scene::online::Online& net, const bool isPlayable = true );
+		PlayView( const bool isPlayable = true );
 		// This's not copy c'tor, just initialization.
 		PlayView( const PlayView& another );
 		void operator=( const PlayView& ) = delete;
@@ -25,12 +25,12 @@ namespace ui
 										 const float cellSize,
 										 const sf::Vector2i clipSize );
 		void getReady( );
-		void update( std::vector<sf::Event>& eventQueue );
+		void update( std::vector<sf::Event>& eventQueue, ::scene::online::Online& net );
 		void setNewCurrentTetrimino( const ::model::tetrimino::Type newCurrentType );
 		void updateStage( const ::model::stage::Grid& grid );
 		void setNumOfLinesCleared( const uint8_t numOfLinesCleared );
 		void gameOver( );
-		void draw( );
+		void draw( sf::RenderWindow& window );
 		::model::Tetrimino& currentTetrimino( );
 		::model::Stage& stage( );
 		::vfx::Combo& vfxCombo( );
@@ -77,8 +77,6 @@ namespace ui
 		static std::string SoundPaths[(int)SoundIndex::NONE_MAX];
 		State mState_;
 		sf::Vector2i countdownSpriteSize_;
-		sf::RenderWindow& mWindow_;
-		::scene::online::Online& mNet;
 		// NOTE: Stack-based sf::Texture instance made a malfunction here.
 		std::unique_ptr<sf::Texture> mTexture_countdown;
 		Clock::time_point mAlarms[(int)AlarmIndex::NONE_MAX];

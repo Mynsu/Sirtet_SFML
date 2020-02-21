@@ -16,9 +16,11 @@ namespace scene::online
 		InLobby( sf::RenderWindow& window, ::scene::online::Online& net );
 		~InLobby( );
 
-		void loadResources( ) override;
-		::scene::online::ID update( std::vector<sf::Event>& eventQueue ) override;
-		void draw( ) override;
+		void loadResources( sf::RenderWindow& window ) override;
+		::scene::online::ID update( std::vector<sf::Event>& eventQueue,
+								   ::scene::online::Online& net,
+								   sf::RenderWindow& window ) override;
+		void draw( sf::RenderWindow& window ) override;
 	private:
 		enum class SoundIndex
 		{
@@ -38,6 +40,7 @@ namespace scene::online
 				usersBoxOutlineThickness, roomOutlineThickness;
 			sf::Color usersBoxColor, roomColor,
 				usersBoxOutlineColor, roomOutlineColor;
+			sf::Vector2f centerPosition;
 			math::Vector<2> accelerationUsersBoxLeftTop0, usersBoxPosition,
 				relativeAccelerationUserBoxRightBottom0, usersBoxSize,
 				accelerationUsersBoxLeftTopToRoom, roomPosition,
@@ -48,9 +51,8 @@ namespace scene::online
 		int8_t mEnteringRoom;
 		uint8_t mIndexForGuideText;
 		uint16_t mFrameCountUserListUpdateInterval, mFrameCountRequestDelay;
-		sf::RenderWindow& mWindow_;
-		::scene::online::Online& mNet;
 		MouseEvent mLatestMouseEvent;
+		::scene::online::Online& mNet;
 		std::vector<std::string> mGuideTexts;
 		std::string mSoundPaths[(int)SoundIndex::NULL_MAX];
 		::ui::TextInputBox mTextInputBox;

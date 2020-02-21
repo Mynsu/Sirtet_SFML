@@ -11,7 +11,10 @@ namespace ui
 	class NextTetriminoPanel
 	{
 	public:
-		NextTetriminoPanel( sf::RenderWindow& window );
+		NextTetriminoPanel( )
+		{
+			clearTetrimino( );
+		}
 		NextTetriminoPanel( const NextTetriminoPanel& ) = delete;
 		void operator=( const NextTetriminoPanel& ) = delete;
 		NextTetriminoPanel( NextTetriminoPanel&& ) = delete;
@@ -64,11 +67,10 @@ namespace ui
 				block.setOutlineThickness( 0.f );
 			}
 		}
-		void draw( );
+		void draw( sf::RenderWindow& window );
 	private:
 		float mCellSize_;
 		sf::Vector2f mLeftTopPosition;
-		sf::RenderWindow& mWindow_;
 		sf::RectangleShape mPanel;
 		sf::RectangleShape mBlocks[::model::tetrimino::BLOCKS_A_TETRIMINO];
 	};

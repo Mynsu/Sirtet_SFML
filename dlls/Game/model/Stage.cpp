@@ -38,9 +38,9 @@ void model::Stage::clear( )
 	}
 }
 
-void model::Stage::draw( )
+void model::Stage::draw( sf::RenderWindow& window )
 {
-	mWindow_.draw( mPanel );
+	window.draw( mPanel );
 	for ( uint8_t i = 0; i != ::model::stage::GRID_HEIGHT; ++i )
 	{
 		for ( uint8_t k = 0; k != ::model::stage::GRID_WIDTH; ++k )
@@ -49,7 +49,7 @@ void model::Stage::draw( )
 			{
 				mCellShape.setFillColor( mGrid[i][k].color );
 				mCellShape.setPosition( mPosition_ + sf::Vector2f(k, i)*mCellSize_ );
-				mWindow_.draw( mCellShape );
+				window.draw( mCellShape );
 			}
 		}
 	}

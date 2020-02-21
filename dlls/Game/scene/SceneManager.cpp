@@ -11,10 +11,10 @@
 
 bool ::scene::SceneManager::IsInstantiated = false;
 
-void ::scene::SceneManager::lastInit( sf::RenderWindow* const window )
+void ::scene::SceneManager::init( sf::RenderWindow& window )
 {
-	mWindow = window;
-
+	ASSERT_NOT_NULL( gService() );
+	mWindow = &window;
 #ifdef _DEV
 	gService()->console().addCommand( CMD_CHANGE_SCENE, std::bind(&SceneManager::chscnto, this, std::placeholders::_1) );
 	gService()->console().addCommand( CMD_RELOAD, std::bind(&SceneManager::refresh, this, std::placeholders::_1) );
@@ -39,14 +39,12 @@ void ::scene::SceneManager::lastInit( sf::RenderWindow* const window )
 	setScene( startScene );
 #else
 	// NOTE: equals setScene( ::scene::ID::INTRO ).
-	mCurrentScene = std::make_unique<::scene::Intro>( *window, mSetScene_ );
+	mCurrentScene = std::make_unique<::scene::Intro>( window );
 #endif
 }
 
 void ::scene::SceneManager::setScene( const ::scene::ID nextScene )
 {
-	ASSERT_NOT_NULL( mWindow );
-
 	mCurrentScene.reset( nullptr );
 	switch ( nextScene )
 	{
@@ -69,7 +67,7 @@ void ::scene::SceneManager::setScene( const ::scene::ID nextScene )
 					::scene::ID::SINGLE_PLAY != mCurrentScene->currentScene() )
 				{
 					mCurrentScene =
-						std::make_unique<::scene::inPlay::InPlay>(*mWindow,	(::scene::inPlay::ID)((int)nextScene%10));
+						std::make_unique<::scene::inPlay::InPlay>(*mWindow, (::scene::inPlay::ID)((int)nextScene%10));
 				}
 				else
 				{
@@ -107,7 +105,6 @@ void ::scene::SceneManager::chscnto( const std::string_view& args )
 
 void ::scene::SceneManager::refresh( const std::string_view& )
 {
-	mWindow->clear( );
-	mCurrentScene->loadResources( );
+	mCurrentScene->loadResources( *mWindow );
 }
 #endif

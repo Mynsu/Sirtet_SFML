@@ -26,9 +26,11 @@ namespace scene::online
 		InRoom( sf::RenderWindow& window, Online& net, const bool asHost = false );
 		~InRoom( );
 
-		void loadResources( ) override;
-		::scene::online::ID update( std::vector<sf::Event>& eventQueue ) override;
-		void draw( ) override;
+		void loadResources( sf::RenderWindow& window ) override;
+		::scene::online::ID update( std::vector<sf::Event>& eventQueue,
+								   ::scene::online::Online& net,
+								   sf::RenderWindow& window ) override;
+		void draw( sf::RenderWindow& window ) override;
 	private:
 		enum class AlarmIndex
 		{
@@ -70,10 +72,11 @@ namespace scene::online
 		static bool IsInstantiated;
 		bool mIsReceiving, mAsHost,
 			mIsStartingGuideVisible_, mIsMouseOverStartButton_, mIsStartButtonPressed_;
-		sf::RenderWindow& mWindow_;
 		uint32_t mFrameCountCoolToRotateStartButton;
+		const HashedKey mMyNicknameHashed;
+		const std::string& mMyNickname;
+		::scene::online::Online& mNet;
 		Clock::time_point mAlarms[(int)AlarmIndex::NONE_MAX];
-		Online& mNet;
 		std::unique_ptr<::scene::inPlay::IScene> mOverlappedScene;
 		// When empty, the value should be 0 == NULL_EMPTY_SLOT.
 		HashedKey mOtherPlayerSlots[ROOM_CAPACITY-1];

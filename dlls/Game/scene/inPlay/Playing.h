@@ -15,9 +15,9 @@ namespace scene::inPlay
 				const std::unique_ptr<::scene::inPlay::IScene>& overlappedScene );
 		~Playing( ) = default;
 
-		void loadResources( ) override;
+		void loadResources( sf::RenderWindow& window ) override;
 		::scene::inPlay::ID update( std::vector<sf::Event>& eventQueue ) override;
-		void draw( ) override;
+		void draw( sf::RenderWindow& window ) override;
 	private:
 		enum class SoundIndex
 		{
@@ -46,7 +46,6 @@ namespace scene::inPlay
 			mFrameCountCoolToGameOver, mFrameCountCoolToNextLevel, mFrameCountCoolAllLevelsCleared;
 		int16_t mAnimationDamper1, mAnimationDamper10;
 		float mTempo;
-		sf::RenderWindow& mWindow_;
 		sf::RectangleShape& mBackgroundRect_;
 		const std::unique_ptr<::scene::inPlay::IScene>& mOverlappedScene_;
 		// Missions to each level.

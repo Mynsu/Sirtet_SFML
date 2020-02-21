@@ -11,9 +11,11 @@ namespace scene::online
 		Waiting( sf::RenderWindow& window, Online& net );
 		~Waiting( );
 		
-		void loadResources( ) override;
-		::scene::online::ID update( std::vector<sf::Event>& eventQueue ) override;
-		void draw( ) override;
+		void loadResources( sf::RenderWindow& window ) override;
+		::scene::online::ID update( std::vector<sf::Event>& eventQueue,
+								   ::scene::online::Online& net,
+								   sf::RenderWindow& window ) override;
+		void draw( sf::RenderWindow& window ) override;
 	private:
 		enum class State
 		{
@@ -28,8 +30,6 @@ namespace scene::online
 		static bool IsInstantiated;
 		uint16_t mOrder;
 		::scene::online::Waiting::State mState;
-		sf::RenderWindow& mWindow_;
-		Online& mNet;
 		std::string mSoundPaths[(int)SoundIndex::NULL_MAX];
 		sf::Font mFont;
 		sf::Text mTextLabels[3];

@@ -60,8 +60,7 @@ namespace
 }
 
 scene::online::Online::Online( sf::RenderWindow& window )
-	: mFrameCountToMainMenu( 0 ), mMyNicknameHashed_( 0 ),
-	mWindow_( window )
+	: mFrameCountToMainMenu( 0 ), mMyNicknameHashed_( 0 ), mWindow_( window )
 {
 	ASSERT_TRUE( false == IsInstantiated );
 
@@ -72,7 +71,7 @@ scene::online::Online::Online( sf::RenderWindow& window )
 	ASSERT_TRUE( vault.end() != it );
 	mFPS_ = (uint16_t)it->second;
 	setScene( ::scene::online::ID::WAITING );
-	loadResources( );
+	loadResources( window );
 
 	IsInstantiated = true;
 }
@@ -93,9 +92,9 @@ scene::online::Online::Online( sf::RenderWindow& window )
 	IsInstantiated = false;
 }
 
-void ::scene::online::Online::loadResources( )
+void ::scene::online::Online::loadResources( sf::RenderWindow& window )
 {
-	mCurrentScene->loadResources( );
+	mCurrentScene->loadResources( window );
 
 	bool isPathDefault = true;
 	bool isWDefault = true;
@@ -227,7 +226,7 @@ void ::scene::online::Online::loadResources( )
 	mSprite.setTexture( mTexture );
 	const sf::Vector2i cast( mSpriteClipSize_ );
 	mSprite.setTextureRect( sf::IntRect(0, cast.y, cast.x, cast.y) );
-	mSprite.setPosition( (sf::Vector2f(mWindow_.getSize())-mSpriteClipSize_)*0.5f );
+	mSprite.setPosition( (sf::Vector2f(window.getSize())-mSpriteClipSize_)*0.5f );
 }
 
 ::scene::ID scene::online::Online::update( std::vector<sf::Event>& eventQueue )
@@ -236,7 +235,7 @@ void ::scene::online::Online::loadResources( )
 
 	if ( 0 == mFrameCountToMainMenu )
 	{
-		const ::scene::online::ID nextSceneID = mCurrentScene->update( eventQueue );
+		const ::scene::online::ID nextSceneID = mCurrentScene->update(eventQueue, *this, mWindow_);
 		if ( ::scene::online::ID::AS_IS < nextSceneID )
 		{
 			setScene( nextSceneID );
@@ -253,15 +252,15 @@ void ::scene::online::Online::loadResources( )
 	return retVal;
 }
 
-void ::scene::online::Online::draw( )
+void ::scene::online::Online::draw( sf::RenderWindow& window )
 {
 	if ( 0 == mFrameCountToMainMenu )
 	{
-		mCurrentScene->draw( );
+		mCurrentScene->draw( window );
 	}
 	else
 	{
-		mWindow_.draw( mSprite );
+		window.draw( mSprite );
 		++mFrameCountToMainMenu;
 	}
 }

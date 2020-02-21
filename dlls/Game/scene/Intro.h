@@ -9,9 +9,9 @@ namespace scene
 		Intro( sf::RenderWindow& window );
 		~Intro( );
 
-		void loadResources( ) override;
+		void loadResources( sf::RenderWindow& window ) override;
 		::scene::ID update( std::vector<sf::Event>& eventQueue ) override;
-		void draw( ) override;
+		void draw( sf::RenderWindow& window ) override;
 		::scene::ID currentScene( ) const override;
 		void setScene( const uint8_t sceneID ) override
 		{}
@@ -23,7 +23,6 @@ namespace scene
 		const uint8_t mDuration;
 		uint8_t mAlpha_;
 		uint16_t mFPS_, mFrameCountToStart;
-		sf::RenderWindow& mWindow_;
 		::scene::ID mNextScene_;
 		sf::Texture mTexture;
 		sf::Sprite mSprite;

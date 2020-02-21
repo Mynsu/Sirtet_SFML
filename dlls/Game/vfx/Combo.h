@@ -6,7 +6,7 @@ namespace vfx
 	class Combo
 	{
 	public:
-		Combo( sf::RenderWindow& window );
+		Combo( ) = default;
 		Combo( const Combo& ) = delete;
 		void operator=( const Combo& ) = delete;
 		Combo( Combo&& ) = delete;
@@ -32,9 +32,12 @@ namespace vfx
 			mSprite.setPosition( origin + localPos*cellSize*0.5f );
 			mSpriteDimension = effectWidthHeight;
 		}
-		void draw( const uint8_t lineCleared );
+		void draw( sf::RenderWindow& window, const uint8_t lineCleared )
+		{
+			mSprite.setTextureRect( sf::IntRect( 0, (lineCleared-1)*mSpriteDimension.y, mSpriteDimension.x, mSpriteDimension.y) );
+			window.draw( mSprite );
+		}
 	private:
-		sf::RenderWindow& mWindow_;
 		sf::Vector2i mSpriteDimension;
 		sf::Texture mTexture;
 		sf::Sprite mSprite;

@@ -11,7 +11,7 @@ namespace scene
 		static bool IsInstantiated;
 	public:
 		// NOTE: Called in compile-time, thus another initialization should be done.
-		// 'lastInit(...)' will be called in 'GetGameAPI(...)' in 'Game.cpp.' in runtime.
+		// 'init(...)' will be called in 'GetGameAPI(...)' in 'Game.cpp.' in runtime.
 		SceneManager( )
 			: mWindow( nullptr )
 		{
@@ -23,7 +23,7 @@ namespace scene
 			mWindow = nullptr;
 			IsInstantiated = false;
 		}
-		void lastInit( sf::RenderWindow* const window );
+		void init( sf::RenderWindow& window );
 
 		void update( std::vector<sf::Event>& eventQueue )
 		{
@@ -35,7 +35,7 @@ namespace scene
 		}
 		void draw( )
 		{
-			mCurrentScene->draw( );
+			mCurrentScene->draw( *mWindow );
 		}
 	private:
 		void setScene( const ::scene::ID nextSceneID );

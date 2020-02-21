@@ -105,17 +105,15 @@ void ui::PlayView::LoadResources( )
 	::model::Tetrimino::LoadResources( );
 }
 
-ui::PlayView::PlayView( sf::RenderWindow& window, ::scene::online::Online& net, const bool isPlayable )
+ui::PlayView::PlayView( const bool isPlayable )
 	: mHasTetriminoLandedOnClient( false ), mHasTetriminoLandedOnServer( false ),
 	mIsForThisPlayer( isPlayable ), mHasCurrentTetrimino( false ),
 	mCountDownSec( 3 ), mNumOfLinesCleared( 0 ),
 	mFrameCountInputDelay( 0 ), mFrameCountVfxDuration( 0 ),
 	mTempoMs( 1000 ),
 	mState_( PlayView::State::WAITING_OR_OVER ),
-	mWindow_( window ), mNet( net ),
 	mAlarms{ Clock::time_point::max() },
-	mTexture_countdown( std::make_unique<sf::Texture>() ), mVfxCombo( window ),
-	mStage( window ), mNextTetriminoPanel( window )
+	mTexture_countdown( std::make_unique<sf::Texture>() )
 { }
 
 ui::PlayView::PlayView( const PlayView& another )
@@ -125,10 +123,8 @@ ui::PlayView::PlayView( const PlayView& another )
 	mFrameCountInputDelay( 0 ), mFrameCountVfxDuration( 0 ),
 	mTempoMs( 1000 ),
 	mState_( PlayView::State::WAITING_OR_OVER ),
-	mWindow_( another.mWindow_ ), mNet( another.mNet ),
 	mAlarms{ Clock::time_point::max() },
-	mTexture_countdown( std::make_unique<sf::Texture>() ), mVfxCombo( mWindow_ ),
-	mStage( mWindow_ ), mNextTetriminoPanel( mWindow_ )
+	mTexture_countdown( std::make_unique<sf::Texture>() )
 {
 }
 
@@ -176,20 +172,20 @@ void ui::PlayView::getReady( )
 	mState_ = PlayView::State::ON_START;
 }
 
-void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
+void ui::PlayView::update( std::vector<sf::Event>& eventQueue, ::scene::online::Online& net )
 {
 	// Exception
 	if ( true == mHasTetriminoLandedOnServer &&
 		true == alarmAfter(ASYNC_TOLERANCE_MS, AlarmIndex::LANDED_ON_SERVER) )
 	{
 		gService()->console().printFailure( FailureLevel::FATAL, "Over asynchronization." );
-		mNet.disconnect( );
+		net.disconnect( );
 		return;
 	}
 
-	if ( true == mNet.hasReceived() )
+	if ( true == net.hasReceived() )
 	{
-		if ( const std::optional<std::string> nextTet( mNet.getByTag(TAG_MY_NEXT_TETRIMINO,
+		if ( const std::optional<std::string> nextTet( net.getByTag(TAG_MY_NEXT_TETRIMINO,
 																	 ::scene::online::Online::Option::DEFAULT,
 																	 sizeof(uint8_t)) );
 			std::nullopt != nextTet	)
@@ -203,7 +199,7 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
 			}
 		}
 
-		if ( const std::optional<std::string> tempoMs( mNet.getByTag(TAG_MY_TEMPO_MS,
+		if ( const std::optional<std::string> tempoMs( net.getByTag(TAG_MY_TEMPO_MS,
 																	::scene::online::Online::Option::DEFAULT,
 																  sizeof(uint16_t)) );
 			std::nullopt != tempoMs )
@@ -393,7 +389,7 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue )
 
 	if ( true == packet.hasData() )
 	{
-		mNet.send( packet );
+		net.send( packet );
 	}
 }
 
@@ -441,21 +437,21 @@ void ui::PlayView::gameOver( )
 	mNextTetriminoPanel.clearTetrimino( );
 }
 
-void ui::PlayView::draw( )
+void ui::PlayView::draw( sf::RenderWindow& window )
 {
-	mStage.draw( );
+	mStage.draw( window );
 	if ( true == mIsForThisPlayer )
 	{
-		mNextTetriminoPanel.draw( );
+		mNextTetriminoPanel.draw( window );
 	}
 	if ( PlayView::State::PLAYING == mState_ )
 	{
-		mCurrentTetrimino.draw( mWindow_ );
+		mCurrentTetrimino.draw( window );
 		if ( true == mIsForThisPlayer )
 		{
 			if ( 0 < mFrameCountVfxDuration )
 			{
-				mVfxCombo.draw( mNumOfLinesCleared );
+				mVfxCombo.draw( window, mNumOfLinesCleared );
 				--mFrameCountVfxDuration;
 			}
 			++mFrameCountInputDelay;
@@ -472,7 +468,7 @@ void ui::PlayView::draw( )
 			}
 			mSprite_countdown.setTextureRect( sf::IntRect(0, countdownSpriteSize_.y*(mCountDownSec-1),
 												countdownSpriteSize_.x, countdownSpriteSize_.y) );
-			mWindow_.draw( mSprite_countdown );
+			window.draw( mSprite_countdown );
 		}
 	}
 }

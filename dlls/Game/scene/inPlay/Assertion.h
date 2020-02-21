@@ -9,9 +9,9 @@ namespace scene::inPlay
 		Assertion( sf::RenderWindow& window );
 		~Assertion( ) = default;
 
-		void loadResources( ) override;
+		void loadResources( sf::RenderWindow& window ) override;
 		::scene::inPlay::ID update( std::vector<sf::Event>& eventQueue ) override;
-		void draw( ) override;
+		void draw( sf::RenderWindow& window ) override;
 	private:
 		enum class SoundIndex
 		{
@@ -19,7 +19,6 @@ namespace scene::inPlay
 			NULL_MAX,
 		};
 		uint16_t mFPS_, mFrameCountToCancel;
-		sf::RenderWindow& mWindow_;
 		std::string mSoundPaths[(int)SoundIndex::NULL_MAX];
 		sf::Font mFont;
 		sf::Text mTextLabelForGuide;
