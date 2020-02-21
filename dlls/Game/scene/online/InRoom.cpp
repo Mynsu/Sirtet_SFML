@@ -2,9 +2,9 @@
 #include "InRoom.h"
 #include <Lib/Common.h>
 #include <Lib/VaultKeyList.h>
+#include <Lib/CommandList.h>
 #include "Online.h"
 #include "../../ServiceLocatorMirror.h"
-#include "../CommandList.h"
 
 const uint8_t NULL_EMPTY_SLOT = 0;
 const uint16_t ROTATION_INTERVAL_THRESHOLD_MS = 1000;

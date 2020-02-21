@@ -2,8 +2,8 @@
 #include "SceneManager.h"
 #include <Lib/ScriptLoader.h>
 #include <Lib/VaultKeyList.h>
+#include <Lib/CommandList.h>
 #include "../ServiceLocatorMirror.h"
-#include "CommandList.h"
 #include "Intro.h"
 #include "MainMenu.h"
 #include "inPlay/InPlay.h"

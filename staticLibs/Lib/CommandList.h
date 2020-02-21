@@ -1,5 +1,9 @@
+////
+//  Commonly used in exes/Engine, dlls/Game.
+////
+
 #pragma once
-#include <Lib/Hash.h>
+#include "Hash.h"
 
 // e.g. "chto 1"
 // Change the current scene to another scene.

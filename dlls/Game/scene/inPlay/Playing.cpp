@@ -844,6 +844,7 @@ void ::scene::inPlay::Playing::loadResources( )
 		mNextTetriminoPanel.setTetrimino( mNextTetriminos.front() );
 	}
 	mDrawingInfo.cellSize_ = stageCellSize;
+	ASSERT_TRUE( 0 < mMissions.size() );
 	mNumOfLinesRemainingToLevelClear = mMissions[mCurrentLevel-1].numOfLinesToClear;
 	mTempo = mMissions[mCurrentLevel-1].tempoOnStart;
 	if ( false == mTextureForScore.loadFromFile(scoreSpritePath) )

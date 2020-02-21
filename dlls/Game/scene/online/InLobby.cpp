@@ -2,8 +2,8 @@
 #include "InLobby.h"
 #include <Lib/Common.h>
 #include <Lib/VaultKeyList.h>
+#include <Lib/CommandList.h>
 #include "../../ServiceLocatorMirror.h"
-#include "../CommandList.h"
 #include "Online.h"
 
 const uint16_t UPDATE_USER_LIST_INTERVAL = 300;

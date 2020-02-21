@@ -164,9 +164,6 @@
     <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\pch.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\CommandList.h">
-      <Filter>헤더 파일\scene</Filter>
-    </ClInclude>
     <ClInclude Include="scene\online\Online.h">
       <Filter>헤더 파일\scene\online</Filter>
     </ClInclude>

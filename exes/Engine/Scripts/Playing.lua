@@ -12,7 +12,6 @@ NextTetriminoPanel = { x = 620, y = 180, cellSize = 30,
 Sound = { tetriminoLocked = { path = "Sounds/tetriminoLocked.wav" },
 		  lineCleared = { path = "Sounds/lineCleared.wav" },
 		  levelCleared = { path = "Sounds/levelCleared.wav" } }
-Missions = { { 7, 0.75 } },
-			{ 13, 0.7 } }
+Missions = { { 7, 0.75 }, { 13, 0.7 } }
 Score = { path = "Images/Score.png", clipWidth = 128, clipHeight = 128,
 		  x = 530, y = 330, gap = 60, animationSpeed = 1.0 }
