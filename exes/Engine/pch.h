@@ -1,5 +1,4 @@
 #pragma once
-
 #include <array>
 #include <memory>
 #include <string>
@@ -7,15 +6,27 @@
 #include <iostream>
 #include <functional>
 #include <stdint.h>
-#include <SFML/Graphics.hpp>
+#include <SFML/Graphics.hpp> // Windows.h 다음에 포함하면 컴파일 에러 발생.
+#include <Windows.h>
 #include <SFML/Window.hpp>
 #include <SFML/Audio.hpp>
+#ifdef _DEBUG
+#pragma comment( lib, "sfml-window-d" )
+#pragma comment( lib, "sfml-system-d" )
+#pragma comment( lib, "sfml-graphics-d" )
+#pragma comment( lib, "sfml-audio-d" )
+#else
+#pragma comment( lib, "sfml-window" )
+#pragma comment( lib, "sfml-system" )
+#pragma comment( lib, "sfml-graphics" )
+#pragma comment( lib, "sfml-audio" )
+#endif
 #include <lua.hpp>
+#pragma comment( lib, "lua53" )
 #include <Lib/Hash.h>
-#include <Lib/Socket.h>
-#include <Lib/IServiceLocator.h>
-#include <Lib/IGame.h>
-#include <Lib/IConsole.h>
+#include <IServiceLocator.h>
+#include <IGame.h>
+#include <IConsole.h>
 
 #ifdef _DEBUG
 #define ASSERT_FALSE( x ) if ( false != (x) ) __debugbreak( )

@@ -3,8 +3,8 @@
 #include <chrono>
 #include <SFML/System.hpp>
 #include <SFML/Graphics/Color.hpp>
-#include "math/Vector.h"
-#include "Hash.h"
+#include "../Lib/math/Vector.h"
+#include "../Lib/Hash.h"
 
 static const char* QUEUE_SERVER_IP_ADDRESS = "192.168.219.102";
 static const char* MAIN_SERVER_IP_ADDRESS = "192.168.219.102";

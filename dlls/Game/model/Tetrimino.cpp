@@ -1,6 +1,6 @@
 #include "../pch.h"
 #include "Tetrimino.h"
-#include <Lib/Common.h>
+#include <Common.h>
 #include "../ServiceLocatorMirror.h"
 
 sf::Vector2<int8_t> model::Tetrimino::Test[(int)::model::tetrimino::Rotation::NONE_MAX][4] =

@@ -1,5 +1,5 @@
 ////
-//  Commonly used in exes/Engine, dlls/Game.
+//  Shared by exes/Engine, dlls/Game.
 ////
 
 #pragma once

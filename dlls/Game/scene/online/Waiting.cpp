@@ -1,8 +1,8 @@
 #include "../../pch.h"
 #include "Waiting.h"
-#include <Lib/Common.h>
-#include <Lib/VaultKeyList.h>
-#include <Lib/CommandList.h>
+#include <Common.h>
+#include <VaultKeyList.h>
+#include <CommandList.h>
 #include "Online.h"
 #include "../../ServiceLocatorMirror.h"
 

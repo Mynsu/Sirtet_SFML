@@ -1,6 +1,6 @@
 #include "../../pch.h"
 #include "Assertion.h"
-#include <Lib/VaultKeyList.h>
+#include <VaultKeyList.h>
 #include "../../ServiceLocatorMirror.h"
 
 scene::inPlay::Assertion::Assertion( sf::RenderWindow& window )

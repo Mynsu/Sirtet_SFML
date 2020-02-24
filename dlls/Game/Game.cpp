@@ -16,9 +16,14 @@ public:
 	GameLocal( )
 	{
 		IsInstantiated = true;
+
+		WSAData w;
+		WSAStartup( MAKEWORD(2, 2), &w );
 	}
 	~GameLocal( )
 	{
+		WSACleanup();
+
 		IsInstantiated = false;
 	};
 

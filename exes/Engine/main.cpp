@@ -1,8 +1,12 @@
 ﻿#include "pch.h"
-#include <Lib/VaultKeyList.h>
+#include <VaultKeyList.h>
 #include "ServiceLocator.h"
 
 const uint16_t DEFAULT_FOREGROUND_FPS = 60;
+// NOTE: A tetrimino moves at the same distance with blinking,
+// which makes it impossible to move as much as time has passed.
+// In other words, if fps in background isn't equal to fps in the server,
+// time gap gets bigger.
 const uint16_t DEFAULT_BACKGROUND_FPS = 60;
 
 int main( int argc, char* argv[] )
@@ -15,26 +19,25 @@ int main( int argc, char* argv[] )
 ////
 	if ( 1 < argc )
 	{
-		const std::string argHelp0( "--help" );
-		const std::string argHelp1( "--h" );
-		const std::string argWinSize( "--WS" );
-		const std::string argFullscreen( "--FS" );
+		const char argHelp0[] = "--help";
+		const char argHelp1[] = "--h";
+		const char argWinSize[] = "--WS";
+		const char argFullscreen[] = "--FS";
 
 		for ( int i = 1; i < argc; ++i )
 		{
 			const char* const cur = argv[i];
-			// When "--help" or "--h",
-			if ( 0==argHelp0.compare(cur) || 0==argHelp1.compare(cur) )
+			if ( 0 == ::strcmp(argHelp0, cur) ||
+				0 == ::strcmp(argHelp1, cur) )
 			{
 				std::cout << "Here are case-sensitive parameters available:\n";
-				std::cout << "\t" << argHelp0.data( ) << ", " << argHelp1.data( ) << ": Show parameters with their own arguments.\n";
-				std::cout << "\t" << argWinSize.data( ) << " [width] [height]: Set the window size.\n";
-				std::cout << "\t" << argFullscreen.data( ) << ": Run on the fullscreen mode.\n";
+				std::cout << "\t" << argHelp0 << ", " << argHelp1 << ": Show parameters with their own arguments.\n";
+				std::cout << "\t" << argWinSize << " [width] [height]: Set the window size.\n";
+				std::cout << "\t" << argFullscreen << ": Run on the fullscreen mode.\n";
 
 				return 0;
 			}
-			// When "--WS",
-			else if ( 0 == argWinSize.compare(cur) )
+			else if ( 0 == ::strcmp(argWinSize, cur) )
 			{
 				const int subArg0 = std::atoi( argv[++i] );
 				// Exception: When NON-number characters has been input,
@@ -66,8 +69,7 @@ int main( int argc, char* argv[] )
 				}
 				winHeight = subArg1;
 			}
-			// When "--FS",
-			else if ( 0 == argFullscreen.compare(cur) )
+			else if ( 0 == ::strcmp(argFullscreen, cur) )
 			{
 				winStyle |= sf::Style::Fullscreen;
 			}

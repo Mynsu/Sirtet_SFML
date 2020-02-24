@@ -3,7 +3,7 @@
 ////
 
 #pragma once
-#include "Hash.h"
+#include "../Lib/Hash.h"
 
 // e.g. "chto 1"
 // Change the current scene to another scene.

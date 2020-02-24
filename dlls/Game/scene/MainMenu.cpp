@@ -1,6 +1,6 @@
 #include "../pch.h"
 #include "MainMenu.h"
-#include <Lib/VaultKeyList.h>
+#include <VaultKeyList.h>
 #include "../ServiceLocatorMirror.h"
 
 bool ::scene::MainMenu::IsInstantiated = false;

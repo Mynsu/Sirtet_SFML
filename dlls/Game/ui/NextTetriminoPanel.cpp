@@ -1,6 +1,6 @@
 #include "../pch.h"
 #include "NextTetriminoPanel.h"
-#include <Lib/Common.h>
+#include <Common.h>
 #include "../model/Tetrimino.h"
 
 void ui::NextTetriminoPanel::setTetrimino( const::model::Tetrimino& next )

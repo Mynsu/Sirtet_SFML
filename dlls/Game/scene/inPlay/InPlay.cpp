@@ -1,6 +1,6 @@
 #include "../../pch.h"
 #include "InPlay.h"
-#include <Lib/VaultKeyList.h>
+#include <VaultKeyList.h>
 #include "../../ServiceLocatorMirror.h"
 #include "Ready.h"
 #include "Playing.h"

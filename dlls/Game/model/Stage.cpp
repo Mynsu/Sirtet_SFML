@@ -1,6 +1,6 @@
 #include "../pch.h"
 #include "Stage.h"
-#include <Lib/Common.h>
+#include <Common.h>
 
 bool model::Stage::isOver( ) const
 {

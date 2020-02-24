@@ -8,9 +8,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "staticLibs", "staticLibs", "{5FE8EC19-0728-409C-8EFB-22C459628749}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Engine", "exes\Engine\Engine.vcxproj", "{D7DDD910-0DB0-4509-BB1A-7708319D1707}"
-	ProjectSection(ProjectDependencies) = postProject
-		{C0995A75-C656-430E-A388-2CF1677FDB48} = {C0995A75-C656-430E-A388-2CF1677FDB48}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Lib", "staticLibs\Lib\Lib.vcxproj", "{C0995A75-C656-430E-A388-2CF1677FDB48}"
 EndProject
@@ -29,6 +26,17 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QueueServer", "exes\QueueServer\QueueServer.vcxproj", "{14E4043E-FC53-493C-BC2F-0484BDC75787}"
 	ProjectSection(ProjectDependencies) = postProject
 		{C0995A75-C656-430E-A388-2CF1677FDB48} = {C0995A75-C656-430E-A388-2CF1677FDB48}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared Headers Only", "Shared Headers Only", "{3DFB0160-CC92-4299-9CC4-EB3A913DAA3D}"
+	ProjectSection(SolutionItems) = preProject
+		staticLibs\Shared Headers Only\CommandList.h = staticLibs\Shared Headers Only\CommandList.h
+		staticLibs\Shared Headers Only\Common.h = staticLibs\Shared Headers Only\Common.h
+		staticLibs\Shared Headers Only\IConsole.h = staticLibs\Shared Headers Only\IConsole.h
+		staticLibs\Shared Headers Only\IGame.h = staticLibs\Shared Headers Only\IGame.h
+		staticLibs\Shared Headers Only\IServiceLocator.h = staticLibs\Shared Headers Only\IServiceLocator.h
+		staticLibs\Shared Headers Only\ISound.h = staticLibs\Shared Headers Only\ISound.h
+		staticLibs\Shared Headers Only\VaultKeyList.h = staticLibs\Shared Headers Only\VaultKeyList.h
 	EndProjectSection
 EndProject
 Global
@@ -111,6 +119,7 @@ Global
 		{BD93EAD9-F247-4A0A-ABE9-79D6756FE4E8} = {EC2FE694-4CB2-4482-B88D-62B2E0017B71}
 		{42D998E6-FEE0-4FAC-BADB-7B95EDAF3122} = {627E3F1F-5807-4803-A9C7-7B94655011D1}
 		{14E4043E-FC53-493C-BC2F-0484BDC75787} = {627E3F1F-5807-4803-A9C7-7B94655011D1}
+		{3DFB0160-CC92-4299-9CC4-EB3A913DAA3D} = {5FE8EC19-0728-409C-8EFB-22C459628749}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2E81D555-AE98-420A-A9B3-2793CFF6A32C}

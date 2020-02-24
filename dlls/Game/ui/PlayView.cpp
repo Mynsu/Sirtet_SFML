@@ -1,6 +1,6 @@
 #include "../pch.h"
 #include "PlayView.h"
-#include <Lib/VaultKeyList.h>
+#include <VaultKeyList.h>
 #include "../scene/online/Online.h"
 #include "../ServiceLocatorMirror.h"
 

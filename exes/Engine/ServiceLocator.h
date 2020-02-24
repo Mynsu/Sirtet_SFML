@@ -1,5 +1,5 @@
 #pragma once
-#include "pch.h" // Commonly included headers, not pch.
+#include "pch.h" // Included as a set of headers, not as pch.
 #include "Console.h"
 #include "Sound.h"
 
@@ -11,9 +11,6 @@ public:
 	{
 		ASSERT_TRUE( false == IsInstantiated );
 
-		WSAData w;
-		WSAStartup( MAKEWORD(2, 2), &w );
-
 		IsInstantiated = true;
 	}
 	ServiceLocator( const ServiceLocator& ) = delete;
@@ -21,31 +18,35 @@ public:
 	ServiceLocator( ServiceLocator&& ) = delete;
 	~ServiceLocator( )
 	{
-		WSACleanup();
-
 		IsInstantiated = false;
 	}
 
-	// Access the console.  For API.
+	// NOTE: 당분간 서비스를 갈아끼울 일이 없어
+	// 통합coalescing으로 인한 성능 저하를 피하기 위해 변수를 힙 영역에 할당하지 않고 있습니다.
+	// 이 파일의 코드 몇 줄만 바꾸면 언제든 연쇄 효과 없이 복구할 수 있습니다.
+	// 둘 이상의 인스턴스를 만들 수 있어 싱글턴 패턴과는 여전히 다릅니다.
+	// Accesses the console.  Reveals only functions the external files like .dll use.
 	IConsole& console( ) override
 	{
 		return mConsole;
 	}
-	// Access the console.  For internal use.
+	// Accesses the whole console.
 	Console& _console( )
 	{
 		return mConsole;
 	}
-	// Access global variables.
-	auto vault( ) -> std::unordered_map<HashedKey, Dword>&
+	// Accesses global variables.
+	auto vault( ) -> std::unordered_map<HashedKey, Dword>& override
 	{
 		return mVault;
 	}
-	void registerSound( std::unique_ptr<ISound>& soundService )
+	// NOTE: 가상 함수를 통해 호출될 수 있도록 템플릿 특수화하지 않았습니다.
+	void provideSound( std::unique_ptr<ISound>& soundService ) override
 	{
+		mSound.reset( );
 		mSound = std::move(soundService);
 	}
-	auto sound( ) -> ISound&
+	auto sound( ) -> ISound& override
 	{
 		return *mSound;
 	}
@@ -55,10 +56,14 @@ public:
 		mConsole.release( );
 	}
 private:
+	// NOTE: 둘 이상의 인스턴스를 만들 수 없습니다.
 	static bool IsInstantiated;
+	// NOTE: 다른 사운드 라이브러리로 부담없이 갈아끼울 수 있고,
+	// 구현, 디버깅, 테스팅에 필요한 null 서비스를 둘 수도 있습니다.
 	std::unique_ptr<ISound> mSound;
 	Console mConsole;
 	std::unordered_map<HashedKey, Dword> mVault;
 };
 
+// NOTE: 싱글턴 패턴과 달리 생성자를 호출할 수 있습니다.
 extern ::ServiceLocator gService;

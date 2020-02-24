@@ -1,6 +1,6 @@
 #include "../../pch.h"
 #include "GameOver.h"
-#include <Lib/VaultKeyList.h>
+#include <VaultKeyList.h>
 #include "../../ServiceLocatorMirror.h"
 
 scene::inPlay::GameOver::GameOver( sf::RenderWindow& window, sf::Drawable& shapeOrSprite,

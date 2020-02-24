@@ -1,5 +1,5 @@
 #pragma once
-#include "Lib/ISound.h"
+#include <ISound.h>
 
 class Sound final : public ISound
 {

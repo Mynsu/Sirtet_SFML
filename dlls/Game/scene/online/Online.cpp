@@ -1,7 +1,7 @@
 #include "../../pch.h"
 #include "Online.h"
-#include <Lib/Common.h>
-#include <Lib/VaultKeyList.h>
+#include <Common.h>
+#include <VaultKeyList.h>
 #include "../../ServiceLocatorMirror.h"
 #include "Waiting.h"
 #include "InLobby.h"

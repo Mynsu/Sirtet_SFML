@@ -20,6 +20,7 @@
 #include <Lib/EndPoint.h>
 #include <Lib/Hash.h>
 #include <Lib/Packet.h>
+#pragma comment( lib, "Lib-d" )
 
 using Clock = std::chrono::high_resolution_clock;
 

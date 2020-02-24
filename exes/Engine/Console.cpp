@@ -48,13 +48,11 @@ void Console::initialize( )
 		{
 			mVisible = std::get<bool>(it->second);
 		}
-		// Type Check Exception
 		else
 		{
 			printScriptError( ExceptionType::TYPE_CHECK, varName0, scriptPath );
 		}
 	}
-	// Variable Not Found Exception
 	else
 	{
 		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName0, scriptPath );
@@ -68,13 +66,11 @@ void Console::initialize( )
 		{
 			color = std::get<int>(it->second);
 		}
-		// Type Check Exception
 		else
 		{
 			printScriptError( ExceptionType::TYPE_CHECK, varName1, scriptPath );
 		}
 	}
-	// Variable Not Found Exception
 	else
 	{
 		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName1, scriptPath );
@@ -88,13 +84,11 @@ void Console::initialize( )
 		{
 			fontPath = std::get<std::string>(it->second);
 		}
-		// Type Check Exception
 		else
 		{
 			printScriptError( ExceptionType::TYPE_CHECK, varName2, scriptPath );
 		}
 	}
-	// Variable Not Found Exception
 	else
 	{
 		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName2, scriptPath );
@@ -108,13 +102,11 @@ void Console::initialize( )
 		{
 			mFontSize = std::get<int>(it->second);
 		}
-		// Type Check Exception
 		else
 		{
 			printScriptError( ExceptionType::TYPE_CHECK, varName3, scriptPath );
 		}
 	}
-	// Variable Not Found Exception
 	else
 	{
 		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName3, scriptPath );
@@ -128,13 +120,11 @@ void Console::initialize( )
 		{
 			currentInputFontColor = std::get<int>(it->second);
 		}
-		// Type Check Exception
 		else
 		{
 			printScriptError( ExceptionType::TYPE_CHECK, varName4, scriptPath );
 		}
 	}
-	// Variable Not Found Exception
 	else
 	{
 		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName4, scriptPath );
@@ -148,13 +138,11 @@ void Console::initialize( )
 		{
 			winSize.x = std::get<int>(it->second);
 		}
-		// Type Check Exception
 		else
 		{
 			printScriptError( ExceptionType::TYPE_CHECK, varName5, scriptPath );
 		}
 	}
-	// Variable Not Found Exception
 	else
 	{
 		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName5, scriptPath );
@@ -168,13 +156,11 @@ void Console::initialize( )
 		{
 			winSize.y = std::get<int>(it->second);
 		}
-		// Type Check Exception
 		else
 		{
 			printScriptError( ExceptionType::TYPE_CHECK, varName6, scriptPath );
 		}
 	}
-	// Variable Not Found Exception
 	else
 	{
 		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName6, scriptPath );
@@ -188,13 +174,11 @@ void Console::initialize( )
 		{
 			mMaxLinesShown = (uint8_t)std::get<int>(it->second);
 		}
-		// Type Check Exception
 		else
 		{
 			printScriptError( ExceptionType::TYPE_CHECK, varName7, scriptPath );
 		}
 	}
-	// Variable Not Found Exception
 	else
 	{
 		printScriptError( ExceptionType::VARIABLE_NOT_FOUND, varName7, scriptPath );
@@ -203,7 +187,6 @@ void Console::initialize( )
 	mConsoleBackground.setFillColor( sf::Color(color) );
 	if ( false == mFont.loadFromFile(fontPath) )
 	{
-		// File Not Found Exception
 		printScriptError( ExceptionType::FILE_NOT_FOUND, varName2, scriptPath );
 	}
 	mTextFieldForCurrentInput.setFont( mFont );

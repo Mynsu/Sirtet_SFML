@@ -1,5 +1,5 @@
 #pragma once
-#include <Lib/Common.h>
+#include <Common.h>
 #include "IScene.h"
 #include "../../ui/TextInputBox.h"
 

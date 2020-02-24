@@ -1,7 +1,7 @@
 #include "../pch.h"
 #include "Intro.h"
 #include <Lib/ScriptLoader.h>
-#include <Lib/VaultKeyList.h>
+#include <VaultKeyList.h>
 #include "../ServiceLocatorMirror.h"
 
 bool ::scene::Intro::IsInstantiated = false;

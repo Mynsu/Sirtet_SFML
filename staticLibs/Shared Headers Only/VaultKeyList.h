@@ -4,7 +4,7 @@
 ////
 
 #pragma once
-#include <Lib/Hash.h>
+#include "../Lib/Hash.h"
 
 // Key to frames per second while the window gains focus.
 constexpr HashedKey HK_FORE_FPS = ::util::hash::Digest( "foreFPS" );

@@ -1,5 +1,5 @@
 ﻿#include "pch.h"
-#include <Lib/Common.h>
+#include <Common.h>
 
 using ClientIndex = uint16_t;
 using Ticket = HashedKey;

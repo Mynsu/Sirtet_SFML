@@ -16,14 +16,25 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
+#ifdef _DEBUG
+#pragma comment( lib, "sfml-window-d" )
+#pragma comment( lib, "sfml-system-d" )
+#pragma comment( lib, "sfml-graphics-d" )
+#else
+#pragma comment( lib, "sfml-window" )
+#pragma comment( lib, "sfml-system" )
+#pragma comment( lib, "sfml-graphics" )
+#endif
 #include <lua.hpp>
+#pragma comment( lib, "lua53" )
 #include <Lib/Hash.h>
 #include <Lib/EndPoint.h>
 #include <Lib/Socket.h>
-#include <Lib/IServiceLocator.h>
-#include <Lib/IGame.h>
 #include <Lib/Packet.h>
 #include <Lib/math/Vector.h>
+#pragma comment( lib, "Lib-d" )
+#include <IServiceLocator.h>
+#include <IGame.h>
 
 using Clock = std::chrono::high_resolution_clock;
 

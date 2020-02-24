@@ -1,5 +1,5 @@
 ////
-//  Commonly used in exes/Engine, dlls/Game.
+//  Shared by exes/Engine, dlls/Game.
 ////
 
 #pragma once
@@ -7,7 +7,7 @@
 #include <string>
 #include <string_view>
 #include <SFML/Graphics.hpp>
-#include "Hash.h"
+#include "../Lib/Hash.h"
 
 using Func = std::function<void(const std::string_view& args)>;
 
