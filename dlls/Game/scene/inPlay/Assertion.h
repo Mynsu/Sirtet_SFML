@@ -5,9 +5,11 @@ namespace scene::inPlay
 {
 	class Assertion final : public ::scene::inPlay::IScene
 	{
+	private:
+		static bool IsInstantiated;
 	public:
 		Assertion( sf::RenderWindow& window );
-		~Assertion( ) = default;
+		~Assertion( );
 
 		void loadResources( sf::RenderWindow& window ) override;
 		::scene::inPlay::ID update( std::vector<sf::Event>& eventQueue ) override;

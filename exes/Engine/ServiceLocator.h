@@ -5,12 +5,14 @@
 
 class ServiceLocator final : public IServiceLocator
 {
+private:
+	// 둘 이상의 인스턴스를 만들 수 없습니다.
+	static bool IsInstantiated;
 public:
 	ServiceLocator( )
 		: mSound( std::make_unique<Sound>() )
 	{
 		ASSERT_TRUE( false == IsInstantiated );
-
 		IsInstantiated = true;
 	}
 	ServiceLocator( const ServiceLocator& ) = delete;
@@ -56,8 +58,6 @@ public:
 		mConsole.release( );
 	}
 private:
-	// NOTE: 둘 이상의 인스턴스를 만들 수 없습니다.
-	static bool IsInstantiated;
 	// NOTE: 다른 사운드 라이브러리로 부담없이 갈아끼울 수 있고,
 	// 구현, 디버깅, 테스팅에 필요한 null 서비스를 둘 수도 있습니다.
 	std::unique_ptr<ISound> mSound;

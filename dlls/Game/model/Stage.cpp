@@ -2,10 +2,12 @@
 #include "Stage.h"
 #include <Common.h>
 
+const int8_t DEAD_LINE_NUMBER = 1;
+
 bool model::Stage::isOver( ) const
 {
 	bool retVal = false;
-	for ( const model::stage::Cell& cell : mGrid[1] )
+	for ( const model::stage::Cell& cell : mGrid[DEAD_LINE_NUMBER] )
 	{
 		if ( true == cell.blocked )
 		{

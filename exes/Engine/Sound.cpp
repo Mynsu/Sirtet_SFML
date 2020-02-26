@@ -6,6 +6,7 @@ const uint8_t Sound::MAX_NUM_OF_BUFFERS;
 
 Sound::Sound( )
 {
+	ASSERT_TRUE( false == IsInstantiated );
 	IsInstantiated = true;
 	setBGMVolume( 2.f );
 	setSFXVolume( 4.f );
@@ -38,7 +39,7 @@ bool Sound::playSFX( const std::string& fileName )
 	{
 		mSoundBuffersForSFX.clear();
 	}
-	const HashedKey fileNameHashed = ::util::hash::Digest2(fileName.data());
+	const HashedKey fileNameHashed = ::util::hash::Digest2(fileName);
 	auto result = mSoundBuffersForSFX.emplace(fileNameHashed, sf::SoundBuffer());
 	if ( true == result.second )
 	{

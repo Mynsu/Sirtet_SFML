@@ -3,6 +3,9 @@
 class ServiceLocatorMirror final
 {
 	friend void _2943305454( const EngineComponents );
+private:
+	// 둘 이상의 인스턴스를 만들 수 없습니다.
+	static bool IsInstantiated;
 public:
 	ServiceLocatorMirror( )
 		: mPtr( nullptr )
@@ -19,12 +22,12 @@ public:
 		IsInstantiated = false;
 	}
 
+	// NOTE: 레퍼런스를 반환하지 않고 포인터임을 명시했습니다.
 	IServiceLocator* operator()( )
 	{
 		return mPtr;
 	}
 private:
-	static bool IsInstantiated;
 	IServiceLocator* mPtr;
 };
 

@@ -6,13 +6,14 @@
 #include "Assertion.h"
 
 const float TEMPO_DIFF_RATIO = 0.02f;
-// Disposition per frame when a tetrimino falls down, hard drops.
+// Disposition per frame when a tetrimino falls down, or hard drops.
 const uint8_t HARD_DROP_SPEED = 3;
 const uint16_t LINE_CLEAR_CHK_INTERVAL_MS = 100;
 const uint16_t COOL_TIME_TO_NEXT_LEVEL_OR_OVER_MS = 1000;
 const uint16_t COOL_TIME_ALL_LEVELS_CLEARED_MS = 1000;
 const uint16_t ANIMATION_SPEED_MS = 34;
 
+bool ::scene::inPlay::Playing::IsInstantiated = false;
 
 ::scene::inPlay::Playing::Playing( sf::RenderWindow& window,
 								   sf::Drawable& shapeOrSprite,
@@ -20,13 +21,16 @@ const uint16_t ANIMATION_SPEED_MS = 34;
 	: mNumOfLinesRecentlyCleared( 0 ), mCurrentLevel( 1 ),
 	mNumOfLinesRemainingToLevelClear( 7 ),
 	mFrameCountSoftDropInterval( 0 ), mFrameCountClearingInterval_( 0 ),
-	mFrameCountVfxDuration_( 0 ),
-	mFrameCountCoolToGameOver( 0 ), mFrameCountCoolToNextLevel( 0 ), mFrameCountCoolAllLevelsCleared( 0 ),
-	mAnimationDamper1( 0 ), mAnimationDamper10( 0 ),
+	mFrameCountVfxDuration( 0 ),
+	mFrameCountCool( 0 ),
+	mStateAfterCooling( StateAfterCooling::NONE ),
+	mAnimationDamperForScore1( 0 ), mAnimationDamperScore10( 0 ),
 	mTempo( 0.75f ),
 	mBackgroundRect_( (sf::RectangleShape&)shapeOrSprite ),
 	mOverlappedScene_( overlappedScene )
 {
+	ASSERT_TRUE( false == IsInstantiated );
+
 	mSpriteForScore.setTexture( mTextureForScore );
 	loadResources( window );
 	gService()->sound().stopBGM( );
@@ -35,6 +39,13 @@ const uint16_t ANIMATION_SPEED_MS = 34;
 	mNextTetriminos.emplace( ::model::Tetrimino::Spawn() );
 	mNextTetriminos.emplace( ::model::Tetrimino::Spawn() );
 	mNextTetriminoPanel.setTetrimino( mNextTetriminos.front() );
+
+	IsInstantiated = true;
+}
+
+::scene::inPlay::Playing::~Playing()
+{
+	IsInstantiated = false;
 }
 
 void ::scene::inPlay::Playing::loadResources( sf::RenderWindow& )
@@ -841,7 +852,7 @@ void ::scene::inPlay::Playing::loadResources( sf::RenderWindow& )
 	{
 		mNextTetriminoPanel.setTetrimino( mNextTetriminos.front() );
 	}
-	mDrawingInfo.cellSize_ = stageCellSize;
+	mDrawingInfo.cellSize = stageCellSize;
 	ASSERT_TRUE( 0 < mMissions.size() );
 	mNumOfLinesRemainingToLevelClear = mMissions[mCurrentLevel-1].numOfLinesToClear;
 	mTempo = mMissions[mCurrentLevel-1].tempoOnStart;
@@ -863,40 +874,51 @@ void ::scene::inPlay::Playing::loadResources( sf::RenderWindow& )
 		const auto it = vault.find(HK_FORE_FPS);
 		ASSERT_TRUE( vault.end() != it );
 		fps = (uint16_t)it->second;
-
-		if ( fps*COOL_TIME_ALL_LEVELS_CLEARED_MS/1000 < mFrameCountCoolAllLevelsCleared )
+		switch( mStateAfterCooling )
 		{
-			mFrameCountCoolAllLevelsCleared = 0;
-			return retVal;
-		}
-		else if ( 0 != mFrameCountCoolAllLevelsCleared )
-		{
-			return retVal;
-		}
-
-		if ( fps*COOL_TIME_TO_NEXT_LEVEL_OR_OVER_MS/1000 < mFrameCountCoolToNextLevel )
-		{
-			mFrameCountCoolToNextLevel = 0;
-			++mCurrentLevel;
-			mNumOfLinesRemainingToLevelClear = mMissions[mCurrentLevel-1].numOfLinesToClear;
-			mTempo = mMissions[mCurrentLevel-1].tempoOnStart;
-			mStage.clear( );
-			reloadTetrimino( );
-			return retVal;
-		}
-		else if ( 0 != mFrameCountCoolToNextLevel )
-		{
-			return retVal;
-		}
-
-		if ( fps*COOL_TIME_TO_NEXT_LEVEL_OR_OVER_MS/1000 < mFrameCountCoolToGameOver )
-		{
-			retVal = ::scene::inPlay::ID::GAME_OVER;
-			return retVal;
-		}
-		else if ( 0 != mFrameCountCoolToGameOver )
-		{
-			return retVal;
+			case StateAfterCooling::TO_GAME_OVER:
+				if ( fps*COOL_TIME_TO_NEXT_LEVEL_OR_OVER_MS/1000 < mFrameCountCool )
+				{
+					retVal = ::scene::inPlay::ID::GAME_OVER;
+					return retVal;
+				}
+				else if ( 0 != mFrameCountCool )
+				{
+					return retVal;
+				}
+				break;
+			case StateAfterCooling::TO_NEXT_LEVEL:
+				if ( fps*COOL_TIME_TO_NEXT_LEVEL_OR_OVER_MS/1000 < mFrameCountCool )
+				{
+					mStateAfterCooling = StateAfterCooling::NONE;
+					mFrameCountCool = 0;
+					++mCurrentLevel;
+					ASSERT_TRUE( mCurrentLevel <= mMissions.size() );
+					mNumOfLinesRemainingToLevelClear = mMissions[mCurrentLevel-1].numOfLinesToClear;
+					mTempo = mMissions[mCurrentLevel-1].tempoOnStart;
+					mStage.clear( );
+					reloadTetrimino( );
+					return retVal;
+				}
+				else if ( 0 != mFrameCountCool )
+				{
+					return retVal;
+				}
+				break;
+			case StateAfterCooling::TO_ALL_CLEARED:
+				if ( fps*COOL_TIME_ALL_LEVELS_CLEARED_MS/1000 < mFrameCountCool )
+				{
+					mStateAfterCooling = StateAfterCooling::NONE;
+					mFrameCountCool = 0;
+					return retVal;
+				}
+				else if ( 0 != mFrameCountCool )
+				{
+					return retVal;
+				}
+				break;
+			default:
+				break;
 		}
 	}
 
@@ -1009,15 +1031,13 @@ void ::scene::inPlay::Playing::loadResources( sf::RenderWindow& )
 				}
 				if ( mMissions.size() == mCurrentLevel )
 				{
-					// Triggering.
-					mFrameCountCoolAllLevelsCleared = 1;
+					mStateAfterCooling = StateAfterCooling::TO_ALL_CLEARED;
 					retVal = ::scene::inPlay::ID::ALL_LEVELS_CLEARED;
 					return retVal;
 				}
 				else
 				{
-					// Triggering.
-					mFrameCountCoolToNextLevel = 1;
+					mStateAfterCooling = StateAfterCooling::TO_NEXT_LEVEL;
 				}
 			}
 			else
@@ -1028,18 +1048,18 @@ void ::scene::inPlay::Playing::loadResources( sf::RenderWindow& )
 					mNumOfLinesRemainingToLevelClear -= numOfLinesCleared;
 					if ( digit10 != mNumOfLinesRemainingToLevelClear/10 )
 					{
-						mAnimationDamper10 = mDrawingInfo.scoreSpriteClipSize.y;
+						mAnimationDamperScore10 = mDrawingInfo.scoreSpriteClipSize.y;
 					}
-					mAnimationDamper1 = numOfLinesCleared;
+					mAnimationDamperForScore1 = numOfLinesCleared;
 					if ( mNumOfLinesRemainingToLevelClear < 0 )
 					{
-						mAnimationDamper1 += mNumOfLinesRemainingToLevelClear;
+						mAnimationDamperForScore1 += mNumOfLinesRemainingToLevelClear;
 					}
-					mAnimationDamper1 *= mDrawingInfo.scoreSpriteClipSize.y;
+					mAnimationDamperForScore1 *= mDrawingInfo.scoreSpriteClipSize.y;
 				}
 				mTempo -= TEMPO_DIFF_RATIO;
 				// Triggering.
-				mFrameCountVfxDuration_ = 1;
+				mFrameCountVfxDuration = 1;
 				if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::LINE_CLEARED]) )
 				{
 					gService()->console().printFailure(FailureLevel::WARNING,
@@ -1050,8 +1070,7 @@ void ::scene::inPlay::Playing::loadResources( sf::RenderWindow& )
 		else if ( true == mStage.isOver() )
 		{
 			mStage.blackout( sf::Color(mDrawingInfo.blackOutColor) );
-			// Triggering.
-			mFrameCountCoolToGameOver = 1;
+			mStateAfterCooling = StateAfterCooling::TO_GAME_OVER;
 		}
 	}
 	
@@ -1062,17 +1081,18 @@ void ::scene::inPlay::Playing::draw( sf::RenderWindow& window )
 {
 	window.draw( mBackgroundRect_ );
 	mStage.draw( window );
-	if ( 0 != mFrameCountCoolToNextLevel )
+	if ( mStateAfterCooling == StateAfterCooling::TO_NEXT_LEVEL ||
+		mStateAfterCooling == StateAfterCooling::TO_GAME_OVER )
 	{
-		++mFrameCountCoolToNextLevel;
-	}
-	else if ( 0 != mFrameCountCoolToGameOver )
-	{
-		++mFrameCountCoolToGameOver;
+		++mFrameCountCool;
 	}
 	else
 	{
 		mCurrentTetrimino.draw( window );
+		if ( mStateAfterCooling == StateAfterCooling::TO_ALL_CLEARED )
+		{
+			++mFrameCountCool;
+		}
 	}
 	mNextTetriminoPanel.draw( window );
 	{
@@ -1081,12 +1101,12 @@ void ::scene::inPlay::Playing::draw( sf::RenderWindow& window )
 		{
 			score = 0;
 		}
-		mSpriteForScore.setTextureRect(	sf::IntRect(0, (score/10)*mDrawingInfo.scoreSpriteClipSize.y+mAnimationDamper10,
+		mSpriteForScore.setTextureRect(	sf::IntRect(0, (score/10)*mDrawingInfo.scoreSpriteClipSize.y+mAnimationDamperScore10,
 													mDrawingInfo.scoreSpriteClipSize.x,
 													mDrawingInfo.scoreSpriteClipSize.y) );
 		mSpriteForScore.setPosition( mDrawingInfo.scorePosition );
 		window.draw( mSpriteForScore );
-		mSpriteForScore.setTextureRect(	sf::IntRect(0, (score%10)*mDrawingInfo.scoreSpriteClipSize.y+mAnimationDamper1,
+		mSpriteForScore.setTextureRect(	sf::IntRect(0, (score%10)*mDrawingInfo.scoreSpriteClipSize.y+mAnimationDamperForScore1,
 													mDrawingInfo.scoreSpriteClipSize.x,
 													mDrawingInfo.scoreSpriteClipSize.y) );
 		mSpriteForScore.setPosition( mDrawingInfo.scorePosition +
@@ -1099,35 +1119,31 @@ void ::scene::inPlay::Playing::draw( sf::RenderWindow& window )
 									sf::Vector2f(mDrawingInfo.gapBetweenScoreLetter+30.f, 75.f) );
 		window.draw( mSpriteForScore );
 	}
-	if ( 0 != mFrameCountVfxDuration_ )
+	if ( 0 != mFrameCountVfxDuration )
 	{
 		mVfxCombo.draw( window, mNumOfLinesRecentlyCleared );
-		++mFrameCountVfxDuration_;
+		++mFrameCountVfxDuration;
 	}
 	
+	++mFrameCountClearingInterval_;
+	++mFrameCountSoftDropInterval;
 	auto& vault = gService()->vault();
 	const auto it = vault.find(HK_FORE_FPS);
 	ASSERT_TRUE( vault.end() != it );
 	const uint16_t fps = (uint16_t)it->second;
-	if ( fps <= mFrameCountVfxDuration_ )
+	if ( fps <= mFrameCountVfxDuration )
 	{
-		mFrameCountVfxDuration_ = 0;
-	}
-	++mFrameCountSoftDropInterval;
-	++mFrameCountClearingInterval_;
-	if ( 0 != mFrameCountCoolAllLevelsCleared )
-	{
-		++mFrameCountCoolAllLevelsCleared;
+		mFrameCountVfxDuration = 0;
 	}
 	{
 		const int16_t delta = (int16_t)(2*mDrawingInfo.animationSpeed);
-		if ( 0 != mAnimationDamper1 )
+		if ( 0 != mAnimationDamperForScore1 )
 		{
-			mAnimationDamper1 -= delta;
+			mAnimationDamperForScore1 -= delta;
 		}
-		if ( 0 != mAnimationDamper10 )
+		if ( 0 != mAnimationDamperScore10 )
 		{
-			mAnimationDamper10 -= delta;
+			mAnimationDamperScore10 -= delta;
 		}
 	}
 }
@@ -1136,7 +1152,7 @@ void scene::inPlay::Playing::reloadTetrimino( )
 {
 	mCurrentTetrimino = mNextTetriminos.front();
 	mCurrentTetrimino.setOrigin( mStage.position() );
-	mCurrentTetrimino.setSize( mDrawingInfo.cellSize_ );
+	mCurrentTetrimino.setSize( mDrawingInfo.cellSize );
 	mNextTetriminos.pop( );
 	mNextTetriminos.emplace( ::model::Tetrimino::Spawn() );
 	mNextTetriminoPanel.setTetrimino( mNextTetriminos.front() );

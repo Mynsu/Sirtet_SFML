@@ -547,7 +547,7 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag,
 void scene::online::Online::setMyNickname( std::string& myNickname )
 {
 	mMyNickname = myNickname;
-	mMyNicknameHashed_ = ::util::hash::Digest2(myNickname.data());
+	mMyNicknameHashed_ = ::util::hash::Digest2(myNickname);
 }
 
 const std::string& scene::online::Online::myNickname( ) const

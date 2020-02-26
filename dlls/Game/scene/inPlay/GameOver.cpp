@@ -3,11 +3,18 @@
 #include <VaultKeyList.h>
 #include "../../ServiceLocatorMirror.h"
 
+const uint8_t TARGET_ALPHA = 0x7fu;
+const uint32_t BACKGROUND_RGB = 0x29cdb500; // Cyan
+
+bool scene::inPlay::GameOver::IsInstantiated = false;
+
 scene::inPlay::GameOver::GameOver( sf::RenderWindow& window, sf::Drawable& shapeOrSprite,
 								   std::unique_ptr<::scene::inPlay::IScene>& overlappedScene )
-	: TARGET_ALPHA( 0x7fu ), mFade( 0xffu ), mFrameCountToMainMenu( 0 ),
+	: mFade( 0xffu ), mFrameCountToMainMenu( 0 ),
 	mBackgroundRect_( (sf::RectangleShape&)shapeOrSprite )
 {
+	ASSERT_TRUE( false == IsInstantiated );
+
 	overlappedScene.reset( );
 	auto& vault = gService()->vault();
 	const auto it = vault.find(HK_FORE_FPS);
@@ -19,6 +26,13 @@ scene::inPlay::GameOver::GameOver( sf::RenderWindow& window, sf::Drawable& shape
 		gService()->console().printFailure(FailureLevel::WARNING,
 										   "File Not Found: "+mSoundPaths[(int)SoundIndex::BGM] );
 	}
+
+	IsInstantiated = true;
+}
+
+scene::inPlay::GameOver::~GameOver()
+{
+	IsInstantiated = false;
 }
 
 void scene::inPlay::GameOver::loadResources( sf::RenderWindow& window )
@@ -203,10 +217,8 @@ void scene::inPlay::GameOver::loadResources( sf::RenderWindow& window )
 
 void scene::inPlay::GameOver::draw( sf::RenderWindow& window )
 {
-	// Cyan
 	if ( TARGET_ALPHA < mFade )
 	{
-		const uint32_t BACKGROUND_RGB = 0x29cdb500;
 		mFade -= 2u;
 		mBackgroundRect_.setFillColor( sf::Color(BACKGROUND_RGB | mFade) );
 		window.draw( mBackgroundRect_ );

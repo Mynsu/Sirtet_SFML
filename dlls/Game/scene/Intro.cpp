@@ -8,9 +8,9 @@ bool ::scene::Intro::IsInstantiated = false;
 
 ::scene::Intro::Intro( sf::RenderWindow& window )
 	: mDuration( 2 ),
-	mAlpha_( 0x00 ),
-	mFrameCountToStart( 0 ),	mFPS_( 60 ),
-	mNextScene_( ::scene::ID::MAIN_MENU )
+	mAlpha( 0x00 ),
+	mFrameCountToStart( 0 ), mFPS_( 60 ),
+	mNextScene( ::scene::ID::MAIN_MENU )
 {
 	ASSERT_TRUE( false == IsInstantiated );
 
@@ -70,7 +70,7 @@ void scene::Intro::loadResources( sf::RenderWindow& window )
 		// Type check whether it can be cast to enum type or not,
 		if ( true == std::holds_alternative<int>(it->second) )
 		{
-			mNextScene_ = (::scene::ID)std::get<int>(it->second);
+			mNextScene = (::scene::ID)std::get<int>(it->second);
 		}
 		else
 		{
@@ -87,7 +87,7 @@ void scene::Intro::loadResources( sf::RenderWindow& window )
 {
 	if ( (uint16_t)mFPS_*mDuration < mFrameCountToStart )
 	{
-		return mNextScene_ ;
+		return mNextScene ;
 	}
 
 	return ::scene::ID::AS_IS;
@@ -107,30 +107,30 @@ void ::scene::Intro::draw( sf::RenderWindow& window )
 	{
 		// NOTE: Both 'mAlpha' and 'diff' are 'uint8_t', but 'mAlpha - diff' is 'int', not 'int8_t.'
 		// That means 'mAlpha - diff' can be below zero, so no underflow happens.
-		if ( mAlpha_ - diff < MIN_RGBA )
+		if ( mAlpha - diff < MIN_RGBA )
 		{
-			mAlpha_ = MIN_RGBA;
+			mAlpha = MIN_RGBA;
 		}
 		// Fade Out
 		else
 		{
-			mAlpha_ -= diff;
+			mAlpha -= diff;
 		}
 	}
 	else
 	{
 		// NOTE: Same as above.
-		if ( mAlpha_ + diff > MAX_RGBA )
+		if ( mAlpha + diff > MAX_RGBA )
 		{
-			mAlpha_ = MAX_RGBA;
+			mAlpha = MAX_RGBA;
 		}
 		// Fade In
 		else
 		{
-			mAlpha_ += diff;
+			mAlpha += diff;
 		}
 	}
-	mSprite.setColor( sf::Color( MAX_RGBA, MAX_RGBA, MAX_RGBA, mAlpha_ ) );
+	mSprite.setColor( sf::Color( MAX_RGBA, MAX_RGBA, MAX_RGBA, mAlpha ) );
 	window.draw( mSprite );
 
 	++mFrameCountToStart;

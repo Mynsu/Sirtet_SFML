@@ -875,10 +875,10 @@ void scene::MainMenu::loadResources( sf::RenderWindow& )
 		gService()->console().printFailure( FailureLevel::WARNING,
 										   "File Not Found: "+fontPath );
 	}
-	mCopyright.setCharacterSize( fontSize );
-	mCopyright.setFont( mFont );
-	mCopyright.setPosition( copyrightPosition );
-	mCopyright.setString( copyright );
+	mTextLabelForCopyrightNotice.setCharacterSize( fontSize );
+	mTextLabelForCopyrightNotice.setFont( mFont );
+	mTextLabelForCopyrightNotice.setPosition( copyrightPosition );
+	mTextLabelForCopyrightNotice.setString( copyright );
 	if ( false == gService()->sound().playBGM(mSoundPaths[(int)SoundIndex::BGM], true) )
 	{
 		gService()->console().printFailure(FailureLevel::WARNING,
@@ -927,7 +927,7 @@ void ::scene::MainMenu::draw( sf::RenderWindow& window )
 			mSprite.setPosition( mDrawingInfo.logoDestinationPosition );
 			window.draw( mSprite );
 			// Copyright
-			window.draw( mCopyright );
+			window.draw( mTextLabelForCopyrightNotice );
 		}
 		else if ( const sf::FloatRect boundButtonSingle(mDrawingInfo.buttonSinglePosition,
 														sf::Vector2f(mDrawingInfo.buttonSingleClipSize));

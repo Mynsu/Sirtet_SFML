@@ -168,7 +168,7 @@ int main( )
 	std::cout << "###############\n### MAIN SERVER\n###############\n\nQ. What would the queue server say?" << std::endl;
 	std::string sign;
 	std::cin >> sign;
-	const HashedKey encryptedSign = ::util::hash::Digest2(sign.data());
+	const HashedKey encryptedSign = ::util::hash::Digest2(sign);
 	std::cout << "Ready.\n";
 	std::vector<Ticket> tickets;
 	std::unordered_set<ClientIndex> connectionsNotSubmittingTicket;

@@ -5,14 +5,10 @@
 class GameLocal final : public IGame
 {
 private:
-	// Only a single instance for a type can live at a time, but shouldn't be accessible globally.
-	// That's the difference from the class filled with static functions, or on singleton pattern and the like.
-	//
-	// NOTE: 'private static' is better than one in an unnamed namespace
-	// because in this .cpp file there are much more than this class.
+	// 둘 이상의 인스턴스를 만들 수 없습니다.
 	static bool IsInstantiated;
 public:
-	// NOTE: Called in compile-time, thus another initialization should be done in runtime.
+	// Needs init(...) to be called.
 	GameLocal( )
 	{
 		IsInstantiated = true;
@@ -50,6 +46,8 @@ bool GameLocal::IsInstantiated = false;
 //		 but often needs another initialization in runtime.
 std::unique_ptr<IGame> _Game( std::make_unique<GameLocal>() );
 
+// 클래스 ServiceLocatorMirror와 추상 클래스 IGame의 friend 함수입니다.
+// 각각 멤버변수 mPtr, 멤버함수 init(...)을 감추고 이 함수에서만 접근합니다.
 // Pseudo-unnamed function
 inline void _2943305454( const EngineComponents engine )
 {

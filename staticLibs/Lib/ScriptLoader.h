@@ -13,7 +13,6 @@ namespace util::script
 {
 	// Load data from a .lua script file.
 	// Value type is std::variant<bool, int, float, std::string>, which you can customize.
-	// This throws std::runtime_error when failing to open the script file.
 	template <typename Value=std::variant<bool,int,float,std::string>, typename Str, typename... Strs,
 		std::enable_if_t<std::is_same_v<std::decay_t<Str>,std::string>>* = nullptr>
 		static const std::unordered_map<Str, Value> LoadFromScript( Str scriptPath, Strs... variables )

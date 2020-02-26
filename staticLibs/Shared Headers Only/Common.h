@@ -53,10 +53,11 @@ namespace model
 
 		enum class Rotation
 		{
-			A,
-			B,
-			C,
-			D,
+			// Clockwise
+			A, // PI/2
+			B, // PI
+			C, // 
+			D, // 2*PI
 
 			NONE_MAX,
 		};

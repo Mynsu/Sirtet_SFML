@@ -5,6 +5,15 @@ namespace scene
 {
 	class MainMenu final : public ::scene::IScene
 	{
+	private:
+		enum class SoundIndex
+		{
+			BGM,
+			ON_SELECTION,
+			NONE_MAX,
+		};
+		// 둘 이상의 인스턴스를 만들 수 없습니다.
+		static bool IsInstantiated;
 	public:
 		MainMenu( sf::RenderWindow& window );
 		~MainMenu( );
@@ -16,18 +25,8 @@ namespace scene
 		void setScene( const uint8_t sceneID ) override
 		{}
 	private:
-		enum class SoundIndex
-		{
-			BGM,
-			ON_SELECTION,
-			NONE_MAX,
-		};
-		// Only a single instance for a type can live at a time, but shouldn't be accessible globally.
-		// That's the difference from the class filled with static functions, or on singleton pattern and the like.
-		static bool IsInstantiated;
 		bool mIsCursorOnButton;
 		::scene::ID mNextSceneID;
-		std::string mSoundPaths[(int)SoundIndex::NONE_MAX];
 		struct
 		{
 			sf::Vector2i logoSourcePosition, logoClipSize,
@@ -37,8 +36,9 @@ namespace scene
 				buttonSinglePosition,
 				buttonOnlinePosition;
 		} mDrawingInfo;
+		std::string mSoundPaths[(int)SoundIndex::NONE_MAX];
 		sf::Font mFont;
-		sf::Text mCopyright;
+		sf::Text mTextLabelForCopyrightNotice;
 		sf::Texture mTexture;
 		sf::Sprite mSprite;
 	};

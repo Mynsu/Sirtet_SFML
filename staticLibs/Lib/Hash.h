@@ -6,11 +6,14 @@ using Dword = int32_t;
 
 namespace util::hash
 {
+	// 문자열의 길이를 반환합니다.
+	// NOTE: 런타임에는 ::strlen(...)이 더 빠릅니다.
 	constexpr uint8_t Measure( const char* str )
 	{
 		return ('\0'==*str)? 0: 1+Measure( ++str );
 	}
 
+	// 65599 문자열 해싱 함수입니다.
 	template <int N>
 	constexpr HashedKey Digest( const char (&str)[N] )
 	{
@@ -22,12 +25,14 @@ namespace util::hash
 		return retHash & 0x7fffffff;
 	}
 
-	inline HashedKey Digest2( const char* str )
+	// 65599 문자열 해싱 함수입니다.
+	inline HashedKey Digest2( const std::string& str )
 	{
 		HashedKey retHash = 0;
-		while ( *str )
+		const char* ptr = str.data();
+		while ( *ptr )
 		{
-			retHash = *str++ + (retHash<<6) + (retHash<<16) - retHash;
+			retHash = *ptr++ + (retHash<<6) + (retHash<<16) - retHash;
 		}
 		return retHash & 0x7fffffff;
 	}

@@ -6,11 +6,8 @@
 void ui::NextTetriminoPanel::setTetrimino( const::model::Tetrimino& next )
 {
 	const sf::Color nextTetColor( next.color() );
-	for ( sf::RectangleShape& block : mBlocks )
-	{
-		block.setFillColor( nextTetColor );
-		block.setOutlineThickness( -2.0f );
-	}
+	mBlock.setFillColor( nextTetColor );
+	mBlock.setOutlineThickness( -2.0f );
 	const ::model::tetrimino::Type type = next.type( );
 	const ::model::tetrimino::LocalSpace nextTetBlocks = next.blocks( );
 	const sf::Vector2f margin( mCellSize_, mCellSize_ );
@@ -23,15 +20,15 @@ void ui::NextTetriminoPanel::setTetrimino( const::model::Tetrimino& next )
 			switch( type )
 			{
 				case ::model::tetrimino::Type::I:
-					mBlocks[k].setPosition( mLeftTopPosition + margin - sf::Vector2f(0.f, mCellSize_*0.5f)
+					mBlocksPositions[k] = sf::Vector2f( mPositionLefTop_ + margin - sf::Vector2f(0.f, mCellSize_*0.5f)
 										   + localPos*mCellSize_ );
 					break;
 				case ::model::tetrimino::Type::O:
-					mBlocks[k].setPosition( mLeftTopPosition + margin
+					mBlocksPositions[k] = sf::Vector2f( mPositionLefTop_ + margin
 										   + localPos*mCellSize_ );
 					break;
 				default:
-					mBlocks[k].setPosition( mLeftTopPosition + margin*1.5f + sf::Vector2f(0.f, mCellSize_*0.5f)
+					mBlocksPositions[k] = sf::Vector2f( mPositionLefTop_ + margin*1.5f + sf::Vector2f(0.f, mCellSize_*0.5f)
 										   + localPos*mCellSize_ );
 					break;
 			}
@@ -46,9 +43,10 @@ void ui::NextTetriminoPanel::setTetrimino( const::model::Tetrimino& next )
 void ui::NextTetriminoPanel::draw( sf::RenderWindow& window )
 {
 	window.draw( mPanel );
-	for ( sf::RectangleShape& it : mBlocks )
+	for ( uint8_t i = 0; ::model::tetrimino::BLOCKS_A_TETRIMINO != i; ++i )
 	{
-		window.draw( it );
+		mBlock.setPosition( mBlocksPositions[i] );
+		window.draw( mBlock );
 	}
 }
 
@@ -61,11 +59,8 @@ void ui::NextTetriminoPanel::setDimension( const sf::Vector2f position, const fl
 	size *= 0.5f;
 	mPanel.setOrigin( size );
 	mPanel.setPosition( position );
-	mLeftTopPosition = position-size;
+	mPositionLefTop_ = position-size;
 	size = sf::Vector2f(cellSize, cellSize);
-	for ( sf::RectangleShape& block : mBlocks )
-	{
-		block.setSize( size );
-	}
+	mBlock.setSize( size );
 	mCellSize_ = cellSize;
 }

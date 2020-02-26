@@ -6,12 +6,10 @@ namespace scene
 	class SceneManager
 	{
 	private:
-		// Only a single instance for a type can live at a time, but shouldn't be accessible globally.
-		// That's the difference from the class filled with static functions, or on singleton pattern and the like.
+		// 둘 이상의 인스턴스를 만들 수 없습니다.
 		static bool IsInstantiated;
 	public:
-		// NOTE: Called in compile-time, thus another initialization should be done.
-		// 'init(...)' will be called in 'GetGameAPI(...)' in 'Game.cpp.' in runtime.
+		// Needs init(...) to be called.
 		SceneManager( )
 			: mWindow( nullptr )
 		{
@@ -23,11 +21,12 @@ namespace scene
 			mWindow = nullptr;
 			IsInstantiated = false;
 		}
+		// .exe로부터 얻은 포인터를 쥡니다.
 		void init( sf::RenderWindow& window );
 
 		void update( std::vector<sf::Event>& eventQueue )
 		{
-			const ::scene::ID nextSceneID = mCurrentScene->update( eventQueue );
+			const ::scene::ID nextSceneID = mCurrentScene->update(eventQueue);
 			if ( ::scene::ID::AS_IS != nextSceneID )
 			{
 				setScene( nextSceneID );
@@ -44,6 +43,6 @@ namespace scene
 		void refresh( const std::string_view& );
 #endif
 		sf::RenderWindow* mWindow;
-		std::unique_ptr< ::scene::IScene > mCurrentScene;
+		std::unique_ptr<::scene::IScene> mCurrentScene;
 	};
 }

@@ -5,6 +5,8 @@ namespace scene::inPlay
 {
 	class AllClear final : public IScene
 	{
+	private:
+		static bool IsInstantiated;
 	public:
 		AllClear( sf::RenderWindow& window );
 		~AllClear( );
@@ -13,7 +15,6 @@ namespace scene::inPlay
 		::scene::inPlay::ID update( std::vector<sf::Event>& eventQueue ) override;
 		void draw( sf::RenderWindow& window ) override;
 	private:
-		static bool IsInstantiated;
 		struct
 		{
 			uint8_t confettiSpriteClipRow, confettiSpriteClipRowMax_,

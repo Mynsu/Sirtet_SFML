@@ -1230,7 +1230,7 @@ void scene::online::InRoom::loadResources( sf::RenderWindow& window )
 				const uint8_t curSize = ptr[curPos];
 				++curPos;
 				const std::string otherNickname( _userList.substr(curPos, curSize) );
-				const HashedKey otherNicknameHashed = ::util::hash::Digest2( otherNickname.data() );
+				const HashedKey otherNicknameHashed = ::util::hash::Digest2(otherNickname);
 				users.emplace( otherNicknameHashed, otherNickname );
 				curPos += curSize;
 			}

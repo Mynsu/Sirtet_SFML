@@ -63,7 +63,7 @@ namespace model
 		}
 		void setOrigin( const sf::Vector2f& origin )
 		{
-			mOrigin_ = origin;
+			mOrigin = origin;
 		}
 		sf::Vector2<int8_t> position( ) const
 		{
@@ -112,7 +112,7 @@ namespace model
 					// Coordinate transformation
 					const sf::Vector2<int8_t> localPos( i%model::tetrimino::BLOCKS_A_TETRIMINO,
 														i/model::tetrimino::BLOCKS_A_TETRIMINO );
-					mBlockShape.setPosition( mOrigin_ + sf::Vector2f(mPosition+localPos)*mBlockSize_ );
+					mBlockShape.setPosition( mOrigin + sf::Vector2f(mPosition+localPos)*mBlockSize_ );
 					window.draw( mBlockShape );
 				}
 			}
@@ -125,10 +125,15 @@ namespace model
 		sf::Vector2<int8_t> mPosition;
 		::model::tetrimino::Type mType;
 		::model::tetrimino::Rotation mRotationID;
+		// Can be figured out from mBlockShape.
 		float mBlockSize_;
-		sf::Vector2f mOrigin_;
+		// Mapped to the left top position of the stage panel.
+		sf::Vector2f mOrigin;
+		// NOTE: 테트리미노를 블록 4개로 구성하지만, 덩치가 큰 그래픽 인스턴스까지 4개를 두어선 안 됩니다.
 		sf::RectangleShape mBlockShape;
+		// Retains blocks' position in advance.
 		::model::tetrimino::LocalSpace mPossibleRotations[(int)::model::tetrimino::Rotation::NONE_MAX];
+		// Relative positions to see while detecting collision for each rotation.
 		static sf::Vector2<int8_t> Test[(int)::model::tetrimino::Rotation::NONE_MAX][4];
 		static sf::Color OutlineColor;
 		static sf::Color Colors[(int)::model::tetrimino::Type::NONE_MAX];

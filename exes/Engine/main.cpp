@@ -151,7 +151,6 @@ int main( int argc, char* argv[] )
 				subEventQueue.emplace_back( event );
 			}
 					
-			// Console
 			console.handleEvent( subEventQueue );
 		}
 

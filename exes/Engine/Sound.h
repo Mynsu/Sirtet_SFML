@@ -3,6 +3,9 @@
 
 class Sound final : public ISound
 {
+private:
+	// 둘 이상의 인스턴스를 만들 수 없습니다.
+	static bool IsInstantiated;
 public:
 	Sound( );
 	~Sound( );
@@ -24,7 +27,6 @@ public:
 	}
 	bool playSFX( const std::string& fileName ) override;
 private:
-	static bool IsInstantiated;
 	static const uint8_t MAX_NUM_OF_BUFFERS = 3;
 	sf::Sound mBGMPlayer, mSFXPlayer;
 	sf::SoundBuffer mSoundBufferForBGM;

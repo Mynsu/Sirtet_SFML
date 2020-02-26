@@ -39,7 +39,7 @@ void ::scene::SceneManager::init( sf::RenderWindow& window )
 	setScene( startScene );
 #else
 	// NOTE: equals setScene( ::scene::ID::INTRO ).
-	mCurrentScene = std::make_unique<::scene::Intro>( window );
+	mCurrentScene = std::make_unique<::scene::Intro>(window);
 #endif
 }
 
@@ -61,14 +61,18 @@ void ::scene::SceneManager::setScene( const ::scene::ID nextScene )
 			mCurrentScene = std::make_unique<::scene::online::Online>(*mWindow);
 			break;
 		default:
+			// 싱글 플레이 시퀀스에서 몇몇 씬을 건너뛸 경우,
 			if ( (int)nextScene/10 == (int)::scene::ID::SINGLE_PLAY )
 			{
+				// 실행 직후거나 다른 시퀀스에 있어 싱글 플레이 시퀀스에 새로 진입하는 경우,
 				if ( nullptr == mCurrentScene ||
 					::scene::ID::SINGLE_PLAY != mCurrentScene->currentScene() )
 				{
+					// NOTE: nextScene%10은 시퀀스 내부 enum에 대응합니다.
 					mCurrentScene =
 						std::make_unique<::scene::inPlay::InPlay>(*mWindow, (::scene::inPlay::ID)((int)nextScene%10));
 				}
+				// 이미 싱글 플레이 시퀀스에 있을 경우,
 				else
 				{
 					mCurrentScene->setScene( (uint8_t)nextScene%10 );

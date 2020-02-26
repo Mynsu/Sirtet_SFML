@@ -57,7 +57,9 @@ namespace model
 		}
 		void draw( sf::RenderWindow& window );
 	private:
+		// Can be figured out from mCellShape.
 		float mCellSize_;
+		// Can be earned from mPanel.
 		sf::Vector2f mPosition_;
 		sf::RectangleShape mPanel, mCellShape;
 		//0

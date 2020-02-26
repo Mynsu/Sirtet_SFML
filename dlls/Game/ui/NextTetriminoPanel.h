@@ -31,10 +31,7 @@ namespace ui
 		void setColor( const sf::Color background, const sf::Color cellOutlineColor )
 		{
 			mPanel.setFillColor( background );
-			for ( sf::RectangleShape& block : mBlocks )
-			{
-				block.setOutlineColor( cellOutlineColor );
-			}
+			mBlock.setOutlineColor( cellOutlineColor );
 		}
 		void setOutline( const float thickness, const sf::Color color )
 		{
@@ -61,17 +58,16 @@ namespace ui
 		void setTetrimino( const ::model::Tetrimino& next );
 		void clearTetrimino( )
 		{
-			for ( sf::RectangleShape& block : mBlocks )
-			{
-				block.setFillColor( sf::Color::Transparent );
-				block.setOutlineThickness( 0.f );
-			}
+			mBlock.setFillColor( sf::Color::Transparent );
+			mBlock.setOutlineThickness( 0.f );
 		}
 		void draw( sf::RenderWindow& window );
 	private:
 		float mCellSize_;
-		sf::Vector2f mLeftTopPosition;
+		// Different from mPanel's position which is its center.
+		sf::Vector2f mPositionLefTop_;
+		sf::Vector2f mBlocksPositions[::model::tetrimino::BLOCKS_A_TETRIMINO];
 		sf::RectangleShape mPanel;
-		sf::RectangleShape mBlocks[::model::tetrimino::BLOCKS_A_TETRIMINO];
+		sf::RectangleShape mBlock;
 	};
 }

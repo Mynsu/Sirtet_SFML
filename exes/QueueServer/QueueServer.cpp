@@ -86,7 +86,7 @@ inline bool ResetAndReconnectToMainServer( std::unique_ptr<Socket>& socketToMain
 	std::cout << "\nQ. What should I say to the main server to let him know I'm the queue server?" << std::endl;
 	std::string sign;
 	std::cin >> sign;
-	const HashedKey encryptedSign = ::util::hash::Digest2(sign.data());
+	const HashedKey encryptedSign = ::util::hash::Digest2(sign);
 	Packet packet;
 	packet.pack( "", encryptedSign );
 	if ( -1 == socketToMainServer->sendOverlapped(packet) )
