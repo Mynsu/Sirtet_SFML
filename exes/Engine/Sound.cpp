@@ -1,10 +1,10 @@
 #include "pch.h"
 #include "Sound.h"
 
-bool Sound::IsInstantiated = false;
-const uint8_t Sound::MAX_NUM_OF_BUFFERS;
+const uint8_t MAX_NUM_OF_BUFFERS = 3;
+bool SFMLSound::IsInstantiated = false;
 
-Sound::Sound( )
+SFMLSound::SFMLSound( )
 {
 	ASSERT_TRUE( false == IsInstantiated );
 	IsInstantiated = true;
@@ -12,12 +12,12 @@ Sound::Sound( )
 	setSFXVolume( 4.f );
 }
 
-Sound::~Sound( )
+SFMLSound::~SFMLSound( )
 {
 	IsInstantiated = false;
 }
 
-bool Sound::playBGM( const std::string& fileName, const bool isRepeated )
+bool SFMLSound::playBGM( const std::string& fileName, const bool isRepeated )
 {
 	bool isLoadSuccessful = true;
 	if ( false == mSoundBufferForBGM.loadFromFile(fileName) )
@@ -32,7 +32,7 @@ bool Sound::playBGM( const std::string& fileName, const bool isRepeated )
 	return isLoadSuccessful;
 }
 
-bool Sound::playSFX( const std::string& fileName )
+bool SFMLSound::playSFX( const std::string& fileName )
 {
 	bool isLoadSuccessful = true;
 	if ( MAX_NUM_OF_BUFFERS < (uint8_t)mSoundBuffersForSFX.size() )
@@ -49,8 +49,15 @@ bool Sound::playSFX( const std::string& fileName )
 			return isLoadSuccessful;
 		}
 	}
-	mSFXPlayer.setBuffer( result.first->second );
-	mSFXPlayer.play( );
+	for ( sf::Sound& player : mSFXPlayers )
+	{
+		if ( sf::Sound::Playing != player.getStatus() )
+		{
+			player.setBuffer( result.first->second );
+			player.play( );
+			break;
+		}
+	}
 
 	return isLoadSuccessful;
 }

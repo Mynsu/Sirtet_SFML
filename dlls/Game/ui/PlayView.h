@@ -13,7 +13,7 @@ namespace ui
 	class PlayView
 	{
 	public:
-		PlayView( const bool isPlayable = true );
+		PlayView( const bool isPlayable );
 		// This's not copy c'tor, just initialization.
 		PlayView( const PlayView& another );
 		void operator=( const PlayView& ) = delete;

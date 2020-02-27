@@ -12,9 +12,8 @@ const uint16_t ALL_OVER_FREEZE_MS = 2000;
 
 bool scene::online::InRoom::IsInstantiated = false;
 
-scene::online::Participant::Participant( const std::string& nickname, ::ui::PlayView&& playView )
-// NOTE: r-value reference malfunctions within SFML, thus 'playView' is copied here.
-	: nickname( nickname ), playView( playView )
+scene::online::Participant::Participant( const std::string& _nickname, const bool isPlayable )
+	: nickname( _nickname ), playView( isPlayable )
 { }
 
 scene::online::InRoom::InRoom( sf::RenderWindow& window, Online& net, const bool asHost )
@@ -29,7 +28,7 @@ scene::online::InRoom::InRoom( sf::RenderWindow& window, Online& net, const bool
 	ASSERT_TRUE( false == IsInstantiated );
 	
 	mParticipants.reserve( ROOM_CAPACITY );
-	mParticipants.emplace( net.myNicknameHashed(), Participant(net.myNickname(), ::ui::PlayView()) );
+	mParticipants.try_emplace( net.myNicknameHashed(), net.myNickname(), true );
 	IServiceLocator* const service = gService();
 	ASSERT_NOT_NULL( service );
 	service->console().addCommand( CMD_LEAVE_ROOM, std::bind( &scene::online::InRoom::_leaveRoom,
@@ -1261,7 +1260,7 @@ void scene::online::InRoom::loadResources( sf::RenderWindow& window )
 			}
 			for ( const auto& pair : users )
 			{
-				mParticipants.emplace( pair.first, Participant(pair.second, ::ui::PlayView(false)) );
+				mParticipants.try_emplace( pair.first, pair.second, false );
 				uint8_t slotIdx = 0;
 				while ( ROOM_CAPACITY-1 != slotIdx )
 				{

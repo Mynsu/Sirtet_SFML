@@ -10,7 +10,7 @@ private:
 	static bool IsInstantiated;
 public:
 	ServiceLocator( )
-		: mSound( std::make_unique<Sound>() )
+		: mSound( std::make_unique<SFMLSound>() )
 	{
 		ASSERT_TRUE( false == IsInstantiated );
 		IsInstantiated = true;

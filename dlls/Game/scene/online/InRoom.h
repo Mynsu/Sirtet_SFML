@@ -8,10 +8,14 @@ const uint8_t ROOM_CAPACITY = 4;
 
 namespace scene::online
 {
-	struct Participant final
+	struct Participant
 	{
-		Participant( const std::string& nickname, ::ui::PlayView&& playView );
+	public:
+		Participant( const std::string& nickname, const bool isPlayable );
+		Participant( const Participant& ) = delete;
+		Participant( Participant&& ) = delete;
 		void operator=( const Participant& ) = delete;
+		~Participant() = default;
 			
 		std::string nickname;
 		::ui::PlayView playView;
@@ -83,7 +87,7 @@ namespace scene::online
 		std::string mSoundPaths[(int)SoundIndex::NONE_MAX];
 		sf::Font mFont;
 		sf::Text mTextLabelForStartingGuide, mLabelForNickname;
-		std::unordered_map<HashedKey, ::scene::online::Participant> mParticipants;
+		std::unordered_map<HashedKey, Participant> mParticipants;
 		sf::RectangleShape mBackground;
 		sf::RectangleShape mOtherPlayerSlotBackground;
 	};
