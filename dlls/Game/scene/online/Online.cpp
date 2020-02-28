@@ -440,7 +440,7 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag,
 														   const Online::Option option,
 														   uint16_t bodySize ) const
 {
-	ASSERT_FALSE( 0 == bodySize && Online::Option::RETURN_TAG_ATTACHED != option );
+	ASSERT_FALSE( 0 == bodySize && Online::Option::RETURNING_TAG_ATTACHED != option );
 	ASSERT_TRUE( 0 < ReceivingResult );
 
 	std::string _retVal;
@@ -448,7 +448,7 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag,
 	if ( false == extraRcvBuf.empty() &&
 		0 == extraRcvBuf.find(tag) )
 	{
-		if ( option & Online::Option::RETURN_TAG_ATTACHED )
+		if ( option & Online::Option::RETURNING_TAG_ATTACHED )
 		{
 			_retVal.append( extraRcvBuf, 0, extraRcvBuf.size() );
 			
@@ -464,7 +464,7 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag,
 	const char* const rcvBuf = SocketToServer->receivingBuffer();
 	std::string_view strView( rcvBuf, ReceivingResult );
 	uint16_t beginPos = -1;
-	if ( option & Option::FIND_END_TO_BEGIN )
+	if ( option & Option::FINDING_END_TO_BEGIN )
 	{
 		uint16_t off = 0;
 		while ( true )
@@ -495,7 +495,7 @@ std::optional<std::string> scene::online::Online::getByTag( const Tag tag,
 	}
 	
 	const uint8_t tagLen = (uint8_t)std::strlen(tag);
-	if ( option & Option::RETURN_TAG_ATTACHED )
+	if ( option & Option::RETURNING_TAG_ATTACHED )
 	{
 		_retVal.append( &rcvBuf[beginPos], tagLen );
 		if ( 0 == bodySize )

@@ -43,7 +43,7 @@ namespace scene::online
 		};
 		enum class SoundIndex
 		{
-			ON_SELECTION,
+			SELECTION,
 			GAME_OVER,
 			NONE_MAX,
 		};

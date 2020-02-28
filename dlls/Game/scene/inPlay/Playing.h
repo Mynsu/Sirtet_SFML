@@ -23,16 +23,16 @@ namespace scene::inPlay
 	private:
 		enum class StateAfterCooling
 		{
-			TO_GAME_OVER,
-			TO_NEXT_LEVEL,
-			TO_ALL_CLEARED,
+			GAME_OVER,
+			NEXT_LEVEL,
+			ALL_CLEAR,
 			NONE,
 		};
 		enum class SoundIndex
 		{
-			TETRIMINO_LOCKED,
-			LINE_CLEARED,
-			LEVEL_CLEARED,
+			TETRIMINO_LOCK,
+			LINE_CLEAR,
+			LEVEL_CLEAR,
 			NONE_MAX,
 		};
 		struct Mission
@@ -45,7 +45,7 @@ namespace scene::inPlay
 		int8_t mNumOfLinesRemainingToLevelClear;
 		uint16_t mFrameCountSoftDropInterval, mFrameCountCool;
 		// Makes it possible to not check out line clearing every frame.  That is needless.
-		uint16_t mFrameCountClearingInterval_;
+		uint16_t mFrameCountLineClearInterval_;
 		// This also serves as flag.  When this isn't equal to 0, visual effect turns on and plays.
 		uint16_t mFrameCountVfxDuration;
 		// For units digit.

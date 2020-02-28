@@ -11,8 +11,8 @@ std::string ui::PlayView::SoundPaths[(int)SoundIndex::NONE_MAX];
 
 void ui::PlayView::LoadResources( )
 {
-	SoundPaths[(int)SoundIndex::TETRIMINO_LOCKED] = "Sounds/tetriminoLocked.wav";
-	SoundPaths[(int)SoundIndex::LINE_CLEARED] = "Sounds/lineCleared.wav";
+	SoundPaths[(int)SoundIndex::TETRIMINO_LOCK] = "Sounds/tetriminoLocked.wav";
+	SoundPaths[(int)SoundIndex::LINE_CLEAR] = "Sounds/lineCleared.wav";
 
 	lua_State* lua = luaL_newstate( );
 	const std::string scriptPath( "Scripts/Playing.lua" );
@@ -50,7 +50,7 @@ void ui::PlayView::LoadResources( )
 				int type = lua_type(lua, TOP_IDX);
 				if ( LUA_TSTRING == type )
 				{
-					SoundPaths[(int)SoundIndex::TETRIMINO_LOCKED] = lua_tostring(lua, TOP_IDX);
+					SoundPaths[(int)SoundIndex::TETRIMINO_LOCK] = lua_tostring(lua, TOP_IDX);
 				}
 				else if ( LUA_TNIL == type )
 				{
@@ -82,7 +82,7 @@ void ui::PlayView::LoadResources( )
 				int type = lua_type(lua, TOP_IDX);
 				if ( LUA_TSTRING == type )
 				{
-					SoundPaths[(int)SoundIndex::LINE_CLEARED] = lua_tostring(lua, TOP_IDX);
+					SoundPaths[(int)SoundIndex::LINE_CLEAR] = lua_tostring(lua, TOP_IDX);
 				}
 				else if ( LUA_TNIL == type )
 				{
@@ -115,18 +115,6 @@ ui::PlayView::PlayView( const bool isPlayable )
 	mAlarms{ Clock::time_point::max() },
 	mTexture_countdown( std::make_unique<sf::Texture>() )
 { }
-
-ui::PlayView::PlayView( const PlayView& another )
-	: mHasTetriminoLandedOnClient( false ), mHasTetriminoLandedOnServer( false ),
-	mIsForThisPlayer( another.mIsForThisPlayer ), mHasCurrentTetrimino( false ),
-	mCountDownSec( 0 ), mNumOfLinesCleared( 0 ),
-	mFrameCountInputDelay( 0 ), mFrameCountVfxDuration( 0 ),
-	mTempoMs( 1000 ),
-	mState_( PlayView::State::WAITING_OR_OVER ),
-	mAlarms{ Clock::time_point::max() },
-	mTexture_countdown( std::make_unique<sf::Texture>() )
-{
-}
 
 bool ui::PlayView::loadCountdownSprite( std::string& filePathNName )
 {
@@ -176,7 +164,7 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue, ::scene::online::
 {
 	// Exception
 	if ( true == mHasTetriminoLandedOnServer &&
-		true == alarmAfter(ASYNC_TOLERANCE_MS, AlarmIndex::LANDED_ON_SERVER) )
+		true == alarmAfter(ASYNC_TOLERANCE_MS, AlarmIndex::LAND_ON_SERVER) )
 	{
 		gService()->console().printFailure( FailureLevel::FATAL, "Over asynchronization." );
 		net.disconnect( );
@@ -366,10 +354,10 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue, ::scene::online::
 	{
 		if ( true == mHasTetriminoLandedOnServer )
 		{
-			if ( false == gService()->sound().playSFX(SoundPaths[(int)SoundIndex::TETRIMINO_LOCKED]) )
+			if ( false == gService()->sound().playSFX(SoundPaths[(int)SoundIndex::TETRIMINO_LOCK]) )
 			{
 				gService()->console().printFailure(FailureLevel::WARNING,
-												   "File Not Found: "+SoundPaths[(int)SoundIndex::TETRIMINO_LOCKED] );
+												   "File Not Found: "+SoundPaths[(int)SoundIndex::TETRIMINO_LOCK] );
 			}
 			mHasTetriminoLandedOnServer = false;
 			mHasTetriminoLandedOnClient = false;
@@ -414,19 +402,19 @@ void ui::PlayView::updateStage( const::model::stage::Grid& grid )
 	else
 	{
 		mBufferForStage = grid;
-		resetAlarm( AlarmIndex::LANDED_ON_SERVER );
+		resetAlarm( AlarmIndex::LAND_ON_SERVER );
 		mHasTetriminoLandedOnServer = true;
 	}
 }
 
-void ui::PlayView::setNumOfLinesCleared( const uint8_t numOfLinesCleared )
+void ui::PlayView::playLineClearEffects( const uint8_t numOfLinesCleared )
 {
 	ASSERT_TRUE( numOfLinesCleared <= ::model::tetrimino::BLOCKS_A_TETRIMINO );
 	mNumOfLinesCleared = numOfLinesCleared;
-	if ( false == gService()->sound().playSFX(SoundPaths[(int)SoundIndex::LINE_CLEARED]) )
+	if ( false == gService()->sound().playSFX(SoundPaths[(int)SoundIndex::LINE_CLEAR]) )
 	{
 		gService()->console().printFailure(FailureLevel::WARNING,
-										   "File Not Found: "+SoundPaths[(int)SoundIndex::LINE_CLEARED] );
+										   "File Not Found: "+SoundPaths[(int)SoundIndex::LINE_CLEAR] );
 	}
 	mFrameCountVfxDuration = mFPS_;
 }

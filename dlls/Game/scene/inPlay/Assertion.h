@@ -17,7 +17,7 @@ namespace scene::inPlay
 	private:
 		enum class SoundIndex
 		{
-			ON_SELECTION,
+			SELECTION,
 			NULL_MAX,
 		};
 		uint16_t mFPS_, mFrameCountToCancel;

@@ -49,7 +49,7 @@ void scene::online::Waiting::loadResources( sf::RenderWindow& window )
 	std::string label2Text( "before me." );
 	uint16_t label2FontSize = 16;
 	sf::Vector2f label2Position( centerPos.x+50.f, centerPos.y );
-	mSoundPaths[(int)SoundIndex::ON_SELECTION] = "Sounds/selection.wav";
+	mSoundPaths[(int)SoundIndex::SELECTION] = "Sounds/selection.wav";
 
 	lua_State* lua = luaL_newstate();
 	const std::string scriptPath( "Scripts/Waiting.lua" );
@@ -360,7 +360,7 @@ void scene::online::Waiting::loadResources( sf::RenderWindow& window )
 				int type = lua_type(lua, TOP_IDX);
 				if ( LUA_TSTRING == type )
 				{
-					mSoundPaths[(int)SoundIndex::ON_SELECTION] = lua_tostring(lua, TOP_IDX);
+					mSoundPaths[(int)SoundIndex::SELECTION] = lua_tostring(lua, TOP_IDX);
 				}
 				else if ( LUA_TNIL == type )
 				{
@@ -409,7 +409,7 @@ void scene::online::Waiting::loadResources( sf::RenderWindow& window )
 			if ( true == net.hasReceived() )
 			{
 				if ( std::optional<std::string> ticket( net.getByTag(TAG_TICKET,
-																	Online::Option::RETURN_TAG_ATTACHED,
+																	Online::Option::RETURNING_TAG_ATTACHED,
 																	sizeof(HashedKey)) );
 					 std::nullopt != ticket )
 				{
@@ -428,7 +428,7 @@ void scene::online::Waiting::loadResources( sf::RenderWindow& window )
 					}
 				}
 				else if ( std::optional<std::string> order( net.getByTag(TAG_ORDER_IN_QUEUE,
-																		 Online::Option::FIND_END_TO_BEGIN,
+																		 Online::Option::FINDING_END_TO_BEGIN,
 																		   sizeof(uint16_t)) );
 						  std::nullopt != order )
 				{
@@ -479,10 +479,10 @@ void scene::online::Waiting::loadResources( sf::RenderWindow& window )
 		if ( sf::Event::KeyPressed == it->type &&
 			sf::Keyboard::Escape == it->key.code )
 		{
-			if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::ON_SELECTION]) )
+			if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::SELECTION]) )
 			{
 				gService()->console().printFailure(FailureLevel::WARNING,
-												   "File Not Found: "+mSoundPaths[(int)SoundIndex::ON_SELECTION] );
+												   "File Not Found: "+mSoundPaths[(int)SoundIndex::SELECTION] );
 			}
 			retVal = ::scene::online::ID::MAIN_MENU;
 			it = eventQueue.erase(it);

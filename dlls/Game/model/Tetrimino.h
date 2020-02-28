@@ -101,7 +101,6 @@ namespace model
 		{
 			mIsHardDropping = isHardDropping;
 		}
-
 		void draw( sf::RenderWindow& window )
 		{
 			for ( uint8_t i = 0; i != ::model::tetrimino::LOCAL_SPACE_SIZE; ++i )

@@ -99,7 +99,7 @@ void scene::inPlay::InPlay::setScene( const ::scene::inPlay::ID nextInPlaySceneI
 			mCurrentScene.reset( );
 			mCurrentScene = std::make_unique<::scene::inPlay::GameOver>(mWindow_, mBackground, mOverlappedScene);
 			break;
-		case ::scene::inPlay::ID::ALL_LEVELS_CLEARED:
+		case ::scene::inPlay::ID::ALL_CLEAR:
 			if ( nullptr == mCurrentScene )
 			{
 				mCurrentScene = std::make_unique<::scene::inPlay::Playing>(mWindow_, mBackground, mOverlappedScene);

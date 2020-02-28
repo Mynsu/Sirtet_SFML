@@ -14,8 +14,8 @@ namespace ui
 	{
 	public:
 		PlayView( const bool isPlayable );
-		// This's not copy c'tor, just initialization.
-		PlayView( const PlayView& another );
+		PlayView( const PlayView& another ) = delete;
+		PlayView( PlayView&& ) = delete;
 		void operator=( const PlayView& ) = delete;
 		virtual ~PlayView( ) = default;
 		
@@ -24,11 +24,16 @@ namespace ui
 		void setCountdownSpriteDimension( const sf::Vector2f origin,
 										 const float cellSize,
 										 const sf::Vector2i clipSize );
+		// Initializes member variables and goes to ON_START state.
 		void getReady( );
 		void update( std::vector<sf::Event>& eventQueue, ::scene::online::Online& net );
 		void setNewCurrentTetrimino( const ::model::tetrimino::Type newCurrentType );
+		// Applies the stage received from the server.
+		// Different from ::model::Stage::deserialize(...).
 		void updateStage( const ::model::stage::Grid& grid );
-		void setNumOfLinesCleared( const uint8_t numOfLinesCleared );
+		// Plays line clear visual and sound effects.
+		void playLineClearEffects( const uint8_t numOfLinesCleared );
+		// Goes to WAITING_OR_OVER state and makes the next-tetrimino-panel clean.
 		void gameOver( );
 		void draw( sf::RenderWindow& window );
 		::model::Tetrimino& currentTetrimino( );
@@ -40,7 +45,7 @@ namespace ui
 		{
 			COUNT_DOWN,
 			TETRIMINO_DOWN,
-			LANDED_ON_SERVER,
+			LAND_ON_SERVER,
 			NONE_MAX,
 		};
 		// This function doesn't reset the alarm.
@@ -70,8 +75,8 @@ namespace ui
 		};
 		enum class SoundIndex
 		{
-			TETRIMINO_LOCKED,
-			LINE_CLEARED,
+			TETRIMINO_LOCK,
+			LINE_CLEAR,
 			NONE_MAX,
 		};
 		static std::string SoundPaths[(int)SoundIndex::NONE_MAX];

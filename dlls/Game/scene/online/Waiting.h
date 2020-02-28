@@ -24,7 +24,7 @@ namespace scene::online
 		};
 		enum class SoundIndex
 		{
-			ON_SELECTION,
+			SELECTION,
 			NULL_MAX,
 		};
 		static bool IsInstantiated;

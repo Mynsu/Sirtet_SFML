@@ -20,7 +20,7 @@ bool ::scene::inPlay::Playing::IsInstantiated = false;
 								   const std::unique_ptr<::scene::inPlay::IScene>& overlappedScene )
 	: mNumOfLinesRecentlyCleared( 0 ), mCurrentLevel( 1 ),
 	mNumOfLinesRemainingToLevelClear( 7 ),
-	mFrameCountSoftDropInterval( 0 ), mFrameCountClearingInterval_( 0 ),
+	mFrameCountSoftDropInterval( 0 ), mFrameCountLineClearInterval_( 0 ),
 	mFrameCountVfxDuration( 0 ),
 	mFrameCountCool( 0 ),
 	mStateAfterCooling( StateAfterCooling::NONE ),
@@ -66,9 +66,9 @@ void ::scene::inPlay::Playing::loadResources( sf::RenderWindow& )
 	float nextTetPanelOutlineThickness = 5.0;
 	uint32_t nextTetPanelOutlineColor = 0x000000'7f;
 	uint32_t nextTetPanelCellOutlineColor = 0x000000'7f;
-	mSoundPaths[(int)SoundIndex::TETRIMINO_LOCKED] = "Sounds/tetriminoLocked.wav";
-	mSoundPaths[(int)SoundIndex::LINE_CLEARED] = "Sounds/lineCleared.wav";
-	mSoundPaths[(int)SoundIndex::LEVEL_CLEARED] = "Sounds/levelCleared.wav";
+	mSoundPaths[(int)SoundIndex::TETRIMINO_LOCK] = "Sounds/tetriminoLocked.wav";
+	mSoundPaths[(int)SoundIndex::LINE_CLEAR] = "Sounds/lineCleared.wav";
+	mSoundPaths[(int)SoundIndex::LEVEL_CLEAR] = "Sounds/levelCleared.wav";
 	std::string scoreSpritePath( "Images/Score.png" );
 	mDrawingInfo.scoreSpriteClipSize.x = 128;
 	mDrawingInfo.scoreSpriteClipSize.y = 128;
@@ -526,7 +526,7 @@ void ::scene::inPlay::Playing::loadResources( sf::RenderWindow& )
 				int type = lua_type(lua, TOP_IDX);
 				if ( LUA_TSTRING == type )
 				{
-					mSoundPaths[(int)SoundIndex::TETRIMINO_LOCKED] = lua_tostring(lua, TOP_IDX);
+					mSoundPaths[(int)SoundIndex::TETRIMINO_LOCK] = lua_tostring(lua, TOP_IDX);
 				}
 				else if ( LUA_TNIL == type )
 				{
@@ -558,7 +558,7 @@ void ::scene::inPlay::Playing::loadResources( sf::RenderWindow& )
 				int type = lua_type(lua, TOP_IDX);
 				if ( LUA_TSTRING == type )
 				{
-					mSoundPaths[(int)SoundIndex::LINE_CLEARED] = lua_tostring(lua, TOP_IDX);
+					mSoundPaths[(int)SoundIndex::LINE_CLEAR] = lua_tostring(lua, TOP_IDX);
 				}
 				else if ( LUA_TNIL == type )
 				{
@@ -590,7 +590,7 @@ void ::scene::inPlay::Playing::loadResources( sf::RenderWindow& )
 				int type = lua_type(lua, TOP_IDX);
 				if ( LUA_TSTRING == type )
 				{
-					mSoundPaths[(int)SoundIndex::LEVEL_CLEARED] = lua_tostring(lua, TOP_IDX);
+					mSoundPaths[(int)SoundIndex::LEVEL_CLEAR] = lua_tostring(lua, TOP_IDX);
 				}
 				else if ( LUA_TNIL == type )
 				{
@@ -876,7 +876,7 @@ void ::scene::inPlay::Playing::loadResources( sf::RenderWindow& )
 		fps = (uint16_t)it->second;
 		switch( mStateAfterCooling )
 		{
-			case StateAfterCooling::TO_GAME_OVER:
+			case StateAfterCooling::GAME_OVER:
 				if ( fps*COOL_TIME_TO_NEXT_LEVEL_OR_OVER_MS/1000 < mFrameCountCool )
 				{
 					retVal = ::scene::inPlay::ID::GAME_OVER;
@@ -887,7 +887,7 @@ void ::scene::inPlay::Playing::loadResources( sf::RenderWindow& )
 					return retVal;
 				}
 				break;
-			case StateAfterCooling::TO_NEXT_LEVEL:
+			case StateAfterCooling::NEXT_LEVEL:
 				if ( fps*COOL_TIME_TO_NEXT_LEVEL_OR_OVER_MS/1000 < mFrameCountCool )
 				{
 					mStateAfterCooling = StateAfterCooling::NONE;
@@ -905,7 +905,7 @@ void ::scene::inPlay::Playing::loadResources( sf::RenderWindow& )
 					return retVal;
 				}
 				break;
-			case StateAfterCooling::TO_ALL_CLEARED:
+			case StateAfterCooling::ALL_CLEAR:
 				if ( fps*COOL_TIME_ALL_LEVELS_CLEARED_MS/1000 < mFrameCountCool )
 				{
 					mStateAfterCooling = StateAfterCooling::NONE;
@@ -1003,19 +1003,19 @@ void ::scene::inPlay::Playing::loadResources( sf::RenderWindow& )
 	if ( true == hasTetriminoLanded )
 	{
 		mCurrentTetrimino.land( mStage.grid() );
-		if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::TETRIMINO_LOCKED]) )
+		if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::TETRIMINO_LOCK]) )
 		{
 			gService()->console().printFailure(FailureLevel::WARNING,
-											   "File Not Found: "+mSoundPaths[(int)SoundIndex::TETRIMINO_LOCKED] );
+											   "File Not Found: "+mSoundPaths[(int)SoundIndex::TETRIMINO_LOCK] );
 		}
 		reloadTetrimino( );
 	}
 
 	// Check if a row or more have to be cleared,
 	// NOTE: It's better to check that every several frames than every frame.
-	if ( (uint16_t)fps*LINE_CLEAR_CHK_INTERVAL_MS/1000 < mFrameCountClearingInterval_ )
+	if ( (uint16_t)fps*LINE_CLEAR_CHK_INTERVAL_MS/1000 < mFrameCountLineClearInterval_ )
 	{
-		mFrameCountClearingInterval_ = 0;
+		mFrameCountLineClearInterval_ = 0;
 		const uint8_t numOfLinesCleared = mStage.tryClearRow();
 		if ( 0 != numOfLinesCleared )
 		{
@@ -1024,20 +1024,20 @@ void ::scene::inPlay::Playing::loadResources( sf::RenderWindow& )
 				mNumOfLinesRemainingToLevelClear <= numOfLinesCleared )
 			{
 				mNumOfLinesRemainingToLevelClear -= numOfLinesCleared;
-				if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::LEVEL_CLEARED]) )
+				if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::LEVEL_CLEAR]) )
 				{
 					gService()->console().printFailure(FailureLevel::WARNING,
-													   "File Not Found: "+mSoundPaths[(int)SoundIndex::LEVEL_CLEARED] );
+													   "File Not Found: "+mSoundPaths[(int)SoundIndex::LEVEL_CLEAR] );
 				}
 				if ( mMissions.size() == mCurrentLevel )
 				{
-					mStateAfterCooling = StateAfterCooling::TO_ALL_CLEARED;
-					retVal = ::scene::inPlay::ID::ALL_LEVELS_CLEARED;
+					mStateAfterCooling = StateAfterCooling::ALL_CLEAR;
+					retVal = ::scene::inPlay::ID::ALL_CLEAR;
 					return retVal;
 				}
 				else
 				{
-					mStateAfterCooling = StateAfterCooling::TO_NEXT_LEVEL;
+					mStateAfterCooling = StateAfterCooling::NEXT_LEVEL;
 				}
 			}
 			else
@@ -1060,17 +1060,17 @@ void ::scene::inPlay::Playing::loadResources( sf::RenderWindow& )
 				mTempo -= TEMPO_DIFF_RATIO;
 				// Triggering.
 				mFrameCountVfxDuration = 1;
-				if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::LINE_CLEARED]) )
+				if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::LINE_CLEAR]) )
 				{
 					gService()->console().printFailure(FailureLevel::WARNING,
-													   "File Not Found: "+mSoundPaths[(int)SoundIndex::LINE_CLEARED] );
+													   "File Not Found: "+mSoundPaths[(int)SoundIndex::LINE_CLEAR] );
 				}
 			}
 		}
 		else if ( true == mStage.isOver() )
 		{
 			mStage.blackout( sf::Color(mDrawingInfo.blackOutColor) );
-			mStateAfterCooling = StateAfterCooling::TO_GAME_OVER;
+			mStateAfterCooling = StateAfterCooling::GAME_OVER;
 		}
 	}
 	
@@ -1081,15 +1081,15 @@ void ::scene::inPlay::Playing::draw( sf::RenderWindow& window )
 {
 	window.draw( mBackgroundRect_ );
 	mStage.draw( window );
-	if ( mStateAfterCooling == StateAfterCooling::TO_NEXT_LEVEL ||
-		mStateAfterCooling == StateAfterCooling::TO_GAME_OVER )
+	if ( mStateAfterCooling == StateAfterCooling::NEXT_LEVEL ||
+		mStateAfterCooling == StateAfterCooling::GAME_OVER )
 	{
 		++mFrameCountCool;
 	}
 	else
 	{
 		mCurrentTetrimino.draw( window );
-		if ( mStateAfterCooling == StateAfterCooling::TO_ALL_CLEARED )
+		if ( mStateAfterCooling == StateAfterCooling::ALL_CLEAR )
 		{
 			++mFrameCountCool;
 		}
@@ -1125,7 +1125,7 @@ void ::scene::inPlay::Playing::draw( sf::RenderWindow& window )
 		++mFrameCountVfxDuration;
 	}
 	
-	++mFrameCountClearingInterval_;
+	++mFrameCountLineClearInterval_;
 	++mFrameCountSoftDropInterval;
 	auto& vault = gService()->vault();
 	const auto it = vault.find(HK_FORE_FPS);

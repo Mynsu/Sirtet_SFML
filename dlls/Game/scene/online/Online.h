@@ -10,8 +10,8 @@ namespace scene::online
 		enum class Option
 		{
 			DEFAULT,
-			FIND_END_TO_BEGIN,
-			RETURN_TAG_ATTACHED,
+			FINDING_END_TO_BEGIN,
+			RETURNING_TAG_ATTACHED,
 		};
 
 		Online( sf::RenderWindow& window );

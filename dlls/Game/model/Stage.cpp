@@ -59,7 +59,7 @@ void model::Stage::draw( sf::RenderWindow& window )
 
 uint8_t model::Stage::tryClearRow( )
 {
-	std::bitset<::model::stage::GRID_HEIGHT> fLineCleared;
+	std::bitset<::model::stage::GRID_HEIGHT> fLinesCleared;
 	// From the bottommost to the topmost,
 	for ( int8_t i = ::model::stage::GRID_HEIGHT-1; i != -1; --i )
 	{
@@ -81,39 +81,39 @@ uint8_t model::Stage::tryClearRow( )
 				// NOTE: Don't need to set it.color transparent.
 				cell.blocked = false;
 			}
-			fLineCleared.set( i );
+			fLinesCleared.set( i );
 			// When an I-shaped tetrimino is inserted vertical,
 			const uint8_t MAX_CLEARED = ::model::tetrimino::BLOCKS_A_TETRIMINO;
 			// There's no need to check after the i-th line.
-			if ( MAX_CLEARED == fLineCleared.count( ) )
+			if ( MAX_CLEARED == fLinesCleared.count() )
 			{
 				break;
 			}
 		}
 	}
-	uint8_t linesCleared = (uint8_t)fLineCleared.count();
+	uint8_t numOflinesCleared = (uint8_t)fLinesCleared.count();
 	// When One or more lines has been cleared,
-	if ( 0 != linesCleared )
+	if ( 0 != numOflinesCleared )
 	{
 		// From the bottommost to the topmost,
 		// NOTE: The topmost line can skip clearing check.
 		for ( int8_t i = ::model::stage::GRID_HEIGHT-1; i != 0; --i )
 		{
-			if ( true == fLineCleared.test(i) )
+			if ( true == fLinesCleared.test(i) )
 			{
 				// the k-th line is the adjacent upper line of the i-th line.
 				int8_t k = i-1;
 				for ( ; k != -1; --k )
 				{
-					if ( false == fLineCleared.test(k) )
+					if ( false == fLinesCleared.test(k) )
 					{
 						mGrid[i] = mGrid[k];
-						fLineCleared.set( i, false );
+						fLinesCleared.set( i, false );
 						for ( ::model::stage::Cell& cell : mGrid[k] )
 						{
 							cell.blocked = false;
 						}
-						fLineCleared.set( k );
+						fLinesCleared.set( k );
 						break;
 					}
 				}
@@ -125,5 +125,5 @@ uint8_t model::Stage::tryClearRow( )
 			}
 		}
 	}
-	return linesCleared;
+	return numOflinesCleared;
 }

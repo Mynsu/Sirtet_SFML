@@ -24,7 +24,7 @@ namespace scene::online
 	private:
 		enum class SoundIndex
 		{
-			ON_SELECTION,
+			SELECTION,
 			NULL_MAX,
 		};
 		void createRoom( );

@@ -94,7 +94,7 @@ void scene::online::InLobby::loadResources( sf::RenderWindow& window )
 	mDrawingInfo.roomColor = sf::Color(0x3f3f3fff);
 	mDrawingInfo.totalDistanceUsersBoxToRoom = 0.f;
 	mDrawingInfo.remainingDistanceUsersBoxToRoom = 0.f;
-	mSoundPaths[(int)SoundIndex::ON_SELECTION] = "Sounds/selection.wav";
+	mSoundPaths[(int)SoundIndex::SELECTION] = "Sounds/selection.wav";
 	mDrawingInfo.centerPosition = sf::Vector2f(window.getSize()/2u);
 	
 	//
@@ -928,7 +928,7 @@ void scene::online::InLobby::loadResources( sf::RenderWindow& window )
 				int type = lua_type(lua, TOP_IDX);
 				if ( LUA_TSTRING == type )
 				{
-					mSoundPaths[(int)SoundIndex::ON_SELECTION] = lua_tostring(lua, TOP_IDX);
+					mSoundPaths[(int)SoundIndex::SELECTION] = lua_tostring(lua, TOP_IDX);
 				}
 				else if ( LUA_TNIL == type )
 				{
@@ -1180,7 +1180,7 @@ void scene::online::InLobby::loadResources( sf::RenderWindow& window )
 	{
 		mIsReceiving = false;
 		if ( const std::optional<std::string> resultCreatingRoom( net.getByTag(TAGGED_REQ_CREATE_ROOM,
-																				Online::Option::RETURN_TAG_ATTACHED,
+																				Online::Option::RETURNING_TAG_ATTACHED,
 																				0) );
 			std::nullopt != resultCreatingRoom )
 		{
@@ -1290,10 +1290,10 @@ void scene::online::InLobby::loadResources( sf::RenderWindow& window )
 		true == mTextInputBox.processEvent(eventQueue) )
 	{
 		joinRoom( mTextInputBox.inputString() );
-		if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::ON_SELECTION]) )
+		if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::SELECTION]) )
 		{
 			gService()->console().printFailure(FailureLevel::WARNING,
-											   "File Not Found: "+mSoundPaths[(int)SoundIndex::ON_SELECTION] );
+											   "File Not Found: "+mSoundPaths[(int)SoundIndex::SELECTION] );
 		}
 	}
 
@@ -1307,10 +1307,10 @@ void scene::online::InLobby::loadResources( sf::RenderWindow& window )
 		if ( sf::Event::EventType::KeyPressed == it->type &&
 			sf::Keyboard::Escape == it->key.code )
 		{
-			if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::ON_SELECTION]) )
+			if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::SELECTION]) )
 			{
 				gService()->console().printFailure(FailureLevel::WARNING,
-												   "File Not Found: "+mSoundPaths[(int)SoundIndex::ON_SELECTION] );
+												   "File Not Found: "+mSoundPaths[(int)SoundIndex::SELECTION] );
 			}
 			retVal = ::scene::online::ID::MAIN_MENU;
 			it = eventQueue.erase(it);
@@ -1326,10 +1326,10 @@ void scene::online::InLobby::loadResources( sf::RenderWindow& window )
 					100.f > diff.magnitude() )
 				{
 					createRoom( );
-					if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::ON_SELECTION]) )
+					if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::SELECTION]) )
 					{
 						gService()->console().printFailure(FailureLevel::WARNING,
-														   "File Not Found: "+mSoundPaths[(int)SoundIndex::ON_SELECTION] );
+														   "File Not Found: "+mSoundPaths[(int)SoundIndex::SELECTION] );
 					}
 				}
 				mLatestMouseEvent.latestClickTime = now;

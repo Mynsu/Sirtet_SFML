@@ -25,7 +25,7 @@ void scene::MainMenu::loadResources( sf::RenderWindow& )
 {
 	std::string spritePath( "Images/MainMenu.png" );
 	mSoundPaths[(int)SoundIndex::BGM] = "Sounds/korobeiniki.mp3";
-	mSoundPaths[(int)SoundIndex::ON_SELECTION] = "Sounds/selection.wav";
+	mSoundPaths[(int)SoundIndex::SELECTION] = "Sounds/selection.wav";
 	mDrawingInfo.logoSourcePosition.x = 0;
 	mDrawingInfo.logoSourcePosition.y = 0;
 	mDrawingInfo.logoClipSize.x = 256;
@@ -843,7 +843,7 @@ void scene::MainMenu::loadResources( sf::RenderWindow& )
 				int type = lua_type(lua, TOP_IDX);
 				if ( LUA_TSTRING == type )
 				{
-					mSoundPaths[(int)SoundIndex::ON_SELECTION] = lua_tostring(lua, TOP_IDX);
+					mSoundPaths[(int)SoundIndex::SELECTION] = lua_tostring(lua, TOP_IDX);
 				}
 				else if ( LUA_TNIL == type )
 				{
@@ -955,10 +955,10 @@ void ::scene::MainMenu::draw( sf::RenderWindow& window )
 			if ( false == mIsCursorOnButton )
 			{
 				mIsCursorOnButton = true;
-				if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::ON_SELECTION]) )
+				if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::SELECTION]) )
 				{
 					gService()->console().printFailure(FailureLevel::WARNING,
-													   "File Not Found: "+mSoundPaths[(int)SoundIndex::ON_SELECTION] );
+													   "File Not Found: "+mSoundPaths[(int)SoundIndex::SELECTION] );
 				}
 			}
 		}
@@ -988,10 +988,10 @@ void ::scene::MainMenu::draw( sf::RenderWindow& window )
 			if ( false == mIsCursorOnButton )
 			{
 				mIsCursorOnButton = true;
-				if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::ON_SELECTION]) )
+				if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::SELECTION]) )
 				{
 					gService()->console().printFailure(FailureLevel::WARNING,
-													   "File Not Found: "+mSoundPaths[(int)SoundIndex::ON_SELECTION] );
+													   "File Not Found: "+mSoundPaths[(int)SoundIndex::SELECTION] );
 				}
 			}
 		}

@@ -32,7 +32,7 @@ void scene::inPlay::Assertion::loadResources( sf::RenderWindow& window )
 	uint32_t backgroundColor = 0x0000007f;
 	uint32_t fontColor = 0x000000'af;
 	std::string fontPath( "Fonts/AGENCYR.ttf" );
-	mSoundPaths[(int)SoundIndex::ON_SELECTION] = "Sounds/selection.wav";
+	mSoundPaths[(int)SoundIndex::SELECTION] = "Sounds/selection.wav";
 
 	lua_State* lua = luaL_newstate();
 	const std::string scriptPath( "Scripts/Assertion.lua" );
@@ -159,7 +159,7 @@ void scene::inPlay::Assertion::loadResources( sf::RenderWindow& window )
 				int type = lua_type(lua, TOP_IDX);
 				if ( LUA_TSTRING == type )
 				{
-					mSoundPaths[(int)SoundIndex::ON_SELECTION] = lua_tostring(lua, TOP_IDX);
+					mSoundPaths[(int)SoundIndex::SELECTION] = lua_tostring(lua, TOP_IDX);
 				}
 				else if ( LUA_TNIL == type )
 				{
@@ -209,10 +209,10 @@ void scene::inPlay::Assertion::loadResources( sf::RenderWindow& window )
 			if ( sf::Event::KeyPressed == it->type &&
 				sf::Keyboard::Escape == it->key.code )
 			{
-				if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::ON_SELECTION]) )
+				if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::SELECTION]) )
 				{
 					gService()->console().printFailure(FailureLevel::WARNING,
-													   "File Not Found: "+mSoundPaths[(int)SoundIndex::ON_SELECTION] );
+													   "File Not Found: "+mSoundPaths[(int)SoundIndex::SELECTION] );
 				}
 				it = eventQueue.erase(it);
 				retVal = ::scene::inPlay::ID::EXIT;

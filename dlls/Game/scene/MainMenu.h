@@ -9,7 +9,7 @@ namespace scene
 		enum class SoundIndex
 		{
 			BGM,
-			ON_SELECTION,
+			SELECTION,
 			NONE_MAX,
 		};
 		// 둘 이상의 인스턴스를 만들 수 없습니다.

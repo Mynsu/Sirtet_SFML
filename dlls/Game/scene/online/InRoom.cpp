@@ -96,7 +96,7 @@ void scene::online::InRoom::loadResources( sf::RenderWindow& window )
 	sf::Vector2f startingGuidePosition( 550.f, 60.f );
 	uint16_t startingGuideFontSize = 30;
 	uint32_t startingGuideFontColor = 0xffffffff;
-	mSoundPaths[(int)SoundIndex::ON_SELECTION] = "Sounds/selection.wav";
+	mSoundPaths[(int)SoundIndex::SELECTION] = "Sounds/selection.wav";
 	mSoundPaths[(int)SoundIndex::GAME_OVER] = "Sounds/gameOver.wav";
 
 	lua_State* lua = luaL_newstate();
@@ -1069,7 +1069,7 @@ void scene::online::InRoom::loadResources( sf::RenderWindow& window )
 				int type = lua_type(lua, TOP_IDX);
 				if ( LUA_TSTRING == type )
 				{
-					mSoundPaths[(int)SoundIndex::ON_SELECTION] = lua_tostring(lua, TOP_IDX);
+					mSoundPaths[(int)SoundIndex::SELECTION] = lua_tostring(lua, TOP_IDX);
 				}
 				else if ( LUA_TNIL == type )
 				{
@@ -1206,7 +1206,7 @@ void scene::online::InRoom::loadResources( sf::RenderWindow& window )
 		mIsReceiving = false;
 
 		if ( const std::optional<std::string> hasLeftOrKicked( net.getByTag(TAGGED_REQ_LEAVE_ROOM,
-																			 Online::Option::RETURN_TAG_ATTACHED,
+																			 Online::Option::RETURNING_TAG_ATTACHED,
 																			 0) );
 			std::nullopt != hasLeftOrKicked )
 		{
@@ -1308,7 +1308,7 @@ void scene::online::InRoom::loadResources( sf::RenderWindow& window )
 		}
 
 		if ( const std::optional<std::string> gettingReady( net.getByTag(TAGGED_REQ_GET_READY,
-																		Online::Option::RETURN_TAG_ATTACHED,
+																		Online::Option::RETURNING_TAG_ATTACHED,
 																		0) );
 			std::nullopt != gettingReady )
 		{
@@ -1435,13 +1435,13 @@ void scene::online::InRoom::loadResources( sf::RenderWindow& window )
 				if ( const auto it = mParticipants.find(nicknameHashed);
 					mParticipants.end() != it )
 				{
-					it->second.playView.setNumOfLinesCleared( numOfLinesCleared );
+					it->second.playView.playLineClearEffects( numOfLinesCleared );
 				}
 			}
 		}
 
 		if ( const std::optional<std::string> allOver( net.getByTag(TAG_ALL_OVER,
-																	Online::Option::RETURN_TAG_ATTACHED,
+																	Online::Option::RETURNING_TAG_ATTACHED,
 																	0) );
 					std::nullopt != allOver )
 		{
@@ -1515,10 +1515,10 @@ void scene::online::InRoom::loadResources( sf::RenderWindow& window )
 			true == mIsStartingGuideVisible_ )
 		{
 			startGame( );
-			if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::ON_SELECTION]) )
+			if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::SELECTION]) )
 			{
 				gService()->console().printFailure(FailureLevel::WARNING,
-												   "File Not Found: "+mSoundPaths[(int)SoundIndex::ON_SELECTION] );
+												   "File Not Found: "+mSoundPaths[(int)SoundIndex::SELECTION] );
 			}
 			mIsStartButtonPressed_ = false;
 			it = eventQueue.erase(it);
