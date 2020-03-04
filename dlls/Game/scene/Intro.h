@@ -9,10 +9,10 @@ namespace scene
 		// 둘 이상의 인스턴스를 만들 수 없습니다.
 		static bool IsInstantiated;
 	public:
-		Intro( sf::RenderWindow& window );
+		Intro( const sf::RenderWindow& window );
 		~Intro( );
 
-		void loadResources( sf::RenderWindow& window ) override;
+		void loadResources( const sf::RenderWindow& window ) override;
 		::scene::ID update( std::vector<sf::Event>& eventQueue ) override;
 		void draw( sf::RenderWindow& window ) override;
 		::scene::ID currentScene( ) const override;

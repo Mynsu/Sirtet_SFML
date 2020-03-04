@@ -21,6 +21,7 @@
 #include <Lib/Hash.h>
 #include <Lib/Packet.h>
 #pragma comment( lib, "Lib-d" )
+#include <GameLib/Common.h>
 
 using Clock = std::chrono::high_resolution_clock;
 

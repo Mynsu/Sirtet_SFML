@@ -19,56 +19,43 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Server\Client.cpp" />
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Server\pch.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Server\Stage.cpp" />
-    <ClCompile Include="Playing.cpp" />
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Server\Room.cpp" />
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Server\Server.cpp" />
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Server\Tetrimino.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Server\Client.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Server\pch.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="Playing.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Server\Room.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Server\Stage.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Server\Tetrimino.h" />
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\GameLib\CommandList.h" />
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\GameLib\Common.h" />
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\GameLib\IConsole.h" />
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\GameLib\IGame.h" />
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\GameLib\IServiceLocator.h" />
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\GameLib\ISound.h" />
+    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\GameLib\VaultKeyList.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{42D998E6-FEE0-4FAC-BADB-7B95EDAF3122}</ProjectGuid>
+    <ProjectGuid>{C43A81D0-1566-4F71-AC03-B5704B6D98E7}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>Server</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <RootNamespace>GameLib</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -110,22 +97,18 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>E:\Tools\SFML-2.5.1\$(PlatformTarget)\include;E:\Tools\Lua\5.3.5\$(PlatformTarget)\include;$(SolutionDir)staticLibs</AdditionalIncludeDirectories>
-      <OpenMPSupport>
-      </OpenMPSupport>
-      <AdditionalOptions>/Zc:twoPhase- %(AdditionalOptions)</AdditionalOptions>
-      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>E:\Tools\SFML-2.5.1\x64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>E:\Tools\SFML-2.5.1\$(PlatformTarget)\lib;E:\Tools\Lua\5.3.5\$(PlatformTarget);$(SolutionDir)$(PlatformTarget)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <Lib>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -133,12 +116,11 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
@@ -150,12 +132,11 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -169,12 +150,11 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>

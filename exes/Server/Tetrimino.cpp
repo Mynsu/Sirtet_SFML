@@ -92,7 +92,6 @@ sf::Vector2<int8_t> model::Tetrimino::Test[(int)::model::tetrimino::Rotation::NO
 #else
 			__assume( 0 );
 #endif
-			break;
 	}
 	retVal.mPosition.x = ::model::stage::GRID_WIDTH/2 - 1;
 	retVal.mPosition.y = 0;

@@ -1,6 +1,5 @@
 #include "../../pch.h"
 #include "Playing.h"
-#include <VaultKeyList.h>
 #include "../../ServiceLocatorMirror.h"
 #include "GameOver.h"
 #include "Assertion.h"
@@ -15,7 +14,7 @@ const uint16_t ANIMATION_SPEED_MS = 34;
 
 bool ::scene::inPlay::Playing::IsInstantiated = false;
 
-::scene::inPlay::Playing::Playing( sf::RenderWindow& window,
+::scene::inPlay::Playing::Playing( const sf::RenderWindow& window,
 								   sf::Drawable& shapeOrSprite,
 								   const std::unique_ptr<::scene::inPlay::IScene>& overlappedScene )
 	: mNumOfLinesRecentlyCleared( 0 ), mCurrentLevel( 1 ),
@@ -48,7 +47,7 @@ bool ::scene::inPlay::Playing::IsInstantiated = false;
 	IsInstantiated = false;
 }
 
-void ::scene::inPlay::Playing::loadResources( sf::RenderWindow& )
+void ::scene::inPlay::Playing::loadResources( const sf::RenderWindow& )
 {
 	uint32_t backgroundColor = 0x29cdb5'fa; // CYAN
 	mDrawingInfo.blackOutColor = 0x808080ff; // GRAY

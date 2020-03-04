@@ -1,8 +1,5 @@
 #include "../../pch.h"
 #include "InRoom.h"
-#include <Common.h>
-#include <VaultKeyList.h>
-#include <CommandList.h>
 #include "Online.h"
 #include "../../ServiceLocatorMirror.h"
 
@@ -16,12 +13,12 @@ scene::online::Participant::Participant( const std::string& _nickname, const boo
 	: nickname( _nickname ), playView( isPlayable )
 { }
 
-scene::online::InRoom::InRoom( sf::RenderWindow& window, Online& net, const bool asHost )
+scene::online::InRoom::InRoom( const sf::RenderWindow& window, Online& net, const bool asHost )
 	: mIsReceiving( false ), mAsHost( asHost ),
-	mIsStartingGuideVisible_( true ),
+	mIsStartingGuideVisible( true ),
 	mIsMouseOverStartButton_( false ), mIsStartButtonPressed_( false ),
 	mFrameCountCoolToRotateStartButton( 0 ),
-	mMyNicknameHashed( net.myNicknameHashed() ), mMyNickname( net.myNickname() ),
+	mMyNicknameHashed_( net.myNicknameHashed() ), mMyNickname( net.myNickname() ),
 	mNet( net ),
 	mAlarms{ Clock::time_point::max() }, mOtherPlayerSlots{ NULL_EMPTY_SLOT }
 {
@@ -39,6 +36,8 @@ scene::online::InRoom::InRoom( sf::RenderWindow& window, Online& net, const bool
 																	 this, std::placeholders::_1 ) );
 	}
 	loadResources( window );
+	std::string request( TAGGED_REQ_USER_LIST );
+	net.send( request.data(), (int)request.size() );
 
 	IsInstantiated = true;
 }
@@ -57,7 +56,7 @@ scene::online::InRoom::~InRoom( )
 	IsInstantiated = false;
 }
 
-void scene::online::InRoom::loadResources( sf::RenderWindow& window )
+void scene::online::InRoom::loadResources( const sf::RenderWindow& window )
 {
 	uint32_t backgroundColor = 0x8ae5ff'ff;
 	std::string fontPath( "Fonts/AGENCYR.TTF" );
@@ -1124,23 +1123,20 @@ void scene::online::InRoom::loadResources( sf::RenderWindow& window )
 	mBackground.setSize( sf::Vector2f(window.getSize()) );
 	mBackground.setFillColor( sf::Color(backgroundColor) );
 	{
-		auto it = mParticipants.find(mMyNicknameHashed);
+		auto it = mParticipants.find(mMyNicknameHashed_);
 		ASSERT_TRUE( mParticipants.end() != it );
 		::ui::PlayView& playView = it->second.playView;
-		::model::Stage& stage = playView.stage();
-		stage.setPosition( myPanelPosition );
-		stage.setSize( myStageCellSize );
-		stage.setColor( sf::Color(myPanelColor), sf::Color(mDrawingInfo.cellOutlineColor) );
-		stage.setOutline( myPanelOutlineThickness, sf::Color(myPanelOutlineColor) );
+		playView.setStageDimension( myPanelPosition, myStageCellSize );
+		playView.setStageColor( sf::Color(myPanelColor), sf::Color(mDrawingInfo.cellOutlineColor) );
+		playView.setStageOutline( myPanelOutlineThickness, sf::Color(myPanelOutlineColor) );
 		if ( false == playView.loadCountdownSprite(mDrawingInfo.countdownSpritePath) )
 		{
 			gService()->console().printScriptError( ExceptionType::FILE_NOT_FOUND,
 													"Path:CountdownSprite", scriptPath );
 		}
 		playView.setCountdownSpriteDimension( myPanelPosition, myStageCellSize, mDrawingInfo.countdownSpriteClipSize );
-		::model::Tetrimino& tetrimino =	playView.currentTetrimino();
-		tetrimino.setOrigin( myPanelPosition );
-		tetrimino.setSize( myStageCellSize );
+		playView.setCurrentTetriminoDimension( myPanelPosition, myStageCellSize );
+		
 		::vfx::Combo& vfxCombo = playView.vfxCombo();
 		vfxCombo.setOrigin( myPanelPosition, myStageCellSize, vfxComboClipSize );
 		if ( false == vfxCombo.loadResources(vfxComboPath) )
@@ -1197,18 +1193,17 @@ void scene::online::InRoom::loadResources( sf::RenderWindow& window )
 
 ::scene::online::ID scene::online::InRoom::update( std::vector<sf::Event>& eventQueue,
 												  ::scene::online::Online& net,
-												  sf::RenderWindow& window )
+												  const sf::RenderWindow& window )
 {
 	::scene::online::ID nextSceneID = ::scene::online::ID::AS_IS;
 	const HashedKey myNicknameHashed = net.myNicknameHashed();
 	if ( true == net.hasReceived() )
 	{
 		mIsReceiving = false;
-
-		if ( const std::optional<std::string> hasLeftOrKicked( net.getByTag(TAGGED_REQ_LEAVE_ROOM,
+		if ( const std::optional<std::string> hasLeftOrIsKicked( net.getByTag(TAGGED_REQ_LEAVE_ROOM,
 																			 Online::Option::RETURNING_TAG_ATTACHED,
 																			 0) );
-			std::nullopt != hasLeftOrKicked )
+			std::nullopt != hasLeftOrIsKicked )
 		{
 			nextSceneID = ::scene::online::ID::IN_LOBBY;
 			return nextSceneID;
@@ -1273,16 +1268,12 @@ void scene::online::InRoom::loadResources( sf::RenderWindow& window )
 				}
 				ASSERT_TRUE( ROOM_CAPACITY-1 != slotIdx );
 				::ui::PlayView& playView = mParticipants.find(pair.first)->second.playView;
-				::model::Stage& stage =	playView.stage();
 				const sf::Vector2f pos( mDrawingInfo.position-mDrawingInfo.positionDifferences[slotIdx] );
-				stage.setPosition( pos );
-				stage.setSize( mDrawingInfo.cellSize );
+				playView.setStageDimension( pos, mDrawingInfo.cellSize );
 				const sf::Color cellOutlineColor( 0x000000'7f );
-				stage.setColor( sf::Color(mDrawingInfo.panelColor_on), sf::Color(cellOutlineColor) );
-				stage.setOutline( mDrawingInfo.outlineThickness_on, sf::Color(mDrawingInfo.outlineColor_on) );
-				::model::Tetrimino& curTet = playView.currentTetrimino();
-				curTet.setOrigin( pos );
-				curTet.setSize( mDrawingInfo.cellSize );
+				playView.setStageColor( sf::Color(mDrawingInfo.panelColor_on), sf::Color(cellOutlineColor) );
+				playView.setStageOutline( mDrawingInfo.outlineThickness_on, sf::Color(mDrawingInfo.outlineColor_on) );
+				playView.setCurrentTetriminoDimension( pos, mDrawingInfo.cellSize );
 				if ( false == playView.loadCountdownSprite(mDrawingInfo.countdownSpritePath) )
 				{
 					gService()->console().printFailure( FailureLevel::WARNING,
@@ -1316,7 +1307,7 @@ void scene::online::InRoom::loadResources( sf::RenderWindow& window )
 			{
 				pair.second.playView.getReady( );
 			}
-			mIsStartingGuideVisible_ = false;
+			mIsStartingGuideVisible = false;
 			gService()->sound().stopBGM( );
 		}
 
@@ -1341,25 +1332,88 @@ void scene::online::InRoom::loadResources( sf::RenderWindow& window )
 			}
 		}
 
-		if ( const std::optional<std::string> newCurrentTetriminos( net.getByTag(TAG_NEW_CURRENT_TETRIMINOS,
-																				Online::Option::DEFAULT,
-																				-1) );
-			std::nullopt != newCurrentTetriminos )
+////
+// 이하는 ::ui::PlayView::update(...) 안에 숨길 수 있지만
+// 문자열 찾는 연산을 줄이기 위해 여기에 꺼내 두었다.
+// 패킷이 태그 + 크기 + (유저 식별자 + 데이터) + (유저 식별자 + 데이터) (반복)으로 구성되기 때문이다.
+		if ( const std::optional<std::string> currentTetriminosLand( net.getByTag(TAG_CURRENT_TETRIMINOS_LAND,
+																			  Online::Option::DEFAULT,
+																			  -1) );
+			std::nullopt != currentTetriminosLand )
 		{
-			const std::string& newCurTetTypes = newCurrentTetriminos.value();
-			const char* ptr = newCurTetTypes.data();
-			const uint16_t totalSize = (uint16_t)newCurTetTypes.size();
+			const std::string& _currentTetriminosLand = currentTetriminosLand.value();
+			const char* ptr = _currentTetriminosLand.data();
+			const uint16_t totalSize = (uint16_t)_currentTetriminosLand.size();
 			uint16_t curPos = 0;
 			while ( totalSize != curPos )
 			{
 				const HashedKey nicknameHashed = ::ntohl(*(HashedKey*)&ptr[curPos]);
 				curPos += sizeof(HashedKey);
-				const ::model::tetrimino::Type newType = (::model::tetrimino::Type)ptr[curPos++];
 				if ( const auto it = mParticipants.find(nicknameHashed);
 					mParticipants.end() != it )
 				{
-					it->second.playView.setNewCurrentTetrimino( newType );
+					it->second.playView.land( );
 				}
+			}
+		}
+
+		if ( const std::optional<std::string> currentTetriminos( net.getByTag(TAG_CURRENT_TETRIMINOS,
+																				Online::Option::DEFAULT,
+																				-1) );
+			std::nullopt != currentTetriminos )
+		{
+			const std::string& curTetTypes = currentTetriminos.value();
+			const char* ptr = curTetTypes.data();
+			const uint16_t totalSize = (uint16_t)curTetTypes.size();
+			uint16_t curPos = 0;
+			while ( totalSize != curPos )
+			{
+				const HashedKey nicknameHashed = ::ntohl(*(HashedKey*)&ptr[curPos]);
+				curPos += sizeof(HashedKey);
+				const ::model::tetrimino::Type curTetType = (::model::tetrimino::Type)ptr[curPos++];
+				if ( const auto it = mParticipants.find(nicknameHashed);
+					mParticipants.end() != it )
+				{
+					it->second.playView.setCurrentTetrimino( curTetType );
+				}
+#ifdef _DEBUG
+				else
+				{
+					gService()->console().printFailure( FailureLevel::WARNING,
+													   "Failed to find " + std::to_string(nicknameHashed) );
+				}
+#endif
+			}
+			std::string ack( TAG_CURRENT_TETRIMINOS );
+			net.send( ack.data(), (int)ack.size() );
+		}
+
+		if ( const std::optional<std::string> nextTetriminos( net.getByTag(TAG_NEXT_TETRIMINOS,
+																		   Online::Option::DEFAULT,
+																		   -1) );
+			std::nullopt != nextTetriminos )
+		{
+			const std::string& nextTetTypes = nextTetriminos.value();
+			const char* ptr = nextTetTypes.data();
+			const uint16_t totalSize = (uint16_t)nextTetTypes.size();
+			uint16_t curPos = 0;
+			while ( totalSize != curPos )
+			{
+				const HashedKey nicknameHashed = ::ntohl(*(HashedKey*)&ptr[curPos]);
+				curPos += sizeof(HashedKey);
+				const ::model::tetrimino::Type nextTetType = (::model::tetrimino::Type)ptr[curPos++];
+				if ( const auto it = mParticipants.find(nicknameHashed);
+					mParticipants.end() != it )
+				{
+					it->second.playView.pushNextTetrimino( nextTetType );
+				}
+#ifdef _DEBUG
+				else
+				{
+					gService()->console().printFailure( FailureLevel::WARNING,
+													   "Failed to find " + std::to_string(nicknameHashed) );
+				}
+#endif
 			}
 		}
 
@@ -1388,9 +1442,15 @@ void scene::online::InRoom::loadResources( sf::RenderWindow& window )
 				if ( const auto it = mParticipants.find(nicknameHashed);
 					mParticipants.end() != it )
 				{
-					::model::Tetrimino& tet = it->second.playView.currentTetrimino();
-					tet.move( rotID, pos );
+					it->second.playView.moveCurrentTetrimino( rotID, pos );
 				}
+#ifdef _DEBUG
+				else
+				{
+					gService()->console().printFailure( FailureLevel::WARNING,
+													   "Failed to find " + std::to_string(nicknameHashed) );
+				}
+#endif
 			}
 		}
 
@@ -1412,8 +1472,15 @@ void scene::online::InRoom::loadResources( sf::RenderWindow& window )
 				if ( const auto it = mParticipants.find(nicknameHashed);
 					mParticipants.end() != it )
 				{
-					it->second.playView.updateStage( *grid );
+					it->second.playView.trySetStage( *grid );
 				}
+#ifdef _DEBUG
+				else
+				{
+					gService()->console().printFailure( FailureLevel::WARNING,
+													   "Failed to find " + std::to_string(nicknameHashed) );
+				}
+#endif
 			}
 		}
 
@@ -1437,8 +1504,17 @@ void scene::online::InRoom::loadResources( sf::RenderWindow& window )
 				{
 					it->second.playView.playLineClearEffects( numOfLinesCleared );
 				}
+#ifdef _DEBUG
+				else
+				{
+					gService()->console().printFailure( FailureLevel::WARNING,
+													   "Failed to find " + std::to_string(nicknameHashed) );
+				}
+#endif
 			}
 		}
+//
+////
 
 		if ( const std::optional<std::string> allOver( net.getByTag(TAG_ALL_OVER,
 																	Online::Option::RETURNING_TAG_ATTACHED,
@@ -1470,10 +1546,9 @@ void scene::online::InRoom::loadResources( sf::RenderWindow& window )
 		// Resetting remnants once and for all.
 		for ( auto& pair : mParticipants )
 		{
-			::ui::PlayView& playView = pair.second.playView;
-			playView.stage().clear();
+			pair.second.playView.clearStage( );
 		}
-		mIsStartingGuideVisible_ = true;
+		mIsStartingGuideVisible = true;
 	}
 
 	if ( nullptr != mOverlappedScene )
@@ -1495,7 +1570,6 @@ void scene::online::InRoom::loadResources( sf::RenderWindow& window )
 #else
 				__assume( 0 );
 #endif
-				break;
 		}
 	}
 
@@ -1504,7 +1578,7 @@ void scene::online::InRoom::loadResources( sf::RenderWindow& window )
 		if ( sf::Event::EventType::MouseButtonPressed == it->type &&
 			sf::Mouse::Button::Left == it->mouseButton.button &&
 			true == mIsMouseOverStartButton_ &&
-			true == mIsStartingGuideVisible_ )
+			true == mIsStartingGuideVisible )
 		{
 			mIsStartButtonPressed_ = true;
 			it = eventQueue.erase(it);
@@ -1512,7 +1586,7 @@ void scene::online::InRoom::loadResources( sf::RenderWindow& window )
 		else if ( sf::Event::EventType::MouseButtonReleased == it->type &&
 			sf::Mouse::Button::Left == it->mouseButton.button &&
 			true == mIsMouseOverStartButton_ &&
-			true == mIsStartingGuideVisible_ )
+			true == mIsStartingGuideVisible )
 		{
 			startGame( );
 			if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::SELECTION]) )
@@ -1542,7 +1616,7 @@ void scene::online::InRoom::draw( sf::RenderWindow& window )
 {
 	window.draw( mBackground );
 	{
-		const auto it = mParticipants.find(mMyNicknameHashed);
+		const auto it = mParticipants.find(mMyNicknameHashed_);
 		ASSERT_TRUE( mParticipants.end() != it );
 		if ( true == mAsHost )
 		{
@@ -1594,7 +1668,7 @@ void scene::online::InRoom::draw( sf::RenderWindow& window )
 			}
 		}
 		it->second.playView.draw( window );
-		if ( true == mIsStartingGuideVisible_ )
+		if ( true == mIsStartingGuideVisible )
 		{
 			window.draw( mTextLabelForStartingGuide );
 		}

@@ -267,7 +267,6 @@ void Socket::reset( const bool isSocketReusable, const Socket::Type type )
 #else
 				__assume( 0 );
 #endif
-				break;
 		}
 	}
 }

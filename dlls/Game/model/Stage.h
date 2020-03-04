@@ -1,5 +1,4 @@
 #pragma once
-#include <Common.h>
 
 namespace model
 {
@@ -11,6 +10,7 @@ namespace model
 		{}
 		virtual ~Stage( ) = default;
 
+		void draw( sf::RenderWindow& window );
 		void deserialize( const ::model::stage::Grid& grid )
 		{
 			mGrid = grid;
@@ -55,7 +55,6 @@ namespace model
 			mPanel.setOutlineThickness( thickness );
 			mPanel.setOutlineColor( color );
 		}
-		void draw( sf::RenderWindow& window );
 	private:
 		// Can be figured out from mCellShape.
 		float mCellSize_;

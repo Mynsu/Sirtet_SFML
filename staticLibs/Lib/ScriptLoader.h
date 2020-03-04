@@ -83,7 +83,6 @@ namespace util::script
 #else
 					__assume( 0 );
 #endif
-					break;
 			}
 		}
 		lua_close( lua );

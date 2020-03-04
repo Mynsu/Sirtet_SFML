@@ -1,6 +1,5 @@
 #include "../pch.h"
 #include "PlayView.h"
-#include <VaultKeyList.h>
 #include "../scene/online/Online.h"
 #include "../ServiceLocatorMirror.h"
 
@@ -111,21 +110,248 @@ ui::PlayView::PlayView( const bool isPlayable )
 	mCountDownSec( 3 ), mNumOfLinesCleared( 0 ),
 	mFrameCountInputDelay( 0 ), mFrameCountVfxDuration( 0 ),
 	mTempoMs( 1000 ),
-	mState_( PlayView::State::WAITING_OR_OVER ),
+	mState( State::WAITING_OR_OVER ),
 	mAlarms{ Clock::time_point::max() },
 	mTexture_countdown( std::make_unique<sf::Texture>() )
 { }
 
-bool ui::PlayView::loadCountdownSprite( std::string& filePathNName )
+void ui::PlayView::update( std::vector<sf::Event>& eventQueue, ::scene::online::Online& net )
 {
-	if ( false == mTexture_countdown->loadFromFile(filePathNName) )
+	if ( true == net.hasReceived() )
 	{
-		return false;
+		if ( const std::optional<std::string> tempoMs( net.getByTag(TAG_MY_TEMPO_MS,
+																	::scene::online::Online::Option::DEFAULT,
+																	sizeof(uint16_t)) );
+			std::nullopt != tempoMs )
+		{
+			const uint16_t tempo = *(uint16_t*)tempoMs.value().data();
+			mTempoMs = ::ntohs(tempo);
+		}
 	}
-	else
+
+	// Keeping a tetrimino from doing soft-drop even though countdown hasn't ended yet.
+	if ( State::ON_START == mState &&
+		0 == mCountDownSec &&
+		true == mHasCurrentTetrimino )
 	{
-		mSprite_countdown.setTexture( *mTexture_countdown );
-		return true;
+		mState = State::PLAYING;
+	}
+
+	if ( State::PLAYING != mState )
+	{
+		return;
+	}
+	
+	if ( true == mIsForThisPlayer )
+	{
+		// Exception
+		if ( true == mHasTetriminoLandedOnServer &&
+			true == alarmAfter(ASYNC_TOLERANCE_MS, AlarmIndex::GAP_LANDING_ON_SERVER) )
+		{
+			gService()->console().printFailure( FailureLevel::FATAL, "Over asynchronization." );
+			net.disconnect( );
+			return;
+		}
+		if ( false == mHasTetriminoLandedOnClient )
+		{
+			{
+				auto& vault = gService()->vault();
+				const auto it = vault.find(HK_HAS_GAINED_FOCUS);
+				ASSERT_TRUE( vault.end() != it );
+				if ( 1 == it->second )
+				{
+					const auto it2 = vault.find(HK_FORE_FPS);
+					ASSERT_TRUE( vault.end() != it2 );
+					mFPS_ = it2->second;
+				}
+				else
+				{
+					const auto it2 = vault.find(HK_BACK_FPS);
+					ASSERT_TRUE( vault.end() != it2 );
+					mFPS_ = it2->second;
+				}
+			}
+			if ( true == mCurrentTetrimino.isHardDropping() )
+			{
+				for ( uint8_t i = 0; HARD_DROP_SPEED != i; ++i )
+				{
+					mHasTetriminoLandedOnClient = mCurrentTetrimino.moveDown(mStage.cgrid());
+					if ( true == mHasTetriminoLandedOnClient )
+					{
+						mCurrentTetrimino.hardDrop( false );
+						std::string msg( TAG_MY_TETRIMINO_LANDED_ON_CLIENT );
+						net.send( msg.data(), (int)msg.size() );
+						break;
+					}
+				}
+				if ( false == mHasTetriminoLandedOnClient )
+				{
+					return;
+				}
+			}
+			else
+			{
+				Packet packet;
+				const uint16_t inputDelayFPS = mFPS_ * INPUT_DELAY_MS / 1000;
+				for ( auto it = eventQueue.cbegin(); eventQueue.cend() != it; )
+				{
+					if ( sf::Event::KeyPressed == it->type )
+					{
+						switch ( it->key.code )
+						{
+							case sf::Keyboard::Space:
+								if ( inputDelayFPS < mFrameCountInputDelay )
+								{
+									mFrameCountInputDelay = 0;
+									if ( false == mHasTetriminoLandedOnServer )
+									{
+										packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::HARD_DROP );
+									}
+									mCurrentTetrimino.hardDrop( );
+									resetAlarm( AlarmIndex::INTERVAL_TETRIMINO_DOWN );
+								}
+								it = eventQueue.erase(it);
+								break;
+							case sf::Keyboard::Down:
+								if ( inputDelayFPS < mFrameCountInputDelay )
+								{
+									mFrameCountInputDelay = 0;
+									if ( false == mHasTetriminoLandedOnServer )
+									{
+										packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::DOWN );
+									}
+									mHasTetriminoLandedOnClient = mCurrentTetrimino.moveDown( mStage.cgrid() );
+									if ( true == mHasTetriminoLandedOnClient )
+									{
+										const uint8_t ignored = 1;
+										packet.pack( TAG_MY_TETRIMINO_LANDED_ON_CLIENT, ignored );
+									}
+									resetAlarm( AlarmIndex::INTERVAL_TETRIMINO_DOWN );
+								}
+								it = eventQueue.erase(it);
+								break;
+							case sf::Keyboard::Left:
+								if ( inputDelayFPS < mFrameCountInputDelay )
+								{
+									mFrameCountInputDelay = 0;
+									if ( false == mHasTetriminoLandedOnServer )
+									{
+										packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::LEFT );
+										mCurrentTetrimino.tryMoveLeft( mStage.cgrid() );
+									}
+								}
+								it = eventQueue.erase(it);
+								break;
+							case sf::Keyboard::Right:
+								if ( inputDelayFPS < mFrameCountInputDelay )
+								{
+									mFrameCountInputDelay = 0;
+									if ( false == mHasTetriminoLandedOnServer )
+									{
+										packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::RIGHT );
+										mCurrentTetrimino.tryMoveRight( mStage.cgrid() );
+									}
+								}
+								it = eventQueue.erase(it);
+								break;
+							case sf::Keyboard::LShift:
+								[[ fallthrough ]];
+							case sf::Keyboard::Up:
+								if ( inputDelayFPS < mFrameCountInputDelay )
+								{
+									mFrameCountInputDelay = 0;
+									if ( false == mHasTetriminoLandedOnServer )
+									{
+										packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::ROTATE );
+										mCurrentTetrimino.tryRotate( mStage.cgrid() );
+									}
+								}
+								it = eventQueue.erase(it);
+								break;
+							default:
+								++it;
+								break;
+						}
+					}
+					else
+					{
+						++it;
+					}
+				}
+
+				if ( false == mHasTetriminoLandedOnClient &&
+					true == alarmAfter(mTempoMs, AlarmIndex::INTERVAL_TETRIMINO_DOWN) )
+				{
+					mHasTetriminoLandedOnClient = mCurrentTetrimino.moveDown( mStage.cgrid() );
+					if ( true == mHasTetriminoLandedOnClient )
+					{
+						const uint8_t ignored = 1;
+						packet.pack( TAG_MY_TETRIMINO_LANDED_ON_CLIENT, ignored );
+					}
+					resetAlarm( AlarmIndex::INTERVAL_TETRIMINO_DOWN );
+				}
+
+				if ( true == packet.hasData() )
+				{
+					net.send( packet );
+				}
+			}
+		}
+	}
+
+	if ( true == mHasTetriminoLandedOnClient ||
+		false == mIsForThisPlayer )
+	{
+		if ( true == mHasTetriminoLandedOnServer )
+		{
+			mHasTetriminoLandedOnServer = false;
+			mHasTetriminoLandedOnClient = false;
+			if ( false == gService()->sound().playSFX(SoundPaths[(int)SoundIndex::TETRIMINO_LOCK]) )
+			{
+				gService()->console().printFailure(FailureLevel::WARNING,
+												   "File Not Found: "+SoundPaths[(int)SoundIndex::TETRIMINO_LOCK] );
+			}
+			mCurrentTetrimino = mNextTetriminos.front();
+			mNextTetriminos.pop_front( );
+			mNextTetriminoPanel.setTetrimino( mNextTetriminos.front() );
+			if ( true == mIsForThisPlayer )
+			{
+				mStage.deserialize( mBufferForStage );
+			}
+		}
+	}
+}
+
+void ui::PlayView::draw( sf::RenderWindow& window )
+{
+	mStage.draw( window );
+	if ( State::PLAYING == mState )
+	{
+		mCurrentTetrimino.draw( window );
+	}
+	else if ( State::ON_START == mState )
+	{
+		if ( 0 != mCountDownSec )
+		{
+			if ( true == alarmAfter(1000, AlarmIndex::COUNT_DOWN) )
+			{
+				--mCountDownSec;
+				resetAlarm( AlarmIndex::COUNT_DOWN );
+			}
+			mSprite_countdown.setTextureRect( sf::IntRect(0, countdownSpriteSize.y*(mCountDownSec-1),
+														  countdownSpriteSize.x, countdownSpriteSize.y) );
+			window.draw( mSprite_countdown );
+		}
+	}
+	if ( true == mIsForThisPlayer )
+	{
+		mNextTetriminoPanel.draw( window );
+		if ( 0 < mFrameCountVfxDuration )
+		{
+			mVfxCombo.draw( window, mNumOfLinesCleared );
+			--mFrameCountVfxDuration;
+		}
+		++mFrameCountInputDelay;
 	}
 }
 
@@ -143,7 +369,7 @@ void ui::PlayView::setCountdownSpriteDimension( const sf::Vector2f origin,
 	{
 		mSprite_countdown.setScale( 0.5f, 0.5f );
 	}
-	countdownSpriteSize_ = clipSize;
+	countdownSpriteSize = clipSize;
 }
 
 void ui::PlayView::getReady( )
@@ -155,256 +381,9 @@ void ui::PlayView::getReady( )
 	resetAlarm( AlarmIndex::COUNT_DOWN );
 	while ( false == mNextTetriminos.empty() )
 	{
-		mNextTetriminos.pop( );
+		mNextTetriminos.pop_front( );
 	}
-	mState_ = PlayView::State::ON_START;
-}
-
-void ui::PlayView::update( std::vector<sf::Event>& eventQueue, ::scene::online::Online& net )
-{
-	// Exception
-	if ( true == mHasTetriminoLandedOnServer &&
-		true == alarmAfter(ASYNC_TOLERANCE_MS, AlarmIndex::LAND_ON_SERVER) )
-	{
-		gService()->console().printFailure( FailureLevel::FATAL, "Over asynchronization." );
-		net.disconnect( );
-		return;
-	}
-
-	if ( true == net.hasReceived() )
-	{
-		if ( const std::optional<std::string> nextTet( net.getByTag(TAG_MY_NEXT_TETRIMINO,
-																	 ::scene::online::Online::Option::DEFAULT,
-																	 sizeof(uint8_t)) );
-			std::nullopt != nextTet	)
-		{
-			const ::model::tetrimino::Type type =
-				(::model::tetrimino::Type)*nextTet.value().data();
-			mNextTetriminos.emplace( ::model::Tetrimino::Spawn(type) );
-			if ( PlayView::State::ON_START == mState_ )
-			{
-				mNextTetriminoPanel.setTetrimino( mNextTetriminos.front() );
-			}
-		}
-
-		if ( const std::optional<std::string> tempoMs( net.getByTag(TAG_MY_TEMPO_MS,
-																	::scene::online::Online::Option::DEFAULT,
-																  sizeof(uint16_t)) );
-			std::nullopt != tempoMs )
-		{
-			const uint16_t tempo = *(uint16_t*)tempoMs.value().data();
-			mTempoMs = ::ntohs(tempo);
-		}
-	}
-
-	if ( PlayView::State::ON_START == mState_ &&
-		0 == mCountDownSec &&
-		true == mHasCurrentTetrimino )
-	{
-		mState_ = PlayView::State::PLAYING;
-	}
-
-	if ( false == mIsForThisPlayer ||
-		PlayView::State::PLAYING != mState_ )
-	{
-		return;
-	}
-	
-	Packet packet;
-	if ( false == mHasTetriminoLandedOnClient )
-	{
-		{
-			auto& vault = gService()->vault();
-			const auto it = vault.find(HK_HAS_GAINED_FOCUS);
-			ASSERT_TRUE( vault.end() != it );
-			if ( 1 == it->second )
-			{
-				const auto it2 = vault.find(HK_FORE_FPS);
-				ASSERT_TRUE( vault.end() != it2 );
-				mFPS_ = it2->second;
-			}
-			else
-			{
-				const auto it2 = vault.find(HK_BACK_FPS);
-				ASSERT_TRUE( vault.end() != it2 );
-				mFPS_ = it2->second;
-			}
-		}
-		
-		if ( true == mCurrentTetrimino.isHardDropping() )
-		{
-			for ( uint8_t i = 0; HARD_DROP_SPEED != i; ++i )
-			{
-				mHasTetriminoLandedOnClient = mCurrentTetrimino.moveDown(mStage.cgrid());
-				if ( true == mHasTetriminoLandedOnClient )
-				{
-					mCurrentTetrimino.hardDrop( false );
-					const uint8_t ignored = 1;
-					packet.pack( TAG_MY_TETRIMINO_LANDED_ON_CLIENT, ignored );
-					goto last;
-				}
-			}
-			return;
-		}
-		else
-		{
-			const uint16_t inputDelayFPS = mFPS_ * INPUT_DELAY_MS / 1000;
-			for ( auto it = eventQueue.cbegin(); eventQueue.cend() != it; )
-			{
-				if ( sf::Event::KeyPressed == it->type )
-				{
-					switch ( it->key.code )
-					{
-						case sf::Keyboard::Space:
-							if ( inputDelayFPS < mFrameCountInputDelay )
-							{
-								mFrameCountInputDelay = 0;
-								if ( false == mHasTetriminoLandedOnServer )
-								{
-									packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::HARD_DROP );
-								}
-								mCurrentTetrimino.hardDrop( );
-								resetAlarm( AlarmIndex::TETRIMINO_DOWN );
-							}
-							it = eventQueue.erase(it);
-							break;
-						case sf::Keyboard::Down:
-							if ( inputDelayFPS < mFrameCountInputDelay )
-							{
-								mFrameCountInputDelay = 0;
-								if ( false == mHasTetriminoLandedOnServer )
-								{
-									packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::DOWN );
-								}
-								mHasTetriminoLandedOnClient = mCurrentTetrimino.moveDown( mStage.cgrid() );
-								if ( true == mHasTetriminoLandedOnClient )
-								{
-									const uint8_t ignored = 1;
-									packet.pack( TAG_MY_TETRIMINO_LANDED_ON_CLIENT, ignored );
-								}
-								resetAlarm( AlarmIndex::TETRIMINO_DOWN );
-							}
-							it = eventQueue.erase(it);
-							break;
-						case sf::Keyboard::Left:
-							if ( inputDelayFPS < mFrameCountInputDelay )
-							{
-								mFrameCountInputDelay = 0;
-								if ( false == mHasTetriminoLandedOnServer )
-								{
-									packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::LEFT );
-									mCurrentTetrimino.tryMoveLeft( mStage.cgrid() );
-								}
-							}
-							it = eventQueue.erase(it);
-							break;
-						case sf::Keyboard::Right:
-							if ( inputDelayFPS < mFrameCountInputDelay )
-							{
-								mFrameCountInputDelay = 0;
-								if ( false == mHasTetriminoLandedOnServer )
-								{
-									packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::RIGHT );
-									mCurrentTetrimino.tryMoveRight( mStage.cgrid() );
-								}
-							}
-							it = eventQueue.erase(it);
-							break;
-						case sf::Keyboard::LShift:
-							[[ fallthrough ]];
-						case sf::Keyboard::Up:
-							if ( inputDelayFPS < mFrameCountInputDelay )
-							{
-								mFrameCountInputDelay = 0;
-								if ( false == mHasTetriminoLandedOnServer )
-								{
-									packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::ROTATE );
-									mCurrentTetrimino.tryRotate( mStage.cgrid() );
-								}
-							}
-							it = eventQueue.erase(it);
-							break;
-						default:
-							++it;
-							break;
-					}
-				}
-				else
-				{
-					++it;
-				}
-			}
-
-			if ( false == mHasTetriminoLandedOnClient &&
-				true == alarmAfter(mTempoMs, AlarmIndex::TETRIMINO_DOWN) )
-			{
-				mHasTetriminoLandedOnClient = mCurrentTetrimino.moveDown( mStage.cgrid() );
-				if ( true == mHasTetriminoLandedOnClient )
-				{
-					const uint8_t ignored = 1;
-					packet.pack( TAG_MY_TETRIMINO_LANDED_ON_CLIENT, ignored );
-				}
-				resetAlarm( AlarmIndex::TETRIMINO_DOWN );
-			}
-		}
-	}
-
-	last:
-	if ( true == mHasTetriminoLandedOnClient )
-	{
-		if ( true == mHasTetriminoLandedOnServer )
-		{
-			if ( false == gService()->sound().playSFX(SoundPaths[(int)SoundIndex::TETRIMINO_LOCK]) )
-			{
-				gService()->console().printFailure(FailureLevel::WARNING,
-												   "File Not Found: "+SoundPaths[(int)SoundIndex::TETRIMINO_LOCK] );
-			}
-			mHasTetriminoLandedOnServer = false;
-			mHasTetriminoLandedOnClient = false;
-			mCurrentTetrimino = mNextTetriminos.front();
-			mNextTetriminos.pop( );
-			mStage.deserialize( mBufferForStage );
-			mNextTetriminoPanel.setTetrimino( mNextTetriminos.front() );
-		}
-#ifdef _DEBUG
-		else
-		{
-			gService()->console().print( "Client has it done while Server hasn't it done yet.",
-										sf::Color::Green );
-		}
-#endif
-	}
-
-	if ( true == packet.hasData() )
-	{
-		net.send( packet );
-	}
-}
-
-void ui::PlayView::setNewCurrentTetrimino( const::model::tetrimino::Type newCurrentType )
-{
-	if ( false == mIsForThisPlayer ||
-		false == mHasCurrentTetrimino )
-	{
-		mCurrentTetrimino = ::model::Tetrimino::Spawn(newCurrentType);
-		mHasCurrentTetrimino = true;
-		mState_ = State::PLAYING;
-	}
-}
-
-void ui::PlayView::updateStage( const::model::stage::Grid& grid )
-{
-	if ( PlayView::State::WAITING_OR_OVER == mState_ ||
-		false == mIsForThisPlayer )
-	{
-		mStage.deserialize( grid );
-	}
-	else
-	{
-		mBufferForStage = grid;
-		resetAlarm( AlarmIndex::LAND_ON_SERVER );
-		mHasTetriminoLandedOnServer = true;
-	}
+	mState = State::ON_START;
 }
 
 void ui::PlayView::playLineClearEffects( const uint8_t numOfLinesCleared )
@@ -417,66 +396,4 @@ void ui::PlayView::playLineClearEffects( const uint8_t numOfLinesCleared )
 										   "File Not Found: "+SoundPaths[(int)SoundIndex::LINE_CLEAR] );
 	}
 	mFrameCountVfxDuration = mFPS_;
-}
-
-void ui::PlayView::gameOver( )
-{
-	mState_ = PlayView::State::WAITING_OR_OVER;
-	mNextTetriminoPanel.clearTetrimino( );
-}
-
-void ui::PlayView::draw( sf::RenderWindow& window )
-{
-	mStage.draw( window );
-	if ( true == mIsForThisPlayer )
-	{
-		mNextTetriminoPanel.draw( window );
-	}
-	if ( PlayView::State::PLAYING == mState_ )
-	{
-		mCurrentTetrimino.draw( window );
-		if ( true == mIsForThisPlayer )
-		{
-			if ( 0 < mFrameCountVfxDuration )
-			{
-				mVfxCombo.draw( window, mNumOfLinesCleared );
-				--mFrameCountVfxDuration;
-			}
-			++mFrameCountInputDelay;
-		}
-	}
-	else if ( PlayView::State::ON_START == mState_ )
-	{
-		if ( 0 != mCountDownSec )
-		{
-			if ( true == alarmAfter(1000, AlarmIndex::COUNT_DOWN) )
-			{
-				--mCountDownSec;
-				resetAlarm( AlarmIndex::COUNT_DOWN );
-			}
-			mSprite_countdown.setTextureRect( sf::IntRect(0, countdownSpriteSize_.y*(mCountDownSec-1),
-												countdownSpriteSize_.x, countdownSpriteSize_.y) );
-			window.draw( mSprite_countdown );
-		}
-	}
-}
-
-::model::Tetrimino& ui::PlayView::currentTetrimino( )
-{
-	return mCurrentTetrimino;
-}
-
-::model::Stage& ui::PlayView::stage( )
-{
-	return mStage;
-}
-
-::vfx::Combo& ui::PlayView::vfxCombo( )
-{
-	return mVfxCombo;
-}
-
-::ui::NextTetriminoPanel& ui::PlayView::nextTetriminoPanel( )
-{
-	return mNextTetriminoPanel;
 }

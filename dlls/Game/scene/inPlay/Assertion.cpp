@@ -1,11 +1,10 @@
 #include "../../pch.h"
 #include "Assertion.h"
-#include <VaultKeyList.h>
 #include "../../ServiceLocatorMirror.h"
 
 bool scene::inPlay::Assertion::IsInstantiated = false;
 
-scene::inPlay::Assertion::Assertion( sf::RenderWindow& window )
+scene::inPlay::Assertion::Assertion( const sf::RenderWindow& window )
 	: mFrameCountToCancel( 0 ), mFPS_( 60 )
 {
 	ASSERT_TRUE( false == IsInstantiated );
@@ -26,7 +25,7 @@ scene::inPlay::Assertion::~Assertion()
 	IsInstantiated = false;
 }
 
-void scene::inPlay::Assertion::loadResources( sf::RenderWindow& window )
+void scene::inPlay::Assertion::loadResources( const sf::RenderWindow& window )
 {
 	uint16_t fontSize = 50;
 	uint32_t backgroundColor = 0x0000007f;

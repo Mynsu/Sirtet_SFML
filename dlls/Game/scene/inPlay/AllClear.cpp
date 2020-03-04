@@ -4,7 +4,7 @@
 
 bool ::scene::inPlay::AllClear::IsInstantiated = false;
 
-scene::inPlay::AllClear::AllClear( sf::RenderWindow& window )
+scene::inPlay::AllClear::AllClear( const sf::RenderWindow& window )
 {
 	ASSERT_TRUE( false == IsInstantiated );
 
@@ -25,7 +25,7 @@ scene::inPlay::AllClear::~AllClear( )
 	IsInstantiated = false;
 }
 
-void scene::inPlay::AllClear::loadResources( sf::RenderWindow& )
+void scene::inPlay::AllClear::loadResources( const sf::RenderWindow& )
 {
 	mDrawingInfo.confettiSpriteClipRowMax_ = mDrawingInfo.confettiSpriteClipColumnMax_ = 8;
 	mDrawingInfo.confettiRelativePlaySpeed = 1.0f;

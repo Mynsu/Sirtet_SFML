@@ -1,6 +1,5 @@
 #include "../../pch.h"
 #include "InPlay.h"
-#include <VaultKeyList.h>
 #include "../../ServiceLocatorMirror.h"
 #include "Ready.h"
 #include "Playing.h"
@@ -30,7 +29,7 @@ bool ::scene::inPlay::InPlay::IsInstantiated = false;
 	IsInstantiated = false;
 }
 
-void scene::inPlay::InPlay::loadResources( sf::RenderWindow& window )
+void scene::inPlay::InPlay::loadResources( const sf::RenderWindow& window )
 {
 	mBackground.setSize( sf::Vector2f(window.getSize()) );
 	mCurrentScene->loadResources( window );

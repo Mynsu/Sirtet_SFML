@@ -8,11 +8,12 @@ namespace scene::inPlay
 	private:
 		static bool IsInstantiated;
 	public:
-		GameOver( sf::RenderWindow& window, sf::Drawable& shapeOrSprite,
+		GameOver( const sf::RenderWindow& window,
+				 sf::Drawable& shapeOrSprite,
 				 std::unique_ptr<::scene::inPlay::IScene>& overlappedScene );
 		~GameOver( );
 
-		void loadResources( sf::RenderWindow& window ) override;
+		void loadResources( const sf::RenderWindow& window ) override;
 		::scene::inPlay::ID update( std::vector<sf::Event>& eventQueue ) override;
 		void draw( sf::RenderWindow& window ) override;
 	private:

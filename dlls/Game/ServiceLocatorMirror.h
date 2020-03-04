@@ -1,4 +1,5 @@
 #pragma once
+#include <GameLib/IGame.h>
 
 class ServiceLocatorMirror final
 {

@@ -253,7 +253,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;GAME_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>E:\%40Mynsu\C++\Tetris\Sirtet\staticLibs\Shared Headers Only;E:\Tools\SFML-2.5.1\$(PlatformTarget)\include;E:\Tools\Lua\5.3.5\$(PlatformTarget)\include;$(SolutionDir)staticLibs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\Tools\SFML-2.5.1\$(PlatformTarget)\include;E:\Tools\Lua\5.3.5\$(PlatformTarget)\include;$(SolutionDir)staticLibs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <DisableSpecificWarnings>4307</DisableSpecificWarnings>

@@ -1,5 +1,5 @@
 ﻿#include "pch.h"
-#include <VaultKeyList.h>
+#include <GameLib/IGame.h>
 #include "ServiceLocator.h"
 
 const uint16_t DEFAULT_FOREGROUND_FPS = 60;
@@ -145,6 +145,12 @@ int main( int argc, char* argv[] )
 			else if ( 0 == vault[HK_HAS_GAINED_FOCUS] )
 			{
 				break;
+			}
+			else if ( sf::Event::KeyReleased == event.type &&
+					 true == event.key.control &&
+					 sf::Keyboard::M == event.key.code )
+			{
+				gService.sound().toggleBGMMute( );
 			}
 			else
 			{

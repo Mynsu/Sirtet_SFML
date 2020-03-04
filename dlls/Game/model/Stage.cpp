@@ -1,8 +1,24 @@
 #include "../pch.h"
 #include "Stage.h"
-#include <Common.h>
 
 const int8_t DEAD_LINE_NUMBER = 1;
+
+void model::Stage::draw( sf::RenderWindow& window )
+{
+	window.draw( mPanel );
+	for ( uint8_t i = 0; i != ::model::stage::GRID_HEIGHT; ++i )
+	{
+		for ( uint8_t k = 0; k != ::model::stage::GRID_WIDTH; ++k )
+		{
+			if ( true == mGrid[i][k].blocked )
+			{
+				mCellShape.setFillColor( mGrid[i][k].color );
+				mCellShape.setPosition( mPosition_ + sf::Vector2f(k, i)*mCellSize_ );
+				window.draw( mCellShape );
+			}
+		}
+	}
+}
 
 bool model::Stage::isOver( ) const
 {
@@ -36,23 +52,6 @@ void model::Stage::clear( )
 		for ( model::stage::Cell& cell : row )
 		{
 			cell.blocked = false;
-		}
-	}
-}
-
-void model::Stage::draw( sf::RenderWindow& window )
-{
-	window.draw( mPanel );
-	for ( uint8_t i = 0; i != ::model::stage::GRID_HEIGHT; ++i )
-	{
-		for ( uint8_t k = 0; k != ::model::stage::GRID_WIDTH; ++k )
-		{
-			if ( true == mGrid[i][k].blocked )
-			{
-				mCellShape.setFillColor( mGrid[i][k].color );
-				mCellShape.setPosition( mPosition_ + sf::Vector2f(k, i)*mCellSize_ );
-				window.draw( mCellShape );
-			}
 		}
 	}
 }

@@ -8,10 +8,10 @@ namespace scene::inPlay
 	private:
 		static bool IsInstantiated;
 	public:
-		AllClear( sf::RenderWindow& window );
+		AllClear( const sf::RenderWindow& window );
 		~AllClear( );
 
-		void loadResources( sf::RenderWindow& window ) override;
+		void loadResources( const sf::RenderWindow& window ) override;
 		::scene::inPlay::ID update( std::vector<sf::Event>& eventQueue ) override;
 		void draw( sf::RenderWindow& window ) override;
 	private:

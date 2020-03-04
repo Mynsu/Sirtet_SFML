@@ -1,5 +1,6 @@
 #pragma once
 #include "pch.h" // Included as a set of headers, not as pch.
+#include <GameLib/IServiceLocator.h>
 #include "Console.h"
 #include "Sound.h"
 

@@ -1,4 +1,5 @@
 #pragma once
+#include <GameLib/IConsole.h>
 #include "Command.h"
 
 class Console : public IConsole

@@ -20,6 +20,7 @@ namespace model
 
 		static void LoadResources( );
 		static Tetrimino Spawn( ::model::tetrimino::Type type = ::model::tetrimino::Type::NONE_MAX );
+		void draw( sf::RenderWindow& window );
 		
 		// Returns true when colliding with the floor or another tetrimino.
 		bool moveDown( const ::model::stage::Grid& grid, const uint8_t diff = 1 )
@@ -56,10 +57,10 @@ namespace model
 		// Rotates counter-clockwise.
 		void tryRotate( const ::model::stage::Grid& grid );
 		void land( ::model::stage::Grid& grid );
-		void move( const ::model::tetrimino::Rotation rotationID, const sf::Vector2<int8_t> position )
+		void move( const ::model::tetrimino::Rotation rotationID, const sf::Vector2<int8_t> destination )
 		{
 			mRotationID = rotationID;
-			mPosition = position;
+			mPosition = destination;
 		}
 		void setOrigin( const sf::Vector2f& origin )
 		{
@@ -69,24 +70,15 @@ namespace model
 		{
 			return mPosition;
 		}
-		::model::tetrimino::Type type( ) const
-		{
-			return mType;
-		}
-		sf::Color color( ) const
-		{
-			return mBlockShape.getFillColor( );
-		}
-		void setColor( const sf::Color color, const sf::Color outlineColor )
-		{
-			mBlockShape.setFillColor( color );
-			mBlockShape.setOutlineColor( outlineColor );
-		}
 		void setSize( const float blockSize )
 		{
 			ASSERT_TRUE( 0.f < blockSize );
 			mBlockShape.setSize( sf::Vector2f( blockSize, blockSize ) );
 			mBlockSize_ = blockSize;
+		}
+		::model::tetrimino::Type type( ) const
+		{
+			return mType;
 		}
 		// Current blocks within their own local space.
 		::model::tetrimino::LocalSpace blocks( ) const
@@ -101,20 +93,14 @@ namespace model
 		{
 			mIsHardDropping = isHardDropping;
 		}
-		void draw( sf::RenderWindow& window )
+		sf::Color color( ) const
 		{
-			for ( uint8_t i = 0; i != ::model::tetrimino::LOCAL_SPACE_SIZE; ++i )
-			{
-				if ( mPossibleRotations[(int)mRotationID] &
-					(0x1u<<(::model::tetrimino::LOCAL_SPACE_SIZE-i-1)) )
-				{
-					// Coordinate transformation
-					const sf::Vector2<int8_t> localPos( i%model::tetrimino::BLOCKS_A_TETRIMINO,
-														i/model::tetrimino::BLOCKS_A_TETRIMINO );
-					mBlockShape.setPosition( mOrigin + sf::Vector2f(mPosition+localPos)*mBlockSize_ );
-					window.draw( mBlockShape );
-				}
-			}
+			return mBlockShape.getFillColor( );
+		}
+		void setColor( const sf::Color color, const sf::Color outlineColor )
+		{
+			mBlockShape.setFillColor( color );
+			mBlockShape.setOutlineColor( outlineColor );
 		}
 	private:
 		bool hasCollidedWith( const ::model::stage::Grid& grid ) const;

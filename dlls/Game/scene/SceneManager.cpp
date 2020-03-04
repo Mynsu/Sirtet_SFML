@@ -1,8 +1,6 @@
 #include "../pch.h"
 #include "SceneManager.h"
 #include <Lib/ScriptLoader.h>
-#include <VaultKeyList.h>
-#include <CommandList.h>
 #include "../ServiceLocatorMirror.h"
 #include "Intro.h"
 #include "MainMenu.h"

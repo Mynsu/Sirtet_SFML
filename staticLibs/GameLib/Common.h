@@ -104,14 +104,14 @@ enum class _Tag
 	////
 	// Inplay
 	////
-	MY_NEXT_TETRIMINO,
 	MY_TEMPO_MS,
-	MY_STAGE,
 	MY_TETRIMINO_MOVE,
 	MY_TETRIMINO_LANDED_ON_CLIENT,
 
-	NEW_CURRENT_TETRIMINOS,
+	CURRENT_TETRIMINOS,
 	CURRENT_TETRIMINOS_MOVE,
+	CURRENT_TETRIMINOS_LAND,
+	NEXT_TETRIMINOS,
 	STAGES,
 	NUMS_OF_LINES_CLEARED,
 	GAMES_OVER,
@@ -143,6 +143,7 @@ constexpr Tag TAG_MY_NICKNAME = { (char)_Tag::MY_NICKNAME, ':', '\0' };
 
 ////
 // Request
+// A client sends stuff with this and then receives response also with this from the server.
 ////
 
 enum class Request
@@ -160,7 +161,7 @@ enum class Request
 constexpr Tag TAG_REQUEST = { (char)_Tag::REQUEST, ':', '\0' };
 constexpr uint8_t TAG_REQUEST_LEN = ::util::hash::Measure(TAG_REQUEST);
 // Attached to nothing.
-constexpr Tag TAGGED_REQ_USER_LIST_IN_LOBBY = { (char)_Tag::REQUEST, ':', (char)Request::UPDATE_USER_LIST, '\0' };
+constexpr Tag TAGGED_REQ_USER_LIST = { (char)_Tag::REQUEST, ':', (char)Request::UPDATE_USER_LIST, '\0' };
 // Attached to nothing.
 constexpr Tag TAGGED_REQ_CREATE_ROOM = { (char)_Tag::REQUEST, ':', (char)Request::CREATE_ROOM, '\0' };
 // Attached to nothing.
@@ -186,7 +187,9 @@ enum class ResultJoiningRoom
 
 ////
 // Notification
+// Only the server sends stuff with this.
 ////
+
 enum class Notification
 {
 	// !IMPORTANT: 0 equals '\0' that might cause an error.
@@ -203,21 +206,21 @@ constexpr Tag TAGGED_NOTI_HOST_CHANGED = { (char)_Tag::NOTIFICATION, ':', (char)
 // Inplay
 ////
 
-// Attached to uint8_t(for ::model::tetrimino::Type).
-constexpr Tag TAG_MY_NEXT_TETRIMINO = { (char)_Tag::MY_NEXT_TETRIMINO, ':', '\0' };
 // Attached to uint16_t(for milliseconds).
 constexpr Tag TAG_MY_TEMPO_MS = { (char)_Tag::MY_TEMPO_MS, ':', '\0' };
-// Attached to Grid.
-constexpr Tag TAG_MY_STAGE = { (char)_Tag::MY_STAGE, ':', '\0' };
 // Attached to uint8_t(for ::model::tetrimino::Move).
 constexpr Tag TAG_MY_TETRIMINO_MOVE = { (char)_Tag::MY_TETRIMINO_MOVE, ':', '\0' };
 const uint8_t TAG_MY_TETRIMINO_MOVE_LEN = ::util::hash::Measure(TAG_MY_TETRIMINO_MOVE);
 // Attached to nothing.
 constexpr Tag TAG_MY_TETRIMINO_LANDED_ON_CLIENT = { (char)_Tag::MY_TETRIMINO_LANDED_ON_CLIENT, ':', '\0' };
-// Attached to uint16_t(for the total size) and repeated pairs of <HashedKey,uint8_t>.
-constexpr Tag TAG_NEW_CURRENT_TETRIMINOS = { (char)_Tag::NEW_CURRENT_TETRIMINOS, ':', '\0' };
-// Attached to uint16_t(for the total size) and repeated tuples of <HashedKey,uint8_t,sf::Vector2<int8_t>>.
+// Attached to uint16_t(for the total size) and pairs of <HashedKey,uint8_t>.
+constexpr Tag TAG_CURRENT_TETRIMINOS = { (char)_Tag::CURRENT_TETRIMINOS, ':', '\0' };
+// Attached to uint16_t(for the total size) and tuples of <HashedKey,uint8_t,sf::Vector2<int8_t>>.
 constexpr Tag TAG_CURRENT_TETRIMINOS_MOVE = { (char)_Tag::CURRENT_TETRIMINOS_MOVE, ':', '\0' };
+// Attached to one or more HashedKey.
+constexpr Tag TAG_CURRENT_TETRIMINOS_LAND = { (char)_Tag::CURRENT_TETRIMINOS_LAND, ':', '\0' };
+// Attached to uint16_t(for the total size) and pairs of <HashedKey,uint8_t>.
+constexpr Tag TAG_NEXT_TETRIMINOS = { (char)_Tag::NEXT_TETRIMINOS, ':', '\0' };
 // Attached to std::string(for Grid).
 constexpr Tag TAG_STAGES = { (char)_Tag::STAGES, ':', '\0' };
 // Attached to uint8_t.

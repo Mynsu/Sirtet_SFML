@@ -1,12 +1,11 @@
 #include "../../pch.h"
 #include "Ready.h"
-#include <VaultKeyList.h>
 #include "../../ServiceLocatorMirror.h"
 #include "Playing.h"
 
 bool ::scene::inPlay::Ready::IsInstantiated = false;
 
-::scene::inPlay::Ready::Ready( sf::RenderWindow& window, sf::Drawable& shapeOrSprite )
+::scene::inPlay::Ready::Ready( const sf::RenderWindow& window, sf::Drawable& shapeOrSprite )
 	: mFPS_( 60 ), mFrameCountToStart( mFPS_ * 3 ),
 	mBackgroundRect_( (sf::RectangleShape&)shapeOrSprite ),
 	mSpriteClipSize( 256.f, 256.f )
@@ -28,7 +27,7 @@ scene::inPlay::Ready::~Ready()
 	IsInstantiated = false;
 }
 
-void ::scene::inPlay::Ready::loadResources( sf::RenderWindow& window )
+void ::scene::inPlay::Ready::loadResources( const sf::RenderWindow& window )
 {
 	uint32_t backgroundColor = 0x29cdb5'7fu;
 	std::string countdownSpritePath( "Images/Countdown.png" );

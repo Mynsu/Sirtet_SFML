@@ -1,6 +1,5 @@
 #include "../pch.h"
 #include "Tetrimino.h"
-#include <Common.h>
 #include "../ServiceLocatorMirror.h"
 
 sf::Vector2<int8_t> model::Tetrimino::Test[(int)::model::tetrimino::Rotation::NONE_MAX][4] =
@@ -291,7 +290,6 @@ void model::Tetrimino::LoadResources( )
 #else
 			__assume( 0 );
 #endif
-			break;
 	}
 	retVal.mBlockShape.setOutlineThickness( -2.f );
 	retVal.mPosition.x = ::model::stage::GRID_WIDTH/2 - 1;
@@ -305,8 +303,8 @@ model::Tetrimino::Tetrimino( )
 {}
 
 model::Tetrimino::Tetrimino( const Tetrimino& arg )
-	: mIsHardDropping( false ), mType( arg.mType ),
-	mRotationID( arg.mRotationID ), mPosition( arg.mPosition )
+	: mIsHardDropping( arg.mIsHardDropping ), mPosition( arg.mPosition ),
+	mType( arg.mType ), mRotationID( arg.mRotationID )
 {
 	mBlockShape.setFillColor( arg.mBlockShape.getFillColor() );
 	mBlockShape.setOutlineThickness( arg.mBlockShape.getOutlineThickness() );
@@ -319,15 +317,32 @@ model::Tetrimino::Tetrimino( const Tetrimino& arg )
 
 void model::Tetrimino::operator=( const Tetrimino& arg )
 {
+	mIsHardDropping = arg.mIsHardDropping;
+	mPosition = arg.mPosition;
 	mType = arg.mType;
 	mRotationID = arg.mRotationID;
-	mPosition = arg.mPosition;
 	mBlockShape.setFillColor( arg.mBlockShape.getFillColor() );
 	mBlockShape.setOutlineThickness( arg.mBlockShape.getOutlineThickness() );
 	mBlockShape.setOutlineColor( arg.mBlockShape.getOutlineColor() );
 	for ( uint8_t i = 0; i != (uint8_t)::model::tetrimino::Rotation::NONE_MAX; ++i )
 	{
 		mPossibleRotations[i] = arg.mPossibleRotations[i];
+	}
+}
+
+void model::Tetrimino::draw( sf::RenderWindow& window )
+{
+	for ( uint8_t i = 0; i != ::model::tetrimino::LOCAL_SPACE_SIZE; ++i )
+	{
+		if ( mPossibleRotations[(int)mRotationID] &
+			(0x1u<<(::model::tetrimino::LOCAL_SPACE_SIZE-i-1)) )
+		{
+			// Coordinate transformation
+			const sf::Vector2<int8_t> localPos( i%model::tetrimino::BLOCKS_A_TETRIMINO,
+											   i/model::tetrimino::BLOCKS_A_TETRIMINO );
+			mBlockShape.setPosition( mOrigin + sf::Vector2f(mPosition+localPos)*mBlockSize_ );
+			window.draw( mBlockShape );
+		}
 	}
 }
 

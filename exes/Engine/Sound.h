@@ -1,5 +1,5 @@
 #pragma once
-#include <ISound.h>
+#include <GameLib/ISound.h>
 
 class SFMLSound final : public ISound
 {
@@ -23,14 +23,27 @@ public:
 			player.setVolume( volume );
 		}
 	}
-	bool playBGM( const std::string& fileName, const bool isRepeated = false ) override;
+	void toggleBGMMute( ) override
+	{
+		if ( 0.f == mBGMPlayer.getVolume() )
+		{
+			mBGMPlayer.setVolume( mPreviousVolumeBGM );
+		}
+		else
+		{
+			mPreviousVolumeBGM = mBGMPlayer.getVolume();
+			mBGMPlayer.setVolume( 0 );
+		}
+	}
+	bool playBGM( std::string& fileName, const bool isRepeated = false ) override;
 	void stopBGM( ) override
 	{
 		mBGMPlayer.stop( );
 	}
-	bool playSFX( const std::string& fileName ) override;
+	bool playSFX( std::string& fileName ) override;
 private:
 	static const uint8_t NUM_OF_SFX_PLAYERS = 2;
+	float mPreviousVolumeBGM;
 	sf::Sound mBGMPlayer, mSFXPlayers[NUM_OF_SFX_PLAYERS];
 	sf::SoundBuffer mSoundBufferForBGM;
 	std::unordered_map<HashedKey, sf::SoundBuffer> mSoundBuffersForSFX;

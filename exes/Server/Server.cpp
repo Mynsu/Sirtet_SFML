@@ -140,7 +140,7 @@ int main( )
 		else if ( const auto it = rooms.find(client.roomID());
 				 rooms.end() != it )
 		{
-			if ( 0 == it->second.leave(index) )
+			if ( 0 == it->second.pop(index) )
 			{
 #ifdef _DEBUG
 				std::cout << "Room "
@@ -361,7 +361,6 @@ int main( )
 #else
 							__assume(0);
 #endif
-							break;
 					}
 				}
 			}
@@ -397,7 +396,7 @@ int main( )
 					else if ( const auto it = rooms.find(client.roomID());
 								rooms.end() != it )
 					{
-						if ( 0 == it->second.leave(clientIdx) )
+						if ( 0 == it->second.pop(clientIdx) )
 						{
 #ifdef _DEBUG
 							std::cout << "Room "

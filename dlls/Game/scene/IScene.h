@@ -26,7 +26,7 @@ namespace scene
 		void operator=( const IScene& ) = delete;
 		virtual ~IScene( ) = default;
 
-		virtual void loadResources( sf::RenderWindow& window ) = 0;
+		virtual void loadResources( const sf::RenderWindow& window ) = 0;
 		virtual ::scene::ID update( std::vector<sf::Event>& eventQueue ) = 0;
 		virtual void draw( sf::RenderWindow& window ) = 0;
 		// NOTE: 비싼 RTTI를 쓰지 않았습니다.

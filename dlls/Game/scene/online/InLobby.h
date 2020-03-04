@@ -1,27 +1,35 @@
 #pragma once
-#include <Common.h>
 #include "IScene.h"
 #include "../../ui/TextInputBox.h"
 
 namespace scene::online
 {
 	class Online;
-}
 
-namespace scene::online
-{
 	class InLobby final : public ::scene::online::IScene
 	{
 	public:
-		InLobby( sf::RenderWindow& window, ::scene::online::Online& net );
+		InLobby( const sf::RenderWindow& window, ::scene::online::Online& net );
 		~InLobby( );
 
-		void loadResources( sf::RenderWindow& window ) override;
+		void loadResources( const sf::RenderWindow& window ) override;
 		::scene::online::ID update( std::vector<sf::Event>& eventQueue,
 								   ::scene::online::Online& net,
-								   sf::RenderWindow& window ) override;
+								   const sf::RenderWindow& window ) override;
 		void draw( sf::RenderWindow& window ) override;
 	private:
+		struct User
+		{
+		public:
+			User( const std::string& nickname, const sf::Font& font )
+				: destinationIndex( 0 ), textFieldNickname( nickname, font )
+			{ }
+			User( const User& ) = delete;
+			User( User&& ) = delete;
+			void operator=( const User& ) = delete;
+			uint8_t destinationIndex;
+			sf::Text textFieldNickname;
+		};
 		enum class SoundIndex
 		{
 			SELECTION,
@@ -47,8 +55,8 @@ namespace scene::online
 				relativeAccelerationUsersBoxRightBottomToRoom, roomSize;
 			std::vector<sf::Vector2f> movingPoints;
 		} mDrawingInfo;
-		bool mIsReceiving, mHasJoined, mIsLoading;
-		int8_t mEnteringRoom;
+		bool mIsReceiving, mIsLoading;
+		int8_t mRoomEntranceCase;
 		uint8_t mIndexForGuideText;
 		uint16_t mFrameCountUserListUpdateInterval, mFrameCountRequestDelay;
 		MouseEvent mLatestMouseEvent;
@@ -56,8 +64,7 @@ namespace scene::online
 		std::vector<std::string> mGuideTexts;
 		std::string mSoundPaths[(int)SoundIndex::NULL_MAX];
 		::ui::TextInputBox mTextInputBox;
-		// NOTE: std::pair<sf::Text, target point to move>.
-		std::unordered_map< std::string, std::pair<sf::Text, uint8_t> > mUserList;
+		std::unordered_map<std::string, User> mUserList;
 		sf::Font mFont;
 		sf::Text mTextLabelForGuide;
 		sf::RectangleShape mBackground;

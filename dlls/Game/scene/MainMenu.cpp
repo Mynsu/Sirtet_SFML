@@ -1,11 +1,10 @@
 #include "../pch.h"
 #include "MainMenu.h"
-#include <VaultKeyList.h>
 #include "../ServiceLocatorMirror.h"
 
 bool ::scene::MainMenu::IsInstantiated = false;
 
-::scene::MainMenu::MainMenu( sf::RenderWindow& window )
+::scene::MainMenu::MainMenu( const sf::RenderWindow& window )
 	: mIsCursorOnButton( false ),
 	mNextSceneID( ::scene::ID::AS_IS )
 {
@@ -21,7 +20,7 @@ bool ::scene::MainMenu::IsInstantiated = false;
 	IsInstantiated = false;
 }
 
-void scene::MainMenu::loadResources( sf::RenderWindow& )
+void scene::MainMenu::loadResources( const sf::RenderWindow& )
 {
 	std::string spritePath( "Images/MainMenu.png" );
 	mSoundPaths[(int)SoundIndex::BGM] = "Sounds/korobeiniki.mp3";

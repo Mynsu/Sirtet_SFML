@@ -13,7 +13,8 @@ public:
 	{ }
 	~Packet( ) = default;
 
-	void pack( const Tag tag, std::string& data, const bool includingTotalSize = true )
+	template <int N>
+	void pack( const char (&tag)[N], std::string& data, const bool includingTotalSize = true )
 	{
 		mData += tag;
 		if ( true == includingTotalSize )
@@ -21,11 +22,11 @@ public:
 			const uint16_t size = ::htons((uint16_t)data.size());
 			mData.append( (char*)&size, sizeof(size) );
 		}
-		mData += data;
+		mData.append( data.data(), data.size() );
 		mHasSomethingToSend = true;
 	}
-	template <typename T, std::enable_if_t<std::is_integral_v<T>>* = nullptr>
-	void pack( const Tag tag, T data )
+	template <typename T, std::enable_if_t<std::is_integral_v<T>>* = nullptr, int N>
+	void pack( const char (&tag)[N], T data )
 	{
 		static_assert( sizeof(T) <= sizeof(uint64_t) );
 		mData += tag;
@@ -49,10 +50,11 @@ public:
 				break;
 			}
 			default:
-#ifndef _DEBUG
+#ifdef _DEBUG
+				__debugbreak( );
+#else
 				__assume( 0 );
 #endif
-				break;
 		}
 		mData.append( (char*)&data, sizeof(T) );
 		mHasSomethingToSend = true;

@@ -1,12 +1,11 @@
 #include "../pch.h"
 #include "Intro.h"
 #include <Lib/ScriptLoader.h>
-#include <VaultKeyList.h>
 #include "../ServiceLocatorMirror.h"
 
 bool ::scene::Intro::IsInstantiated = false;
 
-::scene::Intro::Intro( sf::RenderWindow& window )
+::scene::Intro::Intro( const sf::RenderWindow& window )
 	: mDuration( 2 ),
 	mAlpha( 0x00 ),
 	mFrameCountToStart( 0 ), mFPS_( 60 ),
@@ -28,7 +27,7 @@ bool ::scene::Intro::IsInstantiated = false;
 	IsInstantiated = false;
 }
 
-void scene::Intro::loadResources( sf::RenderWindow& window )
+void scene::Intro::loadResources( const sf::RenderWindow& window )
 {
 	std::string scriptPath( "Scripts/Intro.lua" );
 	std::string varName0( "Image" );

@@ -10,8 +10,8 @@ Room::Room( const ClientIndex hostIndex )
 	: mHasTempoChanged_( false ), mHasHostChanged_( false ),
 	mHostIndex( hostIndex ), mState( State::WAITING )
 {
-	mParticipants.reserve( PARTICIPANT_CAPACITY );
-	mCandidateParticipants.emplace_back( hostIndex );
+	mPlayingParticipants.reserve( PARTICIPANT_CAPACITY );
+	mObservers.emplace_back( hostIndex, false );
 	const Clock::time_point init = Clock::now();
 	for ( Clock::time_point& tp : mAlarms )
 	{
@@ -24,15 +24,15 @@ void Room::start( )
 	mState = State::ON_START;
 }
 
-int Room::leave( const ClientIndex index )
+int Room::pop( const ClientIndex index )
 {
 	bool isThereSomeoneRemains = true;
 	bool wasCandidateParticipant = false;
-	for ( auto it = mCandidateParticipants.begin(); mCandidateParticipants.end() != it; ++it )
+	for ( auto it = mObservers.begin(); mObservers.end() != it; ++it )
 	{
-		if ( index == *it )
+		if ( index == it->index )
 		{
-			mCandidateParticipants.erase( it );
+			mObservers.erase( it );
 			wasCandidateParticipant = true;
 #ifdef _DEBUG
 			std::cout << "Observer " << index << " left the room.\n";
@@ -43,29 +43,29 @@ int Room::leave( const ClientIndex index )
 	if ( false == wasCandidateParticipant )
 	{
 #ifdef _DEBUG
-		ASSERT_TRUE( 1 == mParticipants.erase(index) );
+		ASSERT_TRUE( 1 == mPlayingParticipants.erase(index) );
 		std::cout << "Observer " << index << " left the room.\n";
 #else
-		mParticipants.erase( index );
+		mPlayingParticipants.erase( index );
 #endif
 	}
 
-	if ( const uint8_t pop = (uint8_t)(mCandidateParticipants.size()+mParticipants.size());
+	if ( const uint8_t pop = (uint8_t)(mObservers.size()+mPlayingParticipants.size());
 		0 == pop )
 	{
 		isThereSomeoneRemains = false;
 	}
 	else if ( index == mHostIndex )
 	{
-		if ( const auto it = mParticipants.cbegin();
-			mParticipants.cend() != it )
+		if ( const auto it = mPlayingParticipants.cbegin();
+			mPlayingParticipants.cend() != it )
 		{
 			mHostIndex = it->first;
 		}
 		else
 		{
-			const auto it2 = mCandidateParticipants.cbegin();
-			mHostIndex = *it2;
+			const auto it2 = mObservers.cbegin();
+			mHostIndex = it2->index;
 		}
 		mHasHostChanged_ = true;
 	}
@@ -74,7 +74,7 @@ int Room::leave( const ClientIndex index )
 
 void Room::perceive( const ClientIndex index, const ::model::tetrimino::Move move )
 {
-	if ( auto it = mParticipants.find(index); mParticipants.end() != it )
+	if ( auto it = mPlayingParticipants.find(index); mPlayingParticipants.end() != it )
 	{
 		it->second.perceive( move );
 	}
@@ -85,16 +85,69 @@ void Room::perceive( const ClientIndex index, const ::model::tetrimino::Move mov
 	}
 }
 
-void Room::perceive( const ClientIndex index, const bool hasTetriminoLandedInClient )
+void Room::perceive( const ClientIndex index, const Perception perceptedThing )
 {
-	if ( auto it = mParticipants.find(index); mParticipants.end() != it )
+	switch ( perceptedThing )
 	{
-		it->second.perceive( );
-	}
-	// Exception
-	else
-	{
-		std::cerr << "Client " << index << " knows the incorrect room ID.\n";
+		case Perception::INSTANTIATION_DONE:
+		{
+			for ( Observer& ob : mObservers )
+			{
+				if ( index == ob.index )
+				{
+					if ( Observer::State::ZERO == ob.state )
+					{
+						ob.state = Observer::State::INSTANTIATION_DONE;
+						break;
+					}
+#ifdef _DEBUG
+					else
+					{
+						std::cerr << "Client " << index << " sent needless data(1).\n";
+					}
+#endif
+				}
+			}
+			break;
+		}
+		case Perception::INITIATION_DONE:
+		{
+			for ( Observer& ob : mObservers )
+			{
+				if ( index == ob.index )
+				{
+					if ( Observer::State::INSTANTIATION_DONE == ob.state )
+					{
+						ob.state = Observer::State::DONE;
+						break;
+					}
+#ifdef _DEBUG
+					else
+					{
+						std::cerr << "Client " << index << " sent needless data(2).\n";
+					}
+#endif
+				}
+			}
+			break;
+		}
+		case Perception::TETRIMINO_LAND_ON_CLIENT:
+			if ( auto it = mPlayingParticipants.find(index); mPlayingParticipants.end() != it )
+			{
+				it->second.perceive( );
+			}
+			// Exception
+			else
+			{
+				std::cerr << "Client " << index << " knows the incorrect room ID.\n";
+			}
+			break;
+		default:
+#ifdef _DEBUG
+			__debugbreak( );
+#else
+			__assume( 0 );
+#endif
 	}
 }
 
@@ -106,18 +159,19 @@ std::vector<ClientIndex> Room::update( std::vector<Client>& clients )
 		case Room::State::WAITING:
 			break;
 		case Room::State::ON_START:
-			for ( const ClientIndex idx : mCandidateParticipants )
+			for ( const Observer ob : mObservers )
 			{
-				mParticipants.emplace( idx, Playing() );
-				clients[idx].setState( Client::State::PLAYING_IN_ROOM );
+				auto pair = mPlayingParticipants.try_emplace(ob.index);
+				pair.first->second.spawnTetrimino( );
+				clients[ob.index].setState( Client::State::PLAYING_IN_ROOM );
 			}
-			mCandidateParticipants.clear( );
+			mObservers.clear( );
 			break;
 		case Room::State::READY:
 			break;
 		case Room::State::PLAYING:
 		{
-			for ( auto& pair : mParticipants )
+			for ( auto& pair : mPlayingParticipants )
 			{
 				if ( false == pair.second.update() )
 				{
@@ -136,12 +190,12 @@ std::vector<ClientIndex> Room::update( std::vector<Client>& clients )
 			break;
 		}
 		case Room::State::ALL_OVER:
-			for ( auto& pair : mParticipants )
+			for ( auto& pair : mPlayingParticipants )
 			{
-				mCandidateParticipants.emplace_back( pair.first );
+				mObservers.emplace_back( pair.first, false );
 				clients[pair.first].setState( Client::State::WAITING_IN_ROOM );
 			}
-			mParticipants.clear( );
+			mPlayingParticipants.clear( );
 			break;
 		default:
 #ifdef _DEBUG
@@ -149,7 +203,6 @@ std::vector<ClientIndex> Room::update( std::vector<Client>& clients )
 #else
 			__assume( 0 );
 #endif
-			break;
 	}
 	return failedIndices;
 }
@@ -158,11 +211,14 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 {
 	std::vector<ClientIndex> failedIndices;
 	std::vector<ClientIndex> everyoneInRoom;
-	for ( const ClientIndex idx : mCandidateParticipants )
+	for ( const Observer ob : mObservers )
 	{
-		everyoneInRoom.emplace_back( idx );
+		if ( Observer::State::DONE == ob.state )
+		{
+			everyoneInRoom.emplace_back( ob.index );
+		}
 	}
-	for ( const auto& pair : mParticipants )
+	for ( const auto& pair : mPlayingParticipants )
 	{
 		everyoneInRoom.emplace_back( pair.first );
 	}
@@ -176,7 +232,7 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 			Packet packet;
 			const uint8_t ignored = 1;
 			packet.pack( TAGGED_REQ_GET_READY, ignored );
-			for ( auto& pair : mParticipants )
+			for ( auto& pair : mPlayingParticipants )
 			{
 				Socket& socket = clients[pair.first].socket();
 				if ( -1 == socket.sendOverlapped(packet) )
@@ -185,7 +241,6 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 						pair.first << ".\n";
 					failedIndices.emplace_back( pair.first );
 				}
-				pair.second.spawnTetrimino( );
 			}
 			mAlarms[(int)AlarmIndex::START] = Clock::now( );
 			mState = Room::State::READY;
@@ -194,15 +249,13 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 		case Room::State::READY:
 			if ( true == alarmAfterAndReset(COUNTDOWN_MS, AlarmIndex::START) )
 			{
-				std::string tetriminos;
-				for ( const auto& pair : mParticipants )
+				std::string currentTetriminos;
+				std::string nextTetriminos;
+				for ( const auto& pair : mPlayingParticipants )
 				{
 					const Playing& playing = pair.second;
-					const ::model::tetrimino::Type curTetType = playing.currentTetriminoType();
-					const ::model::tetrimino::Type nextTetType = playing.nextTetriminoType();
 					const uint16_t tempoMs = playing.tempoMs();
 					Packet packet;
-					packet.pack( TAG_MY_NEXT_TETRIMINO, (uint8_t)nextTetType );
 					packet.pack( TAG_MY_TEMPO_MS, tempoMs );
 					Socket& socket = clients[pair.first].socket();
 					if ( -1 == socket.sendOverlapped(packet) )
@@ -211,11 +264,16 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 						failedIndices.emplace_back( pair.first );
 					}
 					const HashedKey nicknameHashed = ::htonl(clients[pair.first].nicknameHashed());
-					tetriminos.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
-					tetriminos += (char)curTetType;
+					currentTetriminos.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
+					nextTetriminos.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
+					const ::model::tetrimino::Type curTetType = playing.currentTetriminoType();
+					currentTetriminos += (char)curTetType;
+					const ::model::tetrimino::Type nextTetType = playing.nextTetriminoType();
+					nextTetriminos += (char)nextTetType;
 				}
 				Packet packet;
-				packet.pack( TAG_NEW_CURRENT_TETRIMINOS, tetriminos );
+				packet.pack( TAG_CURRENT_TETRIMINOS, currentTetriminos );
+				packet.pack( TAG_NEXT_TETRIMINOS, nextTetriminos );
 				for ( const ClientIndex idx : everyoneInRoom )
 				{
 					Socket& socket = clients[idx].socket();
@@ -232,12 +290,15 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 		case Room::State::PLAYING:
 		{
 			std::string currentTetriminosMove;
-			std::string newCurrentTetriminos;
+			std::string currentTetriminosLand;
+			std::string nextTetriminos;
 			std::string stages;
 			std::string numsOfLinesCleared;
 			std::string gamesOver;
-			for ( const auto& pair : mParticipants )
+			for ( const auto& pair : mPlayingParticipants )
 			{
+				const HashedKey nicknameHashed = ::htonl(clients[pair.first].nicknameHashed());
+				const Playing& playing = pair.second;
 				if ( true == isAllOver && false == pair.second.isGameOver() )
 				{
 					isAllOver = false;
@@ -249,80 +310,43 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 						break;
 					case Playing::UpdateResult::TETRIMINO_MOVED:
 					{
-						const HashedKey nicknameHashed = ::htonl(clients[pair.first].nicknameHashed());
-						const Playing& playing = pair.second;
-						const ::model::tetrimino::Type curTetType = playing.currentTetriminoType();
-						newCurrentTetriminos.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
-						newCurrentTetriminos += (char)curTetType;
-						const ::model::tetrimino::Rotation rotID = playing.currentTetriminoRotationID();
-						const sf::Vector2<int8_t> pos( playing.currentTetriminoPosition() );
 						currentTetriminosMove.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
+						const ::model::tetrimino::Rotation rotID = playing.currentTetriminoRotationID();
 						currentTetriminosMove += (char)rotID;
+						const sf::Vector2<int8_t> pos( playing.currentTetriminoPosition() );
 						currentTetriminosMove.append( (char*)&pos, sizeof(pos) );
 						break;
 					}
 					case Playing::UpdateResult::TETRIMINO_LANDED:
 					{
-						const Playing& playing = pair.second;
-						const ::model::tetrimino::Type nextTetType = playing.nextTetriminoType();
-						std::string serializedStage( playing.serializedStage() );
-						Packet packet;
-						packet.pack( TAG_MY_NEXT_TETRIMINO, (uint8_t)nextTetType );
-						packet.pack( TAG_MY_STAGE, serializedStage, false );
-						Socket& socket = clients[pair.first].socket();
-						if ( -1 == socket.sendOverlapped(packet) )
-						{
-							std::cerr << "WARNING: Failed to send to Client " << pair.first << ".\n";
-							failedIndices.emplace_back( pair.first );
-						}
-						const HashedKey nicknameHashed = ::htonl(clients[pair.first].nicknameHashed());
-						const ::model::tetrimino::Type curTetType = playing.currentTetriminoType();
-						newCurrentTetriminos.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
-						newCurrentTetriminos += (char)curTetType;
+						currentTetriminosLand.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
+						nextTetriminos.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
 						stages.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
-						stages.append( serializedStage.data(), serializedStage.size() );
+						const ::model::tetrimino::Type nextTetType = playing.nextTetriminoType();
+						nextTetriminos += (char)nextTetType;
+						const ::model::stage::Grid& stage = playing.serializedStage();
+						stages.append( (char*)&stage, sizeof(stage) );
 						break;
 					}
 					case Playing::UpdateResult::LINE_CLEARED:
 					{
-						const Playing& playing = pair.second;
-						const ::model::tetrimino::Type nextTetType = playing.nextTetriminoType();
-						std::string serializedStage( playing.serializedStage() );
-						const uint8_t numOfLinesCleared = playing.numOfLinesCleared();
-						Packet packet;
-						packet.pack( TAG_MY_NEXT_TETRIMINO, (uint8_t)nextTetType );
-						packet.pack( TAG_MY_STAGE, serializedStage, false );
-						Socket& socket = clients[pair.first].socket();
-						if ( -1 == socket.sendOverlapped(packet) )
-						{
-							std::cerr << "WARNING: Failed to send to Client " << pair.first << ".\n";
-							failedIndices.emplace_back( pair.first );
-						}
-						const HashedKey nicknameHashed = ::htonl(clients[pair.first].nicknameHashed());
-						const ::model::tetrimino::Type curTetType = playing.currentTetriminoType();
-						newCurrentTetriminos.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
-						newCurrentTetriminos += (char)curTetType;
+						currentTetriminosLand.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
+						nextTetriminos.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
 						stages.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
-						stages.append( serializedStage.data(), serializedStage.size() );
 						numsOfLinesCleared.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
+						const ::model::tetrimino::Type nextTetType = playing.nextTetriminoType();
+						nextTetriminos += (char)nextTetType;
+						const ::model::stage::Grid& stage = playing.serializedStage();
+						stages.append( (char*)&stage, sizeof(stage) );
+						const uint8_t numOfLinesCleared = playing.numOfLinesCleared();
 						numsOfLinesCleared += (char)numOfLinesCleared;
 						break;
 					}
 					case Playing::UpdateResult::GAME_OVER:
 					{
-						const Playing& playing = pair.second;
-						std::string serializedStage( playing.serializedStage() );
-						Packet packet;
-						packet.pack( TAG_MY_STAGE, serializedStage, false );
-						Socket& socket = clients[pair.first].socket();
-						if ( -1 == socket.sendOverlapped(packet) )
-						{
-							std::cerr << "WARNING: Failed to send to Client " << pair.first << ".\n";
-							failedIndices.emplace_back( pair.first );
-						}
-						const HashedKey nicknameHashed = ::htonl(clients[pair.first].nicknameHashed());
 						stages.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
-						stages.append( serializedStage.data(), serializedStage.size() );
+						const ::model::stage::Grid& stage = playing.serializedStage();
+						stages.append( (char*)&stage, sizeof(stage) );
 						gamesOver.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
 						break;
 					}
@@ -332,7 +356,6 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 #else
 						__assume( 0 );
 #endif
-						break;
 				}
 				if ( true == mHasTempoChanged_ )
 				{
@@ -349,13 +372,17 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 			}
 			mHasTempoChanged_ = false;
 			Packet packet;
+			if ( false == currentTetriminosLand.empty() )
+			{
+				packet.pack( TAG_CURRENT_TETRIMINOS_LAND, currentTetriminosLand );
+			}
 			if ( false == currentTetriminosMove.empty() )
 			{
 				packet.pack( TAG_CURRENT_TETRIMINOS_MOVE, currentTetriminosMove );
 			}
-			if ( false == newCurrentTetriminos.empty() )
+			if ( false == nextTetriminos.empty() )
 			{
-				packet.pack( TAG_NEW_CURRENT_TETRIMINOS, newCurrentTetriminos );
+				packet.pack( TAG_NEXT_TETRIMINOS, nextTetriminos );
 			}
 			if ( false == stages.empty() )
 			{
@@ -398,7 +425,6 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 #else
 			__assume( 0 );
 #endif
-			break;
 	}
 	if ( true == alarmAfterAndReset(UPDATE_USER_LIST_INTERVAL_MS, AlarmIndex::UPDATE_USER_LIST) ||
 		true == isAllOver )
@@ -411,6 +437,21 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 			const uint8_t nicknameLen = (uint8_t)nickname.size();
 			userList += (char)nicknameLen;
 			userList += nickname;
+		}
+		bool hasNewObserver = false;
+		for ( const Observer ob : mObservers )
+		{
+			if ( Observer::State::DONE != ob.state )
+			{
+				if ( Observer::State::INSTANTIATION_DONE == ob.state )
+				{
+					hasNewObserver = true;
+				}
+				const std::string& nickname = clients[ob.index].nickname();
+				const uint8_t nicknameLen = (uint8_t)nickname.size();
+				userList += (char)nicknameLen;
+				userList += nickname;
+			}
 		}
 		Packet packet;
 		packet.pack( TAGGED_NOTI_UPDATE_USER_LIST, userList );
@@ -429,6 +470,58 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 				failedIndices.emplace_back( idx );
 			}
 		}
+		if ( true == hasNewObserver )
+		{
+			std::string currentTetriminos, nextTetriminos, stages, gamesOver;
+			for ( const auto& pair : mPlayingParticipants )
+			{
+				const Playing& playing = pair.second;
+				const HashedKey nicknameHashed = ::htonl(clients[pair.first].nicknameHashed());
+				currentTetriminos.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
+				nextTetriminos.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
+				stages.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
+				if ( true == playing.isGameOver() )
+				{
+					gamesOver.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
+				}
+				const ::model::tetrimino::Type curTetType = playing.currentTetriminoType();
+				currentTetriminos += (char)curTetType;
+				const ::model::tetrimino::Type nextTetType = playing.nextTetriminoType();
+				nextTetriminos += (char)nextTetType;
+				const ::model::stage::Grid& stage = playing.serializedStage();
+				stages.append( (char*)&stage, sizeof(stage) );
+			}
+			if ( false == currentTetriminos.empty() )
+			{
+				packet.pack( TAG_CURRENT_TETRIMINOS, currentTetriminos );
+			}
+			if ( false == nextTetriminos.empty() )
+			{
+				packet.pack( TAG_NEXT_TETRIMINOS, nextTetriminos );
+			}
+			if ( false == stages.empty() )
+			{
+				packet.pack( TAG_STAGES, stages );
+			}
+			if ( false == gamesOver.empty() )
+			{
+				packet.pack( TAG_GAMES_OVER, gamesOver );
+			}
+			for ( Observer& ob : mObservers )
+			{
+				if ( Observer::State::INSTANTIATION_DONE == ob.state )
+				{
+					Socket& socket = clients[ob.index].socket();
+					if ( -1 == socket.sendOverlapped(packet) )
+					{
+						std::cerr << "WARNING: Failed to send the list of users in the room to Client " <<
+							ob.index << ".\n";
+						failedIndices.emplace_back( ob.index );
+					}
+					ob.state = Observer::State::DONE;
+				}
+			}
+		}
 	}
 
 	return failedIndices;
@@ -439,17 +532,24 @@ ClientIndex Room::hostIndex( ) const
 	return mHostIndex;
 }
 
-bool Room::tryAccept( const ClientIndex index )
+bool Room::tryEmplace( const ClientIndex index )
 {
 	bool isSuccessful = true;
-	const uint8_t pop = (uint8_t)(mCandidateParticipants.size() + mParticipants.size());
+	const uint8_t pop = (uint8_t)(mObservers.size() + mPlayingParticipants.size());
 	if ( PARTICIPANT_CAPACITY == pop )
 	{
 		isSuccessful = false;
 	}
 	else
 	{
-		mCandidateParticipants.emplace_back( index );
+		if ( State::PLAYING == mState )
+		{
+			mObservers.emplace_back( index, true );
+		}
+		else
+		{
+			mObservers.emplace_back( index, false );
+		}
 	}
 	return isSuccessful;
 }

@@ -45,6 +45,7 @@ bool Playing::update( )
 	mUpdateResult = Playing::UpdateResult::NONE;
 	if ( true == mIsGameOver_ )
 	{
+		// Doing nothing.
 		return isAsyncTolerable;
 	}
 
@@ -83,7 +84,7 @@ bool Playing::update( )
 				}
 			}
 			mUpdateResult = Playing::UpdateResult::TETRIMINO_MOVED;
-			return true;
+			return isAsyncTolerable;
 		}
 	}
 	else
@@ -113,13 +114,11 @@ bool Playing::update( )
 			case ::model::tetrimino::Move::NONE_MAX:
 				break;
 			default:
-				std::cerr << "Undefined move.\n";
 #ifdef _DEBUG
 				__debugbreak( );
 #else
 				__assume( 0 );
 #endif
-				break;
 		}
 		if ( true == alarmAfter(mTempoMs, AlarmIndex::TETRIMINO_DOWN) )
 		{
@@ -170,7 +169,7 @@ bool Playing::update( )
 		}
 	}
 
-	return true;
+	return isAsyncTolerable;
 }
 
 Playing::UpdateResult Playing::updateResult( ) const
@@ -208,10 +207,9 @@ void Playing::setRelativeTempoMs( const int32_t milliseconds )
 	mTempoMs += milliseconds;
 }
 
-std::string Playing::serializedStage( ) const
+const ::model::stage::Grid& Playing::serializedStage( ) const
 {
-	const ::model::stage::Grid& grid = mStage.cgrid();
-	return std::string( (char*)&grid, sizeof(::model::stage::Grid) );
+	return mStage.cgrid();
 }
 
 uint8_t Playing::numOfLinesCleared( ) const

@@ -7,6 +7,7 @@
 #include <string>
 #include <string_view>
 #include <SFML/Graphics.hpp>
+#pragma comment (lib, "sfml-graphics-d" )
 #include "../Lib/Hash.h"
 
 using Func = std::function<void(const std::string_view& args)>;

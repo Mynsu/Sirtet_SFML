@@ -1,14 +1,11 @@
 #include "../../pch.h"
 #include "Waiting.h"
-#include <Common.h>
-#include <VaultKeyList.h>
-#include <CommandList.h>
 #include "Online.h"
 #include "../../ServiceLocatorMirror.h"
 
 bool scene::online::Waiting::IsInstantiated = false;
 
-scene::online::Waiting::Waiting( sf::RenderWindow& window, Online& net )
+scene::online::Waiting::Waiting( const sf::RenderWindow& window, Online& net )
 	: mOrder( 0 ),
 	mState( ::scene::online::Waiting::State::TICKETING )
 {
@@ -37,7 +34,7 @@ scene::online::Waiting::~Waiting( )
 	IsInstantiated = false;
 }
 
-void scene::online::Waiting::loadResources( sf::RenderWindow& window )
+void scene::online::Waiting::loadResources( const sf::RenderWindow& window )
 {
 	std::string font( "Fonts/AGENCYB.TTF" );
 	sf::Vector2f centerPos( sf::Vector2f(window.getSize())*.5f );
@@ -400,7 +397,7 @@ void scene::online::Waiting::loadResources( sf::RenderWindow& window )
 
 ::scene::online::ID scene::online::Waiting::update( std::vector<sf::Event>& eventQueue,
 												   ::scene::online::Online& net,
-												   sf::RenderWindow& )
+												   const sf::RenderWindow& )
 {
 	::scene::online::ID retVal = ::scene::online::ID::AS_IS;
 	switch ( mState )
@@ -472,7 +469,6 @@ void scene::online::Waiting::loadResources( sf::RenderWindow& window )
 #else
 			__assume(0);
 #endif
-			break;
 	}
 	for ( auto it = eventQueue.cbegin(); eventQueue.cend() !=it; )
 	{

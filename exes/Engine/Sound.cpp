@@ -5,11 +5,14 @@ const uint8_t MAX_NUM_OF_BUFFERS = 3;
 bool SFMLSound::IsInstantiated = false;
 
 SFMLSound::SFMLSound( )
+	: mPreviousVolumeBGM( 0 )
 {
 	ASSERT_TRUE( false == IsInstantiated );
-	IsInstantiated = true;
+
 	setBGMVolume( 2.f );
 	setSFXVolume( 4.f );
+
+	IsInstantiated = true;
 }
 
 SFMLSound::~SFMLSound( )
@@ -17,7 +20,7 @@ SFMLSound::~SFMLSound( )
 	IsInstantiated = false;
 }
 
-bool SFMLSound::playBGM( const std::string& fileName, const bool isRepeated )
+bool SFMLSound::playBGM( std::string& fileName, const bool isRepeated )
 {
 	bool isLoadSuccessful = true;
 	if ( false == mSoundBufferForBGM.loadFromFile(fileName) )
@@ -32,7 +35,7 @@ bool SFMLSound::playBGM( const std::string& fileName, const bool isRepeated )
 	return isLoadSuccessful;
 }
 
-bool SFMLSound::playSFX( const std::string& fileName )
+bool SFMLSound::playSFX( std::string& fileName )
 {
 	bool isLoadSuccessful = true;
 	if ( MAX_NUM_OF_BUFFERS < (uint8_t)mSoundBuffersForSFX.size() )

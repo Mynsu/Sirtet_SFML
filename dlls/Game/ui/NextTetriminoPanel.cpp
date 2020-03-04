@@ -1,7 +1,16 @@
 #include "../pch.h"
 #include "NextTetriminoPanel.h"
-#include <Common.h>
 #include "../model/Tetrimino.h"
+
+void ui::NextTetriminoPanel::draw( sf::RenderWindow& window )
+{
+	window.draw( mPanel );
+	for ( uint8_t i = 0; ::model::tetrimino::BLOCKS_A_TETRIMINO != i; ++i )
+	{
+		mBlock.setPosition( mBlocksPositions[i] );
+		window.draw( mBlock );
+	}
+}
 
 void ui::NextTetriminoPanel::setTetrimino( const::model::Tetrimino& next )
 {
@@ -37,16 +46,6 @@ void ui::NextTetriminoPanel::setTetrimino( const::model::Tetrimino& next )
 				break;
 			}
 		}
-	}
-}
-
-void ui::NextTetriminoPanel::draw( sf::RenderWindow& window )
-{
-	window.draw( mPanel );
-	for ( uint8_t i = 0; ::model::tetrimino::BLOCKS_A_TETRIMINO != i; ++i )
-	{
-		mBlock.setPosition( mBlocksPositions[i] );
-		window.draw( mBlock );
 	}
 }
 

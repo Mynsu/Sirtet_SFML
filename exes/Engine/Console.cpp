@@ -221,10 +221,11 @@ void Console::printFailure( const FailureLevel failureLevel, const std::string& 
 			ss << "FATAL: " << message;
 			break;
 		default:
-#ifndef _DEBUG
+#ifdef _DEBUG
+			__debugbreak( );
+#else
 			__assume(0);
 #endif
-			break;
 	}
 	print( ss.str(), sf::Color::Red );
 }

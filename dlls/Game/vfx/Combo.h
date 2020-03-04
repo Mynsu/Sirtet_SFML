@@ -1,5 +1,4 @@
 #pragma once
-#include <Common.h>
 
 namespace vfx
 {
@@ -12,7 +11,7 @@ namespace vfx
 		Combo( Combo&& ) = delete;
 		virtual ~Combo( ) = default;
 
-		bool loadResources( const std::string& textureFileName )
+		bool loadResources( std::string& textureFileName )
 		{
 			if ( false == mTexture.loadFromFile( textureFileName ) )
 			{

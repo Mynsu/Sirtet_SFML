@@ -1,7 +1,5 @@
 #include "../../pch.h"
 #include "Online.h"
-#include <Common.h>
-#include <VaultKeyList.h>
 #include "../../ServiceLocatorMirror.h"
 #include "Waiting.h"
 #include "InLobby.h"
@@ -30,7 +28,7 @@ namespace
 			int rcvErr = WSAGetLastError();
 			if ( -1 == rcvRes && WSAETIMEDOUT == rcvErr )
 			{
-				// Trying to receive again
+				// Trying to receive again.
 			}
 			else if ( 0 < rcvRes )
 			{
@@ -48,19 +46,19 @@ namespace
 					ReceivingResult = rcvRes;
 					ReceivingError = rcvErr;
 				}
- 				break;
+  				break;
 			}
 		}
 	}
 
-	void CompletionRoutine(DWORD, DWORD cbTransferred, LPWSAOVERLAPPED lpOverlapped, DWORD)
+	void CompletionRoutine( DWORD, DWORD cbTransferred, LPWSAOVERLAPPED lpOverlapped, DWORD )
 	{
 		SocketToServer->completedIO( lpOverlapped, cbTransferred );
 	}
 }
 
-scene::online::Online::Online( sf::RenderWindow& window )
-	: mFrameCountToMainMenu( 0 ), mMyNicknameHashed_( 0 ), mWindow_( window )
+scene::online::Online::Online( const sf::RenderWindow& window )
+	: mFrameCountToMainMenu( 0 ), mMyNicknameHashed_( 0 ), mWindow( window )
 {
 	ASSERT_TRUE( false == IsInstantiated );
 
@@ -92,7 +90,7 @@ scene::online::Online::Online( sf::RenderWindow& window )
 	IsInstantiated = false;
 }
 
-void ::scene::online::Online::loadResources( sf::RenderWindow& window )
+void ::scene::online::Online::loadResources( const sf::RenderWindow& window )
 {
 	mCurrentScene->loadResources( window );
 
@@ -163,7 +161,7 @@ void ::scene::online::Online::loadResources( sf::RenderWindow& window )
 				// When the value looks OK,
 				else
 				{
-					mSpriteClipSize_.x = temp;
+					mSpriteClipSize.x = temp;
 					isWDefault = false;
 				}
 			}
@@ -192,7 +190,7 @@ void ::scene::online::Online::loadResources( sf::RenderWindow& window )
 				// When the value looks OK,
 				else
 				{
-					mSpriteClipSize_.y = temp;
+					mSpriteClipSize.y = temp;
 					isHDefault = false;
 				}
 			}
@@ -224,9 +222,9 @@ void ::scene::online::Online::loadResources( sf::RenderWindow& window )
 	}
 
 	mSprite.setTexture( mTexture );
-	const sf::Vector2i cast( mSpriteClipSize_ );
+	const sf::Vector2i cast( mSpriteClipSize );
 	mSprite.setTextureRect( sf::IntRect(0, cast.y, cast.x, cast.y) );
-	mSprite.setPosition( (sf::Vector2f(window.getSize())-mSpriteClipSize_)*0.5f );
+	mSprite.setPosition( (sf::Vector2f(window.getSize())-mSpriteClipSize)*0.5f );
 }
 
 ::scene::ID scene::online::Online::update( std::vector<sf::Event>& eventQueue )
@@ -235,7 +233,7 @@ void ::scene::online::Online::loadResources( sf::RenderWindow& window )
 
 	if ( 0 == mFrameCountToMainMenu )
 	{
-		const ::scene::online::ID nextSceneID = mCurrentScene->update(eventQueue, *this, mWindow_);
+		const ::scene::online::ID nextSceneID = mCurrentScene->update(eventQueue, *this, mWindow);
 		if ( ::scene::online::ID::AS_IS < nextSceneID )
 		{
 			setScene( nextSceneID );
@@ -303,12 +301,6 @@ void scene::online::Online::connectToQueueServer( )
 								  sf::Color::Green );
 }
 
-void scene::online::Online::disconnect( )
-{
-	// Triggering
-	mFrameCountToMainMenu = 1;
-}
-
 bool scene::online::Online::connectToMainServer( )
 {
 	bool result = true;
@@ -332,7 +324,7 @@ bool scene::online::Online::connectToMainServer( )
 		result = false;
 		return result;
 	}
-	// NOTE: Socket option should be set after binding it.
+	// NOTE: Socket option should be set only after binding it.
 	if ( const DWORD timeout = RECEIVING_WAIT_MS;
 		-1 == setsockopt(SocketToServer->handle(), SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, (int)sizeof(DWORD)) )
 	{
@@ -368,6 +360,12 @@ bool scene::online::Online::connectToMainServer( )
 	return true;
 }
 
+void scene::online::Online::disconnect( )
+{
+	// Triggering
+	mFrameCountToMainMenu = 1;
+}
+
 void scene::online::Online::send( char* const data, const int size )
 {
 	if ( -1 == SocketToServer->sendOverlapped(data, size, CompletionRoutine) )
@@ -375,7 +373,7 @@ void scene::online::Online::send( char* const data, const int size )
 		disconnect( );
 		return;
 	}
-	// NOTE: Blocking can happen.
+	// Invocation of CompletionRoutine requires this.  Blocking can happen.
 	::SleepEx( 1000, TRUE );
 }
 
@@ -386,7 +384,7 @@ void scene::online::Online::send( Packet& packet )
 		disconnect( );
 		return;
 	}
-	// NOTE: Blocking can happen.
+	// Invocation of CompletionRoutine requires this.  Blocking can happen.
 	::SleepEx( 1000, TRUE );
 }
 
@@ -571,16 +569,16 @@ void scene::online::Online::setScene( const::scene::online::ID nextSceneID )
 	switch ( nextSceneID )
 	{
 		case ::scene::online::ID::WAITING:
-			mCurrentScene = std::make_unique<::scene::online::Waiting>( mWindow_, *this );
+			mCurrentScene = std::make_unique<::scene::online::Waiting>( mWindow, *this );
 			break;
 		case ::scene::online::ID::IN_LOBBY:
-			mCurrentScene = std::make_unique<::scene::online::InLobby>( mWindow_, *this );
+			mCurrentScene = std::make_unique<::scene::online::InLobby>( mWindow, *this );
 			break;
 		case ::scene::online::ID::IN_ROOM_AS_HOST:
-			mCurrentScene = std::make_unique<::scene::online::InRoom>( mWindow_, *this, true );
+			mCurrentScene = std::make_unique<::scene::online::InRoom>( mWindow, *this, true );
 			break;
 		case ::scene::online::ID::IN_ROOM:
-			mCurrentScene = std::make_unique<::scene::online::InRoom>( mWindow_, *this );
+			mCurrentScene = std::make_unique<::scene::online::InRoom>( mWindow, *this );
 			break;
 		default:
 #ifdef _DEBUG
@@ -588,6 +586,5 @@ void scene::online::Online::setScene( const::scene::online::ID nextSceneID )
 #else
 			__assume( 0 );
 #endif
-			break;
 	}
 }

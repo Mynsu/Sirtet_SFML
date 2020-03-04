@@ -1,5 +1,4 @@
 #pragma once
-#include <Common.h>
 
 namespace model
 {
@@ -20,6 +19,8 @@ namespace ui
 		NextTetriminoPanel( NextTetriminoPanel&& ) = delete;
 		virtual ~NextTetriminoPanel( ) = default;
 
+		void draw( sf::RenderWindow& window );
+		void setDimension( const sf::Vector2f position, const float cellSize );
 		sf::FloatRect globalBounds( ) const
 		{
 			return mPanel.getGlobalBounds();
@@ -28,17 +29,6 @@ namespace ui
 		{
 			return mPanel.getRotation();
 		}
-		void setColor( const sf::Color background, const sf::Color cellOutlineColor )
-		{
-			mPanel.setFillColor( background );
-			mBlock.setOutlineColor( cellOutlineColor );
-		}
-		void setOutline( const float thickness, const sf::Color color )
-		{
-			mPanel.setOutlineThickness( thickness );
-			mPanel.setOutlineColor( color );
-		}
-		void setDimension( const sf::Vector2f position, const float cellSize );
 		void rotate( const float degree )
 		{
 			mPanel.rotate( degree );
@@ -61,7 +51,16 @@ namespace ui
 			mBlock.setFillColor( sf::Color::Transparent );
 			mBlock.setOutlineThickness( 0.f );
 		}
-		void draw( sf::RenderWindow& window );
+		void setColor( const sf::Color background, const sf::Color cellOutlineColor )
+		{
+			mPanel.setFillColor( background );
+			mBlock.setOutlineColor( cellOutlineColor );
+		}
+		void setOutline( const float thickness, const sf::Color color )
+		{
+			mPanel.setOutlineThickness( thickness );
+			mPanel.setOutlineColor( color );
+		}
 	private:
 		float mCellSize_;
 		// Different from mPanel's position which is its center.

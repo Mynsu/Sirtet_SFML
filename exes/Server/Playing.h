@@ -29,7 +29,7 @@ public:
 	::model::tetrimino::Type nextTetriminoType( ) const;
 	uint16_t tempoMs( ) const;
 	void setRelativeTempoMs( const int32_t milliseconds );
-	std::string serializedStage( ) const;
+	const ::model::stage::Grid& serializedStage( ) const;
 	uint8_t numOfLinesCleared( ) const;
 	bool isGameOver( ) const;
 private:

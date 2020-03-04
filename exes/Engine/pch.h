@@ -6,10 +6,12 @@
 #include <iostream>
 #include <functional>
 #include <stdint.h>
+#include <intrin.h>
 #include <SFML/Graphics.hpp> // Windows.h 다음에 포함하면 컴파일 에러 발생.
 #include <Windows.h>
 #include <SFML/Window.hpp>
 #include <SFML/Audio.hpp>
+#include <SFML/System.hpp>
 #ifdef _DEBUG
 #pragma comment( lib, "sfml-window-d" )
 #pragma comment( lib, "sfml-system-d" )
@@ -23,10 +25,7 @@
 #endif
 #include <lua.hpp>
 #pragma comment( lib, "lua53" )
-#include <Lib/Hash.h>
-#include <IServiceLocator.h>
-#include <IGame.h>
-#include <IConsole.h>
+#include <GameLib/VaultKeyList.h>
 
 #ifdef _DEBUG
 #define ASSERT_FALSE( x ) if ( false != (x) ) __debugbreak( )

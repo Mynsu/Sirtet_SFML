@@ -1,8 +1,5 @@
 #include "../../pch.h"
 #include "InLobby.h"
-#include <Common.h>
-#include <VaultKeyList.h>
-#include <CommandList.h>
 #include "../../ServiceLocatorMirror.h"
 #include "Online.h"
 
@@ -14,23 +11,25 @@ std::mutex MutexForGuideText, MutexForMovingPoints;
 
 bool scene::online::InLobby::IsInstantiated = false;
 
-scene::online::InLobby::InLobby( sf::RenderWindow& window, ::scene::online::Online& net )
-	: mIsReceiving( false ), mHasJoined( false ), mIsLoading( true ),
-	mIndexForGuideText( 0 ), mEnteringRoom( 0 ),
+scene::online::InLobby::InLobby( const sf::RenderWindow& window, ::scene::online::Online& net )
+	: mIsReceiving( false ), mIsLoading( true ),
+	mIndexForGuideText( 0 ), mRoomEntranceCase( 0 ),
 	mFrameCountUserListUpdateInterval( 30 ), mFrameCountRequestDelay( 0 ),
 	mNet( net ),
 	mTextInputBox( window )
 {
 	ASSERT_TRUE( false == IsInstantiated );
-
+	
 	const sf::Vector2f winSize( window.getSize() );
 	mBackground.setSize( winSize );
 	const std::string& myNickname = net.myNickname();
-	sf::Text tf( myNickname, mFont );
+	auto pair = mUserList.emplace( std::piecewise_construct,
+								  std::forward_as_tuple(myNickname),
+								  std::forward_as_tuple(myNickname, mFont) );
+	sf::Text& tf = pair.first->second.textFieldNickname;
 	tf.setOrigin( 0.5f, 0.5f );
 	tf.setPosition(	winSize*.5f );
 	tf.setFillColor( sf::Color(0xffa500ff) ); // Orange
-	mUserList.emplace( myNickname, std::make_pair(tf,0) );
 	mLatestMouseEvent.latestClickTime = Clock::time_point::min();
 	loadResources( window );
 #ifdef _DEV
@@ -54,7 +53,7 @@ scene::online::InLobby::~InLobby( )
 	IsInstantiated = false;
 }
 
-void scene::online::InLobby::loadResources( sf::RenderWindow& window )
+void scene::online::InLobby::loadResources( const sf::RenderWindow& window )
 {
 	uint32_t backgroundColor = 0x29cdb5fa; // Cyan
 	mDrawingInfo.usersBoxAnimationSpeed = 3.f;
@@ -952,7 +951,7 @@ void scene::online::InLobby::loadResources( sf::RenderWindow& window )
 	{
 		auto it = mUserList.find(mNet.myNickname());
 		ASSERT_TRUE( mUserList.end() != it );
-		it->second.first.setFillColor( sf::Color(myNicknameColor) );
+		it->second.textFieldNickname.setFillColor( sf::Color(myNicknameColor) );
 	}
 	::math::Vector<2> dir( mDrawingInfo.usersBoxPosition-
 								::math::Vector<2>(0.f, 0.f) );
@@ -1162,15 +1161,15 @@ void scene::online::InLobby::loadResources( sf::RenderWindow& window )
 
 ::scene::online::ID scene::online::InLobby::update( std::vector<sf::Event>& eventQueue,
 												   ::scene::online::Online& net,
-												   sf::RenderWindow& )
+												   const sf::RenderWindow& )
 {
 	::scene::online::ID retVal = ::scene::online::ID::AS_IS;
-	if ( 2 == mEnteringRoom )
+	if ( 2 == mRoomEntranceCase )
 	{
 		retVal = ::scene::online::ID::IN_ROOM;
 		return retVal;
 	}
-	else if ( -2 == mEnteringRoom )
+	else if ( -2 == mRoomEntranceCase )
 	{
 		retVal = ::scene::online::ID::IN_ROOM_AS_HOST;
 		return retVal;
@@ -1184,7 +1183,7 @@ void scene::online::InLobby::loadResources( sf::RenderWindow& window )
 																				0) );
 			std::nullopt != resultCreatingRoom )
 		{
-			mEnteringRoom = -1;
+			mRoomEntranceCase = -1;
 			mUserList.clear( );
 		}
 		else if ( const std::optional<std::string> resultJoiningRoom( net.getByTag(TAGGED_REQ_JOIN_ROOM,
@@ -1202,7 +1201,7 @@ void scene::online::InLobby::loadResources( sf::RenderWindow& window )
 					gService()->console().print( "Room is full.", sf::Color::Green );
 					break;
 				case ResultJoiningRoom::SUCCCEDED:
-					mEnteringRoom = 1;
+					mRoomEntranceCase = 1;
 					mUserList.clear( );
 					break;
 				case ResultJoiningRoom::FAILED_DUE_TO_TARGET_NOT_CONNECTING:
@@ -1217,11 +1216,10 @@ void scene::online::InLobby::loadResources( sf::RenderWindow& window )
 #else
 					__assume( 0 );
 #endif
-					break;
 			}
 		}
 		
-		if ( const std::optional<std::string> userList( net.getByTag(TAGGED_REQ_USER_LIST_IN_LOBBY,
+		if ( const std::optional<std::string> userList( net.getByTag(TAGGED_REQ_USER_LIST,
 																	Online::Option::DEFAULT,
 																	-1) );
 			std::nullopt != userList )
@@ -1265,10 +1263,12 @@ void scene::online::InLobby::loadResources( sf::RenderWindow& window )
 			float mul = 0.f;
 			for ( const std::string& nickname : curUsers )
 			{
-				sf::Text tf( nickname, mFont );
+				auto pair = mUserList.emplace( std::piecewise_construct,
+											  std::forward_as_tuple(nickname),
+											  std::forward_as_tuple(nickname, mFont) );
+				sf::Text& tf = pair.first->second.textFieldNickname;
 				tf.setFillColor( sf::Color(mDrawingInfo.nicknameColor) );
 				tf.setPosition( mDrawingInfo.centerPosition + offset*mul );
-				mUserList.emplace( nickname, std::make_pair(tf, 0) );
 				mul += 1.f;
 			}
 		}
@@ -1282,8 +1282,8 @@ void scene::online::InLobby::loadResources( sf::RenderWindow& window )
 
 	if ( UPDATE_USER_LIST_INTERVAL <= mFrameCountUserListUpdateInterval )
 	{
-		std::string req( TAGGED_REQ_USER_LIST_IN_LOBBY );
-		net.send( req.data(), (int)req.size() );
+		std::string request( TAGGED_REQ_USER_LIST );
+		net.send( request.data(), (int)request.size() );
 	}
 
 	if ( true == mTextInputBox.isActive() && 
@@ -1370,7 +1370,7 @@ void scene::online::InLobby::draw( sf::RenderWindow& window )
 		size.y += mDrawingInfo.relativeAccelerationUserBoxRightBottom0.mComponents[1];
 		mUsersBox.setSize( size );
 	}
-	else if ( 0 != mEnteringRoom )
+	else if ( 0 != mRoomEntranceCase )
 	{
 		sf::Vector2f boxPos( mUsersBox.getPosition() );
 		boxPos += sf::Vector2f(mDrawingInfo.accelerationUsersBoxLeftTopToRoom.mComponents[0],
@@ -1410,7 +1410,7 @@ void scene::online::InLobby::draw( sf::RenderWindow& window )
 		const float mag = v.magnitude();
 		if ( mag < ERROR_RANGE )
 		{
-			mEnteringRoom *= 2;
+			mRoomEntranceCase *= 2;
 		}
 	}
 	window.draw( mUsersBox );
@@ -1428,7 +1428,7 @@ void scene::online::InLobby::draw( sf::RenderWindow& window )
 			mTextLabelForGuide.setString( mGuideTexts[mIndexForGuideText] );
 		}
 	}
-	if ( 0 == mEnteringRoom )
+	if ( 0 == mRoomEntranceCase )
 	{
 		window.draw( mTextLabelForGuide );
 	}
@@ -1440,25 +1440,26 @@ void scene::online::InLobby::draw( sf::RenderWindow& window )
 			while ( true )
 			{
 				auto& textFieldAndDestination = pair.second;
-				const sf::Vector2f dir( mDrawingInfo.movingPoints[textFieldAndDestination.second] - textFieldAndDestination.first.getPosition() );
+				const sf::Vector2f dir( mDrawingInfo.movingPoints[textFieldAndDestination.destinationIndex] -
+									   textFieldAndDestination.textFieldNickname.getPosition() );
 				math::Vector<2> v( dir.x, dir.y );
 				const float mag = v.magnitude();
 				if ( mag <= ERROR_RANGE )
 				{
-					if ( numOfMovingPoints-1 == textFieldAndDestination.second )
+					if ( numOfMovingPoints-1 == textFieldAndDestination.destinationIndex )
 					{
-						textFieldAndDestination.second = 0;
+						textFieldAndDestination.destinationIndex = 0;
 					}
 					else
 					{
-						++textFieldAndDestination.second;
+						++textFieldAndDestination.destinationIndex;
 					}
 				}
 				else
 				{
 					const math::Vector<2> nv( v.normalize()*SPEED_OF_NICKNAME_MOVE );
-					textFieldAndDestination.first.move( nv.mComponents[0], nv.mComponents[1] );
-					window.draw( textFieldAndDestination.first );
+					textFieldAndDestination.textFieldNickname.move( nv.mComponents[0], nv.mComponents[1] );
+					window.draw( textFieldAndDestination.textFieldNickname );
 					break;
 				}
 			}

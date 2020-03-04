@@ -8,13 +8,13 @@ namespace scene::online
 	class Waiting final : public ::scene::online::IScene
 	{
 	public:
-		Waiting( sf::RenderWindow& window, Online& net );
+		Waiting( const sf::RenderWindow& window, Online& net );
 		~Waiting( );
 		
-		void loadResources( sf::RenderWindow& window ) override;
+		void loadResources( const sf::RenderWindow& window ) override;
 		::scene::online::ID update( std::vector<sf::Event>& eventQueue,
 								   ::scene::online::Online& net,
-								   sf::RenderWindow& window ) override;
+								   const sf::RenderWindow& window ) override;
 		void draw( sf::RenderWindow& window ) override;
 	private:
 		enum class State

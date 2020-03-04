@@ -1,6 +1,5 @@
 #include "../../pch.h"
 #include "GameOver.h"
-#include <VaultKeyList.h>
 #include "../../ServiceLocatorMirror.h"
 
 const uint8_t TARGET_ALPHA = 0x7fu;
@@ -8,7 +7,8 @@ const uint32_t BACKGROUND_RGB = 0x29cdb500; // Cyan
 
 bool scene::inPlay::GameOver::IsInstantiated = false;
 
-scene::inPlay::GameOver::GameOver( sf::RenderWindow& window, sf::Drawable& shapeOrSprite,
+scene::inPlay::GameOver::GameOver( const sf::RenderWindow& window,
+								  sf::Drawable& shapeOrSprite,
 								   std::unique_ptr<::scene::inPlay::IScene>& overlappedScene )
 	: mFade( 0xffu ), mFrameCountToMainMenu( 0 ),
 	mBackgroundRect_( (sf::RectangleShape&)shapeOrSprite )
@@ -35,7 +35,7 @@ scene::inPlay::GameOver::~GameOver()
 	IsInstantiated = false;
 }
 
-void scene::inPlay::GameOver::loadResources( sf::RenderWindow& window )
+void scene::inPlay::GameOver::loadResources( const sf::RenderWindow& window )
 {
 	sf::Vector2f imageSize( 512.f, 256.f );
 	std::string imagePath( "Images/GameOver.png" );

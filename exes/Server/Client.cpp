@@ -5,7 +5,7 @@
 const uint8_t NULL_HASHED_KEY = 0;
 const uint8_t NULL_ROOM_ID = -1;
 const Clock::duration MIN_REQ_GAP = std::chrono::milliseconds(100);
-const Clock::duration MIN_MOVE_GAP = std::chrono::milliseconds(40);
+const Clock::duration MIN_MOVE_GAP = std::chrono::milliseconds(35);
 const Clock::duration MIN_LAND_GAP = std::chrono::milliseconds(100);
 
 Client::Client( const Socket::Type type, const ClientIndex index )
@@ -53,7 +53,7 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 							if ( false == userList.empty() )
 							{
 								Packet packet;
-								packet.pack( TAGGED_REQ_USER_LIST_IN_LOBBY, userList );
+								packet.pack( TAGGED_REQ_USER_LIST, userList );
 								if ( -1 == mSocket.sendOverlapped(packet) )
 								{
 									// Exception
@@ -70,7 +70,7 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 							if ( now-mTimeStamp[(int)TimeStampIndex::GENERAL] < MIN_REQ_GAP )
 							{
 								std::cerr << "Client " << mIndex <<
-									" doesn't seem to be human's.\n";
+									" doesn't seem to be human's request.\n";
 								failedIndices.emplace_back(mIndex);
 								return failedIndices;
 							}
@@ -115,7 +115,7 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 							if ( now-mTimeStamp[(int)TimeStampIndex::GENERAL] < MIN_REQ_GAP )
 							{
 								std::cerr << "Client " << mIndex <<
-									" doesn't seem to be human's.\n";
+									" doesn't seem to be human's request.\n";
 								failedIndices.emplace_back(mIndex);
 								return failedIndices;
 							}
@@ -140,7 +140,7 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 										auto roomIt = rooms.find(roomID);
 										ASSERT_TRUE( roomIt != rooms.end() );
 										res = (ResultJoiningRoom)roomIt->
-											second.tryAccept(mIndex);
+											second.tryEmplace(mIndex);
 										if ( ResultJoiningRoom::SUCCCEDED == res )
 										{
 											for ( auto it = lobby.cbegin();
@@ -214,17 +214,17 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 				const _Tag tag = (_Tag)*rcvBuf;
 				if ( _Tag::REQUEST == tag )
 				{
-					if ( now-mTimeStamp[(int)TimeStampIndex::GENERAL] < MIN_REQ_GAP )
-					{
-						std::cerr << "Client " << mIndex <<
-							" doesn't seem to be human's.\n";
-						failedIndices.emplace_back(mIndex);
-						return failedIndices;
-					}
 					mTimeStamp[(int)TimeStampIndex::GENERAL] = now;
 					const Request req = (Request)rcvBuf[TAG_REQUEST_LEN];
 					switch ( req )
 					{
+						case Request::UPDATE_USER_LIST:
+						{
+							auto it = rooms.find(mRoomID);
+							ASSERT_TRUE( rooms.end() != it );
+							it->second.perceive( mIndex, Room::Perception::INSTANTIATION_DONE );
+							break;
+						}
 						case Request::START_GAME:
 						{
 							auto it = rooms.find(mRoomID);
@@ -246,7 +246,7 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 							std::cout << "Client "
 								<< mIndex << " leaved Room " << it->first << ".\n";
 #endif
-							if ( 0 == it->second.leave(mIndex) )
+							if ( 0 == it->second.pop(mIndex) )
 							{
 #ifdef _DEBUG
 								std::cout << "Room "
@@ -273,6 +273,12 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 								<< mIndex << " sent an undefined request.\n";
 							break;
 					}
+				}
+				else if ( _Tag::CURRENT_TETRIMINOS == tag )
+				{
+					auto it = rooms.find(mRoomID);
+					ASSERT_TRUE( rooms.end() != it );
+					it->second.perceive( mIndex, Room::Perception::INITIATION_DONE );
 				}
 				// Exception
 				else
@@ -301,7 +307,7 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 					if ( now-mTimeStamp[(int)TimeStampIndex::GENERAL] < MIN_REQ_GAP )
 					{
 						std::cerr << "Client " << mIndex <<
-							" doesn't seem to be human's.\n";
+							" doesn't seem to be human's request.\n";
 						failedIndices.emplace_back(mIndex);
 						return failedIndices;
 					}
@@ -320,7 +326,7 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 							std::cout << "Client "
 								<< mIndex << " leaved Room " << it->first << ".\n";
 #endif
-							if ( 0 == it->second.leave(mIndex) )
+							if ( 0 == it->second.pop(mIndex) )
 							{
 #ifdef _DEBUG
 								std::cout << "Room "
@@ -349,7 +355,7 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 					}
 				}
 
-				bool hasTimeChecked = false;
+				bool hasCheckedTime = false;
 				size_t pos = 0;
 				while ( true )
 				{
@@ -358,17 +364,17 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 					{
 						break;
 					}
-					if ( false == hasTimeChecked )
+					if ( false == hasCheckedTime )
 					{
 						if ( now-mTimeStamp[(int)TimeStampIndex::TETRIMINO_MOVED] < MIN_MOVE_GAP )
 						{
 							std::cerr << "Client " << mIndex <<
-								" doesn't seem to be human's.\n";
+								" doesn't seem to be human's move.\n";
 							failedIndices.emplace_back(mIndex);
 							return failedIndices;
 						}
 						mTimeStamp[(int)TimeStampIndex::TETRIMINO_MOVED] = now;
-						hasTimeChecked = true;
+						hasCheckedTime = true;
 					}
 					hasException = false;
 					auto it = rooms.find(mRoomID);
@@ -385,7 +391,7 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 					if ( now-mTimeStamp[(int)TimeStampIndex::TETRIMINO_LANDED] < MIN_LAND_GAP )
 					{
 						std::cerr << "Client " << mIndex <<
-							" doesn't seem to be human's.\n";
+							" doesn't seem to be human's landing.\n";
 						failedIndices.emplace_back(mIndex);
 						return failedIndices;
 					}
@@ -393,7 +399,21 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 					hasException = false;
 					auto it = rooms.find(mRoomID);
 					ASSERT_TRUE( rooms.end() != it );
-					it->second.perceive( mIndex );
+					it->second.perceive( mIndex, Room::Perception::TETRIMINO_LAND_ON_CLIENT );
+				}
+
+				if ( pos = strView.find(TAGGED_REQ_USER_LIST);
+					strView.npos != pos	)
+				{
+					hasException = false;
+					// Doing nothing.
+				}
+
+				if ( pos = strView.find(TAG_CURRENT_TETRIMINOS);
+					strView.npos != pos	)
+				{
+					hasException = false;
+					// Doing nothing.
 				}
 
 				// Exception
@@ -418,7 +438,6 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 #else
 				__assume( 0 );
 #endif
-				break;
 	}
 
 	return failedIndices;

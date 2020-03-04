@@ -12,12 +12,12 @@ namespace scene::inPlay
 	private:
 		static bool IsInstantiated;
 	public:
-		Playing( sf::RenderWindow& window,
+		Playing( const sf::RenderWindow& window,
 				sf::Drawable& shapeOrSprite,
 				const std::unique_ptr<::scene::inPlay::IScene>& overlappedScene );
 		~Playing( );
 
-		void loadResources( sf::RenderWindow& window ) override;
+		void loadResources( const sf::RenderWindow& window ) override;
 		::scene::inPlay::ID update( std::vector<sf::Event>& eventQueue ) override;
 		void draw( sf::RenderWindow& window ) override;
 	private:

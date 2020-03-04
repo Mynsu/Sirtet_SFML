@@ -1,4 +1,6 @@
 #pragma once
+#include <GameLib/IConsole.h>
+#include <Lib/Hash.h>
 
 class Command
 {

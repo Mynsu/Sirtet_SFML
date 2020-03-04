@@ -14,40 +14,43 @@ namespace scene::online
 			RETURNING_TAG_ATTACHED,
 		};
 
-		Online( sf::RenderWindow& window );
+		Online( const sf::RenderWindow& window );
 		~Online( );
 
-		void loadResources( sf::RenderWindow& window ) override;
+		void loadResources( const sf::RenderWindow& window ) override;
 		::scene::ID update( std::vector<sf::Event>& eventQueue ) override;
 		void draw( sf::RenderWindow& window ) override;
 		::scene::ID currentScene( ) const override;
 		void setScene( const uint8_t sceneID ) override
 		{}
 
+		void setMyNickname( std::string& myNickname );
+		const std::string& myNickname( ) const;
+		HashedKey myNicknameHashed( ) const;
+		////
+		// 외부에서 Online.cpp의 전역변수에 접근하기 위한 함수들입니다.
+		///
 		void connectToQueueServer( );
-		void disconnect( );
-		// Stop receiving and disconnect from the queue server, and connect to the main server.
+		// Stops receiving, disconnects from the queue server, and connects to the main server.
 		bool connectToMainServer( );
+		// Disconnects and goes back to main menu.
+		void disconnect( );
 		void send( char* const data, const int size );
 		void send( Packet& packet );
-		// Ignore received stuff and resume reception.
+		// Ignores already received stuff and resumes receiving.
 		void receive( );
 		bool hasReceived( );
 		std::optional<std::string> getByTag( const Tag tag,
 											 const Online::Option option,
 											uint16_t bodySize ) const;
-		void setMyNickname( std::string& myNickname );
-		const std::string& myNickname( ) const;
-		HashedKey myNicknameHashed( ) const;
+		////
 	private:
-		void setScene( const ::scene::online::ID nextSceneID );
 		static bool IsInstantiated;
-		// When 0 frame counters don't increase, while 1 or more they increase.
-		// In other words, setting the value 0 to 1( or any number except 0 ) acts like a trigger.
+		void setScene( const ::scene::online::ID nextSceneID );
 		uint16_t mFPS_, mFrameCountToMainMenu;
 		HashedKey mMyNicknameHashed_;
-		sf::Vector2f mSpriteClipSize_;
-		sf::RenderWindow& mWindow_;
+		sf::Vector2f mSpriteClipSize;
+		const sf::RenderWindow& mWindow;
 		std::unique_ptr<::scene::online::IScene> mCurrentScene;
 		std::string mMyNickname;
 		sf::Texture mTexture;

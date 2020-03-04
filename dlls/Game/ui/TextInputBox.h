@@ -5,7 +5,7 @@ namespace ui
 	class TextInputBox
 	{
 	public:
-		TextInputBox( sf::RenderWindow& window )
+		TextInputBox( const sf::RenderWindow& window )
 			: mIsActive( false )
 		{
 			mBackground.setSize( sf::Vector2f(window.getSize()) );
@@ -13,54 +13,14 @@ namespace ui
 		}
 		virtual ~TextInputBox( ) = default;
 
-		void setBackgroundColor( const sf::Color color )
+		void draw( sf::RenderWindow& window )
 		{
-			mBackground.setFillColor( color );
+			window.draw( mBackground );
+			window.draw( mSubWindow );
+			window.draw( mTextLabelForTitle );
+			window.draw( mTextFieldToInput );
 		}
-		void setPosition( const sf::Vector2f position )
-		{
-			mSubWindow.setPosition( position );
-		}
-		void setSize( const sf::Vector2f size )
-		{
-			mSubWindow.setSize( size );
-		}
-		void setColor( const sf::Color color )
-		{
-			mSubWindow.setFillColor( color );
-		}
-		bool loadFont( const std::string& fontPath )
-		{
-			bool result = true;
-			if ( false == mFont.loadFromFile(fontPath) )
-			{
-				result = false;
-				return result;
-			}
-			mTextLabelForTitle.setFont( mFont );
-			mTextFieldToInput.setFont( mFont );
-			return result;
-		}
-		void setTitleDimension( const sf::Vector2f relativePosition, 
-							   const uint16_t fontSize )
-		{
-			mTextLabelForTitle.setPosition( mSubWindow.getPosition() + relativePosition );
-			mTextLabelForTitle.setCharacterSize( fontSize );
-		}
-		void setTitleColor( const sf::Color color )
-		{
-			mTextLabelForTitle.setFillColor( color );
-		}
-		void setInputTextFieldDimension( const sf::Vector2f relativePosition,
-										const uint16_t fontSize )
-		{
-			mTextFieldToInput.setPosition( mSubWindow.getPosition() + relativePosition );
-			mTextFieldToInput.setCharacterSize( fontSize );
-		}
-		void setInputTextFieldColor( const sf::Color color )
-		{
-			mTextFieldToInput.setFillColor( color );
-		}
+		bool processEvent( std::vector<sf::Event>& eventQueue );
 		bool isActive( ) const
 		{
 			return mIsActive;
@@ -76,17 +36,57 @@ namespace ui
 		{
 			mIsActive = false;
 		}
-		bool processEvent( std::vector<sf::Event>& eventQueue );
 		const std::string& inputString( )
 		{
 			return mInputTextFieldString;
 		}
-		void draw( sf::RenderWindow& window )
+		bool loadFont( std::string& fontPath )
 		{
-			window.draw( mBackground );
-			window.draw( mSubWindow );
-			window.draw( mTextLabelForTitle );
-			window.draw( mTextFieldToInput );
+			bool result = true;
+			if ( false == mFont.loadFromFile(fontPath) )
+			{
+				result = false;
+				return result;
+			}
+			mTextLabelForTitle.setFont( mFont );
+			mTextFieldToInput.setFont( mFont );
+			return result;
+		}
+		void setPosition( const sf::Vector2f position )
+		{
+			mSubWindow.setPosition( position );
+		}
+		void setSize( const sf::Vector2f size )
+		{
+			mSubWindow.setSize( size );
+		}
+		void setTitleDimension( const sf::Vector2f relativePosition, 
+							   const uint16_t fontSize )
+		{
+			mTextLabelForTitle.setPosition( mSubWindow.getPosition() + relativePosition );
+			mTextLabelForTitle.setCharacterSize( fontSize );
+		}
+		void setInputTextFieldDimension( const sf::Vector2f relativePosition,
+										const uint16_t fontSize )
+		{
+			mTextFieldToInput.setPosition( mSubWindow.getPosition() + relativePosition );
+			mTextFieldToInput.setCharacterSize( fontSize );
+		}
+		void setBackgroundColor( const sf::Color color )
+		{
+			mBackground.setFillColor( color );
+		}
+		void setColor( const sf::Color color )
+		{
+			mSubWindow.setFillColor( color );
+		}
+		void setTitleColor( const sf::Color color )
+		{
+			mTextLabelForTitle.setFillColor( color );
+		}
+		void setInputTextFieldColor( const sf::Color color )
+		{
+			mTextFieldToInput.setFillColor( color );
 		}
 	private:
 		bool mIsActive;

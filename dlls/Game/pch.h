@@ -18,12 +18,12 @@
 #include <SFML/System.hpp>
 #ifdef _DEBUG
 #pragma comment( lib, "sfml-window-d" )
-#pragma comment( lib, "sfml-system-d" )
 #pragma comment( lib, "sfml-graphics-d" )
+#pragma comment( lib, "sfml-system-d" )
 #else
 #pragma comment( lib, "sfml-window" )
-#pragma comment( lib, "sfml-system" )
 #pragma comment( lib, "sfml-graphics" )
+#pragma comment( lib, "sfml-system" )
 #endif
 #include <lua.hpp>
 #pragma comment( lib, "lua53" )
@@ -33,8 +33,10 @@
 #include <Lib/Packet.h>
 #include <Lib/math/Vector.h>
 #pragma comment( lib, "Lib-d" )
-#include <IServiceLocator.h>
-#include <IGame.h>
+#include <GameLib/CommandList.h>
+#include <GameLib/Common.h>
+#include <GameLib/IServiceLocator.h>
+#include <GameLib/VaultKeyList.h>
 
 using Clock = std::chrono::high_resolution_clock;
 

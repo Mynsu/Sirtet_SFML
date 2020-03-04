@@ -1,11 +1,9 @@
 ﻿#include "pch.h"
-#include <Common.h>
 
 using ClientIndex = uint16_t;
 using Ticket = HashedKey;
 const uint16_t CAPACITY = 100;
-const uint16_t BACKLOG_SIZ = CAPACITY/2;
-const uint16_t mainServerCapacity = 2;
+const uint16_t BACKLOG_SIZ = CAPACITY/2; // NOTE: Assure this is not zero.
 const ClientIndex MAIN_SERVER_INDEX = CAPACITY;
 const ClientIndex LISTENER_IDX = CAPACITY + 1;
 const Clock::duration IDENTIFICATION_TIME_LIMIT = std::chrono::seconds(2);
@@ -414,7 +412,6 @@ int main( )
 #else
 							__assume( 0 );
 #endif
-							break;
 					}
 				}
 			}
@@ -602,7 +599,6 @@ int main( )
 #else
 							__assume(0);
 #endif
-							break;
 					}
 				}
 			}
