@@ -5,12 +5,12 @@ const uint8_t MAX_NUM_OF_BUFFERS = 3;
 bool SFMLSound::IsInstantiated = false;
 
 SFMLSound::SFMLSound( )
-	: mPreviousVolumeBGM( 0 )
+	: mPreviousVolumeBGM( 0.f ), mPreviousVolumeSFX( 0.f )
 {
 	ASSERT_TRUE( false == IsInstantiated );
 
-	setBGMVolume( 2.f );
-	setSFXVolume( 4.f );
+	setVolume( ::sound::Target::BGM, 2.f );
+	setVolume( ::sound::Target::SFX, 4.f );
 
 	IsInstantiated = true;
 }
@@ -18,6 +18,92 @@ SFMLSound::SFMLSound( )
 SFMLSound::~SFMLSound( )
 {
 	IsInstantiated = false;
+}
+
+void SFMLSound::setVolume( const ::sound::Target target, const float volume )
+{
+	switch ( target )
+	{
+		case ::sound::Target::BGM:
+			if ( 0.f <= volume )
+			{
+				mBGMPlayer.setVolume( volume );
+			}
+			else
+			{
+				float targetVol = mBGMPlayer.getVolume() + volume;
+				if ( targetVol < 0.f )
+				{
+					targetVol = 0.f;
+				}
+				mBGMPlayer.setVolume( targetVol );
+			}
+			break;
+		case ::sound::Target::SFX:
+			if ( 0.f <= volume )
+			{
+				for ( sf::Sound& player : mSFXPlayers )
+				{
+					player.setVolume( volume );
+				}
+			}
+			else
+			{
+				float targetVol = mSFXPlayers[0].getVolume() + volume;
+				if ( targetVol < 0.f )
+				{
+					targetVol = 0.f;
+				}
+				for ( sf::Sound& player : mSFXPlayers )
+				{
+					player.setVolume( targetVol );
+				}
+			}
+			break;
+		default:
+#ifdef _DEBUG
+			__debugbreak( );
+#else
+			__assume( 0 );
+#endif
+	}
+}
+
+void SFMLSound::toggleMute( const ::sound::Target target )
+{
+	switch ( target )
+	{
+		case ::sound::Target::BGM:
+			if ( 0.f == mBGMPlayer.getVolume() )
+			{
+				setVolume( ::sound::Target::BGM, mPreviousVolumeBGM );
+			}
+			else
+			{
+				mPreviousVolumeBGM = mBGMPlayer.getVolume();
+				setVolume( ::sound::Target::BGM, 0.f );
+			}
+			break;
+		case ::sound::Target::SFX:
+		{
+			if ( 0.f == mSFXPlayers[0].getVolume() )
+			{
+				setVolume( ::sound::Target::SFX, mPreviousVolumeSFX );
+			}
+			else
+			{
+				mPreviousVolumeSFX = mSFXPlayers[0].getVolume();
+				setVolume( ::sound::Target::SFX, 0.f );
+			}
+			break;
+		}
+		default:
+#ifdef _DEBUG
+			__debugbreak( );
+#else
+			__assume( 0 );
+#endif
+	}
 }
 
 bool SFMLSound::playBGM( std::string& fileName, const bool isRepeated )

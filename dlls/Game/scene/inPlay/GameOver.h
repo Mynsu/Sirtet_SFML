@@ -22,8 +22,9 @@ namespace scene::inPlay
 			BGM,
 			NULL_MAX,
 		};
+		uint8_t mTargetAlpha;
 		uint16_t mFPS_, mFrameCountToMainMenu;
-		uint32_t mFade;
+		uint32_t mFade, mBackgroundRGB;
 		// NOTE: 읽기 쉽게 멤버 함수 draw(...)의 인자로 넘기려니
 		// 오버라이드하고 있는 순수 가상 함수까지 바꿔야해서
 		// 생성자로 레퍼런스를 받아 쥐고 있습니다.

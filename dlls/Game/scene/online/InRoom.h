@@ -25,6 +25,9 @@ namespace scene::online
 
 	class InRoom final : public ::scene::online::IScene
 	{
+	private:
+		// 둘 이상의 인스턴스를 만들 수 없습니다.
+		static bool IsInstantiated;
 	public:
 		InRoom( ) = delete;
 		InRoom( const sf::RenderWindow& window, Online& net, const bool asHost = false );
@@ -56,7 +59,7 @@ namespace scene::online
 			bool retVal = false;
 			if ( std::chrono::milliseconds(milliseconds) < Clock::now()-mAlarms[(int)index] )
 			{
-				mAlarms[(int)index] = Clock::time_point::max();
+				mAlarms[(int)index] = (Clock::time_point::max)();
 				retVal = true;
 			}
 			return retVal;
@@ -73,12 +76,12 @@ namespace scene::online
 			sf::FloatRect nextTetriminoPanelBound;
 			std::string countdownSpritePath;
 		} mDrawingInfo;
-		static bool IsInstantiated;
 		bool mIsReceiving, mAsHost,
 			mIsStartingGuideVisible, mIsMouseOverStartButton_, mIsStartButtonPressed_;
 		uint32_t mFrameCountCoolToRotateStartButton;
 		const HashedKey mMyNicknameHashed_;
 		const std::string& mMyNickname;
+		// Recommended to use only for console command like startGame(...), leaveGame(...).
 		::scene::online::Online& mNet;
 		Clock::time_point mAlarms[(int)AlarmIndex::NONE_MAX];
 		std::unique_ptr<::scene::inPlay::IScene> mOverlappedScene;

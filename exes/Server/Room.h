@@ -22,17 +22,37 @@ public:
 	};
 
 	explicit Room( const ClientIndex hostIndex );
+	Room( const Room& ) = delete;
+	Room( Room&& ) = delete;
 	void operator=( const Room& ) = delete;
 	virtual ~Room( ) = default;
 
-	void start( );
-	int pop( const ClientIndex index );
-	void perceive( const ClientIndex index, const ::model::tetrimino::Move move );
+	void start( )
+	{
+		mState = State::ON_START;
+	}
+	// Kicks the client out.
+	// Returns 0 if no one remains, otherwise returns 1.
+	int8_t pop( const ClientIndex index );
+	void perceive( const ClientIndex index, const ::model::tetrimino::Move move )
+	{
+		if ( auto it = mPlayingParticipants.find(index); mPlayingParticipants.end() != it )
+		{
+			it->second.moveTetrimino( move );
+		}
+		// Exception
+		else
+		{
+			std::cerr << "Client " << index << " knows the incorrect room ID.\n";
+		}
+	}
 	void perceive( const ClientIndex index, const Perception perceptedThing );
-	std::vector<ClientIndex> update( std::vector<Client>& clients );
-	std::vector<ClientIndex> notify( std::vector<Client>& clients );
-	// MUST destruct this room when returning false, which means having kicked out the last one.
-	ClientIndex hostIndex( ) const;
+	std::vector<ClientIndex> update( std::array<Client, CLIENT_CAPACITY>& clients );
+	std::vector<ClientIndex> notify( std::array<Client, CLIENT_CAPACITY>& clients );
+	ClientIndex hostIndex( ) const
+	{
+		return mHostIndex;
+	}
 	bool tryEmplace( const ClientIndex index );
 private:
 	enum class AlarmIndex

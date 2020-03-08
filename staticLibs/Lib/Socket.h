@@ -54,13 +54,6 @@ public:
 
 	Socket( ) = delete;
 	Socket( const ::Socket::Type type );
-	// !IMPORTANT: DO NOT USE!  std::vector requires c'tor.
-	Socket( const Socket& )
-	{
-#ifdef _DEBUG
-		__debugbreak( );
-#endif
-	}
 	~Socket( );
 	// Returns SOCKET_ERROR when failed.
 	int bind( const EndPoint& selfEndPoint );

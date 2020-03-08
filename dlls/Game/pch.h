@@ -1,5 +1,9 @@
 #pragma once
 
+#include <SFML/Graphics.hpp> // WIN32_LEAN_AND_MEAN을 정의한 다음에 포함하면 컴파일 에러 발생.
+#include <Lib/Socket.h>
+#define WIN32_LEAN_AND_MEAN // NOTE: Defined after Socket.h to include UUID.
+
 #include <list>
 #include <queue>
 #include <array>
@@ -14,7 +18,6 @@
 #include <optional>
 #include <intrin.h>
 #include <SFML/Window.hpp>
-#include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 #ifdef _DEBUG
 #pragma comment( lib, "sfml-window-d" )
@@ -29,10 +32,13 @@
 #pragma comment( lib, "lua53" )
 #include <Lib/Hash.h>
 #include <Lib/EndPoint.h>
-#include <Lib/Socket.h>
 #include <Lib/Packet.h>
 #include <Lib/math/Vector.h>
+#ifdef _DEBUG
 #pragma comment( lib, "Lib-d" )
+#else
+#pragma comment( lib, "Lib" )
+#endif
 #include <GameLib/CommandList.h>
 #include <GameLib/Common.h>
 #include <GameLib/IServiceLocator.h>
@@ -40,7 +46,7 @@
 
 using Clock = std::chrono::high_resolution_clock;
 
-// !IMPORTANT: On delivery, make sure that this macro is canceled, or undefined for the security.
+// !IMPORTANT: On delivery, make sure that this macro be undefined for the security.
 #define _DEV
 
 #ifdef _DEBUG
@@ -53,21 +59,21 @@ using Clock = std::chrono::high_resolution_clock;
 if ( false != ( x ) ) \
 { \
 	std::string msg( "ASSERT_FALSE disproved. (" ); \
-	(*gService).console()->printFailure( FailureLevel::FATAL, \
-											msg + __FILE__ + ":" + std::to_string( __LINE__ ) + ")" ); \
+	gService()->console().printFailure( FailureLevel::FATAL, \
+										msg + __FILE__ + ":" + std::to_string( __LINE__ ) + ")" ); \
 }
 #define ASSERT_TRUE( x ) \
 if ( true != ( x ) ) \
 { \
 	std::string msg( "ASSERT_TRUE disproved. (" ); \
-	(*gService).console()->printFailure( FailureLevel::FATAL, \
-											msg + __FILE__ + ":" + std::to_string( __LINE__ ) + ")" ); \
+	gService()->console().printFailure( FailureLevel::FATAL, \
+										msg + __FILE__ + ":" + std::to_string( __LINE__ ) + ")" ); \
 }
 #define ASSERT_NOT_NULL( x ) \
 if ( nullptr == (x) || NULL == (x) ) \
 { \
 	std::string msg( "ASSERT_NOT_NULL disproved. (" ); \
-	(*gService).console()->printFailure( FailureLevel::FATAL, \
-											msg + __FILE__ + ":" + std::to_string( __LINE__ ) + ")" ); \
+	gService()->console().printFailure( FailureLevel::FATAL, \
+										msg + __FILE__ + ":" + std::to_string( __LINE__ ) + ")" ); \
 }
 #endif

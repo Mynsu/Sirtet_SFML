@@ -5,4 +5,4 @@
 	-- Game Over 22
 	-- All Levels Cleared 23
 -- Online Battle 3
-StartScene = 3
+StartScene = 0

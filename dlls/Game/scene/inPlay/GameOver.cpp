@@ -2,15 +2,12 @@
 #include "GameOver.h"
 #include "../../ServiceLocatorMirror.h"
 
-const uint8_t TARGET_ALPHA = 0x7fu;
-const uint32_t BACKGROUND_RGB = 0x29cdb500; // Cyan
-
 bool scene::inPlay::GameOver::IsInstantiated = false;
 
 scene::inPlay::GameOver::GameOver( const sf::RenderWindow& window,
 								  sf::Drawable& shapeOrSprite,
 								   std::unique_ptr<::scene::inPlay::IScene>& overlappedScene )
-	: mFade( 0xffu ), mFrameCountToMainMenu( 0 ),
+	: mTargetAlpha( 0x7f ), mFade( 0xff ), mFrameCountToMainMenu( 0 ), mBackgroundRGB( 0x29cdb500 ), // Cyan
 	mBackgroundRect_( (sf::RectangleShape&)shapeOrSprite )
 {
 	ASSERT_TRUE( false == IsInstantiated );
@@ -52,6 +49,45 @@ void scene::inPlay::GameOver::loadResources( const sf::RenderWindow& window )
 	{
 		luaL_openlibs( lua );
 		const int TOP_IDX = -1;
+
+		std::string varName( "Background" );
+		lua_getglobal( lua, varName.data() );
+		int type = lua_type(lua, TOP_IDX);
+		if ( LUA_TNUMBER == type )
+		{
+			mBackgroundRGB = (uint32_t)lua_tointeger(lua, TOP_IDX);
+		}
+		else if ( LUA_TNIL == type )
+		{
+			gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+												   varName, scriptPath );
+		}
+		else
+		{
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
+												   varName, scriptPath );
+		}
+		lua_pop( lua, 1 );
+
+		varName = "TargetAlpha";
+		lua_getglobal(lua, varName.data() );
+		type = lua_type(lua, TOP_IDX);
+		if ( LUA_TNUMBER == type )
+		{
+			mTargetAlpha = (uint8_t)lua_tointeger(lua, TOP_IDX);
+		}
+		else if ( LUA_TNIL == type )
+		{
+			gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+												   varName, scriptPath );
+		}
+		else
+		{
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
+												   varName, scriptPath );
+		}
+		lua_pop( lua, 1 );
+
 		std::string tableName( "Image" );
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
@@ -63,7 +99,7 @@ void scene::inPlay::GameOver::loadResources( const sf::RenderWindow& window )
 			std::string field( "path" );
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
-			int type = lua_type(lua, TOP_IDX);
+			type = lua_type(lua, TOP_IDX);
 			if ( LUA_TSTRING == type )
 			{
 				imagePath = lua_tostring(lua, TOP_IDX);
@@ -201,7 +237,7 @@ void scene::inPlay::GameOver::loadResources( const sf::RenderWindow& window )
 	::scene::inPlay::ID retVal = ::scene::inPlay::ID::AS_IS;
 
 	// When mFade reaches the target,
-	if ( mFade <= TARGET_ALPHA )
+	if ( mFade <= mTargetAlpha )
 	{
 		// Frame counting starts.
 		++mFrameCountToMainMenu;
@@ -217,10 +253,10 @@ void scene::inPlay::GameOver::loadResources( const sf::RenderWindow& window )
 
 void scene::inPlay::GameOver::draw( sf::RenderWindow& window )
 {
-	if ( TARGET_ALPHA < mFade )
+	if ( mTargetAlpha < mFade )
 	{
 		mFade -= 2u;
-		mBackgroundRect_.setFillColor( sf::Color(BACKGROUND_RGB | mFade) );
+		mBackgroundRect_.setFillColor( sf::Color(mBackgroundRGB | mFade) );
 		window.draw( mBackgroundRect_ );
 	}
 	else

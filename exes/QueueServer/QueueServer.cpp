@@ -3,13 +3,13 @@
 using ClientIndex = uint16_t;
 using Ticket = HashedKey;
 const uint16_t CAPACITY = 100;
-const uint16_t BACKLOG_SIZ = CAPACITY/2; // NOTE: Assure this is not zero.
+const uint16_t BACKLOG_SIZ = CAPACITY/2; // NOTE: Assure this be not zero.
 const ClientIndex MAIN_SERVER_INDEX = CAPACITY;
 const ClientIndex LISTENER_IDX = CAPACITY + 1;
 const Clock::duration IDENTIFICATION_TIME_LIMIT = std::chrono::seconds(2);
 const Clock::duration TCP_TIMED_WAIT_DELAY = std::chrono::seconds(30);
 const Clock::duration NOTIFYING_QUEUE_INTERVAL = std::chrono::milliseconds(1000);
-const Clock::duration ASKING_POP_INTERVAL = std::chrono::milliseconds(1000);
+const Clock::duration ASKING_N_OF_CONN_IN_MAIN_SERV_INTERVAL = std::chrono::milliseconds(1000);
 
 volatile bool IsWorking = true;
 void ProcessSignal( int signal )
@@ -19,10 +19,10 @@ void ProcessSignal( int signal )
 		IsWorking = false;
 	}
 }
-inline void PrintLeavingWithError( const uint16_t clientIndex, const uint16_t population )
+inline void PrintLeavingWithError( const uint16_t clientIndex, const uint16_t numOfConnections )
 {
 	std::cout << "Client " << clientIndex << " left due to an error. (Now " <<
-		population << '/' << CAPACITY << " connections.)\n";
+		numOfConnections << '/' << CAPACITY << " connections.)\n";
 }
 // Returns 0 in success, -1 in fail.
 inline bool ResetAndReconnectToMainServer( std::unique_ptr<Socket>& socketToMainServer,
@@ -108,26 +108,27 @@ inline bool ResetAndReconnectToMainServer( std::unique_ptr<Socket>& socketToMain
 enum Status
 {
 	WAITING_FOR_IDENTIFICATION,
-	WAITING_FOR_POPULATION,
+	WAITING_FOR_N_OF_CONN,
 	NONE_MAX,
 };
 
 class Client
 {
 public:
-	Client( const Socket::Type type )
+	Client( const Socket::Type type = Socket::Type::TCP )
 		: mSocket( type )
-	{ }
+	{}
+	~Client() = default;
 	
-	Clock::time_point timeStamp() const
+	Clock::time_point timeStamp( ) const
 	{
 		return mTimeStamp;
 	}
-	void resetTimeStamp()
+	void resetTimeStamp( )
 	{
 		mTimeStamp = Clock::now();
 	}
-	Socket& socket()
+	Socket& socket( )
 	{
 		return mSocket;
 	}
@@ -158,7 +159,7 @@ int main( )
 	}
 	std::bitset<(int)Status::NONE_MAX> statusAgainstMainServer;
 	statusAgainstMainServer.set( Status::WAITING_FOR_IDENTIFICATION, 1 );
-	statusAgainstMainServer.set( Status::WAITING_FOR_POPULATION, 1 );
+	statusAgainstMainServer.set( Status::WAITING_FOR_N_OF_CONN, 1 );
 	std::cout << "Q. Tell me how much the maximum capacity the main server has." << std::endl;
 	// Capacity in the main server defaults to 100.
 	// You can resize it indirectly here without re-compliing or rescaling the main server.
@@ -210,7 +211,10 @@ int main( )
 		if ( false == result )
 		{
 			listener.close( );
-			socketToMainServer->close( );
+			if ( nullptr != socketToMainServer )
+			{
+				socketToMainServer->close( );
+			}
 			IOCPEvent event;
 			iocp.wait( event, INFINITE );
 			WSACleanup( );
@@ -220,28 +224,29 @@ int main( )
 
 	uint16_t numOfAcceptancePending = 0;
 	std::unordered_set<ClientIndex> clientIndicesNotAccepted;
-	std::vector<Client> clients;
-	clients.reserve( CAPACITY );
-	for ( uint16_t i = 0; i != CAPACITY; ++i )
+	std::array<Client, CAPACITY> clients;
+	for ( uint16_t index = 0; CAPACITY != index; ++index )
 	{
-		Client& client = clients.emplace_back(Socket::Type::TCP);
-		Socket& socket = client.socket();
-		if ( -1 == iocp.add(socket.handle(), i) )
+		Socket& socket = clients[index].socket();
+		// NOTE: 디버그하기 쉬워서 주소 대신 인덱스를 키로 삼았습니다.
+		if ( -1 == iocp.add(socket.handle(), index) )
 		{
 			// Exception
 			std::cerr << "FATAL: Failed to add a client into IOCP.\n";
-			clients.clear( );
 			listener.close( );
-			socketToMainServer->close( );
+			if ( nullptr != socketToMainServer )
+			{
+				socketToMainServer->close( );
+			}
 			IOCPEvent event;
 			iocp.wait( event, INFINITE );
 			WSACleanup( );
 			return -1;
 		}
 
-		if ( i < BACKLOG_SIZ )
+		if ( index < BACKLOG_SIZ )
 		{
-			const int result = listener.acceptOverlapped(socket, i);
+			const int result = listener.acceptOverlapped(socket, index);
 			if ( FALSE == result )
 			{
 				// Exception
@@ -258,16 +263,18 @@ int main( )
 		}
 		else
 		{
-			clientIndicesNotAccepted.emplace( i );
+			clientIndicesNotAccepted.emplace( index );
 		}
 	}
 
-	uint16_t population = 0;
+	uint16_t nOfConnInQueueServ = 0;
 	auto forceDisconnection =
-		[&iocp, &clients, &clientIndicesNotAccepted, &population]( const ClientIndex index ) -> bool
+		[&iocp, &clients, &clientIndicesNotAccepted, &nOfConnInQueueServ]( const ClientIndex index ) -> bool
 	{
 		bool result = true;
 		Socket& clientSocket = clients[index].socket();
+		// NOTE: Client 인스턴스를 통째로 새로 만들고 복사해 덮어쓰지 않고,
+		// 필요한 부분만 교체해 작업을 최소화했습니다.
 		clientSocket.close( );
 		clientSocket.reset( false );
 		if ( -1 == iocp.add(clientSocket.handle(), index) )
@@ -276,15 +283,15 @@ int main( )
 			result = false;
 			return result;
 		}
-		--population;
+		--nOfConnInQueueServ;
 		clientIndicesNotAccepted.emplace( index );
 		return result;
 	};
 	uint16_t roomInMainServer = 0;
 	uint32_t seedForInvitation = 0;
-	HashedKey invitations[2];
+	uint32_t invitations[2];
 	Clock::time_point lastTimeNotifyingQueue;
-	Clock::time_point lastTimeAskingPop;
+	Clock::time_point lastTimeAskingNOfConnInMainServ;
 	std::vector<ClientIndex> queue;
 	std::unordered_set<ClientIndex> connectionsUnidentified;
 	std::bitset<CAPACITY> clientIndicesTicketed;
@@ -312,13 +319,13 @@ int main( )
 				}
 				// When accepting successfully,
 				--numOfAcceptancePending;
-				++population;
+				++nOfConnInQueueServ;
 				Socket& clientSocket = candidateSocket;
 				const ClientIndex clientIdx = candidateIdx;
 #ifdef _DEBUG
 				std::cout << "A new client " << clientIdx <<
 					" wants to join the main server. (Now " <<
-					population << "/" << CAPACITY << " connections.)\n";
+					nOfConnInQueueServ << "/" << CAPACITY << " connections.)\n";
 #endif
 				if ( -1 == clientSocket.receiveOverlapped() )
 				{
@@ -331,7 +338,7 @@ int main( )
 						// Break twice
 						goto cleanUp;
 					}
-					PrintLeavingWithError( clientIdx, population );
+					PrintLeavingWithError( clientIdx, nOfConnInQueueServ );
 					continue;
 				}
 				clients[clientIdx].resetTimeStamp( );
@@ -373,29 +380,29 @@ int main( )
 								std::cout << "Identification passed.\n";
 								statusAgainstMainServer.reset( Status::WAITING_FOR_IDENTIFICATION );
 							}
-							// When having received population in the main server,
-							if ( 1 == statusAgainstMainServer[Status::WAITING_FOR_POPULATION] )
+							// When having received the number of connections in the main server,
+							if ( 1 == statusAgainstMainServer[Status::WAITING_FOR_N_OF_CONN] )
 							{
-								statusAgainstMainServer.reset( Status::WAITING_FOR_POPULATION );
+								statusAgainstMainServer.reset( Status::WAITING_FOR_N_OF_CONN );
 								const char* const rcvBuf = socketToMainServer->receivingBuffer();
-								// NOTE: Assuming that there's a message about nothing but population in and from the main server.
-								constexpr uint8_t TAG_POPULATION_LEN = ::util::hash::Measure(TAG_POPULATION);
-								const uint16_t pop = ::ntohs(*(uint16_t*)&rcvBuf[TAG_POPULATION_LEN]);
-								// When population is out of range,
-								if ( pop<0 || mainServerCapacity<pop )
+								// NOTE: Assuming that there's a message about nothing but the number of connections the main server.
+								constexpr uint8_t TAG_N_OF_CONN_LEN = ::util::hash::Measure(TAG_NUM_OF_CONNECTIONS);
+								const uint16_t nOfConnInMainServ = ::ntohs(*(uint16_t*)&rcvBuf[TAG_N_OF_CONN_LEN]);
+								// When the number of connections is out of range,
+								if ( nOfConnInMainServ<0 || mainServerCapacity<nOfConnInMainServ )
 								{
 									roomInMainServer = 0;
 								}
 								else
 								{
-									roomInMainServer = (int)mainServerCapacity-pop;
+									roomInMainServer = (int)mainServerCapacity-nOfConnInMainServ;
 #ifdef _DEBUG
 									std::cout << "Room in the main server: " << roomInMainServer << std::endl;
 #endif
 								}
 								if ( -1 == socketToMainServer->receiveOverlapped() )
 								{
-									std::cerr << "WARNING: Failed to receive population in the main server.\n";
+									std::cerr << "WARNING: Failed to receive the number of connections of the main server.\n";
 									if ( false == ResetAndReconnectToMainServer(socketToMainServer, iocp) )
 									{
 										goto cleanUp;
@@ -421,6 +428,9 @@ int main( )
 			else
 			{
 				const ClientIndex clientIdx = (ClientIndex)ev.lpCompletionKey;
+				// NOTE: I/O pending 중인 소켓을 닫으면
+				// IOCP가 이미 닫힌 이 소켓이 I/O를 완료했다고 알리는데,
+				// 이것을 걸러냈습니다.
 				if ( auto it = clientIndicesNotAccepted.find(clientIdx);
 					clientIndicesNotAccepted.end() != it )
 				{
@@ -433,7 +443,7 @@ int main( )
 				if ( IOType::DISCONNECT == cmpl )
 				{
 					clientSocket.reset( );
-					--population;
+					--nOfConnInQueueServ;
 					clients[clientIdx].resetTimeStamp();
 					clientIndicesNotAccepted.emplace( clientIdx );
 					if ( false == clientIndicesTicketed.test(clientIdx) )
@@ -441,7 +451,7 @@ int main( )
 #ifdef _DEBUG
 						std::cout << "A client " << clientIdx <<
 							" left without a ticket. (Now "
-							<< population << '/' << CAPACITY << " connections.)\n";
+							<< nOfConnInQueueServ << '/' << CAPACITY << " connections.)\n";
 #endif
 						for ( auto it = queue.cbegin(); queue.cend() != it; ++it )
 						{
@@ -457,7 +467,7 @@ int main( )
 #ifdef _DEBUG
 						std::cout << "A client " << clientIdx <<
 							" left with a ticket. (Now "
-							<< population << '/' << CAPACITY << " connections.)\n";
+							<< nOfConnInQueueServ << '/' << CAPACITY << " connections.)\n";
 #endif
 						clientIndicesTicketed.reset( clientIdx );
 					}
@@ -475,7 +485,7 @@ int main( )
 							// Break twice
 							goto cleanUp;
 						}
-						PrintLeavingWithError( clientIdx, population );
+						PrintLeavingWithError( clientIdx, nOfConnInQueueServ );
 						continue;
 					}
 					else if ( -1 == result )
@@ -509,9 +519,9 @@ int main( )
 							}
 							const char* const rcvBuf = clientSocket.receivingBuffer();
 							constexpr uint8_t TAG_INVITATION_LEN = ::util::hash::Measure(TAG_INVITATION);
-							const HashedKey submittedInvitation = ::ntohl(*(HashedKey*)&rcvBuf[TAG_INVITATION_LEN]);
+							const uint32_t submittedInvitation = ::ntohl(*(uint32_t*)&rcvBuf[TAG_INVITATION_LEN]);
 							bool isIdentified = false;
-							for ( const HashedKey inv : invitations	)
+							for ( const uint32_t inv : invitations )
 							{
 								if ( inv == submittedInvitation )
 								{
@@ -533,7 +543,7 @@ int main( )
 										// Break twice
 										goto cleanUp;
 									}
-									PrintLeavingWithError( clientIdx, population );
+									PrintLeavingWithError( clientIdx, nOfConnInQueueServ );
 									continue;
 								}
 								queue.emplace_back( clientIdx );
@@ -554,7 +564,7 @@ int main( )
 										// Break twice
 										goto cleanUp;
 									}
-									PrintLeavingWithError( clientIdx, population );
+									PrintLeavingWithError( clientIdx, nOfConnInQueueServ );
 								}
 								else if ( -1 == result )
 								{
@@ -581,7 +591,7 @@ int main( )
 										goto cleanUp;
 									}
 									clientIndicesTicketed.reset( clientIdx );
-									PrintLeavingWithError( clientIdx, population );
+									PrintLeavingWithError( clientIdx, nOfConnInQueueServ );
 									continue;
 								}
 								else if ( -1 == result )
@@ -620,7 +630,7 @@ int main( )
 						// Break twice
 						goto cleanUp;
 					}
-					PrintLeavingWithError( idx, population );
+					PrintLeavingWithError( idx, nOfConnInQueueServ );
 				}
 			}
 		}
@@ -649,7 +659,7 @@ int main( )
 					// Break twice
 					goto cleanUp;
 				}
-				PrintLeavingWithError( *it, population );
+				PrintLeavingWithError( *it, nOfConnInQueueServ );
 			}
 			else
 			{
@@ -674,7 +684,7 @@ int main( )
 				--roomInMainServer;
 			}
 			it = queue.erase(it);
-			lastTimeAskingPop = now;
+			lastTimeAskingNOfConnInMainServ = now;
 		}
 
 		{
@@ -697,7 +707,7 @@ int main( )
 						// Break twice
 						goto cleanUp;
 					}
-					PrintLeavingWithError( *it, population );
+					PrintLeavingWithError( *it, nOfConnInQueueServ );
 					it = queue.erase(it);
 					continue;
 				}
@@ -715,15 +725,15 @@ int main( )
 
 		// When there's no more room in the main server,
 		if ( 0 == roomInMainServer &&
-			0 == statusAgainstMainServer[Status::WAITING_FOR_POPULATION] &&
-			ASKING_POP_INTERVAL < now-lastTimeAskingPop )
+			0 == statusAgainstMainServer[Status::WAITING_FOR_N_OF_CONN] &&
+			ASKING_N_OF_CONN_IN_MAIN_SERV_INTERVAL < now-lastTimeAskingNOfConnInMainServ )
 		{
 			// Reset
-			lastTimeAskingPop = now;
+			lastTimeAskingNOfConnInMainServ = now;
 
 			const uint8_t ignored = 1;
 			Packet packet;
-			packet.pack( TAG_POPULATION, ignored );
+			packet.pack( TAG_NUM_OF_CONNECTIONS, ignored );
 			if ( -1 == socketToMainServer->sendOverlapped(packet) )
 			{
 				// Exception
@@ -736,7 +746,7 @@ int main( )
 				}
 				statusAgainstMainServer.set( Status::WAITING_FOR_IDENTIFICATION, 1 );
 			}
-			statusAgainstMainServer.set( Status::WAITING_FOR_POPULATION, 1 );
+			statusAgainstMainServer.set( Status::WAITING_FOR_N_OF_CONN, 1 );
 #ifdef _DEBUG
 			std::cout << "Asked the main server how many clients are there.\n";
 #endif
@@ -767,7 +777,10 @@ cleanUp:
 	//!IMPORTANT: Must release all the overlapped I/O in hand before closing the server.
 	//	 		  Otherwise overlapped I/O still runs on O/S background.
 	std::cout << "Server gets closed.\n";
-	socketToMainServer->close( );
+	if ( nullptr != socketToMainServer )
+	{
+		socketToMainServer->close( );
+	}
 	listener.close( );
 	uint16_t areClientsPending = 0;
 	for ( Client& client : clients )
@@ -781,7 +794,7 @@ cleanUp:
 	}
 	while ( 0 < areClientsPending ||
 		   true == listener.isPending() ||
-		   true == socketToMainServer->isPending() )
+		   nullptr != socketToMainServer && true == socketToMainServer->isPending() )
 	{
 		IOCPEvent event;
 		iocp.wait( event, 100 );
@@ -807,7 +820,6 @@ cleanUp:
 			}
 		}
 	}
-	clients.clear( );
 	
 	WSACleanup( );
 	std::cout << "Server has been closed successfully." << std::endl;

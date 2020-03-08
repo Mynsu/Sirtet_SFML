@@ -864,7 +864,6 @@ void scene::MainMenu::loadResources( const sf::RenderWindow& )
 
 	if ( false == mTexture.loadFromFile(spritePath) )
 	{
-		// Exception: When there's not even the default file,
 		gService()->console().printFailure( FailureLevel::WARNING,
 										   "File Not Found: "+spritePath );
 	}

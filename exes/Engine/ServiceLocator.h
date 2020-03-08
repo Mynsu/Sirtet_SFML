@@ -1,5 +1,5 @@
 #pragma once
-#include "pch.h" // Included as a set of headers, not as pch.
+#include <unordered_map>
 #include <GameLib/IServiceLocator.h>
 #include "Console.h"
 #include "Sound.h"
@@ -13,7 +13,16 @@ public:
 	ServiceLocator( )
 		: mSound( std::make_unique<SFMLSound>() )
 	{
-		ASSERT_TRUE( false == IsInstantiated );
+		if ( true == IsInstantiated )
+		{
+#ifdef _DEBUG
+			__debugbreak( );
+#else
+			std::string msg( "ASSERT_TRUE disproved. (" );
+			mConsole.printFailure( FailureLevel::FATAL,
+									msg + __FILE__ + ':' + std::to_string( __LINE__ ) + ')' );
+#endif
+		}
 		IsInstantiated = true;
 	}
 	ServiceLocator( const ServiceLocator& ) = delete;

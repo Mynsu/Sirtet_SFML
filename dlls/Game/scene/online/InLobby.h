@@ -8,6 +8,9 @@ namespace scene::online
 
 	class InLobby final : public ::scene::online::IScene
 	{
+	private:
+		// 둘 이상의 인스턴스를 만들 수 없습니다.
+		static bool IsInstantiated;
 	public:
 		InLobby( const sf::RenderWindow& window, ::scene::online::Online& net );
 		~InLobby( );
@@ -38,7 +41,6 @@ namespace scene::online
 		void createRoom( );
 		void _createRoom( const std::string_view& );
 		void joinRoom( const std::string_view& arg );
-		static bool IsInstantiated;
 		struct
 		{
 			uint16_t nicknameFontSize;

@@ -6,13 +6,13 @@
 #include "../Lib/Hash.h"
 
 // e.g. "chto 1"
-// Change the current scene to another scene.
+// Changes the current scene to another scene immediately.
 // Intro 0, Main Menu 1, Singleplay 2, Online Battle 3.
+// Countdown Skipped 21, Game Over 22, All Levels Cleared 23
 constexpr HashedKey CMD_CHANGE_SCENE = ::util::hash::Digest( "chto" );
 
 // e.g. "refresh"
-// Refresh the current scene,
-// in other words, reload its script and resources.
+// Refreshes the current scene, or reloads its script and resources.
 constexpr HashedKey CMD_RELOAD = ::util::hash::Digest( "refresh" );
 
 // Used just in Console.cpp

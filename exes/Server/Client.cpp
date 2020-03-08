@@ -16,7 +16,7 @@ Client::Client( const Socket::Type type, const ClientIndex index )
 }
 
 std::vector<ClientIndex> Client::work( const IOType completedIOType, 
-									std::vector<Client>& clients,
+									std::array<Client,CLIENT_CAPACITY>& clients,
 									 std::vector<ClientIndex>& lobby,
 									 std::unordered_map<HashedKey, Room>& rooms )
 {
@@ -75,8 +75,6 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 								return failedIndices;
 							}
 							mTimeStamp[(int)TimeStampIndex::GENERAL] = now;
-							// NOTE: Not checking out ...
-							// ... if there's memory space enough to create one more room.
 #ifdef _DEBUG
 							std::cout << "Client " << mIndex << " created a room.\n";
 #endif
@@ -441,48 +439,6 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 	}
 
 	return failedIndices;
-}
-
-Client::State Client::state( ) const
-{
-	return mState;
-}
-
-void Client::setState(const Client::State state)
-{
-	mState = state;
-}
-
-RoomID Client::roomID( ) const
-{
-	return mRoomID;
-}
-
-void Client::setRoomID( const RoomID roomID )
-{
-	mRoomID = roomID;
-}
-
-const std::string& Client::nickname( ) const
-{
-	return mNickname;
-}
-
-HashedKey Client::nicknameHashed( ) const
-{
-	return mNicknameHashed_;
-}
-
-void Client::setNickname( std::string& nickname )
-{
-	mNickname.clear( );
-	mNickname = nickname;
-	mNicknameHashed_ = ::util::hash::Digest2(nickname);
-}
-
-Socket& Client::socket( )
-{
-	return mSocket;
 }
 
 void Client::reset( const bool isSocketReusable )

@@ -91,7 +91,7 @@ uint8_t model::Stage::tryClearRow( )
 		}
 	}
 	uint8_t numOflinesCleared = (uint8_t)fLinesCleared.count();
-	// When One or more lines has been cleared,
+	// When one or more lines have been cleared,
 	if ( 0 != numOflinesCleared )
 	{
 		// From the bottommost to the topmost,

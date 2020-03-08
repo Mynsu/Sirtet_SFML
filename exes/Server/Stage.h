@@ -6,8 +6,12 @@ namespace model
 	{
 	public:
 		Stage( ) = default;
+		Stage( const Stage&	) = delete;
+		Stage( Stage&& ) = delete;
+		void operator=( const Stage& ) = delete;
 		virtual ~Stage( ) = default;
 
+		// Returns how many lines has been cleared.
 		uint8_t tryClearRow( );
 		bool isOver( ) const;
 		void blackout( );

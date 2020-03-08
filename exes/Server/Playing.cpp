@@ -10,33 +10,14 @@ Playing::Playing( )
 	: mHasTetriminoLandedOnClient( false ),
 	mHasTetriminoLandedOnServer( false ),
 	mIsGameOver_( false ),
-	mNumOfLinesCleared( 0 ), mTempoMs( 1000 ),
-	mMoveToUpdate( ::model::tetrimino::Move::NONE_MAX ),
-	mAlarms{ Clock::now() }
-{	
-	for ( Clock::time_point& tp : mAlarms )
+	mNumOfLinesClearedRecently( 0 ), mTempoMs( 1000 ),
+	mMoveToUpdate( ::model::tetrimino::Move::NONE_MAX )
+{
+	const Clock::time_point init = Clock::now();
+	for ( Clock::time_point& alarm : mAlarms )
 	{
-		tp = Clock::now( );
+		alarm = init;
 	}
-}
-
-void Playing::spawnTetrimino( )
-{
-	mCurrentTetrimino = ::model::Tetrimino::Spawn();
-	mNextTetriminos.emplace( ::model::Tetrimino::Spawn() );
-	mNextTetriminos.emplace( ::model::Tetrimino::Spawn() );
-	mNextTetriminos.emplace( ::model::Tetrimino::Spawn() );
-} 
-
-void Playing::perceive( const ::model::tetrimino::Move move )
-{
-	ASSERT_TRUE( move < ::model::tetrimino::Move::NONE_MAX );
-	mMoveToUpdate = move;
-}
-
-void Playing::perceive( const bool hasTetriminoLandedOnClient )
-{
-	mHasTetriminoLandedOnClient = hasTetriminoLandedOnClient;
 }
 
 bool Playing::update( )
@@ -80,11 +61,14 @@ bool Playing::update( )
 				if ( true == hasTetriminoLandedOnServer )
 				{
 					mCurrentTetrimino.hardDrop( false );
-					goto last;
+					break;
 				}
 			}
-			mUpdateResult = Playing::UpdateResult::TETRIMINO_MOVED;
-			return isAsyncTolerable;
+			if ( false == hasTetriminoLandedOnServer )
+			{
+				mUpdateResult = Playing::UpdateResult::TETRIMINO_MOVED;
+				return isAsyncTolerable;
+			}
 		}
 	}
 	else
@@ -130,7 +114,6 @@ bool Playing::update( )
 		mMoveToUpdate = ::model::tetrimino::Move::NONE_MAX;
 	}
 
-	last:
 	if ( true == hasTetriminoLandedOnServer )
 	{
 		mCurrentTetrimino.land( mStage.grid() );
@@ -140,7 +123,7 @@ bool Playing::update( )
 		const uint8_t numOfLinesCleared = mStage.tryClearRow();
 		if ( 0 != numOfLinesCleared )
 		{
-			mNumOfLinesCleared = numOfLinesCleared;
+			mNumOfLinesClearedRecently = numOfLinesCleared;
 			mUpdateResult = Playing::UpdateResult::LINE_CLEARED;
 		}
 	}
@@ -170,54 +153,4 @@ bool Playing::update( )
 	}
 
 	return isAsyncTolerable;
-}
-
-Playing::UpdateResult Playing::updateResult( ) const
-{
-	return mUpdateResult;
-}
-
-::model::tetrimino::Type Playing::currentTetriminoType( ) const
-{
-	return mCurrentTetrimino.type();
-}
-
-::model::tetrimino::Rotation Playing::currentTetriminoRotationID( ) const
-{
-	return mCurrentTetrimino.rotationID();
-}
-
-sf::Vector2<int8_t> Playing::currentTetriminoPosition( ) const
-{
-	return mCurrentTetrimino.position();
-}
-
-::model::tetrimino::Type Playing::nextTetriminoType( ) const
-{
-	return mNextTetriminos.front().type();
-}
-
-uint16_t Playing::tempoMs( ) const
-{
-	return mTempoMs;
-}
-
-void Playing::setRelativeTempoMs( const int32_t milliseconds )
-{
-	mTempoMs += milliseconds;
-}
-
-const ::model::stage::Grid& Playing::serializedStage( ) const
-{
-	return mStage.cgrid();
-}
-
-uint8_t Playing::numOfLinesCleared( ) const
-{
-	return mNumOfLinesCleared;
-}
-
-bool Playing::isGameOver( ) const
-{
-	return mIsGameOver_;
 }

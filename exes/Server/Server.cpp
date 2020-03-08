@@ -3,8 +3,7 @@
 #include "Client.h"
 #include "Tetrimino.h"
 
-const uint16_t CLIENT_CAPACITY = 100;
-const uint16_t BACKLOG_SIZ = CLIENT_CAPACITY/2;
+const uint16_t BACKLOG_SIZ = CLIENT_CAPACITY/2; // NOTE: Assure this be not zero.
 const uint16_t ROOM_CAPACITY = 25;
 const uint16_t LOBBY_CAPACITY = 100;
 const ClientIndex LISTENER_IDX = CLIENT_CAPACITY;
@@ -69,32 +68,31 @@ int main( )
 	}
 
 	uint16_t numOfAcceptancePending = 0;
-	std::vector<Client> clients;
-	clients.reserve( CLIENT_CAPACITY );
+	std::array<Client, CLIENT_CAPACITY> clients;
 	std::unordered_set<ClientIndex> clientIndicesNotAccepted;
 	clientIndicesNotAccepted.reserve( CLIENT_CAPACITY );
-	for ( uint16_t i = 0; i != CLIENT_CAPACITY; ++i )
+	for ( uint16_t index = 0; index != CLIENT_CAPACITY; ++index )
 	{
-		Client& client = clients.emplace_back(Socket::Type::TCP, i);
+		Client& client = clients[index];
+		client.setIndex( index );
 		Socket& socket = client.socket();
-		if ( -1 == iocp.add(socket.handle(), i) )
+		// NOTE: 디버그하기 쉬워서 주소 대신 인덱스를 키로 삼았습니다.
+		if ( -1 == iocp.add(socket.handle(), index) )
 		{
-			std::cerr << "FATAL: Failed to add Client " << i << " into IOCP.\n";
+			std::cerr << "FATAL: Failed to add Client " << index << " into IOCP.\n";
 			listener.close( );
 			WSACleanup( );
-			clients.clear( );
 			return -1;
 		}
 
-		if ( i < BACKLOG_SIZ )
+		if ( index < BACKLOG_SIZ )
 		{
-			const int result = listener.acceptOverlapped(socket, i);
+			const int result = listener.acceptOverlapped(socket, index);
 			if ( FALSE == result )
 			{
 				// Exception
 				std::cerr << "FATAL: Failed to accept.\n";
 				listener.close( );
-				clients.clear( );
 				WSACleanup( );
 				return -1;
 			}
@@ -103,7 +101,6 @@ int main( )
 				// Exception
 				std::cerr << "FATAL: Failed to get AcceptEx(...).\n";
 				listener.close( );
-				clients.clear( );
 				WSACleanup( );
 				return -1;
 			}
@@ -111,18 +108,19 @@ int main( )
 		}
 		else
 		{
-			clientIndicesNotAccepted.emplace( i );
+			clientIndicesNotAccepted.emplace( index );
 		}
 	}
 
-	uint16_t population = 0;
-	// NOTE: std::vector is as fast as std::forward_list and much easier in erasing something in it.
+	uint16_t nOfConnInMainServ = 0;
+	// NOTE: If T is less than about 64 Bytes,
+	// std::vector<T> is as fast as std::forward_list<T> and much easier in erasing something in it.
 	std::vector<ClientIndex> lobby;
 	lobby.reserve( LOBBY_CAPACITY );
 	std::unordered_map<HashedKey, Room> rooms;
 	rooms.reserve( ROOM_CAPACITY );
 	auto forceDisconnection =
-		[&iocp, &clients, &clientIndicesNotAccepted, &population, &lobby, &rooms]( const ClientIndex index ) -> bool
+		[&iocp, &clients, &clientIndicesNotAccepted, &nOfConnInMainServ, &lobby, &rooms]( const ClientIndex index ) -> bool
 	{
 		bool result = true;
 		Client& client = clients[index];
@@ -149,6 +147,8 @@ int main( )
 				rooms.erase( it );
 			}
 		}
+		// NOTE: Client 인스턴스를 통째로 새로 만들고 복사해 덮어쓰지 않고,
+		// 필요한 부분만 교체해 작업을 최소화했습니다.
 		client.reset( false );
 		const Socket& socket = client.socket();
 		if ( -1 == iocp.add(socket.handle(), index) )
@@ -158,10 +158,10 @@ int main( )
 			result = false;
 			return result;
 		}
-		--population;
+		--nOfConnInMainServ;
 		clientIndicesNotAccepted.emplace( index );
 		std::cout << "Forced to disconnect Client " << index << ". (Now "
-			<< population << "/" << CLIENT_CAPACITY << " connections.)\n";
+			<< nOfConnInMainServ << "/" << CLIENT_CAPACITY << " connections.)\n";
 		return result;
 	};
 	ClientIndex queueServerIdx = UINT16_MAX;
@@ -197,7 +197,7 @@ int main( )
 				}
 				// When accepting successfully,
 				--numOfAcceptancePending;
-				++population;
+				++nOfConnInMainServ;
 				Socket& clientSocket = candidateClientSocket;
 				const ClientIndex clientIdx = candidateIdx;
 				if ( -1 == clientSocket.receiveOverlapped() )
@@ -214,7 +214,7 @@ int main( )
 				}
 #ifdef _DEBUG
 				std::cout << "A new client " << clientIdx << " joined. (Now "
-						<< population << "/" << CLIENT_CAPACITY << " connections.)\n";
+						<< nOfConnInMainServ << "/" << CLIENT_CAPACITY << " connections.)\n";
 #endif
 				clients[clientIdx].resetTimeStamp();
 				connectionsNotSubmittingTicket.emplace( clientIdx );
@@ -237,13 +237,13 @@ int main( )
 				if ( IOType::DISCONNECT == cmpl )
 				{
 					queueServer.reset( );
-					--population;
+					--nOfConnInMainServ;
 					clientIndicesNotAccepted.emplace( queueServerIdx );
 					// Reset
 					queueServerIdx = -1;
 #ifdef _DEBUG
 					std::cerr << "WARNING: The queue server disconnected. (Now "
-						<< population << '/' << CLIENT_CAPACITY << " connections.)\n";
+						<< nOfConnInMainServ << '/' << CLIENT_CAPACITY << " connections.)\n";
 #endif
 				}
 				else if ( 0 == ev.dwNumberOfBytesTransferred )
@@ -278,18 +278,18 @@ int main( )
 							const char* const rcvBuf = socketToQueueServer.receivingBuffer();
 							const std::string_view strView( rcvBuf );
 							// When the queue server asked how many clients keep connecting,
-							if ( const size_t pos = strView.find(TAG_POPULATION);
+							if ( const size_t pos = strView.find(TAG_NUM_OF_CONNECTIONS);
 								std::string_view::npos != pos )
 							{
 #ifdef _DEBUG
-								std::cout << "Population has been asked by the queue server.\n";
+								std::cout << "Queue server asks how many connections there are.\n";
 #endif
 								Packet packet;
-								packet.pack( TAG_POPULATION, population );
+								packet.pack( TAG_NUM_OF_CONNECTIONS, nOfConnInMainServ );
 								if ( -1 == socketToQueueServer.sendOverlapped(packet) )
 								{
 									// Exception
-									std::cerr << "WARNING: Failed to receive population\n";
+									std::cerr << "WARNING: Failed to send the number of connections.\n";
 									if ( false == forceDisconnection(queueServerIdx) )
 									{
 										// Break twice
@@ -301,7 +301,8 @@ int main( )
 								else
 								{
 #ifdef _DEBUG
-									std::cout << "Population has been told: " << population << ".\n";
+									std::cout << "The number of connections has been told: "
+										<< nOfConnInMainServ << ".\n";
 #endif
 								}
 							}
@@ -406,11 +407,11 @@ int main( )
 						}
 					}
 					client.reset( );
-					--population;
+					--nOfConnInMainServ;
 					clientIndicesNotAccepted.emplace( clientIdx );
 #ifdef _DEBUG
 					std::cout << "Client " << clientIdx << " left. (Now "
-						<< population << "/" << CLIENT_CAPACITY << " connections.)\n";
+						<< nOfConnInMainServ << "/" << CLIENT_CAPACITY << " connections.)\n";
 #endif
 				}
 				else if ( 0 == ev.dwNumberOfBytesTransferred )
@@ -500,15 +501,15 @@ int main( )
 								connectionsNotSubmittingTicket.erase( queueServerIdx );
 								client.setState( Client::State::AS_QUEUE_SERVER );
 #ifdef _DEBUG
-								std::cout << "Population has been asked by the queue server.\n";
+								std::cout << "Queue server asks how many connections there are.\n";
 #endif
 								Packet packet;
-								packet.pack( TAG_POPULATION, population );
+								packet.pack( TAG_NUM_OF_CONNECTIONS, nOfConnInMainServ );
 								Socket& queueServerSocket = clientSocket;
 								if ( -1 == queueServerSocket.sendOverlapped(packet) )
 								{
 									// Exception
-									std::cerr << "WARNING: Failed to send population.\n";
+									std::cerr << "WARNING: Failed to send the number of connections.\n";
 									if ( false == forceDisconnection(queueServerIdx) )
 									{
 										// Break twice
@@ -517,7 +518,7 @@ int main( )
 									continue;
 								}
 #ifdef _DEBUG
-								std::cout << "Population has been told: " << population << ".\n";
+								std::cout << "The number of connections has been told: " << nOfConnInMainServ << ".\n";
 #endif
 								if ( -1 == clientSocket.receiveOverlapped() )
 								{
@@ -700,7 +701,6 @@ cleanUp:
 			}
 		}
 	}
-	clients.clear( );
 	std::cout << "Server has been closed successfully." << std::endl;
 
 	WSACleanup( );

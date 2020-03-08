@@ -1,8 +1,8 @@
 #pragma once
 
 #include <Lib/Socket.h>
-// NOTE: Defined after Socket.h to include UUID
-#define WIN32_LEAN_AND_MEAN
+#include <SFML/Graphics/Color.hpp>
+#define WIN32_LEAN_AND_MEAN // NOTE: Defined after Socket.h to include UUID.
 
 #include <signal.h>
 #include <unordered_set>
@@ -16,25 +16,29 @@
 #include <chrono>
 #include <stdint.h>
 #include <intrin.h>
-#include <lua.hpp>
-#pragma comment( lib, "lua53" )
-#include <SFML/Graphics.hpp>
 #ifdef _DEBUG
 #pragma comment( lib, "sfml-graphics-d" )
 #else
 #pragma comment( lib, "sfml-graphics" )
 #endif
+#include <lua.hpp>
+#pragma comment( lib, "lua53" )
 #include <Lib/IOCP.h>
 #include <Lib/EndPoint.h>
 #include <Lib/Hash.h>
 #include <Lib/Packet.h>
+#ifdef _DEBUG
 #pragma comment( lib, "Lib-d" )
+#else
+#pragma comment( lib, "Lib" )
+#endif
 #include <GameLib/Common.h>
 
 using Clock = std::chrono::high_resolution_clock;
 using ClientIndex = uint16_t;
 using Ticket = HashedKey;
 using RoomID = uint32_t;
+const uint16_t CLIENT_CAPACITY = 100;
 
 #ifdef _DEBUG
 #define ASSERT_TRUE( x ) if ( false == (x) ) __debugbreak( );
@@ -43,6 +47,6 @@ using RoomID = uint32_t;
 if ( false == (x) )\
 {\
 	std::string msg( "ASSERT_TRUE disproved. (" );\
-	std::cerr << msg + __FILE__ + ':' + std::to_string( __LINE__ ) + ')'; << std::endl;\
+	std::cerr << msg + __FILE__ + ':' + std::to_string( __LINE__ ) + ')' << std::endl;\
 }
 #endif

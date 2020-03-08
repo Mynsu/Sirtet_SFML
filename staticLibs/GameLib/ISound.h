@@ -5,6 +5,15 @@
 #pragma once
 #include <string>
 
+namespace sound
+{
+	enum class Target
+	{
+		BGM,
+		SFX,
+	};
+}
+
 class ISound
 {
 public:
@@ -12,11 +21,10 @@ public:
 	void operator=( const ISound& ) = delete;
 	virtual ~ISound( ) = default;
 
-	// 0 to 100
-	virtual void setBGMVolume( const float volume ) = 0;
-	// 0 to 100
-	virtual void setSFXVolume( const float volume ) = 0;
-	virtual void toggleBGMMute( ) = 0;
+	// If volume is 0.f to 100.f, sets absolute volume.
+	// If volume is negative, sets relative volume.
+	virtual void setVolume( const ::sound::Target target, const float volume ) = 0;
+	virtual void toggleMute( const ::sound::Target target ) = 0;
 	virtual bool playBGM( std::string& fileName, const bool isRepeated = false ) = 0;
 	virtual void stopBGM( ) = 0;
 	virtual bool playSFX( std::string& fileName ) = 0;

@@ -96,7 +96,7 @@ void ::scene::SceneManager::chscnto( const std::string_view& args )
 		return;
 	}
 	const ::scene::ID nextScene = (::scene::ID)std::atoi( args.data() );
-	// Exception: When the current scene id equals with the next scene id,
+	// Exception
 	if ( nextScene == mCurrentScene->currentScene() )
 	{
 		gService()->console().print( "We are already where you want to go." );

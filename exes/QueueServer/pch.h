@@ -2,8 +2,7 @@
 #define PCH_H
 
 #include <Lib/Socket.h>
-// NOTE: Defined after Socket.h to include UUID
-#define WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN // NOTE: Defined after Socket.h to include UUID.
 
 #include <signal.h>
 #include <unordered_set>
@@ -20,7 +19,11 @@
 #include <Lib/EndPoint.h>
 #include <Lib/Hash.h>
 #include <Lib/Packet.h>
+#ifdef _DEBUG
 #pragma comment( lib, "Lib-d" )
+#else
+#pragma comment( lib, "Lib" )
+#endif
 #include <GameLib/Common.h>
 
 using Clock = std::chrono::high_resolution_clock;

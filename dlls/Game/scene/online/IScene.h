@@ -1,3 +1,8 @@
+////
+// 온라인 플레이 씬들(대기열, 로비, 방)의 인터페이스입니다.
+// ::scene::IScene.h, ::scene::inPlay::IScene.h와 다릅니다.
+////
+
 #pragma once
 #include <list>
 #include <SFML/Window.hpp>

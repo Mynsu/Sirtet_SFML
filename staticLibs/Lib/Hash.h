@@ -13,12 +13,16 @@ namespace util::hash
 		return ('\0'==*str)? 0: 1+Measure( ++str );
 	}
 
+	////
+	// !IMPORTANT: Digest(...)와 Digest2(...)는 입력이 같으면 출력도 같아야 함.
+	///
+
 	// 65599 문자열 해싱 함수입니다.
 	template <int N>
 	constexpr HashedKey Digest( const char (&str)[N] )
 	{
 		HashedKey retHash = 0;
-		for ( uint8_t i = 0; N != i; ++i )
+		for ( uint8_t i = 0; N-1 != i; ++i )
 		{
 			retHash = str[i] + (retHash<<6) + (retHash<<16) - retHash;
 		}

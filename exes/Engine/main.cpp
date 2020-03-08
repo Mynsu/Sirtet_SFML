@@ -116,6 +116,7 @@ int main( int argc, char* argv[] )
 	const GameComponents gameComponents = GetGameAPI(engineComponents);
 	// Passed by value, or copied, thus initialized for security.
 	engineComponents = { nullptr };
+	ASSERT_NOT_NULL( gameComponents.game );
 ////
 // Main Loop
 ////
@@ -150,7 +151,7 @@ int main( int argc, char* argv[] )
 					 true == event.key.control &&
 					 sf::Keyboard::M == event.key.code )
 			{
-				gService.sound().toggleBGMMute( );
+				gService.sound().toggleMute( ::sound::Target::BGM );
 			}
 			else
 			{

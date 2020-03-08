@@ -29,7 +29,7 @@ namespace scene::inPlay
 		// 생성자로 레퍼런스를 받아 쥐고 있습니다.
 		sf::RenderWindow& mWindow_;
 		std::unique_ptr<::scene::inPlay::IScene> mCurrentScene;
-		// 동시에 여러 씬을 띄워 봤습니다.
+		// 동시에 여러 씬을 띄워봤습니다.
 		std::unique_ptr<::scene::inPlay::IScene> mOverlappedScene;
 		sf::RectangleShape mBackground;
 	};

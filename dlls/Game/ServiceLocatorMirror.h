@@ -11,7 +11,12 @@ public:
 	ServiceLocatorMirror( )
 		: mPtr( nullptr )
 	{
-		ASSERT_TRUE( false == IsInstantiated );
+#ifdef _DEBUG
+		if ( true == IsInstantiated )
+		{
+			__debugbreak( );
+		}
+#endif
 		IsInstantiated = true;
 	}
 	ServiceLocatorMirror( const ServiceLocatorMirror& ) = delete;
@@ -32,4 +37,5 @@ private:
 	IServiceLocator* mPtr;
 };
 
+// NOTE: 싱글턴 패턴과 달리 생성자를 호출할 수 있습니다.
 extern ::ServiceLocatorMirror gService;

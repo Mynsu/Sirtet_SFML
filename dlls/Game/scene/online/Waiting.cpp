@@ -21,7 +21,7 @@ scene::online::Waiting::Waiting( const sf::RenderWindow& window, Online& net )
 	const uint32_t seed = (uint32_t)atSec.count();
 	std::minstd_rand engine( seed + SALT );
 	engine.discard( engine() % MAX_KEY_STRETCHING );
-	const HashedKey invitation = engine();
+	const uint32_t invitation = engine();
 	Packet packet;
 	packet.pack( TAG_INVITATION, invitation );
 	net.send( packet );
@@ -83,7 +83,6 @@ void scene::online::Waiting::loadResources( const sf::RenderWindow& window )
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			// Type Check Exception
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 													 tableName, scriptPath );
 		}
@@ -419,8 +418,15 @@ void scene::online::Waiting::loadResources( const sf::RenderWindow& window )
 #endif
 					if ( true == net.connectToMainServer() )
 					{
-						// Sending to the main server the ticket, which the main server will verify.
-						net.send( _ticket.data(), (int)_ticket.size() );
+						// NOTE: 대기열 서버가 메인 서버에 보낸 티켓이 도착한 후에 클라이언트에게 티켓을 보내는 방법이 더 세련되지만
+						// 대기열 서버와 메인 서버에 걸리는 부하에 비하면 괜한 일을 하는 것일 수 있습니다.
+						// 그래서 이렇게 클라이언트가 기다렸다가 메인 서버에 티켓을 에코하도록 했습니다.
+						std::thread sendingTicket( [&net, _ticket]() mutable
+												  {
+													std::this_thread::sleep_for( std::chrono::milliseconds(1000) );
+													net.send( _ticket.data(), (int)_ticket.size() );
+												  } );
+						sendingTicket.detach();
 						mState = State::SUBMITTING_TICKET;
 					}
 				}

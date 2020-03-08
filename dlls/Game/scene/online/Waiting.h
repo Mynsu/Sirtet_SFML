@@ -7,6 +7,9 @@ namespace scene::online
 
 	class Waiting final : public ::scene::online::IScene
 	{
+	private:
+		// 둘 이상의 인스턴스를 만들 수 없습니다.
+		static bool IsInstantiated;
 	public:
 		Waiting( const sf::RenderWindow& window, Online& net );
 		~Waiting( );
@@ -27,7 +30,6 @@ namespace scene::online
 			SELECTION,
 			NULL_MAX,
 		};
-		static bool IsInstantiated;
 		uint16_t mOrder;
 		::scene::online::Waiting::State mState;
 		std::string mSoundPaths[(int)SoundIndex::NULL_MAX];

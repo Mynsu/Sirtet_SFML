@@ -8,6 +8,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "staticLibs", "staticLibs", "{5FE8EC19-0728-409C-8EFB-22C459628749}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Engine", "exes\Engine\Engine.vcxproj", "{D7DDD910-0DB0-4509-BB1A-7708319D1707}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C0995A75-C656-430E-A388-2CF1677FDB48} = {C0995A75-C656-430E-A388-2CF1677FDB48}
+		{C43A81D0-1566-4F71-AC03-B5704B6D98E7} = {C43A81D0-1566-4F71-AC03-B5704B6D98E7}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Lib", "staticLibs\Lib\Lib.vcxproj", "{C0995A75-C656-430E-A388-2CF1677FDB48}"
 EndProject
@@ -16,11 +20,13 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Game", "dlls\Game\Game.vcxproj", "{BD93EAD9-F247-4A0A-ABE9-79D6756FE4E8}"
 	ProjectSection(ProjectDependencies) = postProject
 		{C0995A75-C656-430E-A388-2CF1677FDB48} = {C0995A75-C656-430E-A388-2CF1677FDB48}
+		{C43A81D0-1566-4F71-AC03-B5704B6D98E7} = {C43A81D0-1566-4F71-AC03-B5704B6D98E7}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Server", "exes\Server\Server.vcxproj", "{42D998E6-FEE0-4FAC-BADB-7B95EDAF3122}"
 	ProjectSection(ProjectDependencies) = postProject
 		{C0995A75-C656-430E-A388-2CF1677FDB48} = {C0995A75-C656-430E-A388-2CF1677FDB48}
+		{C43A81D0-1566-4F71-AC03-B5704B6D98E7} = {C43A81D0-1566-4F71-AC03-B5704B6D98E7}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QueueServer", "exes\QueueServer\QueueServer.vcxproj", "{14E4043E-FC53-493C-BC2F-0484BDC75787}"
@@ -29,6 +35,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QueueServer", "exes\QueueSe
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GameLib", "staticLibs\GameLib\GameLib.vcxproj", "{C43A81D0-1566-4F71-AC03-B5704B6D98E7}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C0995A75-C656-430E-A388-2CF1677FDB48} = {C0995A75-C656-430E-A388-2CF1677FDB48}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

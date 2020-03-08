@@ -156,7 +156,6 @@ void ::scene::inPlay::Ready::loadResources( const sf::RenderWindow& window )
 
 	if ( false == mTexture.loadFromFile(countdownSpritePath) )
 	{
-		// Exception: When there's not even the default file,
 		gService()->console().printFailure( FailureLevel::WARNING,
 												"File Not Found: "+countdownSpritePath );
 	}

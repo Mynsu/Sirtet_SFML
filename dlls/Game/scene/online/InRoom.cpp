@@ -20,7 +20,7 @@ scene::online::InRoom::InRoom( const sf::RenderWindow& window, Online& net, cons
 	mFrameCountCoolToRotateStartButton( 0 ),
 	mMyNicknameHashed_( net.myNicknameHashed() ), mMyNickname( net.myNickname() ),
 	mNet( net ),
-	mAlarms{ Clock::time_point::max() }, mOtherPlayerSlots{ NULL_EMPTY_SLOT }
+	mAlarms{ (Clock::time_point::max)() }, mOtherPlayerSlots{ NULL_EMPTY_SLOT }
 {
 	ASSERT_TRUE( false == IsInstantiated );
 	
@@ -411,7 +411,6 @@ void scene::online::InRoom::loadResources( const sf::RenderWindow& window )
 
 		tableName = "VfxCombo";
 		lua_getglobal( lua, tableName.data() );
-		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
@@ -702,7 +701,6 @@ void scene::online::InRoom::loadResources( const sf::RenderWindow& window )
 
 		tableName = "OtherPlayerSlot";
 		lua_getglobal( lua, tableName.data() );
-		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,

@@ -43,8 +43,6 @@ private:
 
 bool GameLocal::IsInstantiated = false;
 
-// NOTE: In this way an instance will be created in compile-time,
-//		 but often needs another initialization in runtime.
 std::unique_ptr<IGame> _Game( std::make_unique<GameLocal>() );
 
 // 클래스 ServiceLocatorMirror와 추상 클래스 IGame의 friend 함수입니다.
@@ -54,6 +52,7 @@ inline void _2943305454( const EngineComponents engine )
 {
 	// Prerequisite for _Game->init( ).
 	gService.mPtr = engine.service;
+	ASSERT_NOT_NULL( _Game );
 	_Game->init( *engine.window );
 }
 

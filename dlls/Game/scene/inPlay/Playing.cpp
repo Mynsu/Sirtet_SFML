@@ -279,7 +279,6 @@ void ::scene::inPlay::Playing::loadResources( const sf::RenderWindow& )
 
 		tableName = "VfxCombo";
 		lua_getglobal( lua, tableName.data() );
-		// Type Check Exception
 		if ( false == lua_istable( lua, TOP_IDX ) )
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
@@ -351,7 +350,6 @@ void ::scene::inPlay::Playing::loadResources( const sf::RenderWindow& )
 
 		tableName = "NextTetriminoPanel";
 		lua_getglobal( lua, tableName.data() );
-		// Type Check Exception
 		if ( false == lua_istable( lua, TOP_IDX ) )
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
@@ -930,11 +928,13 @@ void ::scene::inPlay::Playing::loadResources( const sf::RenderWindow& )
 			if ( true == hasTetriminoLanded )
 			{
 				mCurrentTetrimino.hardDrop( false );
-				// NOTE: Break the loop and stop stuff in the 1st if-scope immediately.
-				goto last;
+				break;
 			}
 		}
-		return ::scene::inPlay::ID::AS_IS;
+		if ( false == hasTetriminoLanded )
+		{
+			return ::scene::inPlay::ID::AS_IS;
+		}
 	}
 	else
 	{
@@ -998,7 +998,6 @@ void ::scene::inPlay::Playing::loadResources( const sf::RenderWindow& )
 		mFrameCountSoftDropInterval = 0;
 	}
 
-	last:
 	if ( true == hasTetriminoLanded )
 	{
 		mCurrentTetrimino.land( mStage.grid() );

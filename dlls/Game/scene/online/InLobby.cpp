@@ -30,7 +30,6 @@ scene::online::InLobby::InLobby( const sf::RenderWindow& window, ::scene::online
 	tf.setOrigin( 0.5f, 0.5f );
 	tf.setPosition(	winSize*.5f );
 	tf.setFillColor( sf::Color(0xffa500ff) ); // Orange
-	mLatestMouseEvent.latestClickTime = Clock::time_point::min();
 	loadResources( window );
 #ifdef _DEV
 	IServiceLocator* const service = gService();
@@ -450,7 +449,6 @@ void scene::online::InLobby::loadResources( const sf::RenderWindow& window )
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			// Type Check Exception
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 													 tableName, scriptPath );
 		}
@@ -560,7 +558,6 @@ void scene::online::InLobby::loadResources( const sf::RenderWindow& window )
 
 		tableName = "GuideTexts";
 		lua_getglobal( lua, tableName.data() );
-		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
@@ -595,7 +592,6 @@ void scene::online::InLobby::loadResources( const sf::RenderWindow& window )
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			// Type Check Exception
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 													 tableName, scriptPath );
 		}

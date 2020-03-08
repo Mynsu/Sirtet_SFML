@@ -13,18 +13,13 @@ Room::Room( const ClientIndex hostIndex )
 	mPlayingParticipants.reserve( PARTICIPANT_CAPACITY );
 	mObservers.emplace_back( hostIndex, false );
 	const Clock::time_point init = Clock::now();
-	for ( Clock::time_point& tp : mAlarms )
+	for ( Clock::time_point& alarm : mAlarms )
 	{
-		tp = init;
+		alarm = init;
 	}
 }
 
-void Room::start( )
-{
-	mState = State::ON_START;
-}
-
-int Room::pop( const ClientIndex index )
+int8_t Room::pop( const ClientIndex index )
 {
 	bool isThereSomeoneRemains = true;
 	bool wasCandidateParticipant = false;
@@ -70,19 +65,6 @@ int Room::pop( const ClientIndex index )
 		mHasHostChanged_ = true;
 	}
 	return (true==isThereSomeoneRemains)? 1: 0;
-}
-
-void Room::perceive( const ClientIndex index, const ::model::tetrimino::Move move )
-{
-	if ( auto it = mPlayingParticipants.find(index); mPlayingParticipants.end() != it )
-	{
-		it->second.perceive( move );
-	}
-	// Exception
-	else
-	{
-		std::cerr << "Client " << index << " knows the incorrect room ID.\n";
-	}
 }
 
 void Room::perceive( const ClientIndex index, const Perception perceptedThing )
@@ -151,7 +133,7 @@ void Room::perceive( const ClientIndex index, const Perception perceptedThing )
 	}
 }
 
-std::vector<ClientIndex> Room::update( std::vector<Client>& clients )
+std::vector<ClientIndex> Room::update( std::array<Client, CLIENT_CAPACITY>& clients )
 {
 	std::vector<ClientIndex> failedIndices;
 	switch ( mState )
@@ -162,7 +144,7 @@ std::vector<ClientIndex> Room::update( std::vector<Client>& clients )
 			for ( const Observer ob : mObservers )
 			{
 				auto pair = mPlayingParticipants.try_emplace(ob.index);
-				pair.first->second.spawnTetrimino( );
+				pair.first->second.spawnTetriminos( );
 				clients[ob.index].setState( Client::State::PLAYING_IN_ROOM );
 			}
 			mObservers.clear( );
@@ -179,9 +161,9 @@ std::vector<ClientIndex> Room::update( std::vector<Client>& clients )
 					std::cerr << "FAIL: Client " << pair.first << "'s time out.\n";
 					failedIndices.emplace_back( pair.first );
 				}
-				if ( Playing::UpdateResult::LINE_CLEARED == pair.second.updateResult() )
+				if ( Playing::UpdateResult::LINE_CLEARED == pair.second.updateResultToNotify() )
 				{
-					const uint8_t numOfLinesCleared = pair.second.numOfLinesCleared();
+					const uint8_t numOfLinesCleared = pair.second.numOfLinesClearedRecently();
 					const int32_t tempoDiff = TEMPO_DIFF_MS*numOfLinesCleared;
 					pair.second.setRelativeTempoMs( tempoDiff );
 					mHasTempoChanged_ = true;
@@ -207,7 +189,7 @@ std::vector<ClientIndex> Room::update( std::vector<Client>& clients )
 	return failedIndices;
 }
 
-std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
+std::vector<ClientIndex> Room::notify( std::array<Client, CLIENT_CAPACITY>& clients )
 {
 	std::vector<ClientIndex> failedIndices;
 	std::vector<ClientIndex> everyoneInRoom;
@@ -303,7 +285,7 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 				{
 					isAllOver = false;
 				}
-				const Playing::UpdateResult result = pair.second.updateResult();
+				const Playing::UpdateResult result = pair.second.updateResultToNotify();
 				switch ( result )
 				{
 					case Playing::UpdateResult::NONE:
@@ -338,7 +320,7 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 						nextTetriminos += (char)nextTetType;
 						const ::model::stage::Grid& stage = playing.serializedStage();
 						stages.append( (char*)&stage, sizeof(stage) );
-						const uint8_t numOfLinesCleared = playing.numOfLinesCleared();
+						const uint8_t numOfLinesCleared = playing.numOfLinesClearedRecently();
 						numsOfLinesCleared += (char)numOfLinesCleared;
 						break;
 					}
@@ -525,11 +507,6 @@ std::vector<ClientIndex> Room::notify( std::vector<Client>& clients )
 	}
 
 	return failedIndices;
-}
-
-ClientIndex Room::hostIndex( ) const
-{
-	return mHostIndex;
 }
 
 bool Room::tryEmplace( const ClientIndex index )

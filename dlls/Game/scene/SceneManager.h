@@ -26,6 +26,7 @@ namespace scene
 
 		void update( std::vector<sf::Event>& eventQueue )
 		{
+			// NOTE: 매 프레임마다 호출되는 함수라서 부하를 줄이기 위해 nullptr 체크 생략했습니다.
 			const ::scene::ID nextSceneID = mCurrentScene->update(eventQueue);
 			if ( ::scene::ID::AS_IS != nextSceneID )
 			{
@@ -34,6 +35,7 @@ namespace scene
 		}
 		void draw( )
 		{
+			// NOTE: 매 프레임마다 호출되는 함수라서 부하를 줄이기 위해 nullptr 체크 생략했습니다.
 			mCurrentScene->draw( *mWindow );
 		}
 	private:

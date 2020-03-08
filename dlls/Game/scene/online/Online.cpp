@@ -111,7 +111,6 @@ void ::scene::online::Online::loadResources( const sf::RenderWindow& window )
 		const int TOP_IDX = -1;
 		std::string tableName( "DisconnectionSprite" );
 		lua_getglobal( lua, tableName.data() );
-		// Type Check Exception
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK, tableName, scriptPath );
@@ -122,12 +121,10 @@ void ::scene::online::Online::loadResources( const sf::RenderWindow& window )
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			int type = lua_type(lua, TOP_IDX);
-			// Type check
 			if ( LUA_TSTRING == type )
 			{
 				if ( false == mTexture.loadFromFile(lua_tostring(lua, TOP_IDX)) )
 				{
-					// File Not Found Exception
 					gService()->console().printScriptError( ExceptionType::FILE_NOT_FOUND,
 						tableName+':'+field, scriptPath );
 				}
@@ -136,7 +133,6 @@ void ::scene::online::Online::loadResources( const sf::RenderWindow& window )
 					isPathDefault = false;
 				}
 			}
-			// Type Check Exception
 			else
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
@@ -148,7 +144,6 @@ void ::scene::online::Online::loadResources( const sf::RenderWindow& window )
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type(lua, TOP_IDX);
-			// Type check
 			if ( LUA_TNUMBER == type )
 			{
 				const float temp = (float)lua_tonumber(lua, TOP_IDX);
@@ -165,7 +160,6 @@ void ::scene::online::Online::loadResources( const sf::RenderWindow& window )
 					isWDefault = false;
 				}
 			}
-			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
@@ -177,7 +171,6 @@ void ::scene::online::Online::loadResources( const sf::RenderWindow& window )
 			lua_pushstring( lua, field.data() );
 			lua_gettable( lua, 1 );
 			type = lua_type(lua, TOP_IDX);
-			// Type check
 			if ( LUA_TNUMBER == type )
 			{
 				const float temp = (float)lua_tonumber(lua, TOP_IDX);
@@ -194,7 +187,6 @@ void ::scene::online::Online::loadResources( const sf::RenderWindow& window )
 					isHDefault = false;
 				}
 			}
-			// Type Check Exception
 			else if ( LUA_TNIL != type )
 			{
 				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
@@ -210,7 +202,6 @@ void ::scene::online::Online::loadResources( const sf::RenderWindow& window )
 		std::string defaultFilePath( "Images/Online.png" );
 		if ( false == mTexture.loadFromFile(defaultFilePath) )
 		{
-			// Exception: When there's not even the default file,
 			gService()->console().printFailure( FailureLevel::WARNING,
 											   "File Not Found: "+defaultFilePath );
 		}
