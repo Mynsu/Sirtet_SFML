@@ -22,6 +22,7 @@ scene::online::InLobby::InLobby( const sf::RenderWindow& window, ::scene::online
 	
 	const sf::Vector2f winSize( window.getSize() );
 	mBackground.setSize( winSize );
+	mUsersBox.setSize( winSize );
 	const std::string& myNickname = net.myNickname();
 	auto pair = mUserList.emplace( std::piecewise_construct,
 								  std::forward_as_tuple(myNickname),
@@ -77,7 +78,7 @@ void scene::online::InLobby::loadResources( const sf::RenderWindow& window )
 	mGuideTexts.emplace_back( "Double click to create a room." );
 	mGuideTexts.emplace_back( "Right click to join a room." );
 	uint16_t guideTextFontSize = 20;
-	std::string guideTextFont( "Fonts/AGENCYB.TTF" );
+	std::string fontPath( "Fonts/AGENCYB.TTF" );
 	uint32_t shade = 0x0000007f;
 	sf::Vector2f subWindowPosition( 300.f, 200.f );
 	sf::Vector2f subWindowSize( 200.f, 100.f );
@@ -127,6 +128,25 @@ void scene::online::InLobby::loadResources( const sf::RenderWindow& window )
 		{
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 													 varName, scriptPath );
+		}
+		lua_pop( lua, 1 );
+
+		varName = "Font";
+		lua_getglobal( lua, varName.data() );
+		type = lua_type(lua, TOP_IDX);
+		if ( LUA_TSTRING == type )
+		{
+			fontPath = lua_tostring(lua, TOP_IDX);
+		}
+		else if ( LUA_TNIL == type )
+		{
+			gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
+												   varName, scriptPath );
+		}
+		else
+		{
+			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
+												   varName, scriptPath );
 		}
 		lua_pop( lua, 1 );
 
@@ -501,26 +521,6 @@ void scene::online::InLobby::loadResources( const sf::RenderWindow& window )
 			if ( LUA_TNUMBER == type )
 			{
 				guideTextColor = (uint32_t)lua_tointeger(lua, TOP_IDX);
-			}
-			else if ( LUA_TNIL == type )
-			{
-				gService()->console().printScriptError( ExceptionType::VARIABLE_NOT_FOUND,
-													   tableName+':'+field, scriptPath );
-			}
-			else
-			{
-				gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
-														tableName+':'+field, scriptPath );
-			}
-			lua_pop( lua, 1 );
-
-			field = "font";
-			lua_pushstring( lua, field.data() );
-			lua_gettable( lua, 1 );
-			type = lua_type(lua, TOP_IDX);
-			if ( LUA_TSTRING == type )
-			{
-				guideTextFont = lua_tostring(lua, TOP_IDX);
 			}
 			else if ( LUA_TNIL == type )
 			{
@@ -954,7 +954,7 @@ void scene::online::InLobby::loadResources( const sf::RenderWindow& window )
 	mDrawingInfo.accelerationUsersBoxLeftTop0 = dir.normalize();
 	mDrawingInfo.accelerationUsersBoxLeftTop0 *=
 		mDrawingInfo.usersBoxAnimationSpeed;
-	mUsersBox.setSize( sf::Vector2f(window.getSize()) );
+
 	float mag = dir.magnitude();
 	float ratio = mDrawingInfo.usersBoxAnimationSpeed/mag;
 	const sf::Vector2f winSize( window.getSize() );
@@ -966,7 +966,7 @@ void scene::online::InLobby::loadResources( const sf::RenderWindow& window )
 	mUsersBox.setFillColor( mDrawingInfo.usersBoxColor );
 	mUsersBox.setOutlineThickness( mDrawingInfo.usersBoxOutlineThickness );
 	mUsersBox.setOutlineColor( mDrawingInfo.usersBoxOutlineColor );
-	mFont.loadFromFile( guideTextFont );
+	mFont.loadFromFile( fontPath );
 	mTextLabelForGuide.setPosition( guideTextLabelPosition );
 	mTextLabelForGuide.setFillColor( sf::Color(guideTextColor) );
 	mTextLabelForGuide.setCharacterSize( guideTextFontSize );
@@ -985,6 +985,11 @@ void scene::online::InLobby::loadResources( const sf::RenderWindow& window )
 	mTextInputBox.setInputTextFieldDimension( subWindowInputTextFieldRelativePosition,
 											 subWindowInputTextFieldFontSize );
 	mTextInputBox.setInputTextFieldColor( sf::Color(subWindowInputTextFieldFontColor) );
+	for ( auto& pair : mUserList )
+	{
+		sf::Text& tf = pair.second.textFieldNickname;
+		tf.setCharacterSize(mDrawingInfo.nicknameFontSize);
+	}
 
 	//
 	// From 'InRoom.lua'.
@@ -1265,6 +1270,7 @@ void scene::online::InLobby::loadResources( const sf::RenderWindow& window )
 				sf::Text& tf = pair.first->second.textFieldNickname;
 				tf.setFillColor( sf::Color(mDrawingInfo.nicknameColor) );
 				tf.setPosition( mDrawingInfo.centerPosition + offset*mul );
+				tf.setCharacterSize( mDrawingInfo.nicknameFontSize );
 				mul += 1.f;
 			}
 		}

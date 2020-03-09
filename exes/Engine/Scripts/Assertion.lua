@@ -1,3 +1,3 @@
 BackgroundColor = 0x0000007f
-GuideTextLabel = { font = "Fonts/AGENCYR.TTF", fontSize = 50, fontColor = 0xffffffaf }
+GuideTextLabel = { font = "Fonts/Teko-Light.ttf", fontSize = 60, fontColor = 0xffffffaf }
 Sound = { onSelection = { path = "Sounds/selection.wav" } }

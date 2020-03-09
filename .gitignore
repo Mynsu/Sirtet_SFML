@@ -4,7 +4,4 @@ ReleaseWithNoPDB
 x64
 .vs
 .gitignore
-*.ttf
-_backup
 *.psd
-readme.md

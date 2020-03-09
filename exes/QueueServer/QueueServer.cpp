@@ -108,7 +108,6 @@ inline bool ResetAndReconnectToMainServer( std::unique_ptr<Socket>& socketToMain
 enum Status
 {
 	WAITING_FOR_IDENTIFICATION,
-	WAITING_FOR_N_OF_CONN,
 	NONE_MAX,
 };
 
@@ -159,7 +158,6 @@ int main( )
 	}
 	std::bitset<(int)Status::NONE_MAX> statusAgainstMainServer;
 	statusAgainstMainServer.set( Status::WAITING_FOR_IDENTIFICATION, 1 );
-	statusAgainstMainServer.set( Status::WAITING_FOR_N_OF_CONN, 1 );
 	std::cout << "Q. Tell me how much the maximum capacity the main server has." << std::endl;
 	// Capacity in the main server defaults to 100.
 	// You can resize it indirectly here without re-compliing or rescaling the main server.
@@ -375,42 +373,40 @@ int main( )
 					switch ( cmpl )
 					{
 						case IOType::RECEIVE:
+						{
 							if ( 1 == statusAgainstMainServer[Status::WAITING_FOR_IDENTIFICATION] )
 							{
 								std::cout << "Identification passed.\n";
 								statusAgainstMainServer.reset( Status::WAITING_FOR_IDENTIFICATION );
 							}
 							// When having received the number of connections in the main server,
-							if ( 1 == statusAgainstMainServer[Status::WAITING_FOR_N_OF_CONN] )
+							const char* const rcvBuf = socketToMainServer->receivingBuffer();
+							// NOTE: Assuming that there's a message about nothing but the number of connections the main server.
+							constexpr uint8_t TAG_N_OF_CONN_LEN = ::util::hash::Measure(TAG_NUM_OF_CONNECTIONS);
+							const uint16_t nOfConnInMainServ = ::ntohs(*(uint16_t*)&rcvBuf[TAG_N_OF_CONN_LEN]);
+							// When the number of connections is out of range,
+							if ( nOfConnInMainServ<0 || mainServerCapacity<nOfConnInMainServ )
 							{
-								statusAgainstMainServer.reset( Status::WAITING_FOR_N_OF_CONN );
-								const char* const rcvBuf = socketToMainServer->receivingBuffer();
-								// NOTE: Assuming that there's a message about nothing but the number of connections the main server.
-								constexpr uint8_t TAG_N_OF_CONN_LEN = ::util::hash::Measure(TAG_NUM_OF_CONNECTIONS);
-								const uint16_t nOfConnInMainServ = ::ntohs(*(uint16_t*)&rcvBuf[TAG_N_OF_CONN_LEN]);
-								// When the number of connections is out of range,
-								if ( nOfConnInMainServ<0 || mainServerCapacity<nOfConnInMainServ )
-								{
-									roomInMainServer = 0;
-								}
-								else
-								{
-									roomInMainServer = (int)mainServerCapacity-nOfConnInMainServ;
+								roomInMainServer = 0;
+							}
+							else
+							{
+								roomInMainServer = (int)mainServerCapacity-nOfConnInMainServ;
 #ifdef _DEBUG
-									std::cout << "Room in the main server: " << roomInMainServer << std::endl;
+								std::cout << "Room in the main server: " << roomInMainServer << std::endl;
 #endif
-								}
-								if ( -1 == socketToMainServer->receiveOverlapped() )
+							}
+							if ( -1 == socketToMainServer->receiveOverlapped() )
+							{
+								std::cerr << "WARNING: Failed to receive the number of connections of the main server.\n";
+								if ( false == ResetAndReconnectToMainServer(socketToMainServer, iocp) )
 								{
-									std::cerr << "WARNING: Failed to receive the number of connections of the main server.\n";
-									if ( false == ResetAndReconnectToMainServer(socketToMainServer, iocp) )
-									{
-										goto cleanUp;
-									}
-									statusAgainstMainServer.set( Status::WAITING_FOR_IDENTIFICATION, 1 );
+									goto cleanUp;
 								}
+								statusAgainstMainServer.set( Status::WAITING_FOR_IDENTIFICATION, 1 );
 							}
 							break;
+						}
 						case IOType::SEND:
 							break;
 						default:
@@ -725,7 +721,6 @@ int main( )
 
 		// When there's no more room in the main server,
 		if ( 0 == roomInMainServer &&
-			0 == statusAgainstMainServer[Status::WAITING_FOR_N_OF_CONN] &&
 			ASKING_N_OF_CONN_IN_MAIN_SERV_INTERVAL < now-lastTimeAskingNOfConnInMainServ )
 		{
 			// Reset
@@ -746,7 +741,6 @@ int main( )
 				}
 				statusAgainstMainServer.set( Status::WAITING_FOR_IDENTIFICATION, 1 );
 			}
-			statusAgainstMainServer.set( Status::WAITING_FOR_N_OF_CONN, 1 );
 #ifdef _DEBUG
 			std::cout << "Asked the main server how many clients are there.\n";
 #endif

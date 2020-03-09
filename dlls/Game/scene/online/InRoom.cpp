@@ -1176,7 +1176,7 @@ void scene::online::InRoom::loadResources( const sf::RenderWindow& window )
 	}
 	else
 	{
-		mTextLabelForStartingGuide.setString( "Be\nPrepared!" );
+		mTextLabelForStartingGuide.setString( "Be\r\nPrepared!" );
 	}
 	mTextLabelForStartingGuide.setFont( mFont );
 	mTextLabelForStartingGuide.setCharacterSize( startingGuideFontSize );
