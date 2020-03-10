@@ -140,7 +140,7 @@ int main( )
 		{
 			if ( 0 == it->second.pop(index) )
 			{
-#ifdef _DEBUG
+#ifdef _DEV
 				std::cout << "Room "
 					<< it->first << " has been destructed.\n";
 #endif
@@ -212,7 +212,7 @@ int main( )
 					}
 					continue;
 				}
-#ifdef _DEBUG
+#ifdef _DEV
 				std::cout << "A new client " << clientIdx << " joined. (Now "
 						<< nOfConnInMainServ << "/" << CLIENT_CAPACITY << " connections.)\n";
 #endif
@@ -241,7 +241,7 @@ int main( )
 					clientIndicesNotAccepted.emplace( queueServerIdx );
 					// Reset
 					queueServerIdx = -1;
-#ifdef _DEBUG
+#ifdef _DEV
 					std::cerr << "WARNING: The queue server disconnected. (Now "
 						<< nOfConnInMainServ << '/' << CLIENT_CAPACITY << " connections.)\n";
 #endif
@@ -281,7 +281,7 @@ int main( )
 							if ( const size_t pos = strView.find(TAG_NUM_OF_CONNECTIONS);
 								std::string_view::npos != pos )
 							{
-#ifdef _DEBUG
+#ifdef _DEV
 								std::cout << "Queue server asks how many connections there are.\n";
 #endif
 								Packet packet;
@@ -300,7 +300,7 @@ int main( )
 								}
 								else
 								{
-#ifdef _DEBUG
+#ifdef _DEV
 									std::cout << "The number of connections has been told: "
 										<< nOfConnInMainServ << ".\n";
 #endif
@@ -322,7 +322,7 @@ int main( )
 									off += sizeof(Ticket);
 									const Ticket id = ::ntohl(*(Ticket*)&rcvBuf[beginPos]);
 									tickets.emplace_back( id );
-#ifdef _DEBUG
+#ifdef _DEV
 									std::cout << "A copy of the issued ticket arrived: " << id << ".\n";
 #endif
 								}
@@ -399,7 +399,7 @@ int main( )
 					{
 						if ( 0 == it->second.pop(clientIdx) )
 						{
-#ifdef _DEBUG
+#ifdef _DEV
 							std::cout << "Room "
 								<< it->first << " has been destructed.\n";
 #endif
@@ -409,7 +409,7 @@ int main( )
 					client.reset( );
 					--nOfConnInMainServ;
 					clientIndicesNotAccepted.emplace( clientIdx );
-#ifdef _DEBUG
+#ifdef _DEV
 					std::cout << "Client " << clientIdx << " left. (Now "
 						<< nOfConnInMainServ << "/" << CLIENT_CAPACITY << " connections.)\n";
 #endif
@@ -500,7 +500,7 @@ int main( )
 								queueServerIdx = clientIdx;
 								connectionsNotSubmittingTicket.erase( queueServerIdx );
 								client.setState( Client::State::AS_QUEUE_SERVER );
-#ifdef _DEBUG
+#ifdef _DEV
 								std::cout << "Queue server asks how many connections there are.\n";
 #endif
 								Packet packet;
@@ -517,7 +517,7 @@ int main( )
 									}
 									continue;
 								}
-#ifdef _DEBUG
+#ifdef _DEV
 								std::cout << "The number of connections has been told: " << nOfConnInMainServ << ".\n";
 #endif
 								if ( -1 == clientSocket.receiveOverlapped() )

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Sound.h"
+#include <Lib/ScriptLoader.h>
 
 const uint8_t MAX_NUM_OF_BUFFERS = 3;
 bool SFMLSound::IsInstantiated = false;
@@ -11,6 +12,18 @@ SFMLSound::SFMLSound( )
 
 	setVolume( ::sound::Target::BGM, 2.f );
 	setVolume( ::sound::Target::SFX, 4.f );
+
+	const std::string scriptPath( "Scripts/_OnlyDuringDev.lua" );
+	const std::string varName0( "IsBGMOffOnStart" );
+	auto result = ::util::script::LoadFromScript(scriptPath, varName0);
+	const auto it = result.find(varName0);
+	if ( result.end() != it )
+	{
+		if ( true == std::get<bool>(it->second) )
+		{
+			toggleMute(::sound::Target::BGM);
+		}
+	}
 
 	IsInstantiated = true;
 }

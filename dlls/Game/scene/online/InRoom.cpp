@@ -1374,7 +1374,7 @@ void scene::online::InRoom::loadResources( const sf::RenderWindow& window )
 				{
 					it->second.playView.setCurrentTetrimino( curTetType );
 				}
-#ifdef _DEBUG
+#ifdef _DEV
 				else
 				{
 					gService()->console().printFailure( FailureLevel::WARNING,
@@ -1405,7 +1405,7 @@ void scene::online::InRoom::loadResources( const sf::RenderWindow& window )
 				{
 					it->second.playView.pushNextTetrimino( nextTetType );
 				}
-#ifdef _DEBUG
+#ifdef _DEV
 				else
 				{
 					gService()->console().printFailure( FailureLevel::WARNING,
@@ -1442,7 +1442,7 @@ void scene::online::InRoom::loadResources( const sf::RenderWindow& window )
 				{
 					it->second.playView.moveCurrentTetrimino( rotID, pos );
 				}
-#ifdef _DEBUG
+#ifdef _DEV
 				else
 				{
 					gService()->console().printFailure( FailureLevel::WARNING,
@@ -1472,7 +1472,7 @@ void scene::online::InRoom::loadResources( const sf::RenderWindow& window )
 				{
 					it->second.playView.trySetStage( *grid );
 				}
-#ifdef _DEBUG
+#ifdef _DEV
 				else
 				{
 					gService()->console().printFailure( FailureLevel::WARNING,
@@ -1502,7 +1502,7 @@ void scene::online::InRoom::loadResources( const sf::RenderWindow& window )
 				{
 					it->second.playView.playLineClearEffects( numOfLinesCleared );
 				}
-#ifdef _DEBUG
+#ifdef _DEV
 				else
 				{
 					gService()->console().printFailure( FailureLevel::WARNING,

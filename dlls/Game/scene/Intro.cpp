@@ -13,6 +13,7 @@ bool ::scene::Intro::IsInstantiated = false;
 {
 	ASSERT_TRUE( false == IsInstantiated );
 
+	gService()->sound().stopBGM();
 	if ( const auto it = gService()->vault().find(HK_FORE_FPS); gService()->vault().cend() != it )
 	{
 		mFPS_ = (uint16_t)it->second;

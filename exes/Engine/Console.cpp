@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Console.h"
 #include <Lib/ScriptLoader.h>
+#include <GameLib/CommandList.h>
 
 Console::Console( ) :
 	mVisible( false ), mFontSize( 30 ), mMaxLinesShown( 9 ), mReverseIndexInHistory( 0 )
@@ -14,7 +15,7 @@ Console::Console( ) :
 	mExceptionTypes[(int)ExceptionType::RANGE_CHECK]
 		= "Range Check: ";
 
-	addCommand( ::util::hash::Digest("refreshcon"), std::bind(&Console::refresh, this, std::placeholders::_1) );
+	addCommand( CMD_RELOAD_CONSOLE, std::bind(&Console::refresh, this, std::placeholders::_1) );
 }
 
 void Console::initialize( )

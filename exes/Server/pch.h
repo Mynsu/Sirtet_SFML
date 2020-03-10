@@ -27,13 +27,10 @@
 #include <Lib/EndPoint.h>
 #include <Lib/Hash.h>
 #include <Lib/Packet.h>
-#ifdef _DEBUG
-#pragma comment( lib, "Lib-d" )
-#else
 #pragma comment( lib, "Lib" )
-#endif
 #include <GameLib/Common.h>
 
+#define _DEV
 using Clock = std::chrono::high_resolution_clock;
 using ClientIndex = uint16_t;
 using Ticket = HashedKey;

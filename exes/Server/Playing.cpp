@@ -130,7 +130,7 @@ bool Playing::update( )
 
 	if ( true == mStage.isOver() )
 	{
-#ifdef _DEBUG
+#ifdef _DEV
 		std::cout << "Game is over.\n";
 #endif
 		mStage.blackout( );

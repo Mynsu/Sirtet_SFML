@@ -1,6 +1,7 @@
 #pragma once
 #include <unordered_map>
 #include <GameLib/IServiceLocator.h>
+#include <GameLib/CommandList.h>
 #include "Console.h"
 #include "Sound.h"
 
@@ -23,6 +24,8 @@ public:
 									msg + __FILE__ + ':' + std::to_string( __LINE__ ) + ')' );
 #endif
 		}
+		mConsole.addCommand(CMD_SET_VOLUME, std::bind(&ServiceLocator::_setVolume, this, std::placeholders::_1));
+
 		IsInstantiated = true;
 	}
 	ServiceLocator( const ServiceLocator& ) = delete;
@@ -30,6 +33,8 @@ public:
 	ServiceLocator( ServiceLocator&& ) = delete;
 	~ServiceLocator( )
 	{
+		mConsole.removeCommand(CMD_SET_VOLUME);
+
 		IsInstantiated = false;
 	}
 
@@ -68,6 +73,7 @@ public:
 		mConsole.release( );
 	}
 private:
+	void _setVolume( const std::string_view& );
 	// NOTE: 다른 사운드 라이브러리로 부담없이 갈아끼울 수 있고,
 	// 구현, 디버깅, 테스팅에 필요한 null 서비스를 둘 수도 있습니다.
 	std::unique_ptr<ISound> mSound;

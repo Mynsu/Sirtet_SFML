@@ -39,6 +39,10 @@ bool ui::TextInputBox::processEvent( std::vector<sf::Event>& eventQueue )
 			}
 			it = eventQueue.erase(it);
 		}
+		else if ( sf::Event::MouseButtonPressed == it->type )
+		{
+			it = eventQueue.erase(it);
+		}
 		else
 		{
 			++it;

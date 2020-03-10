@@ -37,7 +37,7 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 					{
 						case Request::UPDATE_USER_LIST:
 						{
-#ifdef _DEBUG
+#ifdef _DEV
 							std::cout << "Client " << mIndex <<
 								" wants the list of users in the lobby.\n";
 #endif
@@ -75,7 +75,7 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 								return failedIndices;
 							}
 							mTimeStamp[(int)TimeStampIndex::GENERAL] = now;
-#ifdef _DEBUG
+#ifdef _DEV
 							std::cout << "Client " << mIndex << " created a room.\n";
 #endif
 							for ( auto it = lobby.cbegin(); lobby.cend() != it; ++it )
@@ -173,7 +173,7 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 								failedIndices.emplace_back( mIndex );
 								return failedIndices;
 							}
-#ifdef _DEBUG
+#ifdef _DEV
 							else
 							{
 								std::cout << "Client " << mIndex <<
@@ -227,7 +227,7 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 						{
 							auto it = rooms.find(mRoomID);
 							ASSERT_TRUE( rooms.end() != it && it->second.hostIndex() == mIndex );
-#ifdef _DEBUG
+#ifdef _DEV
 							std::cout << "Client "
 									<< mIndex << " starts the game.\n";
 #endif
@@ -246,7 +246,7 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 #endif
 							if ( 0 == it->second.pop(mIndex) )
 							{
-#ifdef _DEBUG
+#ifdef _DEV
 								std::cout << "Room "
 									<< it->first << " has been destructed.\n";
 #endif
@@ -320,13 +320,13 @@ std::vector<ClientIndex> Client::work( const IOType completedIOType,
 							ASSERT_TRUE( rooms.end() != it );
 							mRoomID = NULL_ROOM_ID;
 							mState = State::IN_LOBBY;
-#ifdef _DEBUG
+#ifdef _DEV
 							std::cout << "Client "
 								<< mIndex << " leaved Room " << it->first << ".\n";
 #endif
 							if ( 0 == it->second.pop(mIndex) )
 							{
-#ifdef _DEBUG
+#ifdef _DEV
 								std::cout << "Room "
 									<< it->first << " has been destructed.\n";
 #endif

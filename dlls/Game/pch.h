@@ -34,11 +34,7 @@
 #include <Lib/EndPoint.h>
 #include <Lib/Packet.h>
 #include <Lib/math/Vector.h>
-#ifdef _DEBUG
-#pragma comment( lib, "Lib-d" )
-#else
 #pragma comment( lib, "Lib" )
-#endif
 #include <GameLib/CommandList.h>
 #include <GameLib/Common.h>
 #include <GameLib/IServiceLocator.h>

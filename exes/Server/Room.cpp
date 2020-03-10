@@ -29,7 +29,7 @@ int8_t Room::pop( const ClientIndex index )
 		{
 			mObservers.erase( it );
 			wasCandidateParticipant = true;
-#ifdef _DEBUG
+#ifdef _DEV
 			std::cout << "Observer " << index << " left the room.\n";
 #endif
 			break;
@@ -37,9 +37,11 @@ int8_t Room::pop( const ClientIndex index )
 	}
 	if ( false == wasCandidateParticipant )
 	{
+#ifdef _DEV
+		std::cout << "Observer " << index << " left the room.\n";
+#endif
 #ifdef _DEBUG
 		ASSERT_TRUE( 1 == mPlayingParticipants.erase(index) );
-		std::cout << "Observer " << index << " left the room.\n";
 #else
 		mPlayingParticipants.erase( index );
 #endif
@@ -82,7 +84,7 @@ void Room::perceive( const ClientIndex index, const Perception perceptedThing )
 						ob.state = Observer::State::INSTANTIATION_DONE;
 						break;
 					}
-#ifdef _DEBUG
+#ifdef _DEV
 					else
 					{
 						std::cerr << "Client " << index << " sent needless data(1).\n";
@@ -103,7 +105,7 @@ void Room::perceive( const ClientIndex index, const Perception perceptedThing )
 						ob.state = Observer::State::DONE;
 						break;
 					}
-#ifdef _DEBUG
+#ifdef _DEV
 					else
 					{
 						std::cerr << "Client " << index << " sent needless data(2).\n";
