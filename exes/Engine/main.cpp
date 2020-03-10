@@ -1,4 +1,5 @@
 ﻿#include "pch.h"
+#include <shellapi.h>
 #include <GameLib/IGame.h>
 #include "ServiceLocator.h"
 
@@ -9,8 +10,17 @@ const uint16_t DEFAULT_FOREGROUND_FPS = 60;
 // time gap gets bigger.
 const uint16_t DEFAULT_BACKGROUND_FPS = 60;
 
-int main( int argc, char* argv[] )
+#ifdef _DEBUG
+int main( )
 {
+	return WinMain(GetModuleHandle(NULL), NULL, GetCommandLineA(), SW_SHOWNORMAL);
+}
+#endif
+
+int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int )
+{
+	int argc = 0;
+	LPWSTR* argv = CommandLineToArgvW(GetCommandLine(), &argc);
 	uint16_t winWidth = 800;
 	uint16_t winHeight = 600;
 	uint8_t winStyle = sf::Style::Close;
@@ -19,16 +29,15 @@ int main( int argc, char* argv[] )
 ////
 	if ( 1 < argc )
 	{
-		const char argHelp0[] = "--help";
-		const char argHelp1[] = "--h";
-		const char argWinSize[] = "--WS";
-		const char argFullscreen[] = "--FS";
-
+		const WCHAR argHelp0[] = L"--help";
+		const WCHAR argHelp1[] = L"-H";
+		const WCHAR argWinSize[] = L"-WS";
+		const WCHAR argFullscreen[] = L"-FS";
 		for ( int i = 1; i < argc; ++i )
 		{
-			const char* const cur = argv[i];
-			if ( 0 == ::strcmp(argHelp0, cur) ||
-				0 == ::strcmp(argHelp1, cur) )
+			const WCHAR* const cur = argv[i];
+			if ( 0 == ::lstrcmp(argHelp0, cur) ||
+				0 == ::lstrcmp(argHelp1, cur) )
 			{
 				std::cout << "Here are case-sensitive parameters available:\n";
 				std::cout << "\t" << argHelp0 << ", " << argHelp1 << ": Show parameters with their own arguments.\n";
@@ -37,9 +46,9 @@ int main( int argc, char* argv[] )
 
 				return 0;
 			}
-			else if ( 0 == ::strcmp(argWinSize, cur) )
+			else if ( 0 == ::lstrcmp(argWinSize, cur) )
 			{
-				const int subArg0 = std::atoi( argv[++i] );
+				const int subArg0 = ::_wtoi( argv[++i] );
 				// Exception: When NON-number characters has been input,
 				if ( 0 == subArg0 )
 				{
@@ -54,7 +63,7 @@ int main( int argc, char* argv[] )
 				}
 				winWidth = subArg0;
 
-				const int subArg1 = std::atoi( argv[++i] );
+				const int subArg1 = ::_wtoi( argv[++i] );
 				// Exception: When NON-number characters has been input,
 				if ( 0 == subArg1 )
 				{
@@ -69,7 +78,7 @@ int main( int argc, char* argv[] )
 				}
 				winHeight = subArg1;
 			}
-			else if ( 0 == ::strcmp(argFullscreen, cur) )
+			else if ( 0 == ::lstrcmp(argFullscreen, cur) )
 			{
 				winStyle |= sf::Style::Fullscreen;
 			}
@@ -181,4 +190,6 @@ int main( int argc, char* argv[] )
 	gService.release( );
 	window.close( );
 	FreeLibrary( hGameDLL );
+
+	return 0;
 }
