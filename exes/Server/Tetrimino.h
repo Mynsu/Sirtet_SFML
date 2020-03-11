@@ -14,8 +14,11 @@ namespace model
 	public:
 		// Needs to be initialized by Spawn().
 		Tetrimino( )
-			: mIsHardDropping( false )
-		{ }
+			: mIsHardDropping( false ),
+			mType( ::model::tetrimino::Type::I ),
+			mRotationID( ::model::tetrimino::Rotation::A ),
+			mPossibleRotations{ 0, }
+		{}
 		virtual ~Tetrimino( ) = default;
 
 		static ::model::Tetrimino Spawn( );

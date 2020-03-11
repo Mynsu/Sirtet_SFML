@@ -175,6 +175,9 @@ int main( )
 	IOCPEvent event;
 	while ( true == IsWorking )
 	{
+#ifdef _DEV
+		Clock::time_point begin = Clock::now();
+#endif
 		iocp.wait( event, 1 );
 		for ( uint16_t i = 0; i != event.eventCount; ++i )
 		{
@@ -659,6 +662,14 @@ int main( )
 				}
 			}
 		}
+
+#ifdef _DEV
+		auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now()-begin).count();
+		if ( 10 < elapsed )
+		{
+			std::cout << "MS per frame: " << elapsed << "\n";
+		}
+#endif
 	}
 
 cleanUp:

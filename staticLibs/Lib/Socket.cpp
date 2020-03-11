@@ -120,7 +120,7 @@ int Socket::disconnectOverlapped( )
 	int result = 0;
 	if ( nullptr == DisconnectEx )
 	{
-		DWORD ignored;
+		DWORD ignored = 0;
 		WSAIoctl( mhSocket, SIO_GET_EXTENSION_FUNCTION_POINTER,
 				 &UUID( WSAID_DISCONNECTEX ), (DWORD)sizeof(UUID),
 				 &DisconnectEx, (DWORD)sizeof(DisconnectEx),

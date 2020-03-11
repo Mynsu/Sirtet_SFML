@@ -11,7 +11,8 @@ Playing::Playing( )
 	mHasTetriminoLandedOnServer( false ),
 	mIsGameOver_( false ),
 	mNumOfLinesClearedRecently( 0 ), mTempoMs( 1000 ),
-	mMoveToUpdate( ::model::tetrimino::Move::NONE_MAX )
+	mMoveToUpdate( ::model::tetrimino::Move::NONE_MAX ),
+	mUpdateResult( ::Playing::UpdateResult::NONE )
 {
 	const Clock::time_point init = Clock::now();
 	for ( Clock::time_point& alarm : mAlarms )

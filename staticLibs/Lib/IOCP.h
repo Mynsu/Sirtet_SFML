@@ -6,6 +6,12 @@
 
 struct IOCPEvent
 {
+public:
+	IOCPEvent()
+		: eventCount( 0 )
+	{
+		ZeroMemory(events, sizeof(events));
+	}
 	static const uint16_t MAX_EVENTS = 1000;
 	OVERLAPPED_ENTRY events[MAX_EVENTS];
 	uint32_t eventCount;

@@ -206,7 +206,6 @@ std::vector<ClientIndex> Room::notify( std::array<Client, CLIENT_CAPACITY>& clie
 	{
 		everyoneInRoom.emplace_back( pair.first );
 	}
-	bool isAllOver = true;
 	switch ( mState )
 	{
 		case Room::State::WAITING:
@@ -273,6 +272,7 @@ std::vector<ClientIndex> Room::notify( std::array<Client, CLIENT_CAPACITY>& clie
 			break;
 		case Room::State::PLAYING:
 		{
+			bool isAllOver = true;
 			std::string currentTetriminosMove;
 			std::string currentTetriminosLand;
 			std::string nextTetriminos;
@@ -410,8 +410,7 @@ std::vector<ClientIndex> Room::notify( std::array<Client, CLIENT_CAPACITY>& clie
 			__assume( 0 );
 #endif
 	}
-	if ( true == alarmAfterAndReset(UPDATE_USER_LIST_INTERVAL_MS, AlarmIndex::UPDATE_USER_LIST) ||
-		true == isAllOver )
+	if ( true == alarmAfterAndReset(UPDATE_USER_LIST_INTERVAL_MS, AlarmIndex::UPDATE_USER_LIST) )
 	{
 		std::string userList;
 		userList.reserve( PARTICIPANT_CAPACITY*10 );
