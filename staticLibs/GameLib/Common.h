@@ -1,7 +1,6 @@
 #pragma once
 #include <array>
 #include <chrono>
-#include <SFML/System.hpp>
 #include <SFML/Graphics/Color.hpp>
 #include "../Lib/math/Vector.h"
 #include "../Lib/Hash.h"

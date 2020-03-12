@@ -21,8 +21,6 @@
 #else
 #pragma comment( lib, "sfml-graphics" )
 #endif
-#include <lua.hpp>
-#pragma comment( lib, "lua53" )
 #include <Lib/IOCP.h>
 #include <Lib/EndPoint.h>
 #include <Lib/Hash.h>

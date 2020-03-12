@@ -1,7 +1,11 @@
-Debug
-Release
-ReleaseWithNoPDB
-x64
-.vs
-.gitignore
+#Resources
 *.psd
+
+#External Libraries
+externals
+
+#Outputs
+x64
+
+#Others
+.vs
