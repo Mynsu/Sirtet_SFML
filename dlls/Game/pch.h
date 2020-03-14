@@ -1,5 +1,9 @@
 #pragma once
 
+#include <winsdkver.h>
+#define _WIN32_WINNT _WIN32_WINNT_WIN7
+#include <sdkddkver.h>
+
 #include <SFML/Graphics.hpp> // WIN32_LEAN_AND_MEAN을 정의한 다음에 포함하면 컴파일 에러 발생.
 #include <Lib/Socket.h>
 #define WIN32_LEAN_AND_MEAN // NOTE: Defined after Socket.h to include UUID.

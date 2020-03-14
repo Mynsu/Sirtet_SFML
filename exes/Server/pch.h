@@ -1,5 +1,9 @@
 #pragma once
 
+#include <winsdkver.h>
+#define _WIN32_WINNT _WIN32_WINNT_WIN7
+#include <sdkddkver.h>
+
 #include <Lib/Socket.h>
 #include <SFML/Graphics/Color.hpp>
 #define WIN32_LEAN_AND_MEAN // NOTE: Defined after Socket.h to include UUID.

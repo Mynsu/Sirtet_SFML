@@ -1,25 +1,48 @@
 Sirtet
 ======
 ¿¹, ¸Â½À´Ï´Ù.  Å×Æ®¸®½ºÀÔ´Ï´Ù.
+
+
 Á¦°¡ Å×Æ®¸®½º¸¦ ¸¸µç ÀÌÀ¯´Â
-1. ½É»ç¿ø²² ÀÍ¼÷ÇÑ °ÔÀÓ ÄÚµå¶ó¸é ÇÇ·Î ¹°ÁúÀÌ ´ú ½×ÀÏÅ×°í,
-2. 3D ±×·¡ÇÈ½º API, ¼ÎÀÌ´õ, ÄõÅÍ´Ï¾ð/ÅÙ¼­/¹ÌÀûºÐÀÌ ¾ø¾î ½É»ç¿ø²²¼­ ÄÚµå '±âº»'¸¸ º¸±â ÁÁ°í,
-3. [**¿©±â**](https://www.gamedev.net/articles/programming/general-and-gameplay-programming/your-first-step-to-game-development-starts-here-r2976/)[**Àú±â**](https://www.gamedev.net/articles/programming/general-and-gameplay-programming/how-do-i-make-games-a-path-to-game-development-r892/)¿¡¼­ ÃßÃµÇÑ °ÔÀÓµé Áß À¯ÀÏÇÏ°Ô °ÔÀÓ ÇÃ·¹ÀÌ ·ÎÁ÷ÀÌ ¸Ó¸´¼Ó¿¡ ±×·ÁÁöÁö ¾Ê¾ÒÀ¸¸ç,
-4. ÇÏ°í ½ÍÁö ¾ÊÀº °ÔÀÓÀ» ³¡±îÁö ¸¸µé¾î ³¾ ¼ö ÀÖ´ÂÁö Á¦ ÀÚ½ÅÀÌ ±Ã±ÝÇß±â
+---------------------------
+1. ½É»ç¿ø²² ÀÍ¼÷ÇÑ °ÔÀÓ ÄÚµå¶ó¸é **ÇÇ·Î**°¡ Á¶±ÝÀÌ¶óµµ ´úÇÒ °ÍÀÌ°í,   
+2. 3D ±×·¡ÇÈ½º API/¼ÎÀÌ´õ, ÄõÅÍ´Ï¾ð/ÅÙ¼­/¹ÌÀûºÐÀÌ ¾ø¾î ½É»ç¿ø²²¼­ ÄÚµå **±âº»**¸¸ º¸½Ã±â¿¡ ÁÁ°í,   
+3. [**¿©±â**](https://www.gamedev.net/articles/programming/general-and-gameplay-programming/your-first-step-to-game-development-starts-here-r2976/)[**Àú±â**](https://www.gamedev.net/articles/programming/general-and-gameplay-programming/how-do-i-make-games-a-path-to-game-development-r892/)¿¡¼­ ÃßÃµÇÑ °ÔÀÓµé Áß À¯ÀÏÇÏ°Ô °ÔÀÓ ÇÃ·¹ÀÌ ·ÎÁ÷ÀÌ ¸Ó¸´¼Ó¿¡ ±×·ÁÁöÁö ¾Ê¾ÒÀ¸¸ç,   
+4. **ÇÏ°í ½ÍÁö ¾ÊÀº °ÔÀÓ**ÀÌ´õ¶óµµ ³¡±îÁö ¸¸µé¾î ³¾ ¼ö ÀÖÀ»Áö Á¦ ÀÚ½ÅÀÌ ±Ã±ÝÇß±â   
 ¶§¹®ÀÔ´Ï´Ù.
 
  
-È¯°æ
-----
-C++ 17, ºñÁÖ¾ó ½ºÆ©µð¿À 2017, SFML 2.5.1, Lua 5.3.5 and À©µµ¿ìÁî 10.
+¾ð¾î¿Í °³¹ß È¯°æÀº
+----------------
+C++ 17, Lua 5.3, ºñÁÖ¾ó ½ºÆ©µð¿À 2017(15.9) ±×¸®°í À©µµ¿ìÁî 10(1803)ÀÔ´Ï´Ù.
 
 
-#½ºÆ®·¹½º Å×½ºÆ®
-ÇöÀç Å¬¶óÀÌ¾ðÆ® 100°³±îÁö¸¸ Å×½ºÆ®Çß½À´Ï´Ù.
+¿ä±¸ÇÏ´Â ¿ÜºÎ ¶óÀÌºê·¯¸®¿Í ¿î¿µÃ¼Á¦ÀÇ ¹öÀüÀº
+------
++ Lua 5.3.0 ÀÌ»ó   
+¿¹)   
+1. [**´Ù¿î·Îµå ÆäÀÌÁö**](https://sourceforge.net/projects/luabinaries/files/5.3.5/Windows%20Libraries/Dynamic/)¿¡¼­ lua-5.3.5_Win64_dll15_lib.zip ´Ù¿î·Îµå   
+2. ¼Ö·ç¼Ç µð·ºÅä¸®/externals/Lua-5.3/x64/¿¡ include Æú´õ ¾ÐÃà Ç®±â   
+   ¼Ö·ç¼Ç µð·ºÅä¸®/externals/Lua-5.3/x64/lib/¿¡ lua53.lib ¾ÐÃà Ç®±â   
+3. ºôµåµÈ Sirtet.exe¿Í Game.dllÀÌ ÀÖ´Â µð·ºÅä¸®¿¡ lua53.dll ¾ÐÃà Ç®±â   
++ SFML 2.5.0 ÀÌ»ó   
+¿¹)   
+1. [**´Ù¿î·Îµå ÆäÀÌÁö**](https://www.sfml-dev.org/download/sfml/2.5.1/)¿¡¼­ Visual C++ 15 (2017) - 64-bit ´Ù¿î·Îµå   
+2. ¼Ö·ç¼Ç µð·ºÅä¸®/externals/SFML-2.5/x64/¿¡ include Æú´õ, lib Æú´õ ¾ÐÃà Ç®±â   
+3. ºôµåµÈ Server.exe°¡ ÀÖ´Â µð·ºÅä¸®¿¡ sfml-graphics-2.dll, sfml-system-2.dll, sfml-window-2.dll ¾ÐÃà Ç®±â(ÀÌ ÀÇÁ¸¼ºÀº ¾ø¾Ù ¿¹Á¤ÀÔ´Ï´Ù.)   
+   ºôµåµÈ Sirtet.exe¿Í Game.dllÀÌ ÀÖ´Â µð·ºÅä¸®¿¡ openal32.dll, sfml-audio-2.dll, sfml-graphics-2.dll, sfml-system-2.dll, sfml-window-2.dll ¾ÐÃà Ç®±â   
++ À©µµ¿ìÁî 7 ÀÌ»ó   
+ÀÔ´Ï´Ù.
 
-(±×¸²;½ÃÄö½º ´ÙÀÌ¾î±×·¥)#´ë±â¿­ ¼­¹ö #¸ÞÀÎ ¼­¹ö
-¼­¹ö´Â µÑ, ´ë±â¿­ ¼­¹ö¿Í ¸ÞÀÎ ¼­¹ö¸¦ µÎ¾ú½À´Ï´Ù.
-Å¬¶óÀÌ¾ðÆ®°¡ Á¢¼Ó°ú µ¿½Ã¿¡ ¸Þ½ÃÁö¸¦ º¸³»´õ¶óµµ ¼­¹ö°¡ ÀÌ ¸Þ½ÃÁö¸¦ ¹ÞÁö ¾Êµµ·Ï Çß½À´Ï´Ù.  Å¬¶óÀÌ¾ðÆ®°¡ ¸Þ½ÃÁö¸¦ ¾È º¸³¾ °æ¿ì ¼­¹ö»ó ÀÌ Å¬¶óÀÌ¾ðÆ®¿¡ ´ëÀÀÇÏ´Â ¼ÒÄÏÀÌ ¸Þ½ÃÁö¸¦ ±â´Ù¸®´Â ¹®Á¦°¡ ¹ß»ýÇÏ±â ¶§¹®ÀÔ´Ï´Ù.
+[![Video Thumbnail]()](https://youtu.be/uPx0DgMIeoQ)
+
+½É»ç¿ø²²¼­ ±Ã±ÝÇÏ½Ç ¸¸ÇÑ °Íµé¿¡ ´ëÇØ ´äÇØºÃ½À´Ï´Ù.
+--------------------------------------------------
+#´ë±â¿­ ¼­¹ö #¸ÞÀÎ ¼­¹ö
+<img src="https://user-images.githubusercontent.com/43042411/76689270-8f53da00-6677-11ea-9d8e-ad9e4df90409.png"></img>
+¼­¹ö´Â ´Ü µÑ, ´ë±â¿­ ¼­¹ö¿Í ¸ÞÀÎ ¼­¹ö°¡ ÀÖ½À´Ï´Ù.   
+Áß°³¸¦ À§ÇÑ Redis ¼­¹ö³ª °èÁ¤ °ü¸®¸¦ À§ÇÑ RDBMS ¼­¹ö´Â ¾ø½À´Ï´Ù.   
+Å¬¶óÀÌ¾ðÆ®°¡ Á¢¼Ó°ú µ¿½Ã¿¡ ¸Þ½ÃÁö¸¦ º¸³»´õ¶óµµ ¼­¹ö°¡ ÀÌ ¸Þ½ÃÁö¸¦ ¹ÞÁö ¾Êµµ·Ï Çß½À´Ï´Ù.  ÀÌ·¸Áö ¾ÊÀ¸¸é, ¼­¹ö°¡ ¸Þ½ÃÁö¸¦ ±â´Ù¸®´Â ¹®Á¦°¡ ¹ß»ýÇÒ ¼ö ÀÖ±â ¶§¹®ÀÔ´Ï´Ù.
 ¼­¹öÀÇ ºÎÇÏ¸¦ ´ú±â À§ÇØ ¼­¹ö°¡ accept¸¦ ¿Ï·áÇÑ ÈÄ¿¡¾ß Å¬¶óÀÌ¾ðÆ®°¡ Á¢¼ÓÇÏµµ·Ï Çß½À´Ï´Ù.
 
 1. ´ë±â¿­ ¼­¹ö°¡ Å¬¶óÀÌ¾ðÆ®(È¤Àº ÇÇ¾îpeer)·Î¼­ ¸ÞÀÎ ¼­¹ö¿¡ Á¢¼ÓÇÕ´Ï´Ù.
@@ -36,6 +59,9 @@ C++ 17, ºñÁÖ¾ó ½ºÆ©µð¿À 2017, SFML 2.5.1, Lua 5.3.5 and À©µµ¿ìÁî 10.
 8. Å¬¶óÀÌ¾ðÆ®°¡ ´ë±â¿­ ¼­¹ö·ÎºÎÅÍ ¹ÞÀº Æ¼ÄÏÀ» ¸ÞÀÎ ¼­¹ö¿¡ ¿¡ÄÚÇÕ´Ï´Ù.
 9. ¸ÞÀÎ ¼­¹ö°¡ Å¬¶óÀÌ¾ðÆ®·ÎºÎÅÍ ¹ÞÀº Æ¼ÄÏÀÌ ´ë±â¿­ ¼­¹ö·ÎºÎÅÍ ¹ÞÀº Æ¼ÄÏ°ú ÀÏÄ¡ÇÏ¸é, Å¬¶óÀÌ¾ðÆ®ÀÇ Á¢¼ÓÀ» À¯ÁöÇÕ´Ï´Ù.
 9-1. ÀÏÄ¡ÇÏÁö ¾ÊÀ¸¸é ¸ÞÀÎ ¼­¹ö°¡ Å¬¶óÀÌ¾ðÆ®ÀÇ Á¢¼ÓÀ» ²÷½À´Ï´Ù.
+
+#½ºÆ®·¹½º Å×½ºÆ®   
+20³â 3¿ù 15ÀÏ ÇöÀç, Å¬¶óÀÌ¾ðÆ® 100°³±îÁö´Â Åë°úÇß½À´Ï´Ù.
 
 #¼ÒÄÏ ÀçÈ°¿ë #DisconnectEx
 Á¤»óÀûÀ¸·Î Á¢¼ÓÀ» ²÷Àº ¼ÒÄÏÀº ::DisconnectEx(...)·Î ÀçÈ°¿ëÇß½À´Ï´Ù.  ¼ÒÄÏÀ» »õ°ÍÀ¸·Î ±³Ã¼ÇÏ´Â ºñ¿ëÀÌ ºñ½Î±â ¶§¹®ÀÌ¾ú½À´Ï´Ù.  º¸³»±â³ª ¹Þ±â°¡ ½ÇÆÐÇÑ ¼ÒÄÏÀº °ÅÀÇ ¸ðµÎ ÀçÈ°¿ëµµ ½ÇÆÐÇß±â ¶§¹®¿¡ ÀÌ ¼ÒÄÏÀº »õ°ÍÀ¸·Î ±³Ã¼ÇÏµµ·Ï Çß½À´Ï´Ù.  ÀÌ ¶§ °©ÀÛ½º·¯¿î ±³Ã¼·Î »ý±ä ¹®Á¦µéÀ» ¸¶¹«¸®ÇÏ°í³ª¼­ ´Ù½Ã ::Acceptex(...)¸¦ °É¾îµÎ¾ú½À´Ï´Ù.
@@ -172,7 +198,6 @@ break·Î µÑ ÀÌ»óÀÇ ½ºÄÚÇÁ¸¦ ºüÁ®³ª°¡Áö ¸øÇÏ´Â °æ¿ì, ÀÐ±â ½¬¿ì¸é¼­ ÄÚµå Áßº¹À» ÇÇÇ
 #½ºÅ©¸³Æ® ºÒ·¯¿À±â
 ½ºÅ©¸³Æ®¿¡¼­ ºÒ·¯¿ÀÁö ¸øÇÑ °æ¿ì¸¦ ´ëºñÇØ º¯¼ö¿¡ ±âº»°ªÀ» ÁÖ¾ú½À´Ï´Ù.  ±×¸®°í °ªÀ» ½ºÅ©¸³Æ®¿¡¼­ ºÒ·¯¿Í Å¸ÀÔÀÌ³ª ¹üÀ§¸¦ °Ë»çÇÑ µÚ¿¡¾ß º¯¼ö¿¡ µ¤¾î½è½À´Ï´Ù.  ÀÌ °úÁ¤¿¡¼­ ½ÇÆÐÇÏ¸é ÄÜ¼Ö¿¡ Ãâ·ÂÇÕ´Ï´Ù.
 ( dlls/Game ÀÌÇÏ ¸¹Àº Å¬·¡½º¿¡ Á¤ÀÇµÈ ¸â¹ö ÇÔ¼ö loadScript(...) )
-https://youtu.be/uPx0DgMIeoQ
 
 #¸â¹ö º¯¼öÀÇ ¼±¾ð ¼ø¼­ #ÆÐµù
 ¸â¹ö º¯¼öÀÇ Å©±â°¡ ÀÛÀº °ÍºÎÅÍ À§¿¡¼­ ¾Æ·¡·Î ¼±¾ðÇÏ¿© ÆÐµùÀ» ÁÙ¿´½À´Ï´Ù.
@@ -249,7 +274,7 @@ Mod, È®ÀåÆÑÀÌ³ª ½ÉÁö¾î ´Ù¸¥ °ÔÀÓ¿¡¼­ Àç»ç¿ëÇÒ ¼ö ÀÖ´Â ÄÚµå´Â ¹ü¿ë¼º¿¡ µû¶ó ¶óÀÌº
 Á¤ÀÇµÇ´Â ¼ø¼­°¡ µüÈ÷ Á¤ÇØÁ®ÀÖÁö ¾Ê°í, ÀÎÀÚ·Î ³Ñ±âÁö ¾Ê¾Æ ¾ðÁ¦ ¾î´À ¼­ºê·çÆ¾¿¡¼­ Á¢±ÙÇÏ´ÂÁö ÇÑ´«¿¡ º¸ÀÌÁö ¾Ê¾Æ Àü¿ª º¯¼ö¸¦ ¼Ò±ØÀûÀ¸·Î ¾²°í ÇÑ °÷¿¡ ¸ð¾ÆµÎ¾ú½À´Ï´Ù.
 À¯¿¬ÇÏ°Ô ¾²±â À§ÇØ ½Ì±ÛÅÏ ÆÐÅÏ ´ë½Å ¼­ºñ½º ·ÎÄÉÀÌÅÍ ÆÐÅÏÀ» ½è½À´Ï´Ù.
 ( staticLibs/Shared Headers Only/IServiceLocator.h, exes/Engine/ServiceLocator.h, dlls/Game/ServiceLocatorMirror.h )
-\
+
 
 ¶óÀÌ¼¾½º
 --------

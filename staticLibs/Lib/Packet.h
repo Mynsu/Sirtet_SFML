@@ -46,7 +46,18 @@ public:
 			}
 			case 8:
 			{
+#if (_WIN32_WINNT > _WIN32_WINNT_WIN8)
 				data = (T)::htonll((uint64_t)data);
+#else
+				data = (((uint64_t)data >> 56) & 0x00000000000000ffll) |
+					   (((uint64_t)data >> 40) & 0x000000000000ff00ll) |
+					   (((uint64_t)data >> 24) & 0x0000000000ff0000ll) |
+					   (((uint64_t)data >> 8) & 0x00000000ff000000ll) |
+					   (((uint64_t)data << 8) & 0x000000ff00000000ll) |
+					   (((uint64_t)data << 24) & 0x0000ff0000000000ll) |
+					   (((uint64_t)data << 40) & 0x00ff000000000000ll) |
+					   (((uint64_t)data << 56) & 0xff00000000000000ll);
+#endif
 				break;
 			}
 			default:

@@ -585,7 +585,7 @@ int main( )
 			}
 		}
 
-		const Clock::time_point now = Clock::now();
+		const Clock::time_point now = begin;
 		for ( const ClientIndex idx : connectionsNotSubmittingTicket )
 		{
 			if ( TICKET_SUBMISSION_TIME_LIMIT < now - clients[idx].timeStamp() )

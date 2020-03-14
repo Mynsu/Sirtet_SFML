@@ -5,8 +5,8 @@
 #include "../Lib/math/Vector.h"
 #include "../Lib/Hash.h"
 
-static const char* QUEUE_SERVER_IP_ADDRESS = "192.168.219.102";
-static const char* MAIN_SERVER_IP_ADDRESS = "192.168.219.102";
+static const char* QUEUE_SERVER_IP_ADDRESS = "127.0.0.1";
+static const char* MAIN_SERVER_IP_ADDRESS = "127.0.0.1";
 const uint16_t QUEUE_SERVER_PORT = 10000;
 const uint16_t MAIN_SERVER_PORT = 54321;
 const uint16_t MAX_KEY_STRETCHING = 5000;
