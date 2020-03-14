@@ -1,11 +1,14 @@
 #Resources
 *.psd
 
-#External Libraries
-externals
-
 #Outputs
-x64
+Debug
+DebugRelease
+Release
+
+#External Libraries
+include
+lib
 
 #Others
 .vs

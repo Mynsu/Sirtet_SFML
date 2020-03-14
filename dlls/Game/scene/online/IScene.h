@@ -33,6 +33,10 @@ namespace scene::online
 										   ::scene::online::Online& net,
 										   const sf::RenderWindow& window ) = 0;
 		virtual void draw( sf::RenderWindow& window ) = 0;
+
+		// NOTE: 가시성을 protected로 제한하여
+		// 인터페이스의 인스턴스가 구체concrete 클래스에 암시적으로 만들어지는 것 말고
+		// 다른 방법으로는 만들 수 없도록 했습니다.
 	protected:
 		IScene( ) = default;
 	};

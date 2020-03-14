@@ -1,9 +1,17 @@
 Sirtet
 ======
 ¿¹, ¸Â½À´Ï´Ù.  Å×Æ®¸®½ºÀÔ´Ï´Ù.
+Á¦°¡ Å×Æ®¸®½º¸¦ ¸¸µç ÀÌÀ¯´Â
+1. ½É»ç¿ø²² ÀÍ¼÷ÇÑ °ÔÀÓ ÄÚµå¶ó¸é ÇÇ·Î ¹°ÁúÀÌ ´ú ½×ÀÏÅ×°í,
+2. 3D ±×·¡ÇÈ½º API, ¼ÎÀÌ´õ, ÄõÅÍ´Ï¾ð/ÅÙ¼­/¹ÌÀûºÐÀÌ ¾ø¾î ½É»ç¿ø²²¼­ ÄÚµå '±âº»'¸¸ º¸±â ÁÁ°í,
+3. [**¿©±â**](https://www.gamedev.net/articles/programming/general-and-gameplay-programming/your-first-step-to-game-development-starts-here-r2976/)[**Àú±â**](https://www.gamedev.net/articles/programming/general-and-gameplay-programming/how-do-i-make-games-a-path-to-game-development-r892/)¿¡¼­ ÃßÃµÇÑ °ÔÀÓµé Áß À¯ÀÏÇÏ°Ô °ÔÀÓ ÇÃ·¹ÀÌ ·ÎÁ÷ÀÌ ¸Ó¸´¼Ó¿¡ ±×·ÁÁöÁö ¾Ê¾ÒÀ¸¸ç,
+4. ÇÏ°í ½ÍÁö ¾ÊÀº °ÔÀÓÀ» ³¡±îÁö ¸¸µé¾î ³¾ ¼ö ÀÖ´ÂÁö Á¦ ÀÚ½ÅÀÌ ±Ã±ÝÇß±â
+¶§¹®ÀÔ´Ï´Ù.
 
-( ¿µ»ó )
-
+ 
+È¯°æ
+----
+C++ 17, ºñÁÖ¾ó ½ºÆ©µð¿À 2017, SFML 2.5.1, Lua 5.3.5 and À©µµ¿ìÁî 10.
 
 
 #½ºÆ®·¹½º Å×½ºÆ®
@@ -18,12 +26,12 @@ Sirtet
 1-1. ´ë±â¿­ ¼­¹ö°¡ ¸ØÃß´õ¶óµµ ´Ù½Ã ÄÑ¸é ¸ÞÀÎ ¼­¹ö¿¡ Á¢¼ÓÇÒ ¼ö ÀÖ½À´Ï´Ù.
 2. ´ë±â¿­ ¼­¹ö°¡ ¸ÞÀÎ ¼­¹ö¿¡°Ô ´ë±â¿­ ¼­¹ö·Î¼­ÀÇ ÁõÇ¥¸¦ º¸³À´Ï´Ù.  ¸ÞÀÎ ¼­¹ö´Â ÁõÇ¥¸¦ º¸³½ Å¬¶óÀÌ¾ðÆ®¸¦ ´ë±â¿­ ¼­¹ö·Î °£ÁÖÇÕ´Ï´Ù.
 3. Å¬¶óÀÌ¾ðÆ®°¡ ´ë±â¿­ ¼­¹ö¿¡ Á¢¼ÓÇÕ´Ï´Ù.
-4. Å¬¶óÀÌ¾ðÆ®°¡ ´ë±â¿­ ¼­¹ö¿¡ ÀÓÀÇÀÇ ÇØ½Ã °ªÀ» º¸³À´Ï´Ù.  ´ë±â¿­ ¼­¹ö´Â ÀÌ ÇØ½Ã°ªÀ¸·Î Å¬¶óÀÌ¾ðÆ®°¡ º¯Á¶µÇÁö ¾Ê¾Ò´ÂÁö, ¼­¹öµé°ú ¹öÀüÀÌ °°ÀºÁö¸¦ È®ÀÎÇÕ´Ï´Ù.
+4. Å¬¶óÀÌ¾ðÆ®°¡ ´ë±â¿­ ¼­¹ö¿¡ ÀÓÀÇÀÇ ÇØ½Ã °ªÀ» º¸³À´Ï´Ù.  ´ë±â¿­ ¼­¹ö´Â ÀÌ ÃÊ´ëÀåÀ» º¸°í Å¬¶óÀÌ¾ðÆ®°¡ º¯Á¶µÇÁö ¾Ê¾Ò´ÂÁö, ¼­¹öµé°ú ¹öÀüÀÌ °°ÀºÁö¸¦ È®ÀÎÇÕ´Ï´Ù.
 5. Å¬¶óÀÌ¾ðÆ®°¡ ½Ã°£ ³»¿¡ 4¸¦ Åë°úÇÏ°í ¸ÞÀÎ ¼­¹ö¿¡µµ ÀÚ¸®°¡ ÀÖÀ¸¸é, ´ë±â¿­ ¼­¹ö°¡ Å¬¶óÀÌ¾ðÆ®¿Í ¸ÞÀÎ ¼­¹ö¿¡ ¶È°°Àº Æ¼ÄÏÀ» º¸³À´Ï´Ù.
 5-1-1. Å¬¶óÀÌ¾ðÆ®°¡ ½Ã°£ ³»¿¡ 4¸¦ Åë°úÇßÀ¸³ª ¸ÞÀÎ ¼­¹ö¿¡ ÀÚ¸®°¡ ¾øÀ¸¸é, ´ë±â¿­ ¼­¹ö´Â Å¬¶óÀÌ¾ðÆ®¿¡ ´ë±â ¹øÈ£¸¦ ¹ß±ÞÇÏ°í ¸ÞÀÎ ¼­¹ö¿¡ ÀÚ¸®°¡ ³µ´ÂÁö ÁÖ±âÀûÀ¸·Î ¹°¾îº¾´Ï´Ù.
 5-1-2. ¸ÞÀÎ ¼­¹ö¿¡ ÀÚ¸®°¡ ³ª¸é, ´ë±â ¹øÈ£ 0 Å¬¶óÀÌ¾ðÆ®¿¡°Ô 5¸¦ ¼öÇàÇÕ´Ï´Ù.
 5-2. Å¬¶óÀÌ¾ðÆ®°¡ ½Ã°£ ³»¿¡ 4¸¦ Åë°úÇÏÁö ¸øÇÏ¸é, ´ë±â¿­ ¼­¹ö°¡ Å¬¶óÀÌ¾ðÆ®ÀÇ Á¢¼ÓÀ» ²÷½À´Ï´Ù.
-6. ´ë±â¿­ ¼­¹ö°¡ Æ¼ÄÏÀ» º¸³½ Å¬¶óÀÌ¾ðÆ®¿Í Á¢¼ÓÀ» ²÷½À´Ï´Ù.  Æ¼ÄÏÀ» ¹ÞÀº Å¬¶óÀÌ¾ðÆ®µµ ´ë±â¿­ ¼­¹ö¿Í Á¢¼ÓÀ» ²÷½À´Ï´Ù.
+6. ´ë±â¿­ ¼­¹ö°¡ Æ¼ÄÏÀ» º¸³½ Å¬¶óÀÌ¾ðÆ®¿Í Á¢¼ÓÀ» ²÷½À´Ï´Ù.
 7. Å¬¶óÀÌ¾ðÆ®°¡ ¸ÞÀÎ ¼­¹ö¿¡ Á¢¼ÓÇÕ´Ï´Ù.
 8. Å¬¶óÀÌ¾ðÆ®°¡ ´ë±â¿­ ¼­¹ö·ÎºÎÅÍ ¹ÞÀº Æ¼ÄÏÀ» ¸ÞÀÎ ¼­¹ö¿¡ ¿¡ÄÚÇÕ´Ï´Ù.
 9. ¸ÞÀÎ ¼­¹ö°¡ Å¬¶óÀÌ¾ðÆ®·ÎºÎÅÍ ¹ÞÀº Æ¼ÄÏÀÌ ´ë±â¿­ ¼­¹ö·ÎºÎÅÍ ¹ÞÀº Æ¼ÄÏ°ú ÀÏÄ¡ÇÏ¸é, Å¬¶óÀÌ¾ðÆ®ÀÇ Á¢¼ÓÀ» À¯ÁöÇÕ´Ï´Ù.
@@ -164,6 +172,7 @@ break·Î µÑ ÀÌ»óÀÇ ½ºÄÚÇÁ¸¦ ºüÁ®³ª°¡Áö ¸øÇÏ´Â °æ¿ì, ÀÐ±â ½¬¿ì¸é¼­ ÄÚµå Áßº¹À» ÇÇÇ
 #½ºÅ©¸³Æ® ºÒ·¯¿À±â
 ½ºÅ©¸³Æ®¿¡¼­ ºÒ·¯¿ÀÁö ¸øÇÑ °æ¿ì¸¦ ´ëºñÇØ º¯¼ö¿¡ ±âº»°ªÀ» ÁÖ¾ú½À´Ï´Ù.  ±×¸®°í °ªÀ» ½ºÅ©¸³Æ®¿¡¼­ ºÒ·¯¿Í Å¸ÀÔÀÌ³ª ¹üÀ§¸¦ °Ë»çÇÑ µÚ¿¡¾ß º¯¼ö¿¡ µ¤¾î½è½À´Ï´Ù.  ÀÌ °úÁ¤¿¡¼­ ½ÇÆÐÇÏ¸é ÄÜ¼Ö¿¡ Ãâ·ÂÇÕ´Ï´Ù.
 ( dlls/Game ÀÌÇÏ ¸¹Àº Å¬·¡½º¿¡ Á¤ÀÇµÈ ¸â¹ö ÇÔ¼ö loadScript(...) )
+https://youtu.be/uPx0DgMIeoQ
 
 #¸â¹ö º¯¼öÀÇ ¼±¾ð ¼ø¼­ #ÆÐµù
 ¸â¹ö º¯¼öÀÇ Å©±â°¡ ÀÛÀº °ÍºÎÅÍ À§¿¡¼­ ¾Æ·¡·Î ¼±¾ðÇÏ¿© ÆÐµùÀ» ÁÙ¿´½À´Ï´Ù.
@@ -240,3 +249,9 @@ Mod, È®ÀåÆÑÀÌ³ª ½ÉÁö¾î ´Ù¸¥ °ÔÀÓ¿¡¼­ Àç»ç¿ëÇÒ ¼ö ÀÖ´Â ÄÚµå´Â ¹ü¿ë¼º¿¡ µû¶ó ¶óÀÌº
 Á¤ÀÇµÇ´Â ¼ø¼­°¡ µüÈ÷ Á¤ÇØÁ®ÀÖÁö ¾Ê°í, ÀÎÀÚ·Î ³Ñ±âÁö ¾Ê¾Æ ¾ðÁ¦ ¾î´À ¼­ºê·çÆ¾¿¡¼­ Á¢±ÙÇÏ´ÂÁö ÇÑ´«¿¡ º¸ÀÌÁö ¾Ê¾Æ Àü¿ª º¯¼ö¸¦ ¼Ò±ØÀûÀ¸·Î ¾²°í ÇÑ °÷¿¡ ¸ð¾ÆµÎ¾ú½À´Ï´Ù.
 À¯¿¬ÇÏ°Ô ¾²±â À§ÇØ ½Ì±ÛÅÏ ÆÐÅÏ ´ë½Å ¼­ºñ½º ·ÎÄÉÀÌÅÍ ÆÐÅÏÀ» ½è½À´Ï´Ù.
 ( staticLibs/Shared Headers Only/IServiceLocator.h, exes/Engine/ServiceLocator.h, dlls/Game/ServiceLocatorMirror.h )
+\
+
+¶óÀÌ¼¾½º
+--------
++ [**zlib/png**](https://www.sfml-dev.org/license.php) for SFML
++ OFL for fonts
