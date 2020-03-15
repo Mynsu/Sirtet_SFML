@@ -8,6 +8,8 @@
 #include <Lib/Socket.h>
 #define WIN32_LEAN_AND_MEAN // NOTE: Defined after Socket.h to include UUID.
 
+#include <stdint.h>
+#include <intrin.h>
 #include <signal.h>
 #include <unordered_set>
 #include <list>
@@ -17,8 +19,6 @@
 #include <thread>
 #include <chrono>
 #include <random>
-#include <intrin.h>
-#include <stdint.h>
 #include <Lib/IOCP.h>
 #include <Lib/EndPoint.h>
 #include <Lib/Hash.h>

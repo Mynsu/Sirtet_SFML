@@ -58,7 +58,7 @@ namespace
 }
 
 scene::online::Online::Online( const sf::RenderWindow& window )
-	: mFrameCountToMainMenu( 0 ), mMyNicknameHashed_( 0 ), mWindow( window )
+	: mFrameCountToMainMenu( 0 ), mMyNicknameHashed_( 0 )
 {
 	ASSERT_TRUE( false == IsInstantiated );
 
@@ -68,7 +68,7 @@ scene::online::Online::Online( const sf::RenderWindow& window )
 	const auto it = vault.find(HK_FORE_FPS);
 	ASSERT_TRUE( vault.end() != it );
 	mFPS_ = (uint16_t)it->second;
-	setScene( ::scene::online::ID::WAITING );
+	setScene( ::scene::online::ID::WAITING, window );
 	loadResources( window );
 
 	IsInstantiated = true;
@@ -218,16 +218,17 @@ void ::scene::online::Online::loadResources( const sf::RenderWindow& window )
 	mSprite.setPosition( (sf::Vector2f(window.getSize())-mSpriteClipSize)*0.5f );
 }
 
-::scene::ID scene::online::Online::update( std::vector<sf::Event>& eventQueue )
+::scene::ID scene::online::Online::update( std::vector<sf::Event>& eventQueue,
+										  const sf::RenderWindow& window )
 {
 	::scene::ID retVal = ::scene::ID::AS_IS;
 
 	if ( 0 == mFrameCountToMainMenu )
 	{
-		const ::scene::online::ID nextSceneID = mCurrentScene->update(eventQueue, *this, mWindow);
+		const ::scene::online::ID nextSceneID = mCurrentScene->update(eventQueue, *this, window);
 		if ( ::scene::online::ID::AS_IS < nextSceneID )
 		{
-			setScene( nextSceneID );
+			setScene( nextSceneID, window );
 		}
 		else if ( ::scene::online::ID::MAIN_MENU == nextSceneID )
 		{
@@ -554,22 +555,23 @@ HashedKey scene::online::Online::myNicknameHashed( ) const
 	return ::scene::ID::ONLINE_BATTLE;
 }
 
-void scene::online::Online::setScene( const::scene::online::ID nextSceneID )
+void scene::online::Online::setScene( const::scene::online::ID nextSceneID,
+									 const sf::RenderWindow& window )
 {
 	mCurrentScene.reset( );
 	switch ( nextSceneID )
 	{
 		case ::scene::online::ID::WAITING:
-			mCurrentScene = std::make_unique<::scene::online::Waiting>( mWindow, *this );
+			mCurrentScene = std::make_unique<::scene::online::Waiting>(window, *this);
 			break;
 		case ::scene::online::ID::IN_LOBBY:
-			mCurrentScene = std::make_unique<::scene::online::InLobby>( mWindow, *this );
+			mCurrentScene = std::make_unique<::scene::online::InLobby>(window, *this);
 			break;
 		case ::scene::online::ID::IN_ROOM_AS_HOST:
-			mCurrentScene = std::make_unique<::scene::online::InRoom>( mWindow, *this, true );
+			mCurrentScene = std::make_unique<::scene::online::InRoom>(window, *this, true);
 			break;
 		case ::scene::online::ID::IN_ROOM:
-			mCurrentScene = std::make_unique<::scene::online::InRoom>( mWindow, *this );
+			mCurrentScene = std::make_unique<::scene::online::InRoom>(window, *this);
 			break;
 		default:
 #ifdef _DEBUG

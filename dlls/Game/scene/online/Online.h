@@ -18,10 +18,12 @@ namespace scene::online
 		~Online( );
 
 		void loadResources( const sf::RenderWindow& window ) override;
-		::scene::ID update( std::vector<sf::Event>& eventQueue ) override;
+		::scene::ID update( std::vector<sf::Event>& eventQueue,
+						   const sf::RenderWindow& window ) override;
 		void draw( sf::RenderWindow& window ) override;
 		::scene::ID currentScene( ) const override;
-		void setScene( const uint8_t sceneID ) override
+		void setScene( const uint8_t sceneID,
+					  const sf::RenderWindow& ) override
 		{}
 
 		void setMyNickname( std::string& myNickname );
@@ -46,11 +48,11 @@ namespace scene::online
 		////
 	private:
 		static bool IsInstantiated;
-		void setScene( const ::scene::online::ID nextSceneID );
+		void setScene( const ::scene::online::ID nextSceneID,
+					  const sf::RenderWindow& window );
 		uint16_t mFPS_, mFrameCountToMainMenu;
 		HashedKey mMyNicknameHashed_;
 		sf::Vector2f mSpriteClipSize;
-		const sf::RenderWindow& mWindow;
 		std::unique_ptr<::scene::online::IScene> mCurrentScene;
 		std::string mMyNickname;
 		sf::Texture mTexture;

@@ -27,11 +27,13 @@ namespace scene
 		virtual ~IScene( ) = default;
 
 		virtual void loadResources( const sf::RenderWindow& window ) = 0;
-		virtual ::scene::ID update( std::vector<sf::Event>& eventQueue ) = 0;
+		virtual ::scene::ID update( std::vector<sf::Event>& eventQueue,
+								   const sf::RenderWindow& window ) = 0;
 		virtual void draw( sf::RenderWindow& window ) = 0;
 		// NOTE: 비싼 RTTI를 쓰지 않았습니다.
 		virtual ::scene::ID currentScene( ) const = 0;
-		virtual void setScene( const uint8_t sceneID ) = 0;
+		virtual void setScene( const uint8_t sceneID,
+							  const sf::RenderWindow& window ) = 0;
 
 		// NOTE: 가시성을 protected로 제한하여
 		// 인터페이스의 인스턴스가 구체concrete 클래스에 암시적으로 만들어지는 것 말고

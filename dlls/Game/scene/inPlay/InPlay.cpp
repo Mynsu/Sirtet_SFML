@@ -9,8 +9,8 @@
 
 bool ::scene::inPlay::InPlay::IsInstantiated = false;
 
-::scene::inPlay::InPlay::InPlay( sf::RenderWindow& window, const ::scene::inPlay::ID initScene )
-	: mWindow_( window )
+::scene::inPlay::InPlay::InPlay( const sf::RenderWindow& window,
+								const ::scene::inPlay::ID initScene )
 {
 	ASSERT_TRUE( false == IsInstantiated );
 
@@ -18,7 +18,7 @@ bool ::scene::inPlay::InPlay::IsInstantiated = false;
 	const auto it = vault.find(HK_FORE_FPS);
 	ASSERT_TRUE( vault.end() != it );
 	mFPS_ = (uint16_t)it->second;
-	setScene( initScene );
+	setScene( initScene, window );
 	loadResources( window );
 
 	IsInstantiated = true;
@@ -39,13 +39,14 @@ void scene::inPlay::InPlay::loadResources( const sf::RenderWindow& window )
 	}
 }
 
-::scene::ID scene::inPlay::InPlay::update( std::vector<sf::Event>& eventQueue )
+::scene::ID scene::inPlay::InPlay::update( std::vector<sf::Event>& eventQueue,
+										  const sf::RenderWindow& window )
 {
 	::scene::ID retVal = ::scene::ID::AS_IS;
 	const ::scene::inPlay::ID nextScene = mCurrentScene->update( eventQueue );
 	if ( ::scene::inPlay::ID::AS_IS < nextScene )
 	{
-		setScene( nextScene );
+		setScene( nextScene, window );
 	}
 	else if ( ::scene::inPlay::ID::EXIT == nextScene )
 	{
@@ -82,35 +83,36 @@ void ::scene::inPlay::InPlay::draw( sf::RenderWindow& window )
 	return ::scene::ID::SINGLE_PLAY;
 }
 
-void scene::inPlay::InPlay::setScene( const ::scene::inPlay::ID nextInPlaySceneID )
+void scene::inPlay::InPlay::setScene( const ::scene::inPlay::ID nextInPlaySceneID,
+									 const sf::RenderWindow& window )
 {
 	switch ( nextInPlaySceneID )
 	{
 		case ::scene::inPlay::ID::READY:
 			mCurrentScene.reset( );
-			mCurrentScene = std::make_unique<::scene::inPlay::Ready>(mWindow_, mBackground);
+			mCurrentScene = std::make_unique<::scene::inPlay::Ready>(window, mBackground);
 			break;
 		case ::scene::inPlay::ID::PLAYING:
 			mCurrentScene.reset( );
-			mCurrentScene = std::make_unique<::scene::inPlay::Playing>(mWindow_, mBackground, mOverlappedScene);
+			mCurrentScene = std::make_unique<::scene::inPlay::Playing>(window, mBackground, mOverlappedScene);
 			break;
 		case ::scene::inPlay::ID::GAME_OVER:
 			mCurrentScene.reset( );
-			mCurrentScene = std::make_unique<::scene::inPlay::GameOver>(mWindow_, mBackground, mOverlappedScene);
+			mCurrentScene = std::make_unique<::scene::inPlay::GameOver>(window, mBackground, mOverlappedScene);
 			break;
 		case ::scene::inPlay::ID::ALL_CLEAR:
 			if ( nullptr == mCurrentScene )
 			{
-				mCurrentScene = std::make_unique<::scene::inPlay::Playing>(mWindow_, mBackground, mOverlappedScene);
+				mCurrentScene = std::make_unique<::scene::inPlay::Playing>(window, mBackground, mOverlappedScene);
 			}
-			mOverlappedScene = std::make_unique<::scene::inPlay::AllClear>(mWindow_);
+			mOverlappedScene = std::make_unique<::scene::inPlay::AllClear>(window);
 			break;
 		case ::scene::inPlay::ID::ASSERTION:
 			if ( nullptr == mCurrentScene )
 			{
-				mCurrentScene = std::make_unique<::scene::inPlay::Playing>(mWindow_, mBackground, mOverlappedScene);
+				mCurrentScene = std::make_unique<::scene::inPlay::Playing>(window, mBackground, mOverlappedScene);
 			}
-			mOverlappedScene = std::make_unique<::scene::inPlay::Assertion>(mWindow_);
+			mOverlappedScene = std::make_unique<::scene::inPlay::Assertion>(window);
 			break;
 		default:
 #ifdef _DEBUG

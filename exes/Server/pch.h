@@ -4,10 +4,12 @@
 #define _WIN32_WINNT _WIN32_WINNT_WIN7
 #include <sdkddkver.h>
 
+#include <SFML/Graphics/Color.hpp> // WIN32_LEAN_AND_MEAN을 정의한 다음에 포함하면 컴파일 에러 발생.
 #include <Lib/Socket.h>
-#include <SFML/Graphics/Color.hpp>
 #define WIN32_LEAN_AND_MEAN // NOTE: Defined after Socket.h to include UUID.
 
+#include <stdint.h>
+#include <intrin.h>
 #include <signal.h>
 #include <unordered_set>
 #include <unordered_map>
@@ -18,8 +20,6 @@
 #include <iostream>
 #include <random>
 #include <chrono>
-#include <stdint.h>
-#include <intrin.h>
 #ifdef _DEBUG
 #pragma comment( lib, "sfml-graphics-d" )
 #else

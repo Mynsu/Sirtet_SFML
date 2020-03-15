@@ -4,17 +4,17 @@
 #define _WIN32_WINNT _WIN32_WINNT_WIN7
 #include <sdkddkver.h>
 
+#include <SFML/Graphics.hpp> // WIN32_LEAN_AND_MEAN을 정의한 다음에 포함하면 컴파일 에러 발생.
+#include <stdint.h>
+#include <intrin.h>
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
 #include <array>
 #include <memory>
 #include <string>
 #include <sstream>
 #include <iostream>
 #include <functional>
-#include <stdint.h>
-#include <intrin.h>
-#include <SFML/Graphics.hpp> // WIN32_LEAN_AND_MEAN을 정의한 다음에 포함하면 컴파일 에러 발생.
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
 #include <SFML/Window.hpp>
 #include <SFML/Audio.hpp>
 #include <SFML/System.hpp>

@@ -19,10 +19,12 @@ namespace scene
 		~MainMenu( );
 
 		void loadResources( const sf::RenderWindow& window ) override;
-		::scene::ID update( std::vector<sf::Event>& eventQueue ) override;
+		::scene::ID update( std::vector<sf::Event>& eventQueue,
+						   const sf::RenderWindow& window ) override;
 		void draw( sf::RenderWindow& window ) override;
 		::scene::ID currentScene( ) const override;
-		void setScene( const uint8_t sceneID ) override
+		void setScene( const uint8_t sceneID,
+					  const sf::RenderWindow& ) override
 		{}
 	private:
 		bool mIsCursorOnButton;

@@ -83,7 +83,7 @@ void scene::Intro::loadResources( const sf::RenderWindow& window )
 	}
 }
 
-::scene::ID scene::Intro::update( std::vector<sf::Event>& )
+::scene::ID scene::Intro::update( std::vector<sf::Event>&, const sf::RenderWindow& )
 {
 	if ( (uint16_t)mFPS_*mDuration < mFrameCountToStart )
 	{

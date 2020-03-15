@@ -8,6 +8,7 @@
 #include <Lib/Socket.h>
 #define WIN32_LEAN_AND_MEAN // NOTE: Defined after Socket.h to include UUID.
 
+#include <intrin.h>
 #include <list>
 #include <queue>
 #include <array>
@@ -20,7 +21,6 @@
 #include <functional>
 #include <random>
 #include <optional>
-#include <intrin.h>
 #include <SFML/Window.hpp>
 #include <SFML/System.hpp>
 #ifdef _DEBUG

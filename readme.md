@@ -1,24 +1,23 @@
 Sirtet
 ======
-¿¹, ¸Â½À´Ï´Ù.  Å×Æ®¸®½ºÀÔ´Ï´Ù.
+¿¹, ¸Â½À´Ï´Ù.  [Å×Æ®¸®½º](https://tetris.fandom.com/wiki/Tetris_Guideline)ÀÔ´Ï´Ù.
 
 
-Á¦°¡ Å×Æ®¸®½º¸¦ ¸¸µç ÀÌÀ¯´Â
----------------------------
+Å×Æ®¸®½º¸¦ ¸¸µç ÀÌÀ¯´Â
+----------------------
 1. ½É»ç¿ø²² ÀÍ¼÷ÇÑ °ÔÀÓ ÄÚµå¶ó¸é **ÇÇ·Î**°¡ Á¶±ÝÀÌ¶óµµ ´úÇÒ °ÍÀÌ°í,   
-2. 3D ±×·¡ÇÈ½º API/¼ÎÀÌ´õ, ÄõÅÍ´Ï¾ð/ÅÙ¼­/¹ÌÀûºÐÀÌ ¾ø¾î ½É»ç¿ø²²¼­ ÄÚµå **±âº»**¸¸ º¸½Ã±â¿¡ ÁÁ°í,   
+2. 3D ±×·¡ÇÈ½º API/¼ÎÀÌ´õ, ÄõÅÍ´Ï¾ð/ÅÙ¼­/¹ÌÀûºÐ µîÀÌ ¾ø¾î ½É»ç¿ø²²¼­ ÄÚµå **±âº»**¸¸ º¸½Ã±â¿¡ ÁÁ°í,   
 3. [**¿©±â**](https://www.gamedev.net/articles/programming/general-and-gameplay-programming/your-first-step-to-game-development-starts-here-r2976/)[**Àú±â**](https://www.gamedev.net/articles/programming/general-and-gameplay-programming/how-do-i-make-games-a-path-to-game-development-r892/)¿¡¼­ ÃßÃµÇÑ °ÔÀÓµé Áß À¯ÀÏÇÏ°Ô °ÔÀÓ ÇÃ·¹ÀÌ ·ÎÁ÷ÀÌ ¸Ó¸´¼Ó¿¡ ±×·ÁÁöÁö ¾Ê¾ÒÀ¸¸ç,   
-4. **ÇÏ°í ½ÍÁö ¾ÊÀº °ÔÀÓ**ÀÌ´õ¶óµµ ³¡±îÁö ¸¸µé¾î ³¾ ¼ö ÀÖÀ»Áö Á¦ ÀÚ½ÅÀÌ ±Ã±ÝÇß±â   
-¶§¹®ÀÔ´Ï´Ù.
+4. Á¦ ÀÚ½ÅÀÌ **ÇÏ°í ½ÍÁö ¾ÊÀº °ÔÀÓ**ÀÌ´õ¶óµµ ³¡±îÁö ¸¸µé¾î ³¾ ¼ö ÀÖÀ»Áö ±Ã±ÝÇß±â ¶§¹®ÀÔ´Ï´Ù.
 
  
 ¾ð¾î¿Í °³¹ß È¯°æÀº
-----------------
+------------------
 C++ 17, Lua 5.3, ºñÁÖ¾ó ½ºÆ©µð¿À 2017(15.9) ±×¸®°í À©µµ¿ìÁî 10(1803)ÀÔ´Ï´Ù.
 
 
 ¿ä±¸ÇÏ´Â ¿ÜºÎ ¶óÀÌºê·¯¸®¿Í ¿î¿µÃ¼Á¦ÀÇ ¹öÀüÀº
-------
+--------------------------------------------
 + Lua 5.3.0 ÀÌ»ó   
 ¿¹)   
 1. [**´Ù¿î·Îµå ÆäÀÌÁö**](https://sourceforge.net/projects/luabinaries/files/5.3.5/Windows%20Libraries/Dynamic/)¿¡¼­ lua-5.3.5_Win64_dll15_lib.zip ´Ù¿î·Îµå   
@@ -31,81 +30,78 @@ C++ 17, Lua 5.3, ºñÁÖ¾ó ½ºÆ©µð¿À 2017(15.9) ±×¸®°í À©µµ¿ìÁî 10(1803)ÀÔ´Ï´Ù.
 2. ¼Ö·ç¼Ç µð·ºÅä¸®/externals/SFML-2.5/x64/¿¡ include Æú´õ, lib Æú´õ ¾ÐÃà Ç®±â   
 3. ºôµåµÈ Server.exe°¡ ÀÖ´Â µð·ºÅä¸®¿¡ sfml-graphics-2.dll, sfml-system-2.dll, sfml-window-2.dll ¾ÐÃà Ç®±â(ÀÌ ÀÇÁ¸¼ºÀº ¾ø¾Ù ¿¹Á¤ÀÔ´Ï´Ù.)   
    ºôµåµÈ Sirtet.exe¿Í Game.dllÀÌ ÀÖ´Â µð·ºÅä¸®¿¡ openal32.dll, sfml-audio-2.dll, sfml-graphics-2.dll, sfml-system-2.dll, sfml-window-2.dll ¾ÐÃà Ç®±â   
-+ À©µµ¿ìÁî 7 ÀÌ»ó   
-ÀÔ´Ï´Ù.
++ À©µµ¿ìÁî 7 ÀÌ»óÀÔ´Ï´Ù.
 
-[![Video Thumbnail]()](https://youtu.be/uPx0DgMIeoQ)
 
-½É»ç¿ø²²¼­ ±Ã±ÝÇÏ½Ç ¸¸ÇÑ °Íµé¿¡ ´ëÇØ ´äÇØºÃ½À´Ï´Ù.
---------------------------------------------------
-#´ë±â¿­ ¼­¹ö #¸ÞÀÎ ¼­¹ö
-<img src="https://user-images.githubusercontent.com/43042411/76689270-8f53da00-6677-11ea-9d8e-ad9e4df90409.png"></img>
-¼­¹ö´Â ´Ü µÑ, ´ë±â¿­ ¼­¹ö¿Í ¸ÞÀÎ ¼­¹ö°¡ ÀÖ½À´Ï´Ù.   
-Áß°³¸¦ À§ÇÑ Redis ¼­¹ö³ª °èÁ¤ °ü¸®¸¦ À§ÇÑ RDBMS ¼­¹ö´Â ¾ø½À´Ï´Ù.   
-Å¬¶óÀÌ¾ðÆ®°¡ Á¢¼Ó°ú µ¿½Ã¿¡ ¸Þ½ÃÁö¸¦ º¸³»´õ¶óµµ ¼­¹ö°¡ ÀÌ ¸Þ½ÃÁö¸¦ ¹ÞÁö ¾Êµµ·Ï Çß½À´Ï´Ù.  ÀÌ·¸Áö ¾ÊÀ¸¸é, ¼­¹ö°¡ ¸Þ½ÃÁö¸¦ ±â´Ù¸®´Â ¹®Á¦°¡ ¹ß»ýÇÒ ¼ö ÀÖ±â ¶§¹®ÀÔ´Ï´Ù.
-¼­¹öÀÇ ºÎÇÏ¸¦ ´ú±â À§ÇØ ¼­¹ö°¡ accept¸¦ ¿Ï·áÇÑ ÈÄ¿¡¾ß Å¬¶óÀÌ¾ðÆ®°¡ Á¢¼ÓÇÏµµ·Ï Çß½À´Ï´Ù.
+ºôµåÇÏ±â Àü¿¡!
+--------------
+¼­¹öµéÀÇ IP ÁÖ¼Ò°¡ localhost·Î ¼³Á¤µÇ¾î ÀÖ½À´Ï´Ù.  staticLibs/GameLib/Common.h¿¡¼­ ¼öÁ¤ÇÒ ¼ö ÀÖ½À´Ï´Ù.
 
-1. ´ë±â¿­ ¼­¹ö°¡ Å¬¶óÀÌ¾ðÆ®(È¤Àº ÇÇ¾îpeer)·Î¼­ ¸ÞÀÎ ¼­¹ö¿¡ Á¢¼ÓÇÕ´Ï´Ù.
-1-1. ´ë±â¿­ ¼­¹ö°¡ ¸ØÃß´õ¶óµµ ´Ù½Ã ÄÑ¸é ¸ÞÀÎ ¼­¹ö¿¡ Á¢¼ÓÇÒ ¼ö ÀÖ½À´Ï´Ù.
-2. ´ë±â¿­ ¼­¹ö°¡ ¸ÞÀÎ ¼­¹ö¿¡°Ô ´ë±â¿­ ¼­¹ö·Î¼­ÀÇ ÁõÇ¥¸¦ º¸³À´Ï´Ù.  ¸ÞÀÎ ¼­¹ö´Â ÁõÇ¥¸¦ º¸³½ Å¬¶óÀÌ¾ðÆ®¸¦ ´ë±â¿­ ¼­¹ö·Î °£ÁÖÇÕ´Ï´Ù.
-3. Å¬¶óÀÌ¾ðÆ®°¡ ´ë±â¿­ ¼­¹ö¿¡ Á¢¼ÓÇÕ´Ï´Ù.
-4. Å¬¶óÀÌ¾ðÆ®°¡ ´ë±â¿­ ¼­¹ö¿¡ ÀÓÀÇÀÇ ÇØ½Ã °ªÀ» º¸³À´Ï´Ù.  ´ë±â¿­ ¼­¹ö´Â ÀÌ ÃÊ´ëÀåÀ» º¸°í Å¬¶óÀÌ¾ðÆ®°¡ º¯Á¶µÇÁö ¾Ê¾Ò´ÂÁö, ¼­¹öµé°ú ¹öÀüÀÌ °°ÀºÁö¸¦ È®ÀÎÇÕ´Ï´Ù.
-5. Å¬¶óÀÌ¾ðÆ®°¡ ½Ã°£ ³»¿¡ 4¸¦ Åë°úÇÏ°í ¸ÞÀÎ ¼­¹ö¿¡µµ ÀÚ¸®°¡ ÀÖÀ¸¸é, ´ë±â¿­ ¼­¹ö°¡ Å¬¶óÀÌ¾ðÆ®¿Í ¸ÞÀÎ ¼­¹ö¿¡ ¶È°°Àº Æ¼ÄÏÀ» º¸³À´Ï´Ù.
-5-1-1. Å¬¶óÀÌ¾ðÆ®°¡ ½Ã°£ ³»¿¡ 4¸¦ Åë°úÇßÀ¸³ª ¸ÞÀÎ ¼­¹ö¿¡ ÀÚ¸®°¡ ¾øÀ¸¸é, ´ë±â¿­ ¼­¹ö´Â Å¬¶óÀÌ¾ðÆ®¿¡ ´ë±â ¹øÈ£¸¦ ¹ß±ÞÇÏ°í ¸ÞÀÎ ¼­¹ö¿¡ ÀÚ¸®°¡ ³µ´ÂÁö ÁÖ±âÀûÀ¸·Î ¹°¾îº¾´Ï´Ù.
-5-1-2. ¸ÞÀÎ ¼­¹ö¿¡ ÀÚ¸®°¡ ³ª¸é, ´ë±â ¹øÈ£ 0 Å¬¶óÀÌ¾ðÆ®¿¡°Ô 5¸¦ ¼öÇàÇÕ´Ï´Ù.
-5-2. Å¬¶óÀÌ¾ðÆ®°¡ ½Ã°£ ³»¿¡ 4¸¦ Åë°úÇÏÁö ¸øÇÏ¸é, ´ë±â¿­ ¼­¹ö°¡ Å¬¶óÀÌ¾ðÆ®ÀÇ Á¢¼ÓÀ» ²÷½À´Ï´Ù.
-6. ´ë±â¿­ ¼­¹ö°¡ Æ¼ÄÏÀ» º¸³½ Å¬¶óÀÌ¾ðÆ®¿Í Á¢¼ÓÀ» ²÷½À´Ï´Ù.
-7. Å¬¶óÀÌ¾ðÆ®°¡ ¸ÞÀÎ ¼­¹ö¿¡ Á¢¼ÓÇÕ´Ï´Ù.
-8. Å¬¶óÀÌ¾ðÆ®°¡ ´ë±â¿­ ¼­¹ö·ÎºÎÅÍ ¹ÞÀº Æ¼ÄÏÀ» ¸ÞÀÎ ¼­¹ö¿¡ ¿¡ÄÚÇÕ´Ï´Ù.
-9. ¸ÞÀÎ ¼­¹ö°¡ Å¬¶óÀÌ¾ðÆ®·ÎºÎÅÍ ¹ÞÀº Æ¼ÄÏÀÌ ´ë±â¿­ ¼­¹ö·ÎºÎÅÍ ¹ÞÀº Æ¼ÄÏ°ú ÀÏÄ¡ÇÏ¸é, Å¬¶óÀÌ¾ðÆ®ÀÇ Á¢¼ÓÀ» À¯ÁöÇÕ´Ï´Ù.
-9-1. ÀÏÄ¡ÇÏÁö ¾ÊÀ¸¸é ¸ÞÀÎ ¼­¹ö°¡ Å¬¶óÀÌ¾ðÆ®ÀÇ Á¢¼ÓÀ» ²÷½À´Ï´Ù.
 
-#½ºÆ®·¹½º Å×½ºÆ®   
-20³â 3¿ù 15ÀÏ ÇöÀç, Å¬¶óÀÌ¾ðÆ® 100°³±îÁö´Â Åë°úÇß½À´Ï´Ù.
+½É»ç¿ø²²¼­ ±Ã±ÝÇÏ½Ç ¸¸ÇÑ °ÍµéÀ» Á¤¸®Çß½À´Ï´Ù.
+---------------------------------------------
+**#¼º´É ¿ì¼±** **#°¡µ¶¼º** **#¹®Ã¼**   
+º¸¾ÈÀ» ÃÖ¿ì¼±À¸·Î, ¼º´ÉÀ» ¿ì¼±À¸·Î, °¡µ¶¼ºÀ» ±× ´ÙÀ½À¸·Î ÄÚµùÇß½À´Ï´Ù.   
+Çù¾÷ÇÏ´Â µ¿·á´Â ¹°·Ð ¾ðÁ¨°¡ ´Ù½Ã ÀÐÀ» ÀÛ¼ºÀÚ¸¦ ±«·ÓÈ÷Áö ¾ÊÀ¸·Á¸é, ÄÚµå¸¦ Àû°í ÀÐ±â ¾î·ÆÁö ¾ÊÀºÁö Åð°íÇØ¾ß ÇÕ´Ï´Ù.
 
-#¼ÒÄÏ ÀçÈ°¿ë #DisconnectEx
-Á¤»óÀûÀ¸·Î Á¢¼ÓÀ» ²÷Àº ¼ÒÄÏÀº ::DisconnectEx(...)·Î ÀçÈ°¿ëÇß½À´Ï´Ù.  ¼ÒÄÏÀ» »õ°ÍÀ¸·Î ±³Ã¼ÇÏ´Â ºñ¿ëÀÌ ºñ½Î±â ¶§¹®ÀÌ¾ú½À´Ï´Ù.  º¸³»±â³ª ¹Þ±â°¡ ½ÇÆÐÇÑ ¼ÒÄÏÀº °ÅÀÇ ¸ðµÎ ÀçÈ°¿ëµµ ½ÇÆÐÇß±â ¶§¹®¿¡ ÀÌ ¼ÒÄÏÀº »õ°ÍÀ¸·Î ±³Ã¼ÇÏµµ·Ï Çß½À´Ï´Ù.  ÀÌ ¶§ °©ÀÛ½º·¯¿î ±³Ã¼·Î »ý±ä ¹®Á¦µéÀ» ¸¶¹«¸®ÇÏ°í³ª¼­ ´Ù½Ã ::Acceptex(...)¸¦ °É¾îµÎ¾ú½À´Ï´Ù.
+**#Çì´õ ÆÄÀÏÀ» Æ÷ÇÔ*include*ÇÏ´Â ¼ø¼­** **#°£Á¢ Æ÷ÇÔ ¾øÀ½**   
+ÀÇÁ¸¿¡ µû¶ó C, Ç¥ÁØ*standard*, Á¦ 3ÀÚ*3rd party*, Á÷Á¢ ¸¸µç ¶óÀÌºê·¯¸®, ³ª¸ÓÁö Çì´õ ÆÄÀÏ ¼øÀ¸·Î Æ÷ÇÔÇß½À´Ï´Ù.   
+¿¹¿Ü·Î, WIN32_LEAN_AND_MEANÀ» Á¤ÀÇÇÑ ´ÙÀ½ Æ÷ÇÔÇÏ¸é ÄÄÆÄÀÏ ¿À·ù°¡ ¹ß»ýÇÏ´Â Çì´õ ÆÄÀÏÀº °¡Àå ¸ÕÀú Æ÷ÇÔÇß½À´Ï´Ù.   
+¸ÕÀú Æ÷ÇÔÇÑ Çì´õ ÆÄÀÏ¿¡ ÀÌ¹Ì Æ÷ÇÔµÈ Çì´õ ÆÄÀÏÀÌ¶óµµ »ý·«ÇÏÁö ¾Ê°í ¸í½ÃÇØ Æ÷ÇÔÇß½À´Ï´Ù.   
+( °¢ ÇÁ·ÎÁ§Æ®ÀÇ pch.h µî )
 
-#IOCP #Overlapped I/O #Completion Routine
-¼­¹öÀÇ ¼ÒÄÏ ÀÔÃâ·Â¿¡ IOCP¸¦ ½è½À´Ï´Ù.  °ÔÀÓ ·ÎÁ÷Àº ¸ðµÎ ¸ÞÀÎ ½º·¹µå¿¡¼­ ¼öÇàÅä·Ï Çß½À´Ï´Ù.
+**#Àü¹æ ¼±¾ð*forward declaration***   
+Çì´õ ÆÄÀÏÀ» °¡´ÉÇÑ ÇÑ ¼Ò½º ÆÄÀÏ¿¡¸¸ Æ÷ÇÔÇß½À´Ï´Ù.   
+Çì´õ ÆÄÀÏ¿¡ ¼±¾ðµÈ Æ÷ÀÎÅÍ¿Í ·¹ÆÛ·±½º¸¦ Å¸ÀÔ Ã¼Å©ÇØ¾ß ÇÏ´õ¶óµµ, Çì´õ ÆÄÀÏ¿¡ ÀÌ Å¸ÀÔÀÇ Çì´õ ÆÄÀÏÀ» Æ÷ÇÔÇÏÁö ¾Ê°í Å¸ÀÔÀ» Àü¹æ ¼±¾ðÇÏ¿© ¼øÈ¯ ÂüÁ¶¸¦ ¿¹¹æÇß½À´Ï´Ù.   
+( dlls/Game/ui/NextTetriminoPanel.h¿Í PlayView.h, dlls/Game/scene/online/ ¾Æ·¡ Çì´õ ÆÄÀÏµé, exes/Server/Room.h )
 
-#¶÷´Ù Ç¥Çö½Ä
-ÇÔ¼öÀÇ ÀÎ¼öparameter°¡ ¸¹Àº °Íµµ ½È°í Áö¿ª º¯¼öµéÀ» Àü¿ªÀ¸·Î ¿Å±â±âµµ ½È¾úÀ» ¶§¿Í º°µµÀÇ ½º·¹µå¿¡¼­ µ¹¸± ÇÔ¼ö°¡ ÀÏÈ¸¿ëÀÏ ¶§¸¸, Ä¸ÃÄ¸¦ ¸í½ÃÇÑ ¶÷´Ù Ç¥Çö½ÄÀ» ½è½À´Ï´Ù.
-( exes/QueueServer.cpp:269, Server.exe:122, dlls/Game/scene/online/Waiting.cpp:424 )
+**#»ó¼ö¸¦ ¸ð¾ÆµÐ Çì´õ ÆÄÀÏ** **#¸ðµâÀº ¾ÆÁ÷**   
+°øÀ¯ÇÏ´Â »ó¼ö¸¦ ¸ð¾ÆµÐ Çì´õ ÆÄÀÏÀº ÀÖ½À´Ï´Ù¸¸, °øÀ¯ÇÏÁö ¾Ê´Â »ó¼ö´Â °¢ ¼Ò½º ÆÄÀÏ¿¡ ÀÖ½À´Ï´Ù.   
+Çì´õ ÆÄÀÏ¿¡¼­ ¾î¶² »ó¼ö¸¦ ¼öÁ¤ÇÏ¸é ÀÌ »ó¼ö¸¦ ¾²Áö ¾Ê´Â ¼Ò½º ÆÄÀÏ¸¶Àú ÀÌ Çì´õ ÆÄÀÏÀ» Æ÷ÇÔÇÑ´Ù´Â °Í¸¸À¸·Î ´Ù½Ã ºôµåÇÏ±â ¶§¹®¿¡, ´Ü¼øÈ÷ »ó¼ö¶ó°í ÇÑ Çì´õ ÆÄÀÏ¿¡ ¸ð¾ÆµÎ¾î¼­´Â ¾È µË´Ï´Ù.   
+( staticLibs/GameLib/Common.h )
 
-#¹üÀ§ ±â¹Ý for ¹Ýº¹¹®
-¹üÀ§ ±â¹Ýrange-based for ¹Ýº¹¹®ÀÌ °¡Àå »¡¶ó ¼±È£Çß½À´Ï´Ù.  ¸¶Âù°¡Áö·Î ¹Ýº¹ÀÚ¸¦ ¾²´Â C ½ºÅ¸ÀÏ ¹Ýº¹¹®Àº ¿ÀÈ÷·Á °¡Àå ´À·Á, ¹Ýº¹ÀÚ°¡ ÇÊ¿äÇÏÁö ¾ÊÀ¸¸é ¾²Áö ¾Ê¾Ò½À´Ï´Ù.  <algorithm>ÀÇ std::for_each(...)´Â C ½ºÅ¸ÀÏ ¹Ýº¹¹®º¸´Ù ´À·Á ¾²Áö ¾Ê¾Ò½À´Ï´Ù.
+**#ÀÎÅÍÆäÀÌ½º** **#Ãß»ó Å¬·¡½º** **#¼ø¼ö °¡»ó ÇÔ¼ö**   
+±â¹Ý*base* Å¬·¡½º, Á÷°èÁ¸¼Ó(?)*parent* Å¬·¡½º, ¼ø¼ö °¡»ó ÇÔ¼ö¸¸ ¼±¾ðµÈ Ãß»ó Å¬·¡½º¶ó´Â ÀÌ¸íµé ´ë½Å ÀÚ¹ÙÀÇ ÀÎÅÍÆäÀÌ½º¶ó´Â ÀÌ¸§À» Â÷¿ëÇÏ°Ú½À´Ï´Ù.  ÀÌ ·¹ÆÛÁöÅä¸®¿¡¼­ ´Ù¸¥ ÀÇ¹ÌÀÇ 'ÀÎÅÍÆäÀÌ½º'´Â ¾²Áö ¾Ê½À´Ï´Ù.   
+ÀÎÅÍÆäÀÌ½º ÀÌ¸§ ¾Õ¿¡ ¾ËÆÄºª ´ë¹®ÀÚ I¸¦ ºÙ¿© ´Ù¸¥ Å¬·¡½º¿Í ±¸ºÐÇÕ´Ï´Ù.  ÀÌ·Î½á »ó¼Ó°ú °°Àº ¹®¹ýÀÌÁö¸¸ ÁßÀÇÀûÀÌÁö ¾Ê°Ô µÇ°í, Å¬·¡½º °èÃþÀ» ½±°Ô ÆÄ¾ÇÇÒ ¼ö ÀÖÀ¸¸ç, ½Ç¼ö·Î ÀÎ½ºÅÏ½º¸¦ ¸¸µéÁö ¾Êµµ·Ï µ½½À´Ï´Ù.   
+¶Ç, ÀÎÅÍÆäÀÌ½º »ý¼ºÀÚÀÇ Á¢±Ù ÇÑÁ¤ÀÚ¸¦ protected·Î µÎ¾î ÀÎ½ºÅÏ½º¸¦ ¸¸µå´Â ½Ç¼ö¸¦ Á¶±ÝÀÌ¶óµµ ¿¹¹æÇß½À´Ï´Ù.
 
-#OpenMP
-OpenMP°¡ ´õ ´À·Á °³¹ß µµÁß ¾ø¾Ý½À´Ï´Ù.
+**#»ó¼Ó**   
+ÀÎÅÍÆäÀÌ½º ±¸Çö*implement*¿¡¸¸ »ó¼ÓÀ» ½è½À´Ï´Ù.   
+´ÙÀ½°ú °°Àº ÀÌÀ¯·Î »ó¼ÓÀº Áö¾çÇØ¾ß ÇÕ´Ï´Ù.   
+1. ¿¬ÇÊ¿¡µµ º¼Ææ¿¡µµ ½ÉÀÌ ÀÖ½À´Ï´Ù.  ±×·¡¼­ ½ÉÀ» ¼Ó¼ºÀ¸·Î °®´Â Ææ Å¬·¡½º¸¦ µÎ°í ¿¬ÇÊ Å¬·¡½º¿Í º¼Ææ Å¬·¡½º°¡ Ææ Å¬·¡½º¸¦ »ó¼ÓÇß½À´Ï´Ù.  ½Ã°£ÀÌ Áö³ª ½ÉÀÌ ¾ø´Â ½ºÅ¸ÀÏ·¯½º Ææµµ ´Ù·ç°Ô µÇ¾ú½À´Ï´Ù.  ½ºÅ¸ÀÏ·¯½º Ææ Å¬·¡½º°¡ ÇÊ¿ä¾ø´Â ½É ¼Ó¼º±îÁö °¡Áö¸ç Ææ Å¬·¡½º¸¦ »ó¼ÓÇÏ¸é, ¸Þ¸ð¸®°¡ ³¶ºñµÇ´Â °ÍÀº ¹°·Ð ¿À¹ö¶óÀÌµåÇÏ´Â ÁÙµµ ¸ð¸£°í °¡»ó ½ÉÀÇ »ÏÁ·ÇÔÀ» ¹Ù²Ù´Â ÇÔ¼ö¸¦ ¼±¾ðÇÒ ¼öµµ ÀÖ½À´Ï´Ù.  ¿À¹ö¶óÀÌµå µÈ ÇÔ¼ö ½Ã±×´ÏÃ³¿¡ virtual Å°¿öµå°¡ ºÙÁö ¾Ê¾Ò´Ù¸é ¹®Á¦°¡ »ý±é´Ï´Ù.
+2. ¿¬ÇÊ°ú º¼ÆæÀº Èä±âÀÌ±âµµ ÇÕ´Ï´Ù.  ±×·¡¼­ µ¥¹ÌÁö¸¦ ¼Ó¼ºÀ¸·Î °®´Â Èä±â Å¬·¡½º¸¦ »ó¼ÓÇÏ·Á°í ÇÕ´Ï´Ù.  ÀÏ°üµÈ °áÁ¤ÀÌÁö¸¸ ´ÙÁß »ó¼ÓÀº À§ÇèÇÕ´Ï´Ù.  »ö¿¬ÇÊÃ³·³ Èä±â°¡ µÉ ¼ö ¾ø´Â Ææµµ ÀÖÀ¸´Ï Ææ Å¬·¡½º°¡ Èä±â¸¦ »ó¼ÓÇÒ ¼öµµ ¾ø½À´Ï´Ù.
+3. ÀÌ¹ø¿£ ¿À·ÎÁö ÄÚµå ¹Ýº¹À» ÇÇÇÏ·Á°í »ó¼ÓÀ» ½è½À´Ï´Ù.  °ð 1ÀÇ ¹®Á¦¿¡ Á÷¸éÇÕ´Ï´Ù.
+4. ±âÁ¸ ÄÚµå¸¦ °ÇµéÁö ¾Ê°í À¯Áöº¸¼öÇÏ·Á°í »ó¼ÓÀ» ½è½À´Ï´Ù.  1ÀÇ ¹®Á¦°¡ »ý±â°í ¿ÀÈ÷·Á ¾µ¸ð¾ø´Â ÄÚµå°¡ Áõ½ÄÇß½À´Ï´Ù.
 
-#¹é·Î±× #::AcceptEx(...)
-¹é·Î±×°¡ ¼ö¿ëÇÒ ¼ö ÀÖ´Â Á¢¼Ó ¼ö¸¸Å­ ::AcceptEx(...)¸¦ °É¾îµÎ¾ú½À´Ï´Ù.
+**#¾À*scene* °èÃþ** **#Ãß»óÈ­** **#À§ÀÓ*delegation***
+<img src="https://user-images.githubusercontent.com/43042411/76703130-86641680-6712-11ea-82f0-3ba37f74c280.png"></img>
+Å¬·¡½º ::scene::inPlay::InPlay¿Í ::scene::online::OnlineÀº ÀÎÅÍÆäÀÌ½º ::scene::ISceneÀÇ ±¸ÇöÀÌÁö¸¸ ¾ÀÀÌ ¾Æ´Õ´Ï´Ù.  ±»ÀÌ ¾À ¸Å´ÏÀú±îÁö ³ª¿Í Ã³¸®ÇÒ ÇÊ¿ä°¡ ¾ø´Â °ÍµéÀ» Ãß»óÈ­ÇÏ±â À§ÇÑ °£ÀÌ ¾À ¸Å´ÏÀúÀÔ´Ï´Ù.  Ãß»óÈ­´Â ÄÚµå¸¦ ÀÐ±â ½±°í, ºÐ¾÷ÇÏ±âµµ ½±°Ô ÇØÁÝ´Ï´Ù.   
+±×¸®°í ÇØÁ¦ÇÏÁö ¾Ê°í ´ÙÀ½ ¾ÀÀ¸·Î ³Ñ±â°í ½ÍÀº ÀÎ½ºÅÏ½º¸¦ ´Ù·ç±â ½±½À´Ï´Ù.   
+( dlls/Game/scene/inPlay/Ready.h, Playing.h, GameOver.hÀÇ »ý¼ºÀÚ¿¡ ³Ñ±ä sf::Drawable ·¹ÆÛ·±½º )   
+¶ÇÇÑ, Å¬·¡½º ::scene::online::OnlineÀº Åë½ÅÀ» À§ÇÑ Àü¿ªº¯¼ö¿¡ Á¢±ÙÇÏ´Â À¯ÀÏÇÑ Åë·Î·Î¼­ ÇÏÀ§ ¾Àµé¿¡ À§ÀÓµË´Ï´Ù.   
+( dlls/Game/scene/online/ ¾Æ·¡ Çì´õ ÆÄÀÏµé )
 
-#Á¢¼Ó #Conditional Accept
-Å¬¶óÀÌ¾ðÆ®°¡ ±¦È÷ ¼­¹ö¿¡ ºÎÇÏ¸¦ ÁÖÁö ¸øÇÏµµ·Ï ¼ÒÄÏ ¿É¼ÇÀ¸·Î conditional accept¸¦ ¼³Á¤Çß½À´Ï´Ù.
-°°Àº ÀÌÀ¯·Î Å¬¶óÀÌ¾ðÆ®°¡ º¯Á¶, ¹öÀü È®ÀÎÀ» À§ÇÑ ÇØ½Ã °ªÀ» ÀÏÁ¤ ½Ã°£ ³»¿¡ º¸³»Áö ¾ÊÀ¸¸é ´ë±â¿­ ¼­¹ö°¡ ¿¬°áÀ» ²÷µµ·Ï Çß½À´Ï´Ù.
+**#ÀÇÁ¸dependency °ü°è** **#Aggregation °ü°è**   
+ÇÔ¼öÀÇ ÀÎ¼ö°¡ ¸¹Áö ¾Ê´Ù¸é, ¾î¶² ·ÎÄÃ º¯¼ö°¡ ¾²ÀÌ´Â °÷ÀÌ ¾îµòÁö ½±°Ô º¸ÀÌ´Â ÀÇÁ¸ °ü°è¸¦ ¼±È£ÇÕ´Ï´Ù.   
+±×·¯³ª 
+ ¾î¶² ÇÔ¼ö´Â ÀÎ¼ö¸¦ Ãß°¡ÇÏ·Á´Ï ¿À¹ö¶óÀÌµåÇÏ´Â ¼ø¼ö °¡»ó ÇÔ¼ö¿Í ±× ±¸Çö±îÁö ¹Ù²Ù¾î¾ß Çß½À´Ï´Ù.  ±×·¡¼­ ÀÌ·¸°Ô ÇÏÁö ¾Ê°í »ý¼ºÀÚ¸¦ ÅëÇØ ·¹ÆÛ·±½º¸¦ Áã¾îÁÖ¾ú½À´Ï´Ù.  Aggregation °ü°è´Â ÀÌ·¸°Ô »ý°å½À´Ï´Ù.  
+( dlls/Game/scene/inPlay/InPlay.h:27, Playing.h:52, 
 
-#¹öÆÛ ¾²Áö ¾Ê±â #¼ÒÄÏ ¿É¼Ç
-´ë±â¿­ ¼­¹ö ¸®½º³Ê¿Í ¸®½º³Ê°¡ acceptÇÑ ¼ÒÄÏµéÀÇ O/S»ó ¹öÆÛ¸¦ ¾ø¾Ö º¹»çÇÏÁö ¾Êµµ·Ï Çß½À´Ï´Ù.  ¹öÆÛ°¡ ÇÊ¿äÇÒ ¸¸Å­ ¹«°Å¿î ÀÛ¾÷À» ÇÏÁö ¾Ê±â ¶§¹®ÀÔ´Ï´Ù.  ´ë½Å Å¬¶óÀÌ¾ðÆ®°¡ º¸³»±â/¹Þ±â ¹öÆÛ¸¦ °®½À´Ï´Ù.
+#RTTI
+¼º´É¿¡ °¡½ÃÀûÀÎ ¿µÇâÀÌ ¾ø´Â °æ¿ì¿¡ ÇÑÇØ¼­¸¸ RTTI¸¦ ½è½À´Ï´Ù.
+( dlls/Game/scene/Playing.cpp:952, dlls/Game/scene/IScene.hÀÇ ¼ø¼ö °¡»ó ÇÔ¼ö currentScene() )
 
-#ÀÎ½ºÅÏ½º º¹»ç ÁÙÀÌ±â
-try_emplace(...)¿Í emplace(std::piecewise_construct, std::forward_as_tuple(...)...)¸¦ ½á¼­ ÀÎ½ºÅÏ½º¸¦ ºÒÇÊ¿äÇÏ°Ô º¹»çÇÏÁö ¾Êµµ·Ï Çß½À´Ï´Ù.  std::vector::erase(...)°¡ º¹»ç »ý¼ºÀÚ¸¦ ¿ä±¸ÇÏ¹Ç·Î, ÀÌ °æ¿ì ¿Ü¿£ ¸ðµÎ º¹»ç/ÀÌµ¿ »ý¼ºÀÚ¸¦ ¸í½ÃÀûÀ¸·Î ¾ø¾Ý½À´Ï´Ù.  
+#ÀÎ½ºÅÏ½º Ä«¿îÆÃ
+ÀÏºÎ Å¬·¡½ºÀÇ ÃÑ ÀÎ½ºÅÏ½º ¼ö¸¦ Á¦ÇÑÇß½À´Ï´Ù.
 
-#¼±Çü´ë¼öÇÐ #º¤ÅÍ #¼±Çü º¸°£
-UI ¾Ö´Ï¸ÞÀÌ¼Ç¿¡ 2Â÷¿ø º¤ÅÍ ¿¬»ê°ú ¼±Çü º¸°£ÀÌ ¾²¿´½À´Ï´Ù.
-( dlls/Game/scene/online/InLobby.cpp:956, 1384 )
+#Àü¿ª º¯¼ö
+Á¤ÀÇµÇ´Â ¼ø¼­°¡ µüÈ÷ Á¤ÇØÁ®ÀÖÁö ¾Ê°í, ÀÎÀÚ·Î ³Ñ±âÁö ¾Ê¾Æ ¾ðÁ¦ ¾î´À ¼­ºê·çÆ¾¿¡¼­ Á¢±ÙÇÏ´ÂÁö ÇÑ´«¿¡ º¸ÀÌÁö ¾Ê¾Æ Àü¿ª º¯¼ö¸¦ ¼Ò±ØÀûÀ¸·Î ¾²°í ÇÑ °÷¿¡ ¸ð¾ÆµÎ¾ú½À´Ï´Ù.
+À¯¿¬ÇÏ°Ô ¾²±â À§ÇØ ½Ì±ÛÅÏ ÆÐÅÏ ´ë½Å ¼­ºñ½º ·ÎÄÉÀÌÅÍ ÆÐÅÏÀ» ½è½À´Ï´Ù.
+( staticLibs/Shared Headers Only/IServiceLocator.h, exes/Engine/ServiceLocator.h, dlls/Game/ServiceLocatorMirror.h )
 
-#º¯Á¶ Å¬¶óÀÌ¾ðÆ® °¨Áö #ÇØ½Ã salt #Å° ½ºÆ®·¹Äª
-Å¬¶óÀÌ¾ðÆ®°¡ º¯Á¶µÇÁø ¾Ê¾Ò´ÂÁö, ¹öÀüÀÌ ¼­¹öµé°ú °°ÀºÁö¸¦ ´ë±â¿­ ¼­¹ö°¡ È®ÀÎÅä·Ï Çß½À´Ï´Ù.  ºñ´ëÄª Å°¸¦ ¾²Áö ¾Ê°í, ÇöÀç ½Ã°£°ú salt¿Í Å° ½ºÆ®·¹ÄªÀ¸·Î ¾òÀº ÇØ½Ã °ªÀ» ½è½À´Ï´Ù.
-
-#NRVO
-RVOÀ» À§ÇØ R-Value³ª Named Return Value Áß ÇÏ³ª¸¸ ½èÀ» »Ó ¼¯¾î¾²Áö ¾Ê¾Ò½À´Ï´Ù.
-
-#ºí·ÎÅ·Blocking ¼ÒÄÏ #À©¼Ó
-Å¬¶óÀÌ¾ðÆ®¿¡´Â ºí·ÎÅ· ¼ÒÄÏÀ» ½è½À´Ï´Ù.  ³íºí·ÎÅ· ¼ÒÄÏÀ» ¾²Áö ¾ÊÀº ÀÌÀ¯´Â ¸ÖÆ¼½º·¹µå ÇÁ·Î±×·¡¹ÖÀ» ¿¬½ÀÇÏ°í ½Í¾ú±â ¶§¹®ÀÔ´Ï´Ù.
-°³¹ß µµÁß, ºí·ÎÅ· ¼ÒÄÏÀ» ¾²´Â ::send(...) ÇÔ¼ö¸¦ overlappedµÈ ::WSASend(...) ÇÔ¼ö¿Í completion routineÀ¸·Î ±³Ã¼Çß½À´Ï´Ù.  ½º·¹µå¸¦ ÀçÈ°¿ëÇÏ¸ç ::send(...) ÇÔ¼ö¸¦ ¾²´Ï ¸ÖÆ¼½º·¹µå ÇÁ·Î±×·¡¹Ö Æ¯À¯ÀÇ ¹®Á¦µéÀÌ ¹ß»ýÇß±â ¶§¹®ÀÔ´Ï´Ù.  ±×·¸´Ù°í ::send(...) ÇÔ¼ö¸¦ ¾µ ¶§¸¶´Ù ½º·¹µå¸¦ »õ·Î ¸¸µé¾î ÁÙ ¼ö´Â ¾ø¾ú½À´Ï´Ù.  ½º·¹µå¸¦ ¸¸µå´Â °Í¸¸ ÇØµµ ºñ¿ëÀÌ Å©°í, ¸ÕÀú ¸¸µç ½º·¹µå°¡ ¸ÕÀú µ·´Ù´Â º¸ÀåÀÌ ¾ø±â ¶§¹®ÀÌ¾ú½À´Ï´Ù.  ¹Þ´Â µ¥¿¡´Â ¿©ÀüÈ÷ º°µµÀÇ ½º·¹µå¸¦ ÀçÈ°¿ëÇÏ¸ç ºí·ÎÅ· ¼ÒÄÏ°ú ::recv(...) ÇÔ¼ö¸¦ ½è½À´Ï´Ù.
-Å¸ÀÓ¾Æ¿ôÀ» ÁÖ¾î ½º·¹µå¸¦ joinÇÑ ´ÙÀ½ ¼ÒÄÏÀ» ´Ý¾Ò½À´Ï´Ù.  ¹Ý´ë ¼ø¼­·Î ¼ÒÄÏÀ» ´Ý¾Æ ºí·ÎÅ·À» Ç¬ ´ÙÀ½ ½º·¹µå¸¦ joinÇÒ ¼öµµ ÀÖ¾úÁö¸¸, ´õ gracefulÇÏ°Ô Á¾·áÇß½À´Ï´Ù.
+#°¡½Ã¼º #Á¢±Ù ÇÑÁ¤ÀÚ
+ÄÚµå¸¦ Á¶±ÝÀÌ¶óµµ ´õ ÀÐ±â ½±µµ·Ï Å¬·¡½ºµç ±¸Á¶Ã¼µç »ó¼ÓÀÌµç °¡½Ã¼ºÀ» ¸í½ÃÇß½À´Ï´Ù.
+ÀÎÅÍÆäÀÌ½ºÀÇ »ý¼ºÀÚ´Â protected·Î °¡½Ã¼ºÀ» Á¦ÇÑÇÏ¿© ÀÎ½ºÅÏ½º¸¦ ¸í½ÃÀûÀ¸·Î ¸¸µéÁö ¸øÇÏ°í ±¸Ã¼concrete Å¬·¡½º¿¡¼­ ¾Ï½ÃÀûÀ¸·Î¸¸ ¸¸µé ¼ö ÀÖµµ·Ï Çß½À´Ï´Ù.
 
 #ÇÔ¼ö¸¦ Àß¸ø »ç¿ëÇÒ À§Çè Â÷´Ü
 ¿¹¸¦ µé¾î, ¼­¹ö·ÎºÎÅÍ ¹ÞÀº ½ºÅ×ÀÌÁö¸¦ Å¬¶óÀÌ¾ðÆ®¿¡ Àû¿ëÇÏ¸é¼­ ÇÔ²² ÃëÇØ¾ßÇÒ ºÎ´ë »çÇ×µéÀ» ¹­¾î ³õÀº ÇÔ¼ö 1ÀÌ ÀÖ½À´Ï´Ù.  ±×·±µ¥ ½ºÅ×ÀÌÁöÀÇ ·¹ÆÛ·±½º¸¦ ³Ñ±â´Â ÇÔ¼ö 2±îÁö ÀÖÀ¸¸é, ¹Ì·¡ÀÇ ÀÚ½ÅÀ» Æ÷ÇÔÇÑ ´Ù¸¥ »ç¿ëÀÚ°¡ ÇÔ¼ö 1À» ¾²Áö ¾Ê°í ÇÔ¼ö 2¸¦ ¾µ À§ÇèÀÌ ÀÖ½À´Ï´Ù.  ÀÌ·± °æ¿ì´Â ¾ø¾î¾ß ÇÕ´Ï´Ù.
@@ -117,23 +113,58 @@ RVOÀ» À§ÇØ R-Value³ª Named Return Value Áß ÇÏ³ª¸¸ ½èÀ» »Ó ¼¯¾î¾²Áö ¾Ê¾Ò½À´Ï´Ù.
 #ÇÔ¼ö ¼±¾ð/Á¤ÀÇ
 ÇÑ ·çÇÁ ¾È¿¡ 2¹ø ÀÌ»ó È£ÃâÇÏ°Å³ª È¤Àº Àº´ÐµÈ Á¤º¸¿¡ Ä¸½¶È­µÈ ÇÔ¼ö¸¸ ¼±¾ð/Á¤ÀÇµÆ½À´Ï´Ù.  ´ÜÁö Ç¥Çö½ÄexpressionµéÀ» ¹­¾îµÐ ÇÔ¼ö´Â ¾ø½À´Ï´Ù.  ÇÔ¼ö´Â È£Ãâ ºñ¿ëÀÌ ÀÛÁö ¾Ê°í, ÀÎ¶óÀÎ ÇÔ¼ö¶óµµ Çì´õ ÆÄÀÏÀÌ ´õ·¯¿öÁý´Ï´Ù.
 
-#Àü¹æ ¼±¾ðforward declaration
-.h ÆÄÀÏ¿¡¼­ ¿ä±¸ÇÏÁö ¾Ê´Â ÀÌ»ó Å¬·¡½º¸¦ Àü¹æ ¼±¾ðÇÏ°í .cpp ÆÄÀÏ¿¡ Æ÷ÇÔÇÏ¿© ¼øÈ¯ Æ÷ÇÔÀ¸·Î ÀÎÇÑ ºôµå ¿¡·¯¸¦ ¿¹¹æÇß½À´Ï´Ù.
-( dlls/Game/ui/NextTetriminoPanel.h, PlayView.h, dlls/Game/scene/online/ ÀÌÇÏ Çì´õ ÆÄÀÏµé )
+#¸â¹ö º¯¼öÀÇ ¼±¾ð ¼ø¼­ #ÆÐµù
+¸â¹ö º¯¼öÀÇ Å©±â°¡ ÀÛÀº °ÍºÎÅÍ À§¿¡¼­ ¾Æ·¡·Î ¼±¾ðÇÏ¿© ÆÐµùÀ» ÁÙ¿´½À´Ï´Ù.
+ÄÄÆÄÀÏ·¯°¡ ÃÖÀûÈ­ÇÒ ¼ö ÀÖµµ·Ï ÃÊ±âÈ­ ¸®½ºÆ®»ó ¼ø¼­ ¿ª½Ã ¼±¾ð ¼ø¼­¿Í ¸ÂÃß¾ú½À´Ï´Ù.
 
-#¼­¹ö¿Í Å¬¶óÀÌ¾ðÆ®°¡ °øÀ¯ÇÏ´Â ¸ðµ¨ ¾Ö¼Â
-¸ðµ¨ ¾Ö¼Â Tetrimino¿Í Stage´Â Å¬¶óÀÌ¾ðÆ®¿Í ¼­¹ö ¸ðµÎ¿¡¼­ ¾²ÀÔ´Ï´Ù.  ±×·±µ¥ ¼­¹ö¿¡¼­´Â ·»´õ¿¡ ÇÊ¿äÇÑ ºÎºÐÀÌ ÇÊ¿äÇÏÁö ¾Ê¾Æ ¶óÀÌºê·¯¸®·Î °øÀ¯ÇÏÁö ¾Ê°í µû·Î µÎ¾ú½À´Ï´Ù.  ±×·¸°Ô ÇØº¸´Ï °°Àº ¼öÁ¤À» µÎ ¹ø ¾¿ ¹Ýº¹ÇØ¾ß Çß°í µû·Î ¿­¾î µð¹ö±×ÇØ¾ß Çß½À´Ï´Ù.  ±×·¡¼­ Áö±ÝÀº ¶óÀÌºê·¯¸®·Î °øÀ¯ÇÏ´Â °ÍÀÌ ´õ ³´´Ù°í »ý°¢ÇÕ´Ï´Ù.
+#¸â¹ö º¯¼ö ÀÌ¸§
+³Î¸® ¾²ÀÌ´Â ÄÚµù ½ºÅÄ´Ùµå´ë·Î ¾ËÆÄºª ¼Ò¹®ÀÚ mÀ» ¾Õ¿¡ ºÙ¿´½À´Ï´Ù.  ÀÌ´Â IDE¿¡ ÀÇÁ¸ÇÏÁö ¾Ê°í ¸â¹ö º¯¼ö¸¦ ´Ù¸¥ º¯¼ö·ÎºÎÅÍ ½±°Ô ±¸ºÐÇÒ ¼ö ÀÖ°Ô ÇØÁÝ´Ï´Ù.
+Aggregation °ü°è¿¡ ÀÖ°Å³ª °°Àº ¿¬»êÀ» ¹Ýº¹ÇÏÁö ¾Êµµ·Ï ¸â¹ö ÇÔ¼öÀÇ ¹Ù±ù ½ºÄÚÇÁ·Î »©³» ¼ö¸íÀ» ´Ã¸° °Í¿¡ ºÒ°úÇÑ º¯¼ö¿£ ÀÌ¸§ µÚ¿¡ Æ¯¼ö¹®ÀÚ _¸¦ ºÙ¿´½À´Ï´Ù.  ÀÌ·± º¯¼ö´Â ÀÎ½ºÅÏ½ºÀÇ »óÅÂÀÎ ¸â¹ö º¯¼ö¿Í ±¸º°ÇØ¾ß ÄÚµå¸¦ ÀÐÀ» ¶§ ¹æÇØµÇÁö ¾Ê±â ¶§¹®ÀÔ´Ï´Ù.
+¸í»ç±¸´Â ÈÄÄ¡ Çü¿ëÇß½À´Ï´Ù.  ÀÌ¸§ÀÌ ±â¾ï³ªÁö ¾Ê¾Æµµ ÀÎÅÚ¸®¼¾½º·Î ½±°Ô Ã£À» ¼ö ÀÖ¾ú±â ¶§¹®ÀÔ´Ï´Ù.  ¿¹¸¦ µé¸é, mSoftDropIntervalFrameCount¿Í mCoolFrameCount°¡ ¾Æ´Ï¶ó mFrameCountSoftDropInterval°ú mFrameCountCoolÀ» ½è½À´Ï´Ù.
 
-#uniform ÃÊ±âÈ­
-uniform ÃÊ±âÈ­´Â std::initializer_list¸¦ ÀÎÀÚ·Î ¹Þ´Â »ý¼ºÀÚ°¡ ÀÇµµ¿Í ´Ù¸¦ À§ÇèÀÌ ÀÖ±â ¶§¹®¿¡ ¾²Áö ¾Ê¾Ò½À´Ï´Ù.
-( dlls/Game/model/Tetrimino.cpp:8 )
+#ÃÊ±âÈ­ ¸®½ºÆ®
+¿ÀÀÛµ¿ ¹æÁö °â »ý¼ºÀÚ¿¡¼­ ÃÊ±âÈ­ÇÑ´Ù¸é ÃÊ±âÈ­ ¸®½ºÆ®·Î ¼º´ÉÀ» Ã¬±â´Â °ÍÀÌ ¸ÂÁö¸¸, init(...) µî º°µµÀÇ ÇÔ¼ö·Î ÃÊ±âÈ­ÇÏ´Â °æ¿ì¿¡µµ ±×·± Áö¿¡ ´ëÇØ¼± ÀÇ¹®ÀÔ´Ï´Ù.
 
-#enum class
-enum Çü°ú ´Þ¸® ½ºÄÚÇÁ¸¦ ¸í½ÃÇØ¾ß ÇØ¼­ ´õ ¾ÈÀüÇÏ°Ô ÄÚµå¸¦ ÀÛ¼ºÇÒ ¼ö ÀÖ±â ¶§¹®¿¡ enum class ÇüÀ» ½è½À´Ï´Ù.
+#Unnamed scope
+Unnamed scope·Î Áö¿ª º¯¼öÀÇ ¼ö¸íÀ» ÇÊ¿äÇÑ ¸¸Å­¸¸ µÎ¾î ¿¡·¯ À§ÇèÀ» ÁÙ¿´½À´Ï´Ù.
+
+#´ÊÀºlazy ·ÎÄÃ º¯¼ö ¼±¾ð
+·ÎÄÃ º¯¼ö¸¦ ¼­ºê ·çÆ¾ÀÇ ¸Ó¸®¿¡ ¸ð¾Æ µÎÁö ¾Ê¾Ò½À´Ï´Ù.  º¯¼ö¸¦ ¾²Áö ¾Ê°í ºüÁ®³ª°¥ °æ¿ì º¯¼ö¸¦ ¸¸µå´Â µ¥ µç ½ÎÀÌÅ¬¸¸ ³¶ºñÇÑ °ÍÀÌ µÇ¸ç, º¯¼ö°¡ ¾²ÀÎ ÄÚµå ºí¶ô°ú ¸Ö¾î ÄÚµå¸¦ ÀÐ´Âµ¥ µµ¿òÀÌ µÇÁö ¾Ê±â ¶§¹®ÀÔ´Ï´Ù.
+
+#STL ¿ø¼Ò¿¡ ÀÓÀÇ Á¢±Ùrandom access
+std::array¿Í std::vector´Â Á÷Á¢ ¹üÀ§ °Ë»ç¸¦ ÇÏ°í ¿¬»êÀÚ []·Î Á¢±ÙÇß½À´Ï´Ù.  ¸â¹ö ÇÔ¼ö at(...)Àº ³»ºÎ¿¡¼­ std::exception ¿¹¿Ü Ã³¸®¸¦ ÇÏ±â ¶§¹®¿¡ ´À¸®±â ¶§¹®ÀÔ´Ï´Ù.
+std::unordered_set°ú std::unordered_mapÀº ¸â¹ö ÇÔ¼ö find(...)·Î Á¢±ÙÇÏµÇ, ÀÖ´Â °ªÀÎÁö °Ë»çÇÒ ÇÊ¿ä°¡ ¾ø´Â °æ¿ì¿¡¸¸ ¿¬»êÀÚ []·Î Á¢±ÙÇß½À´Ï´Ù.  ¾ø´Â °ª¿¡ ¿¬»êÀÚ []·Î Á¢±ÙÇÏ¸é °ªÀ» »õ·Î ³Ö±â ¶§¹®ÀÔ´Ï´Ù.  ¸â¹ö ÇÔ¼ö at(...)À» ¾²Áö ¾ÊÀº °ÍÀº Àü°ú °°½À´Ï´Ù.
+
+#½Ã°£ º¹Àâµµ #½ÇÁ¦ ¼Óµµ
+½Ã°£ º¹Àâµµ°¡ ³·´Ù°í ½ÇÁ¦ ¼Óµµ°¡ ºü¸£Áø ¾Ê½À´Ï´Ù.  ¿¹·Î, ÀÚ·á ±¸Á¶ Áß°£¿¡ ÀÖ´Â ¿ø¼Ò¸¦ »©³»°Å³ª ¾ø¾Ö°Å³ª »õ·Î ³Ö´Â ¿¬»êÀÌ ÀæÀº °æ¿ì, ¹è¿­º¸´Ù ¿¬°á ¸®½ºÆ®¸¦ ¾²°ï ÇÕ´Ï´Ù.  ¹è¿­À» ¾²¸é ±× ¿ø¼Ò µÚ¿¡ ÀÖ´Â ¸ðµç ¿ø¼ÒµéÀ» ÇÑ Ä­ ¾¿ ´ç±â°Å³ª ¹Ð¾î¾ßÇÏ´Âµ¥, ¿¬°á ¸®½ºÆ®´Â ¾Æ´Ï±â ¶§¹®ÀÔ´Ï´Ù.  ÇÏÁö¸¸ ÀÌ´Â ¿ø¼ÒÀÇ Å©±â°¡ 64 ¹ÙÀÌÆ® ÀÌ»ó Å¬ ¶§¿¡ ÇÑÇÕ´Ï´Ù.  ¿¬°á ¸®½ºÆ®°¡ Æ÷ÀÎÅÍ·Î ¸Þ¸ð¸®¸¦ °£Á¢ Á¢±ÙÇÏ´Â ºñ¿ëÀÌ ÀÛÁö ¾Ê¾Æ ¿ø¼ÒÀÇ Å©±â°¡ ÀÛÀº °æ¿ì¿£ ¿ÀÈ÷·Á ¹è¿­ÀÌ ºü¸¨´Ï´Ù.  ÀÌ °æ¿ì¿¡µµ ´ÜÀÏsingly ¿¬°á ¸®½ºÆ®´Â ¿©ÀüÈ÷ ¹è¿­º¸´Ù ºü¸£Áö¸¸ Á÷Àü ¿ø¼Ò¸¦ µû·Î ´Ù·ç¾î¾ß ÇØ¼­ ÄÚµå°¡ ±æ¾îÁö°í, ¿ø¼Ò¸¦ ÀÚ·á ±¸Á¶ °¡Àå µÚ¿¡ ³Ö±â¿¡ ºÎÀûÇÕÇÕ´Ï´Ù.
+( exes/Engine/main.cpp:126, 
+
+#¹®ÀÚ¿­ ¸®ÅÍ·²
+¹®ÀÚ¿­ ¸®ÅÍ·²Àº char[]³ª std::stringÀ¸·Î ¹Þ¾Ò½À´Ï´Ù.  const char*·Î ¹ÞÀº ¹®ÀÚ¿­ ¸®ÅÍ·²Àº ¸Þ¸ð¸®¿¡ ³²¾Æ º¸¾È¿¡ ÇØ°¡ µÇ±â ¶§¹®ÀÔ´Ï´Ù.
+
+#¹®ÀÚ¿­À» ¹Þ´Â ÀÎ¼öparameter
+nullptrÀ» °É·¯³¾ ¼ö ¾ø´Â char*º¸´Ù const char (&)[N]¸¦, ¹®ÀÚ¿­ ¸®ÅÍ·²ÀÌ ¸Þ¸ð¸®¿¡ ³²´Â const char (&)[N]º¸´Ù std::stringÀ» ¼±È£Çß½À´Ï´Ù.
+char*ÀÌ ¾²ÀÎ °÷Àº Àç±Í ÇÔ¼ö¿Í À©¼Ó send ÇÔ¼ö»ÓÀÔ´Ï´Ù.
+( staticLibs/Lib/Hash.h:11, Socket.h )
+
+#¹®ÀÚ¿­ ÇØ½Ì
+¹®ÀÚ¿­À» ÇØ½ÌÇÏ¿© ºñ±³ÇÏ´Â °ÍÀÌ ::strcmp(...) µîÀ¸·Î ±×´ë·Î ºñ±³ÇÏ´Â °Íº¸´Ù À¯ÀÇ¹ÌÇÏ°Ô »¡¶ú½À´Ï´Ù.
+
+#ÀÎ½ºÅÏ½º º¹»ç ÁÙÀÌ±â
+try_emplace(...)¿Í emplace(std::piecewise_construct, std::forward_as_tuple(...)...)¸¦ ½á¼­ ÀÎ½ºÅÏ½º¸¦ ºÒÇÊ¿äÇÏ°Ô º¹»çÇÏÁö ¾Êµµ·Ï Çß½À´Ï´Ù.  std::vector::erase(...)°¡ º¹»ç »ý¼ºÀÚ¸¦ ¿ä±¸ÇÏ¹Ç·Î, ÀÌ °æ¿ì ¿Ü¿£ ¸ðµÎ º¹»ç/ÀÌµ¿ »ý¼ºÀÚ¸¦ ¸í½ÃÀûÀ¸·Î ¾ø¾Ý½À´Ï´Ù.
 
 #ÀÎ½ºÅÏ½º ÀçÈ°¿ë
 ±×·¡ÇÈ ÀÎ½ºÅÏ½ºÃ³·³ µ¢Ä¡°¡ Å©¸é ÀçÈ°¿ëÇÏ¿© ºñ¿ëÀ» ÁÙ¿´½À´Ï´Ù.
 ( dlls/Game/model/Tetrimino.h:133, dlls/Game/ui/NextTetriminoPanel.h:71 )
+
+#NRVO
+RVOÀ» À§ÇØ R-Value³ª Named Return Value Áß ÇÏ³ª¸¸ ½èÀ» »Ó ¼¯¾î¾²Áö ¾Ê¾Ò½À´Ï´Ù.
+
+#¹üÀ§ ±â¹Ý for ¹Ýº¹¹®
+¹üÀ§ ±â¹Ýrange-based for ¹Ýº¹¹®ÀÌ °¡Àå »¡¶ó ¼±È£Çß½À´Ï´Ù.  ¸¶Âù°¡Áö·Î ¹Ýº¹ÀÚ¸¦ ¾²´Â C ½ºÅ¸ÀÏ ¹Ýº¹¹®Àº ¿ÀÈ÷·Á °¡Àå ´À·Á, ¹Ýº¹ÀÚ°¡ ÇÊ¿äÇÏÁö ¾ÊÀ¸¸é ¾²Áö ¾Ê¾Ò½À´Ï´Ù.  <algorithm>ÀÇ std::for_each(...)´Â C ½ºÅ¸ÀÏ ¹Ýº¹¹®º¸´Ù ´À·Á ¾²Áö ¾Ê¾Ò½À´Ï´Ù.
+
+#enum class
+enum Çü°ú ´Þ¸® ½ºÄÚÇÁ¸¦ ¸í½ÃÇØ¾ß ÇØ¼­ ´õ ¾ÈÀüÇÏ°Ô ÄÚµå¸¦ ÀÛ¼ºÇÒ ¼ö ÀÖ±â ¶§¹®¿¡ enum class ÇüÀ» ½è½À´Ï´Ù.
 
 #Å°¿öµå inline
 ¿À¹ö·ÎµåÇÑ ¿¬»êÀÚ¿Í .cpp ÆÄÀÏ¿¡ ¼±¾ð/Á¤ÀÇµÈ ÂªÀº ÇÔ¼ö¿¡¸¸ Å°¿öµå inlineÀ» ¸í½ÃÇß½À´Ï´Ù.  ¸í½ÃÇÏÁö ¾ÊÀ¸¸é ÄÄÆÄÀÏ·¯°¡ ÀÎ¶óÀÎÀ¸·Î Ã³¸®ÇÏÁö ¾Ê±â ¶§¹®ÀÔ´Ï´Ù.  ÀÌ´Â µð½º¾î¼Àºí¸®¿¡ call ÀÎ½ºÆ®·°¼Ç ¿©ºÎ·Î ½±°Ô ¾Ë ¼ö ÀÖ½À´Ï´Ù.
@@ -146,44 +177,9 @@ static_cast<T>, reinterpret_cast<T>¸¦ ¾²Áö ¾Ê°í (T), (T*)Ã³·³ C ½ºÅ¸ÀÏ·Î Ä³½ºÆ®Ç
 if ºÐ±â¹®º¸´Ù switch ºÐ±â¹®À» ¼±È£Çß½À´Ï´Ù.  caseµéÀ» ¿À¸§Â÷¼øÀ¸·Î Á¤·ÄÇÏ¸é ÄÄÆÄÀÏ·¯ ÃÖÀûÈ­°¡ °¡´ÉÇÏ±â ¶§¹®ÀÔ´Ï´Ù.
 default case°¡ ¾ø´Â °æ¿ì µð¹ö±× ¸ðµå¿¡¼± __debugbreak()¸¦ µÎ¾î ÄÚµå¿¡ ¾ÈÀüÇÔÀ» ±âÇÏ°í ¸±¸®Áî ¸ðµå¿¡¼± __assume(0)À¸·Î ÄÄÆÄÀÏ·¯°¡ ÃÖÀûÈ­¸¦ À¯µµÇß½À´Ï´Ù.
 
-#´ÊÀºlazy ·ÎÄÃ º¯¼ö ¼±¾ð
-·ÎÄÃ º¯¼ö¸¦ ¼­ºê ·çÆ¾ÀÇ ¸Ó¸®¿¡ ¸ð¾Æ µÎÁö ¾Ê¾Ò½À´Ï´Ù.  º¯¼ö¸¦ ¾²Áö ¾Ê°í ºüÁ®³ª°¥ °æ¿ì º¯¼ö¸¦ ¸¸µå´Â µ¥ µç ½ÎÀÌÅ¬¸¸ ³¶ºñÇÑ °ÍÀÌ µÇ¸ç, º¯¼ö°¡ ¾²ÀÎ ÄÚµå ºí¶ô°ú ¸Ö¾î ÄÚµå¸¦ ÀÐ´Âµ¥ µµ¿òÀÌ µÇÁö ¾Ê±â ¶§¹®ÀÔ´Ï´Ù.
-
-#»ó¼ö¸¦ ¸ð¾Æ³õÀº .h ÆÄÀÏ
-°øÀ¯ÇÏÁö ¾Ê´Â »ó¼ö±îÁö ¸ð¾Æ³õ´Â ÀÌÀ¯¸¦ ¸ð¸£°Ú½À´Ï´Ù.  ÀÌ .h ÆÄÀÏÀ» ¼öÁ¤ÇÏ¸é ÀÌ°ÍÀ» Æ÷ÇÔÇÑ ¸ðµç .h/.cpp ÆÄÀÏµéÀ» »õ·Î ÄÄÆÄÀÏÇØ¾ß ÇÏ´Âµ¥ ¸»ÀÔ´Ï´Ù.
-
-#Unnamed scope
-Unnamed scope·Î Áö¿ª º¯¼öÀÇ ¼ö¸íÀ» ÇÊ¿äÇÑ ¸¸Å­¸¸ µÎ¾î ¿¡·¯ À§ÇèÀ» ÁÙ¿´½À´Ï´Ù.
-
-#¹®ÀÚ¿­À» ¹Þ´Â ÀÎ¼öparameter
-nullptrÀ» °É·¯³¾ ¼ö ¾ø´Â char*º¸´Ù const char (&)[N]¸¦, ¹®ÀÚ¿­ ¸®ÅÍ·²ÀÌ ¸Þ¸ð¸®¿¡ ³²´Â const char (&)[N]º¸´Ù std::stringÀ» ¼±È£Çß½À´Ï´Ù.
-char*ÀÌ ¾²ÀÎ °÷Àº Àç±Í ÇÔ¼ö¿Í À©¼Ó send ÇÔ¼ö»ÓÀÔ´Ï´Ù.
-( staticLibs/Lib/Hash.h:11, Socket.h )
-
-#STL ¿ø¼Ò¿¡ ÀÓÀÇ Á¢±Ùrandom access
-std::array¿Í std::vector´Â Á÷Á¢ ¹üÀ§ °Ë»ç¸¦ ÇÏ°í ¿¬»êÀÚ []·Î Á¢±ÙÇß½À´Ï´Ù.  ¸â¹ö ÇÔ¼ö at(...)Àº ³»ºÎ¿¡¼­ std::exception ¿¹¿Ü Ã³¸®¸¦ ÇÏ±â ¶§¹®¿¡ ´À¸®±â ¶§¹®ÀÔ´Ï´Ù.
-std::unordered_set°ú std::unordered_mapÀº ¸â¹ö ÇÔ¼ö find(...)·Î Á¢±ÙÇÏµÇ, ÀÖ´Â °ªÀÎÁö °Ë»çÇÒ ÇÊ¿ä°¡ ¾ø´Â °æ¿ì¿¡¸¸ ¿¬»êÀÚ []·Î Á¢±ÙÇß½À´Ï´Ù.  ¾ø´Â °ª¿¡ ¿¬»êÀÚ []·Î Á¢±ÙÇÏ¸é °ªÀ» »õ·Î ³Ö±â ¶§¹®ÀÔ´Ï´Ù.  ¸â¹ö ÇÔ¼ö at(...)À» ¾²Áö ¾ÊÀº °ÍÀº Àü°ú °°½À´Ï´Ù.
-
-#½Ã°£ º¹Àâµµ #½ÇÁ¦ ¼Óµµ
-½Ã°£ º¹Àâµµ°¡ ³·´Ù°í ½ÇÁ¦ ¼Óµµ°¡ ºü¸£Áø ¾Ê½À´Ï´Ù.  ¿¹·Î, ÀÚ·á ±¸Á¶ Áß°£¿¡ ÀÖ´Â ¿ø¼Ò¸¦ »©³»°Å³ª ¾ø¾Ö°Å³ª »õ·Î ³Ö´Â ¿¬»êÀÌ ÀæÀº °æ¿ì, ¹è¿­º¸´Ù ¿¬°á ¸®½ºÆ®¸¦ ¾²°ï ÇÕ´Ï´Ù.  ¹è¿­À» ¾²¸é ±× ¿ø¼Ò µÚ¿¡ ÀÖ´Â ¸ðµç ¿ø¼ÒµéÀ» ÇÑ Ä­ ¾¿ ´ç±â°Å³ª ¹Ð¾î¾ßÇÏ´Âµ¥, ¿¬°á ¸®½ºÆ®´Â ¾Æ´Ï±â ¶§¹®ÀÔ´Ï´Ù.  ÇÏÁö¸¸ ÀÌ´Â ¿ø¼ÒÀÇ Å©±â°¡ 64 ¹ÙÀÌÆ® ÀÌ»ó Å¬ ¶§¿¡ ÇÑÇÕ´Ï´Ù.  ¿¬°á ¸®½ºÆ®°¡ Æ÷ÀÎÅÍ·Î ¸Þ¸ð¸®¸¦ °£Á¢ Á¢±ÙÇÏ´Â ºñ¿ëÀÌ ÀÛÁö ¾Ê¾Æ ¿ø¼ÒÀÇ Å©±â°¡ ÀÛÀº °æ¿ì¿£ ¿ÀÈ÷·Á ¹è¿­ÀÌ ºü¸¨´Ï´Ù.  ÀÌ °æ¿ì¿¡µµ ´ÜÀÏsingly ¿¬°á ¸®½ºÆ®´Â ¿©ÀüÈ÷ ¹è¿­º¸´Ù ºü¸£Áö¸¸ Á÷Àü ¿ø¼Ò¸¦ µû·Î ´Ù·ç¾î¾ß ÇØ¼­ ÄÚµå°¡ ±æ¾îÁö°í, ¿ø¼Ò¸¦ ÀÚ·á ±¸Á¶ °¡Àå µÚ¿¡ ³Ö±â¿¡ ºÎÀûÇÕÇÕ´Ï´Ù.
-( exes/Engine/main.cpp:126, 
-
-#Aggregation °ü°è
-ÇÔ¼öÀÇ ½Ã±×´ÏÃ³¸¦ ¹Ù²Ù·Á´Ï ¿À¹ö¶óÀÌµåÇÏ°í ÀÖ´Â ¼ø¼ö °¡»ó ÇÔ¼öÀÇ ½Ã±×´ÏÃ³±îÁö ¹Ù²Ù¾î¾ß ÇÏ´Â °æ¿ì »ý¼ºÀÚ·Î ·¹ÆÛ·±½º¸¦ Áã¾îÁÖ¾î aggregation °ü°è°¡ »ý°å½À´Ï´Ù.  ÇÔ¼öÀÇ ÀÎ¼ö°¡ ¸¹Áö ¾Ê´Ù¸é ÇÊ¿äÇÒ ¶§¸¶´Ù ÀÎÀÚ·Î ³Ñ±â´Â dependency °ü°è¸¦ ´õ ¼±È£Çß½À´Ï´Ù.  ÄÚµå¸¦ ÀÐ±â ½¬¿ü±â ¶§¹®ÀÔ´Ï´Ù.
-( dlls/Game/scene/inPlay/InPlay.h:30, Playing.h:52, 
-
-#»ó¼Ó
-ÀÎÅÍÆäÀÌ½º¸¦ ±¸ÇöÇÒ ¶§ ¿Ü¿£ ÀüÇô ¾²Áö ¾Ê¾Ò½À´Ï´Ù.
-´ÙÀ½°ú °°Àº ÀÌÀ¯ ¶§¹®¿¡ »ó¼ÓÀº Áö¾çÇØ¾ß ÇÕ´Ï´Ù.
-1. ¿¬ÇÊ¿¡µµ º¼Ææ¿¡µµ ½ÉÀÌ ÀÖ½À´Ï´Ù.  ±×·¡¼­ ½ÉÀ» ¼Ó¼ºÀ¸·Î °®´Â Ææ Å¬·¡½º¸¦ µÎ°í ¿¬ÇÊ Å¬·¡½º¿Í º¼Ææ Å¬·¡½º°¡ Ææ Å¬·¡½º¸¦ »ó¼ÓÇß½À´Ï´Ù.  ½Ã°£ÀÌ Áö³ª ½ÉÀÌ ¾ø´Â ½ºÅ¸ÀÏ·¯½º Ææµµ ´Ù·ç°Ô µÇ¾ú½À´Ï´Ù.  ½ºÅ¸ÀÏ·¯½º Ææ Å¬·¡½º°¡ ÇÊ¿ä¾ø´Â ½É ¼Ó¼º±îÁö °¡Áö¸ç Ææ Å¬·¡½º¸¦ »ó¼ÓÇÏ¸é, ¸Þ¸ð¸®°¡ ³¶ºñµÇ´Â °ÍÀº ¹°·Ð ¸ð¸£´Â »çÀÌ virtual Å°¿öµå°¡ ºÙÁö ¾ÊÀº ÇÔ¼ö¸¦ ¿À¹ö¶óÀÌµåÇÒ ¼ö ÀÖ½À´Ï´Ù.
-2. ¿¬ÇÊ°ú º¼ÆæÀº Èä±âÀÌ±âµµ ÇÕ´Ï´Ù.  ±×·¡¼­ µ¥¹ÌÁö¸¦ ¼Ó¼ºÀ¸·Î °®´Â Èä±â Å¬·¡½º¸¦ »ó¼ÓÇÏ·Á°í ÇÕ´Ï´Ù.  ÀÏ°üµÈ °áÁ¤ÀÌÁö¸¸ ´ÙÁß »ó¼ÓÀº À§ÇèÇÕ´Ï´Ù.  »ö¿¬ÇÊÃ³·³ Èä±â°¡ µÉ ¼ö ¾ø´Â Ææµµ ÀÖÀ¸´Ï Ææ Å¬·¡½º°¡ Èä±â¸¦ »ó¼ÓÇÒ ¼öµµ ¾ø½À´Ï´Ù.
-3. ¿À·ÎÁö ÄÚµå¸¦ ÀÏºÎ³ª¸¶ Àç»ç¿ëÇÏ·Á°í »ó¼ÓÀ» ½è½À´Ï´Ù.  °ð 1°ú °°Àº ¹®Á¦¿¡ Á÷¸éÇß½À´Ï´Ù.
-4. ±âÁ¸ ÄÚµå¸¦ °¡´ÉÇÑ ÇÑ ¹Ù²ÙÁö ¾Ê°í À¯Áöº¸¼öÇÏ·Á°í »ó¼ÓÀ» ½è½À´Ï´Ù.  1°ú °°Àº ¹®Á¦°¡ »ý±â´Â µ¿½Ã¿¡ ¾µ¸ð¾ø´Â ÄÚµå°¡ Áõ½ÄÇß½À´Ï´Ù.
-
-(±×¸²)#¾À °èÃþ
-Å¬·¡½º ::scene::inPlay::InPlay¿Í ::scene::online::OnlineÀº ÀÎÅÍÆäÀÌ½º ::scene::ISceneÀÇ ±¸Ã¼concrete Å¬·¡½ºÀÌÁö¸¸ »ç½Ç ¾ÀÀÌ ¾Æ´Õ´Ï´Ù.  °£ÀÌ ¾À ¸Å´ÏÀúÀÔ´Ï´Ù.  ±»ÀÌ ¾À ¸Å´ÏÀú±îÁö ³ª¿Í Ã³¸®ÇÒ ÇÊ¿ä°¡ ¾ø´Â °ÍµéÀ» À§ÀÓdelegateÇÑ °ÍÀÔ´Ï´Ù.  ÀÌ·Î½á ÄÚµå¸¦ ÀÐ±âµµ ½±°í ºÐ¾÷ÇÏ±âµµ ½±°Ô µÇ¾ú½À´Ï´Ù.
-¶Ç, ÇØÁ¦ÇÏÁö ¾Ê°í ´ÙÀ½ ¾À¿¡ ³Ñ±â°í ½ÍÀº ÀÎ½ºÅÏ½º¸¦ °øÀ¯ÇÏ±â¿¡ ½¬¿ü½À´Ï´Ù.
-( dlls/Game/scene/inPlay/Ready.h, Playing.h, GameOver.hÀÇ »ý¼ºÀÚ¿¡ ³Ñ±ä sf::Drawable ·¹ÆÛ·±½º )
+#Å°¿öµå friend
+Å°¿öµå friend°¡ Ç×»ó Á¤º¸ Àº´ÐÀ» ÆÄ±«ÇÏ´Â °ÍÀº ¾Æ´Õ´Ï´Ù.
+( staticLibs/Shared Headers Only/IGame.h, dlls/Game/ServiceLocatorMirror.h¿Í Game.cpp )
 
 #goto
 break·Î µÑ ÀÌ»óÀÇ ½ºÄÚÇÁ¸¦ ºüÁ®³ª°¡Áö ¸øÇÏ´Â °æ¿ì, ÀÐ±â ½¬¿ì¸é¼­ ÄÚµå Áßº¹À» ÇÇÇÒ ¼ö ÀÖ´Â °æ¿ì¿¡ ÇÑÇØ¼­¸¸ Á¡ÇÁ Å°¿öµå goto¸¦ »ç¿ëÇß½À´Ï´Ù.
@@ -192,91 +188,118 @@ break·Î µÑ ÀÌ»óÀÇ ½ºÄÚÇÁ¸¦ ºüÁ®³ª°¡Áö ¸øÇÏ´Â °æ¿ì, ÀÐ±â ½¬¿ì¸é¼­ ÄÚµå Áßº¹À» ÇÇÇ
 #¿¹¿Ü Ã³¸®
 ÀÐ±â ½±°í ºü¸¥ if ¹®À¸·Î Ã³¸®ÇÏ°í try-catch ºí·ÏÀ» ¾²Áö ¾Ê¾Ò½À´Ï´Ù.
 
-#·Î±×
-º°µµÀÇ ÆÄÀÏ·Î Ãâ·ÂÇÏÁö ¾Ê°í ÄÜ¼Ö¿¡ Ãâ·ÂÇÕ´Ï´Ù.
-
-#½ºÅ©¸³Æ® ºÒ·¯¿À±â
-½ºÅ©¸³Æ®¿¡¼­ ºÒ·¯¿ÀÁö ¸øÇÑ °æ¿ì¸¦ ´ëºñÇØ º¯¼ö¿¡ ±âº»°ªÀ» ÁÖ¾ú½À´Ï´Ù.  ±×¸®°í °ªÀ» ½ºÅ©¸³Æ®¿¡¼­ ºÒ·¯¿Í Å¸ÀÔÀÌ³ª ¹üÀ§¸¦ °Ë»çÇÑ µÚ¿¡¾ß º¯¼ö¿¡ µ¤¾î½è½À´Ï´Ù.  ÀÌ °úÁ¤¿¡¼­ ½ÇÆÐÇÏ¸é ÄÜ¼Ö¿¡ Ãâ·ÂÇÕ´Ï´Ù.
-( dlls/Game ÀÌÇÏ ¸¹Àº Å¬·¡½º¿¡ Á¤ÀÇµÈ ¸â¹ö ÇÔ¼ö loadScript(...) )
-
-#¸â¹ö º¯¼öÀÇ ¼±¾ð ¼ø¼­ #ÆÐµù
-¸â¹ö º¯¼öÀÇ Å©±â°¡ ÀÛÀº °ÍºÎÅÍ À§¿¡¼­ ¾Æ·¡·Î ¼±¾ðÇÏ¿© ÆÐµùÀ» ÁÙ¿´½À´Ï´Ù.
-ÄÄÆÄÀÏ·¯°¡ ÃÖÀûÈ­ÇÒ ¼ö ÀÖµµ·Ï ÃÊ±âÈ­ ¸®½ºÆ®»ó ¼ø¼­ ¿ª½Ã ¼±¾ð ¼ø¼­¿Í ¸ÂÃß¾ú½À´Ï´Ù.
-
-#¾À ÀüÈ¯ #¾À ÀÎ½ºÅÏ½º »ý¼º
-°¢ ¾ÀÀÇ ¿äÃ»¿¡ µû¶ó ¾À ¸Å´ÏÀú¿¡¼­ ´ÙÀ½ ¾ÀÀÇ ÀÎ½ºÅÏ½º¸¦ ¸¸µì´Ï´Ù.  °¢ ¾À¿¡¼­ ¾Ë¾Æ¼­ ´ÙÀ½ ¾ÀÀÇ ÀÎ½ºÅÏ½º¸¦ ¸¸µé°í ±× ÀÎ½ºÅÏ½ºÀÇ ÁÖ¼Ò¸¸ ¾À ¸Å´ÏÀú¿¡ ³Ñ±â¸é µÇ´Â ¹æ½ÄÀº °³¹ß Áß ÆÄ±âµÇ¾ú½À´Ï´Ù.  ÄÜ¼ÖÀÌ³ª ½ºÅ©¸³Æ®·Î Æ¯Á¤ ¾ÀÀ» °ð¹Ù·Î ¿­±â À§ÇØ ÀüÀÚÀÇ ¹æ¹ýÀº ½á¾ß Çß´Âµ¥, ÈÄÀÚÀÇ ¹æ¹ý±îÁö È¥¿ëÇÏ´Ï ÄÚµå°¡ º¹ÀâÇß±â ¶§¹®ÀÔ´Ï´Ù.
-°¢ ¹æ¹ýÀÇ Àå´ÜÁ¡Àº ´ÙÀ½°ú °°½À´Ï´Ù. ÀüÀÚÀÇ ¹æ¹ýÀº »õ·Î¿î ±¸Ã¼concrete Å¬·¡½º°¡ µîÀåÇÒ ¶§¸¶´Ù ºÐ±â¹®À» Ãß°¡ÇØÁÖ¾î¾ß ÇÕ´Ï´Ù¸¸ ÆÄ±âµÈ ÈÄÀÚÀÇ ¹æ¹ýÀº ±×·¸Áö ¾Ê½À´Ï´Ù. ´ë½Å ÆÄ±âµÈ ÈÄÀÚÀÇ ¹æ¹ýÀº ´ÙÀ½ ¾ÀÀÇ .h ÆÄÀÏÀÌ ¹Ù²î¸é ÀÌ ÆÄÀÏÀ» Æ÷ÇÔÇÑ ¸ðµç ÆÄÀÏÀ» ¿¬¼âÀûÀ¸·Î ´Ù½Ã ÄÄÆÄÀÏÇØ¾ß ÇÏ°í, ÈÄÀÚÀÇ ¹æ¹ýÀº ¾À ¸Å´ÏÀú¸¸ »õ·Î ÄÄÆÄÀÏÇÏ¸é µË´Ï´Ù.
-( dlls/Game/scene/SceneManager.h:29¿Í ÇÔ¼ö setScene(...), 
-
-#°¡½Ã¼º #Á¢±Ù ÇÑÁ¤ÀÚ
-ÄÚµå¸¦ Á¶±ÝÀÌ¶óµµ ´õ ÀÐ±â ½±µµ·Ï Å¬·¡½ºµç ±¸Á¶Ã¼µç »ó¼ÓÀÌµç °¡½Ã¼ºÀ» ¸í½ÃÇß½À´Ï´Ù.
-ÀÎÅÍÆäÀÌ½ºÀÇ »ý¼ºÀÚ´Â protected·Î °¡½Ã¼ºÀ» Á¦ÇÑÇÏ¿© ÀÎ½ºÅÏ½º¸¦ ¸í½ÃÀûÀ¸·Î ¸¸µéÁö ¸øÇÏ°í ±¸Ã¼concrete Å¬·¡½º¿¡¼­ ¾Ï½ÃÀûÀ¸·Î¸¸ ¸¸µé ¼ö ÀÖµµ·Ï Çß½À´Ï´Ù.
-
-#ÃÊ±âÈ­ ¸®½ºÆ®
-¿ÀÀÛµ¿ ¹æÁö °â »ý¼ºÀÚ¿¡¼­ ÃÊ±âÈ­ÇÑ´Ù¸é ÃÊ±âÈ­ ¸®½ºÆ®·Î ¼º´ÉÀ» Ã¬±â´Â °ÍÀÌ ¸ÂÁö¸¸, init(...) µî º°µµÀÇ ÇÔ¼ö·Î ÃÊ±âÈ­ÇÏ´Â °æ¿ì¿¡µµ ±×·± Áö¿¡ ´ëÇØ¼± ÀÇ¹®ÀÔ´Ï´Ù.
-
-#¸â¹ö º¯¼ö ÀÌ¸§
-³Î¸® ¾²ÀÌ´Â ÄÚµù ½ºÅÄ´Ùµå´ë·Î ¾ËÆÄºª ¼Ò¹®ÀÚ mÀ» ¾Õ¿¡ ºÙ¿´½À´Ï´Ù.  ÀÌ´Â IDE¿¡ ÀÇÁ¸ÇÏÁö ¾Ê°í ¸â¹ö º¯¼ö¸¦ ´Ù¸¥ º¯¼ö·ÎºÎÅÍ ½±°Ô ±¸ºÐÇÒ ¼ö ÀÖ°Ô ÇØÁÝ´Ï´Ù.
-Aggregation °ü°è¿¡ ÀÖ°Å³ª °°Àº ¿¬»êÀ» ¹Ýº¹ÇÏÁö ¾Êµµ·Ï ¸â¹ö ÇÔ¼öÀÇ ¹Ù±ù ½ºÄÚÇÁ·Î »©³» ¼ö¸íÀ» ´Ã¸° °Í¿¡ ºÒ°úÇÑ º¯¼ö¿£ ÀÌ¸§ µÚ¿¡ Æ¯¼ö¹®ÀÚ _¸¦ ºÙ¿´½À´Ï´Ù.  ÀÌ·± º¯¼ö´Â ÀÎ½ºÅÏ½ºÀÇ »óÅÂÀÎ ¸â¹ö º¯¼ö¿Í ±¸º°ÇØ¾ß ÄÚµå¸¦ ÀÐÀ» ¶§ ¹æÇØµÇÁö ¾Ê±â ¶§¹®ÀÔ´Ï´Ù.
-¸í»ç±¸´Â ÈÄÄ¡ Çü¿ëÇß½À´Ï´Ù.  ÀÌ¸§ÀÌ ±â¾ï³ªÁö ¾Ê¾Æµµ ÀÎÅÚ¸®¼¾½º·Î ½±°Ô Ã£À» ¼ö ÀÖ¾ú±â ¶§¹®ÀÔ´Ï´Ù.  ¿¹¸¦ µé¸é, mSoftDropIntervalFrameCount¿Í mCoolFrameCount°¡ ¾Æ´Ï¶ó mFrameCountSoftDropInterval°ú mFrameCountCoolÀ» ½è½À´Ï´Ù.
-
-#ÀÎ½ºÅÏ½º Ä«¿îÆÃ
-ÀÏºÎ Å¬·¡½ºÀÇ ÃÑ ÀÎ½ºÅÏ½º ¼ö¸¦ Á¦ÇÑÇß½À´Ï´Ù.
-
-#RTTI
-¼º´É¿¡ °¡½ÃÀûÀÎ ¿µÇâÀÌ ¾ø´Â °æ¿ì¿¡ ÇÑÇØ¼­¸¸ RTTI¸¦ ½è½À´Ï´Ù.
-( dlls/Game/scene/Playing.cpp:952, dlls/Game/scene/IScene.hÀÇ ¼ø¼ö °¡»ó ÇÔ¼ö currentScene() )
-
-#ÀÎÅÍÆäÀÌ½º
-±â¹Ýbase Å¬·¡½º, Á÷°èÁ¸¼Ó(?)parent, grandparent Å¬·¡½º, ¼ø¼ö °¡»ó ÇÔ¼öpure virtual function¸¸ ¼±¾ðµÈ Ãß»ó Å¬·¡½º¶ó´Â ÀÌ¸íµé ´ë½Å ÀÚ¹ÙÀÇ ÀÎÅÍÆäÀÌ½º¶ó´Â ÀÌ¸§À» Â÷¿ëÇß½À´Ï´Ù.  ÀÎÅÍÆäÀÌ½º¸¦ ½±°Ô ±¸ºÐÇÏµµ·Ï Å¬·¡½º ÀÌ¸§, .h/.cpp ÆÄÀÏ ÀÌ¸§ ¾Õ¿¡ ¾ËÆÄºª ´ë¹®ÀÚ ¾ÆÀÌI¸¦ ºÙ¿´½À´Ï´Ù.
-Á¢±ÙÇÑÁ¤ÀÚ·Î ÀÎÅÍÆäÀÌ½ºÀÇ ÀÎ½ºÅÏ½º¸¦ ÇÔºÎ·Î ¸¸µéÁö ¸øÇÏ°Ô Çß½À´Ï´Ù.
-
-#Å°¿öµå friend
-Å°¿öµå friend°¡ Ç×»ó Á¤º¸ Àº´ÐÀ» ÆÄ±«ÇÏ´Â °ÍÀº ¾Æ´Õ´Ï´Ù.
-( staticLibs/Shared Headers Only/IGame.h, dlls/Game/ServiceLocatorMirror.h¿Í Game.cpp )
-
 #SFINAE
 ÄÄÆÄÀÏÇØ¾ß ¾Ë·ÁÁÖ´Â static_assertº¸´Ù ÀÎÅÚ¸®¼¾½º°¡ ¾Ë·ÁÁÖ´Â SFINAE ±â¹ýÀÌ Çù¾÷¿¡ ´õ µµ¿òÀÌ µÉ °ÍÀÌ¶ó »ý°¢Çß½À´Ï´Ù.
 ( staticLibs/Lib/ScriptLoader.h )
 
-#SFML
-SFMLÀº SDLÃ³·³ ¿ÀÇÂ ¼Ò½º ¸ÖÆ¼¹Ìµð¾î ¶óÀÌºê·¯¸®ÀÔ´Ï´Ù.  SDLÀÌ C ¾ð¾î·Î ÀÛ¼ºµÈ ¹Ý¸é SFMLÀº C++·Î ÀÛ¼ºµÇ¾ú½À´Ï´Ù.  ±×·¸±â¿¡ OOPÀÇ ÁÁÀº ¿¹¸¦ µé¿©´Ùº¼ ¼ö ÀÖ°í, ³ôÀº ¼öÁØ¿¡¼­ Á¡Â÷ ³·Àº ¼öÁØÀ¸·Î ÇÐ½ÀÇÒ ¼ö ÀÖ¾ú½À´Ï´Ù.
-
-#Çì´õ ÆÄÀÏÀ» Æ÷ÇÔÇÏ´Â ¼ø¼­
-½ºÅÄ´Ùµå, Á¦ 3ÀÚ, Á÷Á¢ ¸¸µç ¶óÀÌºê·¯¸® ¼øÀ¸·Î Æ÷ÇÔÇÏµÇ, ¼ø¼­ ¶§¹®¿¡ ÄÄÆÄÀÏ ¿¡·¯°¡ ¹ß»ýÇÏ´Â °æ¿ì¿£ ´Ù¸¨´Ï´Ù.
-(exes/Engine:pch.h:10)
-
 #Á¤Àûstatic ¶óÀÌºê·¯¸®
 ¾Æ¹«¸® .obj ÆÄÀÏÀ» Àç»ç¿ëÇÒ ¼ö ÀÖ´ÙÁö¸¸ ¾Æ¿¹ ¶¼¾î³õ´Â °ÍÀÌ Ä¿ÇÃ¸µÀ» ¸·°í ÆíÇÏ°Ô Àç»ç¿ëÇÏ¸ç ºôµå ½Ã°£µµ ÁÙÀÏ ¼ö ÀÖ´Â ÁÁÀº ¹æ¹ýÀÔ´Ï´Ù.  ÀÌ¹Ì ¸µÅ©µÇ¾ú±â ¶§¹®¿¡ ¹ÙÀÌ³Ê¸® ÆÄÀÏÀ» ½ÇÇàÇÒ ¶§ º°µµÀÇ ÆÄÀÏÀ» ·ÎµåÇÒ ÇÊ¿ä°¡ ¾ø´Ù´Â °Í, Ãâ·Â ÆÄÀÏÀÌ Å©´Ù´Â °ÍÀº °í·Á »çÇ×ÀÌ ¾Æ´Ï¾ú½À´Ï´Ù.
+
+#Çì´õ ÆÄÀÏ¸¸ ÀÖ´Â ¶óÀÌºê·¯¸®
+Çì´õ ÆÄÀÏ¸¸ ÀÖ¾îµµ ¶óÀÌºê·¯¸®·Î µÓ´Ï´Ù.  ±×·¸Áö ¾ÊÀ¸¸é ÀÎÅÚ¸®¼¾½º°¡ ±¸¹® ºÐ¼®À» ¸øÇÏ±â ¶§¹®ÀÔ´Ï´Ù.
 
 #.dll
 Mod, È®ÀåÆÑÀÌ³ª ½ÉÁö¾î ´Ù¸¥ °ÔÀÓ¿¡¼­ Àç»ç¿ëÇÒ ¼ö ÀÖ´Â ÄÚµå´Â ¹ü¿ë¼º¿¡ µû¶ó ¶óÀÌºê·¯¸®³ª exes/Engine ÇÁ·ÎÁ§Æ®¿¡ µÎ°í, ÄÁÅÙÃ÷¿¡ Æ¯È­µÈ ÄÚµå´Â dlls/ ¾Æ·¡ ÇÁ·ÎÁ§Æ®¿¡ µÎ¾ú½À´Ï´Ù.  ·±Å¸ÀÓ Áß .dll ÆÄÀÏÀ» ÇØÁ¦ÇÏ°í ´Ù¸¥ .dll ÆÄÀÏÀ» ·ÎµåÇÒ ¼ö ÀÖµµ·Ï ¸í½ÃÀûÀ¸·Î ¸µÅ©ÇÏ¿´½À´Ï´Ù.
 ¿©·¯ ÇÁ·Î¼¼½º¿¡¼­ °øÀ¯ÇÏ±â À§ÇØ ¸¸µç °Ç ¾Æ´Õ´Ï´Ù.
 
-#·ç¾Æ ½ºÅ©¸³Æ®
-·ÎÁ÷Àº ºü¸£°í µð¹ö±ëÀÌ ½¬¿ö¾ß ÇÏ¹Ç·Î C++¿¡¼­, ±âÈ¹ÀÚ¿Í ¾ÆÆ¼½ºÆ®°¡ ºÎ´ã¾øÀÌ ÀÚÁÖ ¹Ù²Ü ¼ö ÀÖ¾î¾ß ÇÏ´Â µ¥ÀÌÅÍ¿Í ¸®¼Ò½º´Â ·ç¾Æ ½ºÅ©¸³Æ®·Î Ã³¸®Çß½À´Ï´Ù.
-
-#ÄÜ¼Ö
-ÄÜ¼Ö¿¡ ¸í·É¾î¿Í ÇÔ¼ö¸¦ ¸ÅÇÎÇÏ¿© ·±Å¸ÀÓ Áß ´Ù¾çÇÑ ½Ãµµ¸¦ ÇØº¼ ¼ö ÀÖ¾ú½À´Ï´Ù.  ÇöÀç´Â ¼öÁ¤ÇÑ ½ºÅ©¸³Æ®¸¦ ´Ù½Ã ºÒ·¯¿À°Å³ª, ¿øÇÏ´Â ¾ÀÀ¸·Î ÀÌµ¿ÇÏ°Å³ª, GUI°¡ ¹Ì¿Ï¼ºÀÌ°Å³ª ¹Ù²ð °æ¿ì¸¦ ´ëºñÇØ ¹æÀ» »ý¼ºÇÏ°Å³ª µé¾î°¡´Â µîÀÇ ¸í·É¾î°¡ µî·ÏµÇ¾î ÀÖ½À´Ï´Ù.
-( dlls/Game/SceneManager.cpp:19 )
-¸í·É¿¡ µû¶ó °øÀ¯ µ¥ÀÌÅÍ¸¦ »óÈ£ ¹èÁ¦ÇØ¾ß Çß½À´Ï´Ù.
+#¾À ÀüÈ¯ #¾À ÀÎ½ºÅÏ½º »ý¼º
+°¢ ¾ÀÀÇ ¿äÃ»¿¡ µû¶ó ¾À ¸Å´ÏÀú¿¡¼­ ´ÙÀ½ ¾ÀÀÇ ÀÎ½ºÅÏ½º¸¦ ¸¸µì´Ï´Ù.  °¢ ¾À¿¡¼­ ¾Ë¾Æ¼­ ´ÙÀ½ ¾ÀÀÇ ÀÎ½ºÅÏ½º¸¦ ¸¸µé°í ±× ÀÎ½ºÅÏ½ºÀÇ ÁÖ¼Ò¸¸ ¾À ¸Å´ÏÀú¿¡ ³Ñ±â¸é µÇ´Â ¹æ½ÄÀº °³¹ß Áß ÆÄ±âµÇ¾ú½À´Ï´Ù.  ÄÜ¼ÖÀÌ³ª ½ºÅ©¸³Æ®·Î Æ¯Á¤ ¾ÀÀ» °ð¹Ù·Î ¿­±â À§ÇØ ÀüÀÚÀÇ ¹æ¹ýÀº ½á¾ß Çß´Âµ¥, ÈÄÀÚÀÇ ¹æ¹ý±îÁö È¥¿ëÇÏ´Ï ÄÚµå°¡ º¹ÀâÇß±â ¶§¹®ÀÔ´Ï´Ù.
+°¢ ¹æ¹ýÀÇ Àå´ÜÁ¡Àº ´ÙÀ½°ú °°½À´Ï´Ù. ÀüÀÚÀÇ ¹æ¹ýÀº »õ·Î¿î ±¸Ã¼concrete Å¬·¡½º°¡ µîÀåÇÒ ¶§¸¶´Ù ºÐ±â¹®À» Ãß°¡ÇØÁÖ¾î¾ß ÇÕ´Ï´Ù¸¸ ÆÄ±âµÈ ÈÄÀÚÀÇ ¹æ¹ýÀº ±×·¸Áö ¾Ê½À´Ï´Ù. ´ë½Å ÆÄ±âµÈ ÈÄÀÚÀÇ ¹æ¹ýÀº ´ÙÀ½ ¾ÀÀÇ .h ÆÄÀÏÀÌ ¹Ù²î¸é ÀÌ ÆÄÀÏÀ» Æ÷ÇÔÇÑ ¸ðµç ÆÄÀÏÀ» ¿¬¼âÀûÀ¸·Î ´Ù½Ã ÄÄÆÄÀÏÇØ¾ß ÇÏ°í, ÈÄÀÚÀÇ ¹æ¹ýÀº ¾À ¸Å´ÏÀú¸¸ »õ·Î ÄÄÆÄÀÏÇÏ¸é µË´Ï´Ù.
+( dlls/Game/scene/SceneManager.h:29¿Í ÇÔ¼ö setScene(...) )
 
 #Å°¿öµå auto
 Å¸ÀÔÀ» ¸í½ÃÇÏ±â¿£ ³Ê¹« ±äµ¥ ±ÙÃ³ ÄÚµå¿¡¼­ ½±°Ô À¯ÃßÇÒ ¼ö ÀÖ´Â °æ¿ì¿¡¸¸ Å°¿öµå auto¸¦ ½è½À´Ï´Ù.  ¹Ì·¡ÀÇ ÀÚ½ÅÀ» Æ÷ÇÔÇÑ ´Ù¸¥ »ç¶÷ÀÌ ÄÚµå¸¦ ÀÐ´Â µ¥ Å°¿öµå auto°¡ ¿ÀÈ÷·Á ¹æÇØ°¡ µÉ ¼ö ÀÖ±â ¶§¹®ÀÔ´Ï´Ù.
 
-#¹®ÀÚ¿­ ¸®ÅÍ·²
-¹®ÀÚ¿­ ¸®ÅÍ·²Àº char[]³ª std::stringÀ¸·Î ¹Þ¾Ò½À´Ï´Ù.  const char*·Î ¹ÞÀº ¹®ÀÚ¿­ ¸®ÅÍ·²Àº ¸Þ¸ð¸®¿¡ ³²¾Æ º¸¾È¿¡ ÇØ°¡ µÇ±â ¶§¹®ÀÔ´Ï´Ù.
+#uniform ÃÊ±âÈ­
+uniform ÃÊ±âÈ­´Â std::initializer_list¸¦ ÀÎÀÚ·Î ¹Þ´Â »ý¼ºÀÚ°¡ ÀÇµµ¿Í ´Ù¸¦ À§ÇèÀÌ ÀÖ±â ¶§¹®¿¡ ¾²Áö ¾Ê¾Ò½À´Ï´Ù.
+( dlls/Game/model/Tetrimino.cpp:8 )  
 
-#¹®ÀÚ¿­ ÇØ½Ì
-¹®ÀÚ¿­À» ÇØ½ÌÇÏ¿© ºñ±³ÇÏ´Â °ÍÀÌ ::strcmp(...) µîÀ¸·Î ±×´ë·Î ºñ±³ÇÏ´Â °Íº¸´Ù À¯ÀÇ¹ÌÇÏ°Ô »¡¶ú½À´Ï´Ù.
+#¶÷´Ù Ç¥Çö½Ä
+ÇÔ¼öÀÇ ÀÎ¼öparameter°¡ ¸¹Àº °Íµµ ½È°í Áö¿ª º¯¼öµéÀ» Àü¿ªÀ¸·Î ¿Å±â±âµµ ½È¾úÀ» ¶§¿Í º°µµÀÇ ½º·¹µå¿¡¼­ µ¹¸± ÇÔ¼ö°¡ ÀÏÈ¸¿ëÀÏ ¶§¸¸, Ä¸ÃÄ¸¦ ¸í½ÃÇÑ ¶÷´Ù Ç¥Çö½ÄÀ» ½è½À´Ï´Ù.
+( exes/QueueServer.cpp:269, Server.exe:122, dlls/Game/scene/online/Waiting.cpp:424 )
 
-#Àü¿ª º¯¼ö
-Á¤ÀÇµÇ´Â ¼ø¼­°¡ µüÈ÷ Á¤ÇØÁ®ÀÖÁö ¾Ê°í, ÀÎÀÚ·Î ³Ñ±âÁö ¾Ê¾Æ ¾ðÁ¦ ¾î´À ¼­ºê·çÆ¾¿¡¼­ Á¢±ÙÇÏ´ÂÁö ÇÑ´«¿¡ º¸ÀÌÁö ¾Ê¾Æ Àü¿ª º¯¼ö¸¦ ¼Ò±ØÀûÀ¸·Î ¾²°í ÇÑ °÷¿¡ ¸ð¾ÆµÎ¾ú½À´Ï´Ù.
-À¯¿¬ÇÏ°Ô ¾²±â À§ÇØ ½Ì±ÛÅÏ ÆÐÅÏ ´ë½Å ¼­ºñ½º ·ÎÄÉÀÌÅÍ ÆÐÅÏÀ» ½è½À´Ï´Ù.
-( staticLibs/Shared Headers Only/IServiceLocator.h, exes/Engine/ServiceLocator.h, dlls/Game/ServiceLocatorMirror.h )
+#·ç¾Æ ½ºÅ©¸³Æ®
+·ÎÁ÷Àº ºü¸£°í µð¹ö±ëÀÌ ½¬¿ö¾ß ÇÏ¹Ç·Î C++¿¡¼­, ±âÈ¹ÀÚ¿Í ¾ÆÆ¼½ºÆ®°¡ ºÎ´ã¾øÀÌ ÀÚÁÖ ¹Ù²Ü ¼ö ÀÖ¾î¾ß ÇÏ´Â µ¥ÀÌÅÍ¿Í ¸®¼Ò½º´Â ·ç¾Æ ½ºÅ©¸³Æ®·Î Ã³¸®Çß½À´Ï´Ù.
+
+#½ºÅ©¸³Æ® ºÒ·¯¿À±â
+½ºÅ©¸³Æ®¿¡¼­ ºÒ·¯¿ÀÁö ¸øÇÑ °æ¿ì¸¦ ´ëºñÇØ º¯¼ö¿¡ ±âº»°ªÀ» ÁÖ¾ú½À´Ï´Ù.  ±×¸®°í °ªÀ» ½ºÅ©¸³Æ®¿¡¼­ ºÒ·¯¿Í Å¸ÀÔÀÌ³ª ¹üÀ§¸¦ °Ë»çÇÑ µÚ¿¡¾ß º¯¼ö¿¡ µ¤¾î½è½À´Ï´Ù.  ÀÌ °úÁ¤¿¡¼­ ½ÇÆÐÇÏ¸é ÄÜ¼Ö¿¡ Ãâ·ÂÇÕ´Ï´Ù.
+( dlls/Game ÀÌÇÏ ¸¹Àº Å¬·¡½º¿¡ Á¤ÀÇµÈ ¸â¹ö ÇÔ¼ö loadScript(...) )
+
+#SFML
+SFMLÀº SDLÃ³·³ ¿ÀÇÂ ¼Ò½º ¸ÖÆ¼¹Ìµð¾î ¶óÀÌºê·¯¸®ÀÔ´Ï´Ù.  SDLÀÌ C ¾ð¾î·Î ÀÛ¼ºµÈ ¹Ý¸é SFMLÀº C++·Î ÀÛ¼ºµÇ¾ú½À´Ï´Ù.  ±×·¸±â¿¡ OOPÀÇ ÁÁÀº ¿¹¸¦ µé¿©´Ùº¼ ¼ö ÀÖ°í, ³ôÀº ¼öÁØ¿¡¼­ Á¡Â÷ ³·Àº ¼öÁØÀ¸·Î ÇÐ½ÀÇÒ ¼ö ÀÖ¾ú½À´Ï´Ù.
+
+#ÄÜ¼Ö
+[![Video Thumbnail]()](https://youtu.be/uPx0DgMIeoQ)
+ÄÜ¼Ö¿¡ ¸í·É¾î¿Í ÇÔ¼ö¸¦ ¸ÅÇÎÇÏ¿© ·±Å¸ÀÓ Áß ´Ù¾çÇÑ ½Ãµµ¸¦ ÇØº¼ ¼ö ÀÖ¾ú½À´Ï´Ù.  ÇöÀç´Â ¼öÁ¤ÇÑ ½ºÅ©¸³Æ®¸¦ ´Ù½Ã ºÒ·¯¿À°Å³ª, ¿øÇÏ´Â ¾ÀÀ¸·Î ÀÌµ¿ÇÏ°Å³ª, GUI°¡ ¹Ì¿Ï¼ºÀÌ°Å³ª ¹Ù²ð °æ¿ì¸¦ ´ëºñÇØ ¹æÀ» »ý¼ºÇÏ°Å³ª µé¾î°¡´Â µîÀÇ ¸í·É¾î°¡ µî·ÏµÇ¾î ÀÖ½À´Ï´Ù.
+( dlls/Game/SceneManager.cpp:19 )
+¸í·É¿¡ µû¶ó °øÀ¯ µ¥ÀÌÅÍ¸¦ »óÈ£ ¹èÁ¦ÇØ¾ß Çß½À´Ï´Ù.
+
+#·Î±×
+º°µµÀÇ ÆÄÀÏ·Î Ãâ·ÂÇÏÁö ¾Ê°í ÄÜ¼Ö¿¡ Ãâ·ÂÇÕ´Ï´Ù.
+
+#OpenMP
+OpenMP°¡ ´õ ´À·Á °³¹ß µµÁß ¾ø¾Ý½À´Ï´Ù.
+
+#º¤ÅÍ #¼±Çü º¸°£ #¼öÇÐ
+UI ¾Ö´Ï¸ÞÀÌ¼Ç¿¡ 2Â÷¿ø º¤ÅÍ ¿¬»ê°ú ¼±Çü º¸°£ÀÌ ¾²¿´½À´Ï´Ù.
+( dlls/Game/scene/online/InLobby.cpp:956, 1384 )
+#´ë±â¿­ ¼­¹ö #¸ÞÀÎ ¼­¹ö
+¼­¹ö´Â ´Ü µÑ, ´ë±â¿­ ¼­¹ö¿Í ¸ÞÀÎ ¼­¹ö°¡ ÀÖ½À´Ï´Ù.   
+Áß°³¸¦ À§ÇÑ Redis ¼­¹ö³ª °èÁ¤ °ü¸®¸¦ À§ÇÑ RDBMS ¼­¹ö´Â ¾ø½À´Ï´Ù.   
+Å¬¶óÀÌ¾ðÆ®°¡ Á¢¼Ó°ú µ¿½Ã¿¡ ¸Þ½ÃÁö¸¦ º¸³»´õ¶óµµ ¼­¹ö°¡ ÀÌ ¸Þ½ÃÁö¸¦ ¹ÞÁö ¾Êµµ·Ï Çß½À´Ï´Ù.  ÀÌ·¸°Ô ÇÏÁö ¾ÊÀ¸¸é, ¼­¹ö°¡ ¸Þ½ÃÁö¸¦ ±â´Ù¸®´Â ¹®Á¦°¡ ¹ß»ýÇÒ ¼ö ÀÖ±â ¶§¹®ÀÔ´Ï´Ù.
+¼­¹öÀÇ ºÎÇÏ¸¦ ´ú±â À§ÇØ ¼­¹ö°¡ accept¸¦ ¿Ï·áÇÑ ÈÄ¿¡¾ß Å¬¶óÀÌ¾ðÆ®°¡ Á¢¼ÓÇÏµµ·Ï Çß½À´Ï´Ù.  
+<img src="https://user-images.githubusercontent.com/43042411/76689270-8f53da00-6677-11ea-9d8e-ad9e4df90409.png"></img>
+1. ´ë±â¿­ ¼­¹ö°¡ Å¬¶óÀÌ¾ðÆ®(È¤Àº ÇÇ¾îpeer)·Î¼­ ¸ÞÀÎ ¼­¹ö¿¡ Á¢¼ÓÇÕ´Ï´Ù.   
+1-1. ´ë±â¿­ ¼­¹ö°¡ ¸ØÃß´õ¶óµµ ´Ù½Ã ÄÑ¸é ¸ÞÀÎ ¼­¹ö¿¡ Á¢¼ÓÇÒ ¼ö ÀÖ½À´Ï´Ù.
+2. ´ë±â¿­ ¼­¹ö°¡ ¸ÞÀÎ ¼­¹ö¿¡°Ô ´ë±â¿­ ¼­¹ö·Î¼­ÀÇ ÁõÇ¥¸¦ º¸³À´Ï´Ù.  ¸ÞÀÎ ¼­¹ö´Â ÁõÇ¥¸¦ º¸³½ Å¬¶óÀÌ¾ðÆ®¸¦ ´ë±â¿­ ¼­¹ö·Î °£ÁÖÇÕ´Ï´Ù.
+3. Å¬¶óÀÌ¾ðÆ®°¡ ´ë±â¿­ ¼­¹ö¿¡ Á¢¼ÓÇÕ´Ï´Ù.
+4. Å¬¶óÀÌ¾ðÆ®°¡ ´ë±â¿­ ¼­¹ö¿¡ ÀÓÀÇÀÇ ÇØ½Ã °ªÀ» º¸³À´Ï´Ù.  ´ë±â¿­ ¼­¹ö´Â ÀÌ ÃÊ´ëÀåÀ» º¸°í Å¬¶óÀÌ¾ðÆ®°¡ º¯Á¶µÇÁö ¾Ê¾Ò´ÂÁö, ¼­¹öµé°ú ¹öÀüÀÌ °°ÀºÁö¸¦ È®ÀÎÇÕ´Ï´Ù.
+5. Å¬¶óÀÌ¾ðÆ®°¡ ½Ã°£ ³»¿¡ 4¸¦ Åë°úÇÏ°í ¸ÞÀÎ ¼­¹ö¿¡µµ ÀÚ¸®°¡ ÀÖÀ¸¸é, ´ë±â¿­ ¼­¹ö°¡ Å¬¶óÀÌ¾ðÆ®¿Í ¸ÞÀÎ ¼­¹ö¿¡ ¶È°°Àº Æ¼ÄÏÀ» º¸³À´Ï´Ù.   
+5-1-1. Å¬¶óÀÌ¾ðÆ®°¡ ½Ã°£ ³»¿¡ 4¸¦ Åë°úÇßÀ¸³ª ¸ÞÀÎ ¼­¹ö¿¡ ÀÚ¸®°¡ ¾øÀ¸¸é, ´ë±â¿­ ¼­¹ö´Â Å¬¶óÀÌ¾ðÆ®¿¡ ´ë±â ¹øÈ£¸¦ ¹ß±ÞÇÏ°í ¸ÞÀÎ ¼­¹ö¿¡ ÀÚ¸®°¡ ³µ´ÂÁö ÁÖ±âÀûÀ¸·Î ¹°¾îº¾´Ï´Ù.   
+5-1-2. ¸ÞÀÎ ¼­¹ö¿¡ ÀÚ¸®°¡ ³ª¸é, ´ë±â ¹øÈ£ 0 Å¬¶óÀÌ¾ðÆ®¿¡°Ô 5¸¦ ¼öÇàÇÕ´Ï´Ù.   
+5-2. Å¬¶óÀÌ¾ðÆ®°¡ ½Ã°£ ³»¿¡ 4¸¦ Åë°úÇÏÁö ¸øÇÏ¸é, ´ë±â¿­ ¼­¹ö°¡ Å¬¶óÀÌ¾ðÆ®ÀÇ Á¢¼ÓÀ» ²÷½À´Ï´Ù.
+6. ´ë±â¿­ ¼­¹ö°¡ Æ¼ÄÏÀ» º¸³½ Å¬¶óÀÌ¾ðÆ®¿Í Á¢¼ÓÀ» ²÷½À´Ï´Ù.
+7. Å¬¶óÀÌ¾ðÆ®°¡ ¸ÞÀÎ ¼­¹ö¿¡ Á¢¼ÓÇÕ´Ï´Ù.
+8. Å¬¶óÀÌ¾ðÆ®°¡ ´ë±â¿­ ¼­¹ö·ÎºÎÅÍ ¹ÞÀº Æ¼ÄÏÀ» ¸ÞÀÎ ¼­¹ö¿¡ ¿¡ÄÚÇÕ´Ï´Ù.
+9. ¸ÞÀÎ ¼­¹ö°¡ Å¬¶óÀÌ¾ðÆ®·ÎºÎÅÍ ¹ÞÀº Æ¼ÄÏÀÌ ´ë±â¿­ ¼­¹ö·ÎºÎÅÍ ¹ÞÀº Æ¼ÄÏ°ú ÀÏÄ¡ÇÏ¸é, Å¬¶óÀÌ¾ðÆ®ÀÇ Á¢¼ÓÀ» À¯ÁöÇÕ´Ï´Ù.
+9-1. ÀÏÄ¡ÇÏÁö ¾ÊÀ¸¸é ¸ÞÀÎ ¼­¹ö°¡ Å¬¶óÀÌ¾ðÆ®ÀÇ Á¢¼ÓÀ» ²÷½À´Ï´Ù.
+
+#IOCP #Overlapped I/O #Completion Routine
+¼­¹öÀÇ ¼ÒÄÏ ÀÔÃâ·Â¿¡ IOCP¸¦ ½è½À´Ï´Ù.  °ÔÀÓ ·ÎÁ÷Àº ¸ðµÎ ¸ÞÀÎ ½º·¹µå¿¡¼­ ¼öÇàÅä·Ï Çß½À´Ï´Ù.
+
+#¹öÆÛ ¾²Áö ¾Ê±â #¼ÒÄÏ ¿É¼Ç
+´ë±â¿­ ¼­¹ö ¸®½º³Ê¿Í ¸®½º³Ê°¡ acceptÇÑ ¼ÒÄÏµéÀÇ O/S»ó ¹öÆÛ¸¦ ¾ø¾Ö º¹»çÇÏÁö ¾Êµµ·Ï Çß½À´Ï´Ù.  ¹öÆÛ°¡ ÇÊ¿äÇÒ ¸¸Å­ ¹«°Å¿î ÀÛ¾÷À» ÇÏÁö ¾Ê±â ¶§¹®ÀÔ´Ï´Ù.  ´ë½Å Å¬¶óÀÌ¾ðÆ®°¡ º¸³»±â/¹Þ±â ¹öÆÛ¸¦ °®½À´Ï´Ù.
+
+#¹é·Î±× #::AcceptEx(...)
+¹é·Î±×°¡ ¼ö¿ëÇÒ ¼ö ÀÖ´Â Á¢¼Ó ¼ö¸¸Å­ ::AcceptEx(...)¸¦ °É¾îµÎ¾ú½À´Ï´Ù.
+
+#Á¢¼Ó #Conditional Accept
+Å¬¶óÀÌ¾ðÆ®°¡ ±¦È÷ ¼­¹ö¿¡ ºÎÇÏ¸¦ ÁÖÁö ¸øÇÏµµ·Ï ¼ÒÄÏ ¿É¼ÇÀ¸·Î conditional accept¸¦ ¼³Á¤Çß½À´Ï´Ù.
+°°Àº ÀÌÀ¯·Î Å¬¶óÀÌ¾ðÆ®°¡ º¯Á¶, ¹öÀü È®ÀÎÀ» À§ÇÑ ÇØ½Ã °ªÀ» ÀÏÁ¤ ½Ã°£ ³»¿¡ º¸³»Áö ¾ÊÀ¸¸é ´ë±â¿­ ¼­¹ö°¡ ¿¬°áÀ» ²÷µµ·Ï Çß½À´Ï´Ù.
+
+#¼ÒÄÏ ÀçÈ°¿ë #DisconnectEx
+Á¤»óÀûÀ¸·Î Á¢¼ÓÀ» ²÷Àº ¼ÒÄÏÀº ::DisconnectEx(...)·Î ÀçÈ°¿ëÇß½À´Ï´Ù.  ¼ÒÄÏÀ» »õ°ÍÀ¸·Î ±³Ã¼ÇÏ´Â ºñ¿ëÀÌ ºñ½Î±â ¶§¹®ÀÌ¾ú½À´Ï´Ù.  º¸³»±â³ª ¹Þ±â°¡ ½ÇÆÐÇÑ ¼ÒÄÏÀº °ÅÀÇ ¸ðµÎ ÀçÈ°¿ëµµ ½ÇÆÐÇß±â ¶§¹®¿¡ ÀÌ ¼ÒÄÏÀº »õ°ÍÀ¸·Î ±³Ã¼ÇÏµµ·Ï Çß½À´Ï´Ù.  ÀÌ ¶§ °©ÀÛ½º·¯¿î ±³Ã¼·Î »ý±ä ¹®Á¦µéÀ» ¸¶¹«¸®ÇÏ°í³ª¼­ ´Ù½Ã ::Acceptex(...)¸¦ °É¾îµÎ¾ú½À´Ï´Ù.
+
+#½ºÆ®·¹½º Å×½ºÆ®   
+20³â 3¿ù 15ÀÏ ÇöÀç, Å¬¶óÀÌ¾ðÆ® 100°³±îÁö´Â Åë°úÇß½À´Ï´Ù.
+
+#Å¬¶óÀÌ¾ðÆ® #ºí·ÎÅ·Blocking ¼ÒÄÏ #À©¼Ó
+Å¬¶óÀÌ¾ðÆ®¿¡´Â ºí·ÎÅ· ¼ÒÄÏÀ» ½è½À´Ï´Ù.  ³íºí·ÎÅ· ¼ÒÄÏÀ» ¾²Áö ¾ÊÀº ÀÌÀ¯´Â ¸ÖÆ¼½º·¹µå ÇÁ·Î±×·¡¹ÖÀ» ¿¬½ÀÇÏ°í ½Í¾ú±â ¶§¹®ÀÔ´Ï´Ù.
+°³¹ß µµÁß, ºí·ÎÅ· ¼ÒÄÏÀ» ¾²´Â ::send(...) ÇÔ¼ö¸¦ overlappedµÈ ::WSASend(...) ÇÔ¼ö¿Í completion routineÀ¸·Î ±³Ã¼Çß½À´Ï´Ù.  ½º·¹µå¸¦ ÀçÈ°¿ëÇÏ¸ç ::send(...) ÇÔ¼ö¸¦ ¾²´Ï ¸ÖÆ¼½º·¹µå ÇÁ·Î±×·¡¹Ö Æ¯À¯ÀÇ ¹®Á¦µéÀÌ ¹ß»ýÇß±â ¶§¹®ÀÔ´Ï´Ù.  ±×·¸´Ù°í ::send(...) ÇÔ¼ö¸¦ ¾µ ¶§¸¶´Ù ½º·¹µå¸¦ »õ·Î ¸¸µé¾î ÁÙ ¼ö´Â ¾ø¾ú½À´Ï´Ù.  ½º·¹µå¸¦ ¸¸µå´Â °Í¸¸ ÇØµµ ºñ¿ëÀÌ Å©°í, ¸ÕÀú ¸¸µç ½º·¹µå°¡ ¸ÕÀú µ·´Ù´Â º¸ÀåÀÌ ¾ø±â ¶§¹®ÀÌ¾ú½À´Ï´Ù.  ¹Þ´Â µ¥¿¡´Â ¿©ÀüÈ÷ º°µµÀÇ ½º·¹µå¸¦ ÀçÈ°¿ëÇÏ¸ç ºí·ÎÅ· ¼ÒÄÏ°ú ::recv(...) ÇÔ¼ö¸¦ ½è½À´Ï´Ù.
+Å¸ÀÓ¾Æ¿ôÀ» ÁÖ¾î ½º·¹µå¸¦ joinÇÑ ´ÙÀ½ ¼ÒÄÏÀ» ´Ý¾Ò½À´Ï´Ù.  ¹Ý´ë ¼ø¼­·Î ¼ÒÄÏÀ» ´Ý¾Æ ºí·ÎÅ·À» Ç¬ ´ÙÀ½ ½º·¹µå¸¦ joinÇÒ ¼öµµ ÀÖ¾úÁö¸¸, ´õ gracefulÇÏ°Ô Á¾·áÇß½À´Ï´Ù.
+
+#º¯Á¶ Å¬¶óÀÌ¾ðÆ® °¨Áö #ÇØ½Ã salt #Å° ½ºÆ®·¹Äª
+Å¬¶óÀÌ¾ðÆ®°¡ º¯Á¶µÇÁø ¾Ê¾Ò´ÂÁö, ¹öÀüÀÌ ¼­¹öµé°ú °°ÀºÁö¸¦ ´ë±â¿­ ¼­¹ö°¡ È®ÀÎÅä·Ï Çß½À´Ï´Ù.  ºñ´ëÄª Å°¸¦ ¾²Áö ¾Ê°í, ÇöÀç ½Ã°£°ú salt¿Í Å° ½ºÆ®·¹ÄªÀ¸·Î ¾òÀº ÇØ½Ã °ªÀ» ½è½À´Ï´Ù.
+
+#¼­¹ö¿Í Å¬¶óÀÌ¾ðÆ®°¡ °øÀ¯ÇÏ´Â ¸ðµ¨ ¾Ö¼Â
+¸ðµ¨ ¾Ö¼Â Tetrimino¿Í Stage´Â Å¬¶óÀÌ¾ðÆ®¿Í ¼­¹ö ¸ðµÎ¿¡¼­ ¾²ÀÔ´Ï´Ù.  ±×·±µ¥ ¼­¹ö¿¡¼­´Â ·»´õ¿¡ ÇÊ¿äÇÑ ºÎºÐÀÌ ÇÊ¿äÇÏÁö ¾Ê¾Æ ¶óÀÌºê·¯¸®·Î °øÀ¯ÇÏÁö ¾Ê°í µû·Î µÎ¾ú½À´Ï´Ù.  ±×·¸°Ô ÇØº¸´Ï °°Àº ¼öÁ¤À» µÎ ¹ø ¾¿ ¹Ýº¹ÇØ¾ß Çß°í µû·Î ¿­¾î µð¹ö±×ÇØ¾ß Çß½À´Ï´Ù.  ±×·¡¼­ Áö±ÝÀº ¶óÀÌºê·¯¸®·Î °øÀ¯ÇÏ´Â °ÍÀÌ ´õ ³´´Ù°í »ý°¢ÇÕ´Ï´Ù.
 
 
-¶óÀÌ¼¾½º
+´ÙÀ½Àº ¾ÕÀ¸·Î ÇØ¾ßÇÒ °ÍµéÀÔ´Ï´Ù.
+---------------------
+
+
+¶óÀÌ¼¾½º´Â ´ÙÀ½°ú °°½À´Ï´Ù.
 --------
 + [**zlib/png**](https://www.sfml-dev.org/license.php) for SFML
 + OFL for fonts

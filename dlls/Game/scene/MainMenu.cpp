@@ -884,7 +884,8 @@ void scene::MainMenu::loadResources( const sf::RenderWindow& )
 	}
 }
 
-::scene::ID scene::MainMenu::update( std::vector<sf::Event>& eventQueue )
+::scene::ID scene::MainMenu::update( std::vector<sf::Event>& eventQueue,
+									const sf::RenderWindow& )
 {
 	for ( const sf::Event& it : eventQueue )
 	{
