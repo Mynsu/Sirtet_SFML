@@ -26,6 +26,10 @@ namespace scene::online
 					  const sf::RenderWindow& ) override
 		{}
 
+////
+// 사실 아래는 다른 클래스에 분리하는 게 낫습니다.
+////
+
 		void setMyNickname( std::string& myNickname );
 		const std::string& myNickname( ) const;
 		HashedKey myNicknameHashed( ) const;
@@ -46,6 +50,7 @@ namespace scene::online
 											 const Online::Option option,
 											uint16_t bodySize ) const;
 		////
+////
 	private:
 		static bool IsInstantiated;
 		void setScene( const ::scene::online::ID nextSceneID,
