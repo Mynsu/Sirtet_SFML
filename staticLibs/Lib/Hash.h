@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <string>
 
 using HashedKey = uint32_t;
 using Dword = int32_t;

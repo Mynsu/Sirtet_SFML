@@ -114,7 +114,7 @@ namespace model
 		float mBlockSize_;
 		// Mapped to the left top position of the stage panel.
 		sf::Vector2f mOrigin;
-		// NOTE: 테트리미노를 블록 4개로 구성하지만, 덩치가 큰 그래픽 인스턴스까지 4개를 두어선 안 됩니다.
+		// NOTE: 테트리미노를 블록 4개로 구성하지만, 덩치가 큰 그래픽 인스턴스까지 4개를 둘 필요는 없습니다.
 		sf::RectangleShape mBlockShape;
 		// Retains blocks' position in advance.
 		::model::tetrimino::LocalSpace mPossibleRotations[(int)::model::tetrimino::Rotation::NONE_MAX];

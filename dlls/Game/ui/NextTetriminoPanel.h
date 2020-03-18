@@ -67,6 +67,7 @@ namespace ui
 		sf::Vector2f mPositionLefTop_;
 		sf::Vector2f mBlocksPositions[::model::tetrimino::BLOCKS_A_TETRIMINO];
 		sf::RectangleShape mPanel;
+		// NOTE: 테트리미노를 블록 4개로 구성하지만, 덩치가 큰 그래픽 인스턴스까지 4개를 둘 필요는 없습니다.
 		sf::RectangleShape mBlock;
 	};
 }

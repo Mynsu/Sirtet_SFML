@@ -2,6 +2,9 @@
 #include <WinSock2.h>
 #pragma comment (lib, "Ws2_32")
 #include <stdint.h>
+#ifndef _DEBUG
+#include <iostream>
+#endif
 #include "Socket.h"
 
 struct IOCPEvent
