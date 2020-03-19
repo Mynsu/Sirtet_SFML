@@ -10,8 +10,8 @@ SFMLSound::SFMLSound( )
 {
 	ASSERT_TRUE( false == IsInstantiated );
 
-	setVolume( ::sound::Target::BGM, 2.f );
-	setVolume( ::sound::Target::SFX, 4.f );
+	setVolume( ::sound::Target::BGM, 4.f );
+	setVolume( ::sound::Target::SFX, 8.f );
 
 	const std::string scriptPath( "Scripts/_OnlyDuringDev.lua" );
 	const std::string varName0( "IsBGMOffOnStart" );

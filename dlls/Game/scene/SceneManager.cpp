@@ -73,7 +73,7 @@ void ::scene::SceneManager::setScene( const ::scene::ID nextScene )
 				// 이미 싱글 플레이 시퀀스에 있을 경우,
 				else
 				{
-					mCurrentScene->setScene( (uint8_t)nextScene%10 );
+					mCurrentScene->setScene( (uint8_t)nextScene%10, *mWindow );
 				}
 			}
 #ifdef _DEBUG
