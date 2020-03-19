@@ -13,25 +13,25 @@ Sirtet
  
 언어와 개발 환경은
 ------------------
-**C++ 17**, **Lua 5.3**, **비주얼 스튜디오 2017(15.9)** 그리고 **윈도우즈 10(1803)**입니다.
+**C++ 17, Lua 5.3, 비주얼 스튜디오 2017(15.9)** 그리고 윈도우즈 10(1803)입니다.
 
 
 외부 라이브러리와 운영체제의 버전은
 --------------------------------------------
-**Lua 5.3.0 이상**
-+ 설치 예)
-1. [다운로드 페이지](https://sourceforge.net/projects/luabinaries/files/5.3.5/Windows%20Libraries/Dynamic/)에서 *lua-5.3.5_Win64_dll15_lib.zip* 다운로드
-2. *./externals/Lua-5.3/x64/* 에 *include* 폴더 압축 풀기   
-   *./externals/Lua-5.3/x64/lib/* 에 *lua53.lib* 압축 풀기
-3. *빌드된 Sirtet.exe와 Game.dll이 있는 디렉토리* 에 *lua53.dll* 압축 풀기
-**SFML 2.5.0 이상**
-+ 설치 예)
-1. [다운로드 페이지](https://www.sfml-dev.org/download/sfml/2.5.1/)에서 *Visual C++ 15 (2017) - 64-bit* 다운로드
-2. *./externals/SFML-2.5/x64/* 에 *include* 폴더, *lib* 폴더 압축 풀기
-3. *빌드된 Server.exe가 있는 디렉토리* 에 *sfml-graphics-2.dll, sfml-system-2.dll, sfml-window-2.dll* 압축 풀기   
-(이 의존성은 없앨 예정입니다.)   
-   *빌드된 Sirtet.exe와 Game.dll이 있는 디렉토리* 에 *openal32.dll, sfml-audio-2.dll, sfml-graphics-2.dll, sfml-system-2.dll, sfml-window-2.dll* 압축 풀기
-**그리고 윈도우즈 7 이상**이 필요합니다.
+#### **Lua 5.3.0 이상**   
+> 설치 예)
+> 1. [다운로드 페이지](https://sourceforge.net/projects/luabinaries/files/5.3.5/Windows%20Libraries/Dynamic/)에서 *lua-5.3.5_Win64_dll15_lib.zip* 다운로드
+> 2. *./externals/Lua-5.3/x64/* 에 *include* 폴더 압축 풀기
+>   *./externals/Lua-5.3/x64/lib/* 에 *lua53.lib* 압축 풀기
+> 3. *빌드된 Sirtet.exe와 Game.dll이 있는 디렉토리* 에 *lua53.dll* 압축 풀기
+#### **SFML 2.5.0 이상**
+> 설치 예)
+> 1. [다운로드 페이지](https://www.sfml-dev.org/download/sfml/2.5.1/)에서 *Visual C++ 15 (2017) - 64-bit* 다운로드
+> 2. *./externals/SFML-2.5/x64/* 에 *include* 폴더, *lib* 폴더 압축 풀기
+> 3. *빌드된 Server.exe가 있는 디렉토리* 에 *sfml-graphics-2.dll, sfml-system-2.dll, sfml-window-2.dll* 압축 풀기   
+> ( 이 의존성은 없앨 예정입니다. )   
+>   *빌드된 Sirtet.exe와 Game.dll이 있는 디렉토리* 에 *openal32.dll, sfml-audio-2.dll, sfml-graphics-2.dll, sfml-system-2.dll, sfml-window-2.dll* 압축 풀기
+#### 그리고 **윈도우즈 7 이상**이 필요합니다.
 
 
 빌드하시기 전에!
@@ -113,7 +113,7 @@ Sirtet
 **#의존*dependency* 관계** **#x64 호출 규약** **#Aggregation 관계**   
   의존 관계를 선호합니다.  인스턴스를 그때그때 레퍼런스 매개변수로 넘기려고 합니다.  디버그할 때 어떤 인스턴스가 어디에 쓰이는지 쉽게 보이기 때문입니다.  x64 호출 규약*calling convention*상 4 개의 매개변수까진 레지스트리에 넘기므로 성능도 얻습니다.  레퍼런스를 쥐고 있게 하거나 전역 포인터로 넘기는 것은 선호하지 않습니다.   
   하지만 Aggregation 관계가 두 곳 있습니다.  여러 씬들이 인스턴스를 공유하려는데 인터페이스를 수정하고 싶지는 않아서 한 곳에 생겼고, 콘솔로 호출하는 함수들을 컨테이너 하나에 담기 위해 타입을 통일하다 다른 한 곳에 생겼습니다.   
-( *dlls/Game/scene/inPlay/* 아래 헤더 파일들에 선언된 sf::Drawable 멤버 레퍼런스, exes/Engine/Command.h )
+( *dlls/Game/scene/inPlay/* 아래 헤더 파일들에 선언된 sf::Drawable 멤버 레퍼런스, *exes/Engine/Command.h* )
 
 **#RTTI**   
   굳이 쓰지 않아도 되고 성능 손해까지 있지만 연습 삼아 써봤습니다.   
@@ -171,11 +171,10 @@ Sirtet
   단지 자료 구조 중간에 있는 원소를 빼내거나 새로 넣는 경우가 잦다고 연결 리스트를 쓰지는 않습니다.  원소의 크기가 64 바이트 미만이면 SIMD를 쓰지 않아도 배열이 더 빠릅니다.  이 경우에도 단일*singly* 연결 리스트는 배열보다 빠르지만, 직전 원소를 따로 다뤄야 해 코드가 길고, 자료 구조 가장 뒤에 원소를 넣기에도 부적합합니다.   
 
 **#문자열 리터럴**   
-  문자열 리터럴은 (const/constexpr) char[]나 std::string으로 받습니다.  const char*로 받은 문자열 리터럴은 메모리에 남아 보안에 해가 되기 때문입니다.
+  문자열 리터럴은 (const/constexpr) char[]나 std::string으로 받습니다.  const char\*로 받은 문자열 리터럴은 메모리에 남아 보안에 해가 되기 때문입니다.
 
 **#문자열을 받는 매개변수**   
-  nullptr을 걸러낼 수 없는 char*보다 const char (&)[N]를, 문자열 리터럴이 메모리에 남을 수 있는 const char (&)[N]보다 std::string을 선호합니다.   
-  char*이 쓰인 곳은 재귀 함수와 윈속 send 함수뿐입니다.   
+  nullptr을 걸러낼 수 없는 char\*보다 const char (&)[N]를, 문자열 리터럴이 메모리에 남을 수 있는 const char (&)[N]보다 std::string을 선호합니다.  char\*이 쓰인 곳은 재귀 함수와 윈속 send 함수뿐입니다.   
 ( *staticLibs/Lib/Hash.h:11, Socket.h* )
 
 **#문자열 해싱** **#보안** **#성능**   
@@ -205,7 +204,7 @@ Sirtet
   오버로드한 연산자와 소스 파일에 선언, 정의된 짧은 함수를 인라인으로 만들려면 키워드 inline을 명시해야 합니다.  프로젝트 설정만으로는 인라인으로 만들 수 없습니다.  인라인 여부는 디스어셈블리에 call 인스트럭션이 있는지 아닌지를 보면 쉽게 알 수 있습니다.
 
 **#C 스타일 캐스트**   
-  static_cast<T>, reinterpret_cast<T>를 쓰지 않고 (T), (T*)처럼 C 스타일로 캐스트합니다.  차이도 없고 읽고 쓰기도 쉽기 때문입니다.
+  static_cast<T>, reinterpret_cast<T>를 쓰지 않고 (T), (T\*)처럼 C 스타일로 캐스트합니다.  차이도 없고 읽고 쓰기도 쉽기 때문입니다.
 
 **#switch 분기문**   
   if 분기문보다 switch 분기문을 선호합니다.  case들을 오름차순으로 정렬하면 컴파일러가 최적화해주기 때문입니다.   
@@ -237,7 +236,7 @@ Sirtet
 
 **#런타임 링킹 라이브러리** **#.dll**   
   엔진처럼 여러 Mod, 확장팩, 다른 게임에서 재사용하는 바이너리는 실행 파일로 만들고, 특정 Mod, 확장팩, 게임 컨텐츠를 담은 바이너리는 런타임 링킹 라이브러리, 즉 .dll 파일로 만듭니다.  대개 빌드 타임 링킹 방법과 달리 라이브러리를 공유하려고 쓰지만, 적어도 이 게임은 그렇지 않습니다.   
-  .lib 파일의 도움을 받으면 편하게 쓸 수 있습니다.  이 게임을 만들기 시작했을 때도 이 방법이었고, 이 게임이 의존하는 루아와 SFML도 이렇습니다.  그러나 연습을 위해 .lib 파일의 도움을 받지 않고 런타임 중 해제하고 로드할 수 있는 지금의 방법으로 옮겼습니다.
+  .lib 파일의 도움을 받으면 편하게 쓸 수 있습니다.  이 게임을 만들기 시작했을 때도 이 방법이었고, 이 게임이 의존하는 루아와 SFML도 이렇습니다.  그러나 연습을 위해 .lib 파일의 도움을 받지 않고 런타임 중 해제하고 로드할 수 있는 지금의 방법으로 옮겼습니다.   
 ( *dlls/Game/* 프로젝트 )
 
 **#씬 생성** **#의존성 주입 vs. 일원화**   
@@ -304,16 +303,16 @@ Sirtet
   클라이언트는 IOCP를 쓰지 않고 completion routine을 비동기 호출합니다.
 
 **#버퍼 복사하지 않기**   
-  대기열 서버가 accept 완료한 소켓들의 O/S 층 버퍼를 없애고 데이터를 직접 받습니다.  그래서 O/S 층 버퍼와 애플리케이션 층 버퍼 사이에 복사가 일어나지 않습니다.  버퍼가 필요할 만큼 무거운 작업을 하지 않기 때문에 가능한 일입니다.  대신 클라이언트에 있는 대기열 서버 소켓의 O/S 층 버퍼는 없애지 않았습니다.
+  대기열 서버가 accept 완료한 소켓들의 O/S 층 버퍼를 없애고 데이터를 직접 받습니다.  그래서 O/S 층 버퍼와 애플리케이션 층 버퍼 사이에 복사가 일어나지 않습니다.  버퍼가 필요할 만큼 무거운 작업을 하지 않기 때문에 가능한 일입니다.  대신 클라이언트에 있는 대기열 서버 소켓의 O/S 층 버퍼는 없애지 않았습니다.   
 ( *exes/QueueServer/QueueServer.cpp:177* )
 
 **#백로그** **#::AcceptEx(...)**   
   백로그만큼 ::AcceptEx(...)를 걸어 두었습니다.   
-  최근 걸어둔 소켓부터 accept가 완료되기 때문에, TCP timed wait delay 상태에 있는 소켓을 걸어 두지 않도록 유의합니다.
+  최근 걸어둔 소켓부터 accept가 완료되기 때문에, TCP timed wait delay 상태에 있는 소켓을 걸어 두지 않도록 유의합니다.   
 ( *exes/QueueServer/QueueServer.cpp:245, exes/Server/Server.cpp:88* )
 
 **#접속** **#Conditional accept**   
-  소켓 옵션으로 conditional accept를 주어, 서버가 accept를 완료해야 클라이언트가 접속할 수 있습니다.  이렇게 하지 않으면 클라이언트가 접속을 시도하는 것만으로 서버에 부하를 줍니다.
+  소켓 옵션으로 conditional accept를 주어, 서버가 accept를 완료해야 클라이언트가 접속할 수 있습니다.  이렇게 하지 않으면 클라이언트가 접속을 시도하는 것만으로 서버에 부하를 줍니다.   
 ( *exes/QueueServer/QueueServer.cpp:191, exes/Server/Server.cpp:44* )
 
 **#소켓 재활용** **#DisconnectEx(...)**   
@@ -330,13 +329,13 @@ Sirtet
 ( *dlls/Game/scene/online/Online.cpp* )
 
 **#가짜 클라이언트 감지** **#해시 salt** **#키 스트레칭**   
-  **#대기열 서버**에서 '초대장'이 언급됩니다.  초대장은 현재 시간과 salt와 키 스트레칭으로 얻은 해시 값이면 충분합니다.  암복호화 알고리즘을 쓰지 않아 부하가 덜합니다.
-( *dlls/Game/scene/online/Waiting.cpp 생성자* )
+  **#대기열 서버**에서 '초대장'이 언급됩니다.  초대장은 현재 시간과 salt와 키 스트레칭으로 얻은 해시 값이면 충분합니다.  암복호화 알고리즘을 쓰지 않아 부하가 덜합니다.   
+( *dlls/Game/scene/online/Waiting.cpp*의 생성자 )
 
 **#클라이언트와 서버가 공유하는 모델 애셋*asset***   
   서버를 만들기 시작했을 땐 클라이언트가 쓰던 모델 애셋을 그대로 가져와 썼었습니다.  곧, 렌더링에 쓰이는 멤버 변수/함수는 서버에게 불필요하다는 걸 알아챘습니다.  그래서 서버의 부하를 덜기 위해 필요없는 부위를 뺀 서버용 모델 애셋을 만들었습니다.   
-  서버용 모델 애셋을 따로 만들더라도 개발 막바지에 했어야 했습니다.  비효율적으로 따로따로 수정하다보니 같아야 할 코드가 달라지는 등 실수가 나왔기 때문입니다.
-( *dlls/Game/model/*과 *exes/Server/* 아래 *Tetrimino.h*와 *Stage.h* )
+  서버용 모델 애셋을 따로 만들더라도 개발 막바지에 했어야 했습니다.  비효율적으로 따로따로 수정하다보니 같아야 할 코드가 달라지는 등 실수가 나왔기 때문입니다.   
+( _dlls/Game/model/_과 *exes/Server/* 아래 *Tetrimino.h*와 *Stage.h* )
 
 **#디버그 모드에서 릴리즈 모드로** **#프로파일링**   
   디버그 모드에서 릴리즈 모드로 바꾸고 난 뒤 이슈가 하나 있었습니다.  클라이언트가 메인 서버와 통신하다가 끊기는 이슈였습니다.  원인을 찾기 위해 프로젝트 설정을 소거해나갔습니다.  결국 메인 서버의 CRT가 /MDd가 아니라서 생긴 이슈임을 알아냈습니다.  릴리즈 모드의 기본값이 /MD이므로 원인은 DLL 여부가 아니라 디버그 여부라고 판단, 메인 서버를 /MTd로 빌드했습니다.  그런데 아뿔싸!  이젠 /MDd로 빌드한 클라이언트는 통신이 잘 되고 /MD로 빌드한 클라이언트는 안 되는 것이었습니다.   
