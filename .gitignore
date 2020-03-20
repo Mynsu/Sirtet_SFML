@@ -10,5 +10,8 @@ Release
 include
 lib
 
+#Nuget Packages
+packages
+
 #Others
 .vs
