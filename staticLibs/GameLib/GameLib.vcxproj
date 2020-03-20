@@ -27,16 +27,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\GameLib\CommandList.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\GameLib\Common.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\GameLib\IConsole.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\GameLib\IGame.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\GameLib\IServiceLocator.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\GameLib\ISound.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\GameLib\VaultKeyList.h" />
+    <ClInclude Include="CommandList.h" />
+    <ClInclude Include="Common.h" />
+    <ClInclude Include="IConsole.h" />
+    <ClInclude Include="IGame.h" />
+    <ClInclude Include="IServiceLocator.h" />
+    <ClInclude Include="ISound.h" />
+    <ClInclude Include="VaultKeyList.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\staticLibs\GameLib\Ignored.cpp">
+    <ClCompile Include="Ignored.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">true</ExcludedFromBuild>

@@ -27,49 +27,50 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\pch.cpp">
+    <ClCompile Include="model\Tetrimino.cpp" />
+    <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">Create</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">pch.h</PrecompiledHeaderFile>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\AllClear.cpp">
+    <ClCompile Include="scene\inPlay\AllClear.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">Use</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">../../pch.h</PrecompiledHeaderFile>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\Assertion.cpp">
+    <ClCompile Include="scene\inPlay\Assertion.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">Use</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">../../pch.h</PrecompiledHeaderFile>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\GameOver.cpp">
+    <ClCompile Include="scene\inPlay\GameOver.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">Use</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">../../pch.h</PrecompiledHeaderFile>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\ui\NextTetriminoPanel.cpp">
+    <ClCompile Include="ui\NextTetriminoPanel.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">Use</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">../pch.h</PrecompiledHeaderFile>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\ui\PlayView.cpp">
+    <ClCompile Include="ui\PlayView.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">Use</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">../pch.h</PrecompiledHeaderFile>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\ui\TextInputBox.cpp">
+    <ClCompile Include="ui\TextInputBox.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../pch.h</PrecompiledHeaderFile>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
@@ -93,7 +94,7 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">../../pch.h</PrecompiledHeaderFile>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\online\Waiting.cpp">
+    <ClCompile Include="scene\online\Waiting.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">Use</PrecompiledHeader>
@@ -107,7 +108,7 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">../../pch.h</PrecompiledHeaderFile>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\vfx\Combo.cpp">
+    <ClCompile Include="vfx\Combo.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">Use</PrecompiledHeader>
@@ -122,21 +123,14 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">../pch.h</PrecompiledHeaderFile>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\model\Tetrimino.cpp">
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">Use</PrecompiledHeader>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">../pch.h</PrecompiledHeaderFile>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\InPlay.cpp">
+    <ClCompile Include="scene\inPlay\InPlay.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">Use</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">../../pch.h</PrecompiledHeaderFile>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\Playing.cpp">
+    <ClCompile Include="scene\inPlay\Playing.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
@@ -144,7 +138,7 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">../../pch.h</PrecompiledHeaderFile>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\Ready.cpp">
+    <ClCompile Include="scene\inPlay\Ready.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
@@ -159,27 +153,27 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">pch.h</PrecompiledHeaderFile>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\Game.cpp">
+    <ClCompile Include="Game.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">Use</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">pch.h</PrecompiledHeaderFile>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\Intro.cpp">
+    <ClCompile Include="scene\Intro.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">Use</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">../pch.h</PrecompiledHeaderFile>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\MainMenu.cpp">
+    <ClCompile Include="scene\MainMenu.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">Use</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">../pch.h</PrecompiledHeaderFile>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\SceneManager.cpp">
+    <ClCompile Include="scene\SceneManager.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">Use</PrecompiledHeader>
@@ -188,39 +182,39 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\pch.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\AllClear.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\Assertion.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\GameOver.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\online\IScene.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\ui\NextTetriminoPanel.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\ui\PlayView.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\ui\TextInputBox.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="scene\inPlay\AllClear.h" />
+    <ClInclude Include="scene\inPlay\Assertion.h" />
+    <ClInclude Include="scene\inPlay\GameOver.h" />
+    <ClInclude Include="scene\online\IScene.h" />
+    <ClInclude Include="ui\NextTetriminoPanel.h" />
+    <ClInclude Include="ui\PlayView.h" />
+    <ClInclude Include="ui\TextInputBox.h" />
     <ClInclude Include="scene\online\InLobby.h" />
     <ClInclude Include="scene\online\InRoom.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\online\Waiting.h" />
+    <ClInclude Include="scene\online\Waiting.h" />
     <ClInclude Include="scene\online\Online.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\vfx\Combo.h" />
+    <ClInclude Include="vfx\Combo.h" />
     <ClInclude Include="model\Stage.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\model\Tetrimino.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\InPlay.h" />
+    <ClInclude Include="model\Tetrimino.h" />
+    <ClInclude Include="scene\inPlay\InPlay.h" />
     <ClInclude Include="scene\inPlay\IScene.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\Playing.h">
+    <ClInclude Include="scene\inPlay\Playing.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\Ready.h">
+    <ClInclude Include="scene\inPlay\Ready.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="ServiceLocatorMirror.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\Intro.h" />
+    <ClInclude Include="scene\Intro.h" />
     <ClInclude Include="scene\IScene.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\MainMenu.h" />
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\SceneManager.h" />
+    <ClInclude Include="scene\MainMenu.h" />
+    <ClInclude Include="scene\SceneManager.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\Game.def" />
+    <None Include="Game.def" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

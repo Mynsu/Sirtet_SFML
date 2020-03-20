@@ -18,16 +18,16 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Console.h">
+    <ClInclude Include="Console.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\ServiceLocator.h">
+    <ClInclude Include="ServiceLocator.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Command.h">
+    <ClInclude Include="Command.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\pch.h">
+    <ClInclude Include="pch.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Sound.h">
@@ -35,22 +35,22 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\main.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\ServiceLocator.cpp">
+    <ClCompile Include="ServiceLocator.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\UnityBuild.cpp">
+    <ClCompile Include="UnityBuild.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Console.cpp">
+    <ClCompile Include="Console.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Command.cpp">
+    <ClCompile Include="Command.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\pch.cpp">
+    <ClCompile Include="pch.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Sound.cpp">
@@ -58,49 +58,49 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\_OnlyDuringDev.lua">
+    <None Include="Scripts\_OnlyDuringDev.lua">
       <Filter>리소스 파일\scripts</Filter>
     </None>
-    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\Console.lua">
+    <None Include="Scripts\Console.lua">
       <Filter>리소스 파일\scripts</Filter>
     </None>
-    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\Intro.lua">
+    <None Include="Scripts\Intro.lua">
       <Filter>리소스 파일\scripts</Filter>
     </None>
-    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\MainMenu.lua">
+    <None Include="Scripts\MainMenu.lua">
       <Filter>리소스 파일\scripts</Filter>
     </None>
-    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\Ready.lua">
+    <None Include="Scripts\Ready.lua">
       <Filter>리소스 파일\scripts</Filter>
     </None>
-    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\GameOver.lua">
+    <None Include="Scripts\GameOver.lua">
       <Filter>리소스 파일\scripts</Filter>
     </None>
     <None Include="Scripts\Online.lua">
       <Filter>리소스 파일\scripts</Filter>
     </None>
-    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\InRoom.lua">
+    <None Include="Scripts\InRoom.lua">
       <Filter>리소스 파일\scripts</Filter>
     </None>
-    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\Playing.lua">
+    <None Include="Scripts\Playing.lua">
       <Filter>리소스 파일\scripts</Filter>
     </None>
-    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\Tetrimino.lua">
+    <None Include="Scripts\Tetrimino.lua">
       <Filter>리소스 파일\scripts</Filter>
     </None>
-    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\InLobby.lua">
+    <None Include="Scripts\InLobby.lua">
       <Filter>리소스 파일\scripts</Filter>
     </None>
-    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\Waiting.lua">
+    <None Include="Scripts\Waiting.lua">
       <Filter>리소스 파일\scripts</Filter>
     </None>
-    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\Assertion.lua">
+    <None Include="Scripts\Assertion.lua">
       <Filter>리소스 파일\scripts</Filter>
     </None>
-    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\PlayView.lua">
+    <None Include="Scripts\PlayView.lua">
       <Filter>리소스 파일\scripts</Filter>
     </None>
-    <None Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\exes\Engine\Scripts\AllClear.lua">
+    <None Include="Scripts\AllClear.lua">
       <Filter>리소스 파일\scripts</Filter>
     </None>
   </ItemGroup>

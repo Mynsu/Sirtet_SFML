@@ -75,9 +75,6 @@
     <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\Ready.cpp">
       <Filter>소스 파일\scene\inPlay</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\model\Tetrimino.cpp">
-      <Filter>소스 파일\model</Filter>
-    </ClCompile>
     <ClCompile Include="model\Stage.cpp">
       <Filter>소스 파일\model</Filter>
     </ClCompile>
@@ -116,6 +113,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\scene\inPlay\AllClear.cpp">
       <Filter>소스 파일\scene\inPlay</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\%40Mynsu\C++\Tetris\Sirtet\dlls\Game\model\Tetrimino.cpp">
+      <Filter>소스 파일\model</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
