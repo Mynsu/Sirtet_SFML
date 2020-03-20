@@ -30,6 +30,7 @@ C++ 17, Lua 5.3, 비주얼 스튜디오 2017(15.9) 그리고 윈도우즈 10(180
 > 2. *./externals/SFML-2.5/x64/* 에 *include* 폴더, *lib* 폴더 압축 풀기
 > 3. *빌드된 Sirtet.exe와 Game.dll이 있는 디렉토리* 에 *openal32.dll, sfml-audio-2.dll, sfml-graphics-2.dll, sfml-system-2.dll, sfml-window-2.dll* 압축 풀기   
 > *빌드된 Server.exe가 있는 디렉토리* 에 *sfml-graphics-2.dll, sfml-system-2.dll, sfml-window-2.dll* 압축 풀기   
+> ( 디버그 모드로 빌드하시려면 *sfml-audio-**d**-2.dll*처럼 알파벳 **d**가 붙은 .dll 파일로 대체하십시오. )   
 > ( 메인 서버에서 SFML을 쓰지 않을 예정입니다. )
 + \[클라이언트/대기열 서버/메인 서버] 윈도우즈 7 이상입니다.
 
@@ -37,6 +38,12 @@ C++ 17, Lua 5.3, 비주얼 스튜디오 2017(15.9) 그리고 윈도우즈 10(180
 빌드하시기 전에!
 ----------------
 **서버들의 IP 주소**가 localhost로 설정되어 있습니다.  *staticLibs/GameLib/Common.h*에서 수정하실 수 있습니다.
+
+
+IDE에서는 실행되는데 출력 디렉토리에서는 실행이 안 된다면
+---------------------------------------------------------
+리소스 파일들이 출력 디렉토리에 있는지 확인해주십시오.   
+*./MakeSymbolicLinks.bat* 파일을 출력 디렉토리, 즉 *빌드된 Sirtet.exe와 Game.dll이 있는 디렉토리* 로 옮겨 실행하시면 편하게 리소스 파일들을 옮기실 수 있습니다.
 
 
 실행하신 후에
