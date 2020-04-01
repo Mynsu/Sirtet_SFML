@@ -47,7 +47,7 @@
 using Clock = std::chrono::high_resolution_clock;
 
 // !IMPORTANT: On delivery, make sure that this macro be undefined for the security.
-///#define _DEV
+#define _DEV
 
 #ifdef _DEBUG
 #define ASSERT_FALSE( x ) if ( false != (x) ) __debugbreak( )

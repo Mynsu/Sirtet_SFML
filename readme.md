@@ -1,6 +1,8 @@
 ﻿Sirtet
 ======
 예, 맞습니다.  [테트리스](https://tetris.fandom.com/wiki/Tetris_Guideline) 데모입니다.   
+   
+<a href="https://youtu.be/21LZqKT6xyA" target="_blank"><img src="https://user-images.githubusercontent.com/43042411/78128235-8cffc700-7450-11ea-990a-ffefc8c9c2bf.jpg" width="600" height="337" border="0"></a> *( 유투브 링크 )*
 
 
 테트리스를 만든 이유는
@@ -278,7 +280,7 @@ IDE에서는 실행되는데 출력 디렉토리에서는 실행이 안 된다�
   SFML은 SDL처럼 오픈 소스 멀티미디어 라이브러리지만 레퍼런스가 적습니다.  그럼에도 SFML을 쓴 건 SDL과 달리 C++로 작성되었기 때문입니다.  C++와 OOP의 좋은 예를 뜯어보며 추상에서 구체로 학습할 수 있습니다.
 
 **#콘솔**   
-[![Video Thumbnail](https://user-images.githubusercontent.com/43042411/76969660-0508c000-696e-11ea-897a-5b9b868422ae.jpg)](https://youtu.be/uPx0DgMIeoQ)   *(유투브 링크)*    
+<a href="https://youtu.be/uPx0DgMIeoQ" target="_blank"><img src="https://user-images.githubusercontent.com/43042411/76969660-0508c000-696e-11ea-897a-5b9b868422ae.jpg" width="600" height="337" border="0"></a> *( 유투브 링크 )*   
   명령어와 함수를 매핑하여 런타임 중에 콘솔로 여러 시도를 해볼 수 있습니다.  현재는 스크립트를 새로고침하거나, 원하는 씬으로 이동하거나, GUI가 미완성일 때를 대비한 방 생성/입장 명령어들이 등록되어 있습니다.   
   명령을 비동기로 수행하므로 공유 데이터를 관리해야 합니다.   
 ( [*exes/Engine/Console.h*](https://github.com/Mynsu/Sirtet_SFML/blob/master/exes/Engine/Console.h) )
@@ -391,4 +393,4 @@ IDE에서는 실행되는데 출력 디렉토리에서는 실행이 안 된다�
 
 마지막으로 수정한 날은
 ----------------------
-2020년 3월 19일
+2020년 4월 1일
