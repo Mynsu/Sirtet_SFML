@@ -8,7 +8,9 @@ const uint16_t ROOM_CAPACITY = 25;
 const uint16_t LOBBY_CAPACITY = 100;
 const ClientIndex LISTENER_IDX = CLIENT_CAPACITY;
 const Clock::duration TCP_TIMED_WAIT_DELAY_SEC = std::chrono::seconds(30);
-const Clock::duration TICKET_SUBMISSION_TIME_LIMIT = std::chrono::seconds(2);
+// NOTE: 메인 서버가 대기열 서버를 보통의 클라이언트로 오해해 킥하지 않도록 시간을 넉넉히 줍니다.
+const Clock::duration TicketSubmissionTimeLimit_withoutQueueServer = std::chrono::seconds(10);
+const Clock::duration TicketSubmissionTimeLimit_withQueueServer = std::chrono::seconds(2);
 
 volatile bool IsWorking = true;
 void ProcessSignal( int signal )
@@ -164,12 +166,17 @@ int main( )
 			<< nOfConnInMainServ << "/" << CLIENT_CAPACITY << " connections.)\n";
 		return result;
 	};
+#ifdef _DEV
+	uint8_t sumCount = 0;
+	long long sumMSPerFrame = 0;
+#endif
 	ClientIndex queueServerIdx = UINT16_MAX;
 	std::cout << "###############\n### MAIN SERVER\n###############\n\nQ. What would the queue server say?" << std::endl;
 	std::string sign;
 	std::cin >> sign;
 	const HashedKey encryptedSign = ::util::hash::Digest2(sign);
 	std::cout << "Ready.\n";
+	Clock::duration ticketSubmissionTimeLimit = TicketSubmissionTimeLimit_withoutQueueServer;
 	std::vector<Ticket> tickets;
 	std::unordered_set<ClientIndex> connectionsNotSubmittingTicket;
 	IOCPEvent event;
@@ -243,7 +250,8 @@ int main( )
 					--nOfConnInMainServ;
 					clientIndicesNotAccepted.emplace( queueServerIdx );
 					// Reset
-					queueServerIdx = -1;
+					queueServerIdx = UINT16_MAX;
+					ticketSubmissionTimeLimit = TicketSubmissionTimeLimit_withoutQueueServer;
 #ifdef _DEV
 					std::cerr << "WARNING: The queue server disconnected. (Now "
 						<< nOfConnInMainServ << '/' << CLIENT_CAPACITY << " connections.)\n";
@@ -262,7 +270,8 @@ int main( )
 							goto cleanUp;
 						}
 						// Reset
-						queueServerIdx = -1;
+						queueServerIdx = UINT16_MAX;
+						ticketSubmissionTimeLimit = TicketSubmissionTimeLimit_withoutQueueServer;
 					}
 					else if ( -1 == result )
 					{
@@ -299,7 +308,8 @@ int main( )
 										goto cleanUp;
 									}
 									// Reset
-									queueServerIdx = -1;
+									queueServerIdx = UINT16_MAX;
+									ticketSubmissionTimeLimit = TicketSubmissionTimeLimit_withoutQueueServer;
 								}
 								else
 								{
@@ -340,7 +350,8 @@ int main( )
 									goto cleanUp;
 								}
 								// Reset
-								queueServerIdx = -1;
+								queueServerIdx = UINT16_MAX;
+								ticketSubmissionTimeLimit = TicketSubmissionTimeLimit_withoutQueueServer;
 							}
 							break;
 						}
@@ -355,7 +366,8 @@ int main( )
 									goto cleanUp;
 								}
 								// Reset
-								queueServerIdx = -1;
+								queueServerIdx = UINT16_MAX;
+								ticketSubmissionTimeLimit = TicketSubmissionTimeLimit_withoutQueueServer;
 								continue;
 							}
 							break;
@@ -500,6 +512,7 @@ int main( )
 							else if ( UINT16_MAX == queueServerIdx &&
 									 encryptedSign == ::ntohl(*(HashedKey*)rcvBuf) )
 							{
+								ticketSubmissionTimeLimit = TicketSubmissionTimeLimit_withQueueServer;
 								queueServerIdx = clientIdx;
 								connectionsNotSubmittingTicket.erase( queueServerIdx );
 								client.setState( Client::State::AS_QUEUE_SERVER );
@@ -518,20 +531,26 @@ int main( )
 										// Break twice
 										goto cleanUp;
 									}
+									// Reset
+									queueServerIdx = UINT16_MAX;
+									ticketSubmissionTimeLimit = TicketSubmissionTimeLimit_withoutQueueServer;
 									continue;
 								}
 #ifdef _DEV
 								std::cout << "The number of connections has been told: " << nOfConnInMainServ << ".\n";
 #endif
-								if ( -1 == clientSocket.receiveOverlapped() )
+								if ( -1 == queueServerSocket.receiveOverlapped() )
 								{
 									// Exception
-									std::cerr << "WARNING: Failed to receive from Client " << clientIdx << ".\n";
-									if ( false == forceDisconnection(clientIdx) )
+									std::cerr << "WARNING: Failed to receive from the queue server.\n";
+									if ( false == forceDisconnection(queueServerIdx) )
 									{
 										// Break twice
 										goto cleanUp;
 									}
+									// Reset
+									queueServerIdx = UINT16_MAX;
+									ticketSubmissionTimeLimit = TicketSubmissionTimeLimit_withoutQueueServer;
 									continue;
 								}
 							}
@@ -585,10 +604,10 @@ int main( )
 			}
 		}
 
-		const Clock::time_point now = begin;
+		const Clock::time_point now = Clock::now();
 		for ( const ClientIndex idx : connectionsNotSubmittingTicket )
 		{
-			if ( TICKET_SUBMISSION_TIME_LIMIT < now - clients[idx].timeStamp() )
+			if ( ticketSubmissionTimeLimit < now - clients[idx].timeStamp() )
 			{
 				Socket& socket = clients[idx].socket();
 				if ( FALSE == socket.disconnectOverlapped() )
@@ -667,7 +686,13 @@ int main( )
 		auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now()-begin).count();
 		if ( 10 < elapsed )
 		{
-			std::cout << "MS per frame: " << elapsed << "\n";
+			sumMSPerFrame += elapsed;
+			++sumCount;
+			if ( 9 < sumCount )
+			{
+				std::cout << "Average MS per Frame: " << sumMSPerFrame / sumCount << "\n";
+				sumMSPerFrame = sumCount = 0;
+			}
 		}
 #endif
 	}

@@ -32,7 +32,7 @@
 #pragma comment( lib, "Lib" )
 #include <GameLib/Common.h>
 
-#define _DEV
+///#define _DEV
 using Clock = std::chrono::high_resolution_clock;
 using ClientIndex = uint16_t;
 using Ticket = HashedKey;
