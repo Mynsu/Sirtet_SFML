@@ -24,7 +24,7 @@ public:
 	virtual ~Client( ) = default;
 
 	std::vector<ClientIndex> work( const IOType completedIOType,
-								std::array<Client, CLIENT_CAPACITY>& clients,
+								const std::array<Client, CLIENT_CAPACITY>& clients,
 								std::vector<ClientIndex>& lobby,
 								std::unordered_map<HashedKey, Room>& rooms );
 	void setIndex( const ClientIndex index )

@@ -16,7 +16,7 @@ Client::Client( const Socket::Type type, const ClientIndex index )
 }
 
 std::vector<ClientIndex> Client::work( const IOType completedIOType, 
-									std::array<Client,CLIENT_CAPACITY>& clients,
+									 const std::array<Client,CLIENT_CAPACITY>& clients,
 									 std::vector<ClientIndex>& lobby,
 									 std::unordered_map<HashedKey, Room>& rooms )
 {
