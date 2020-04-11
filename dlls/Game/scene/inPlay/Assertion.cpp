@@ -203,24 +203,22 @@ void scene::inPlay::Assertion::loadResources( const sf::RenderWindow& window )
 	}
 	else
 	{
-		for ( auto it = eventQueue.cbegin(); eventQueue.cend() != it; )
-		{
-			if ( sf::Event::KeyPressed == it->type &&
-				sf::Keyboard::Escape == it->key.code )
-			{
-				if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::SELECTION]) )
-				{
-					gService()->console().printFailure(FailureLevel::WARNING,
-													   "File Not Found: "+mSoundPaths[(int)SoundIndex::SELECTION] );
-				}
-				it = eventQueue.erase(it);
-				retVal = ::scene::inPlay::ID::EXIT;
-			}
-			else
-			{
-				++it;
-			}
-		}
+		eventQueue.erase( std::remove_if(eventQueue.begin(), eventQueue.end(), [this, &retVal](const sf::Event& event)->bool
+										 {
+											 bool isRemoved = false;
+											 if ( sf::Event::KeyPressed == event.type &&
+												 sf::Keyboard::Escape == event.key.code )
+											 {
+												 if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::SELECTION]) )
+												 {
+													 gService()->console().printFailure(FailureLevel::WARNING,
+																						"File Not Found: "+mSoundPaths[(int)SoundIndex::SELECTION] );
+												 }
+												 retVal = ::scene::inPlay::ID::EXIT;
+												 isRemoved = true;
+											 }
+											 return isRemoved;
+										 }), eventQueue.cend() );
 	}
 
 	return retVal;

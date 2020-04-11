@@ -1571,41 +1571,39 @@ void scene::online::InRoom::loadResources( const sf::RenderWindow& window )
 		}
 	}
 
-	for ( auto it = eventQueue.cbegin(); eventQueue.cend() != it; )
-	{
-		if ( sf::Event::EventType::MouseButtonPressed == it->type &&
-			sf::Mouse::Button::Left == it->mouseButton.button &&
-			true == mIsMouseOverStartButton_ &&
-			true == mIsStartingGuideVisible )
-		{
-			mIsStartButtonPressed_ = true;
-			it = eventQueue.erase(it);
-		}
-		else if ( sf::Event::EventType::MouseButtonReleased == it->type &&
-			sf::Mouse::Button::Left == it->mouseButton.button &&
-			true == mIsMouseOverStartButton_ &&
-			true == mIsStartingGuideVisible )
-		{
-			startGame( );
-			if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::SELECTION]) )
-			{
-				gService()->console().printFailure(FailureLevel::WARNING,
-												   "File Not Found: "+mSoundPaths[(int)SoundIndex::SELECTION] );
-			}
-			mIsStartButtonPressed_ = false;
-			it = eventQueue.erase(it);
-		}
-		else if ( sf::Event::EventType::KeyPressed == it->type &&
-					sf::Keyboard::Escape == it->key.code )
-		{
-			mOverlappedScene = std::make_unique<::scene::inPlay::Assertion>(window);
-			it = eventQueue.erase(it);
-		}
-		else
-		{
-			++it;
-		}
-	}
+	eventQueue.erase(std::remove_if(eventQueue.begin(), eventQueue.end(), [this, &window](const sf::Event& event)->bool
+									{
+										bool isRemoved = false;
+										if ( sf::Event::EventType::MouseButtonPressed == event.type &&
+											sf::Mouse::Button::Left == event.mouseButton.button &&
+											true == mIsMouseOverStartButton_ &&
+											true == mIsStartingGuideVisible )
+										{
+											mIsStartButtonPressed_ = true;
+											isRemoved = true;
+										}
+										else if ( sf::Event::EventType::MouseButtonReleased == event.type &&
+												 sf::Mouse::Button::Left == event.mouseButton.button &&
+												 true == mIsMouseOverStartButton_ &&
+												 true == mIsStartingGuideVisible )
+										{
+											startGame( );
+											if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::SELECTION]) )
+											{
+												gService()->console().printFailure(FailureLevel::WARNING,
+																				   "File Not Found: "+mSoundPaths[(int)SoundIndex::SELECTION] );
+											}
+											mIsStartButtonPressed_ = false;
+											isRemoved = true;
+										}
+										else if ( sf::Event::EventType::KeyPressed == event.type &&
+												 sf::Keyboard::Escape == event.key.code )
+										{
+											mOverlappedScene = std::make_unique<::scene::inPlay::Assertion>(window);
+											isRemoved = true;
+										}
+										return isRemoved;
+									}), eventQueue.end());
 
 	return nextSceneID;
 }

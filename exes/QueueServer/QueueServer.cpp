@@ -632,55 +632,67 @@ int main( )
 		}
 
 		// When room in the main server remains yet,
-		for ( auto it = queue.cbegin(); queue.cend() != it &&
-										0 < roomInMainServer; )
 		{
-			Socket& clientSocket = clients[*it].socket();
-			std::random_device d;
-			std::minstd_rand engine( d() );
-			const Ticket ticket = engine();
-			Packet packet;
-			packet.pack( TAG_TICKET, ticket );
-			// First sent to a client, last to the main server.
-			// Otherwise it's annoying to get rid of copies of the ticket in the main server
-			// actually not issued to the client.
-			if ( -1 == clientSocket.sendOverlapped(packet) )
-			{
-				// Exception
-				std::cerr << "WARNING: Failed to send a ticket to Client " << *it
-					<< " waiting in the queue line.\n";
-				if ( false == forceDisconnection(*it) )
-				{
-					// Exception
-					// Break twice
-					goto cleanUp;
-				}
-				PrintLeavingWithError( *it, nOfConnInQueueServ );
-			}
-			else
-			{
+			bool hasFatalExceptionOccured = false;
+			auto it = queue.begin();
+			auto itEnd = queue.end();
+			queue.erase(std::remove_if(queue.begin(), itEnd, [&](const ClientIndex index)->bool
+									   {
+										   bool isRemoved = false;
+
+										   Socket& clientSocket = clients[index].socket();
+										   std::random_device d;
+										   std::minstd_rand engine( d() );
+										   const Ticket ticket = engine();
+										   Packet packet;
+										   packet.pack( TAG_TICKET, ticket );
+										   // First sent to a client, last to the main server.
+										   // Otherwise it's annoying to get rid of copies of the ticket in the main server
+										   // actually not issued to the client.
+										   if ( -1 == clientSocket.sendOverlapped(packet) )
+										   {
+											   // Exception
+											   std::cerr << "WARNING: Failed to send a ticket to Client " << index
+												   << " waiting in the queue line.\n";
+											   if ( false == forceDisconnection(index) )
+											   {
+												   // Exception
+												   hasFatalExceptionOccured = true;
+												   return true;
+											   }
+											   PrintLeavingWithError( index, nOfConnInQueueServ );
+										   }
+										   else
+										   {
 #ifdef _DEBUG
-				std::cout << "Sending a ticket " << ticket << " to Client " <<
-					*it << " succeeded.\n";
+											   std::cout << "Sending a ticket " << ticket << " to Client " <<
+												   index << " succeeded.\n";
 #endif
-				clientIndicesTicketed.set( *it );
-				if ( -1 == socketToMainServer->sendOverlapped(packet) )
-				{
-					// Exception
-					std::cerr << "WARNING: Failed to send a copy of the issued ticket to the main server.\n";
-					if ( false == ResetAndReconnectToMainServer(socketToMainServer,
-																iocp) )
-					{
-						// Exception
-						// Break twice.
-						goto cleanUp;
-					}
-					statusAgainstMainServer.set( Status::WAITING_FOR_IDENTIFICATION, 1 );
-				}
-				--roomInMainServer;
-			}
-			it = queue.erase(it);
-			lastTimeAskingNOfConnInMainServ = now;
+											   clientIndicesTicketed.set( index );
+											   if ( -1 == socketToMainServer->sendOverlapped(packet) )
+											   {
+												   // Exception
+												   std::cerr << "WARNING: Failed to send a copy of the issued ticket to the main server.\n";
+												   if ( false == ResetAndReconnectToMainServer(socketToMainServer,
+																							   iocp) )
+												   {
+													   // Exception
+													   hasFatalExceptionOccured = true;
+													   return true;
+												   }
+												   statusAgainstMainServer.set( Status::WAITING_FOR_IDENTIFICATION, 1 );
+											   }
+											   --roomInMainServer;
+										   }
+										   isRemoved = true;
+										   lastTimeAskingNOfConnInMainServ = now;
+										   ++it;
+										   if ( roomInMainServer <= 0 )
+										   {
+											   itEnd = it;
+										   }
+										   return isRemoved;
+									   }), queue.end());
 		}
 
 		{

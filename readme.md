@@ -136,7 +136,7 @@ IDE에서는 실행되는데 출력 디렉토리에서는 실행이 안 된다�
 
 **#RTTI**   
   굳이 쓰지 않아도 되고 성능 손해까지 있지만 연습 삼아 써봤습니다.   
-( [*dlls/Game/scene/Playing.cpp:973* 키워드 typeid](https://github.com/Mynsu/Sirtet_SFML/blob/9a5e461624dd15256a1f22c75fd294aef88ab21d/dlls/Game/scene/inPlay/Playing.cpp#L973), [*dlls/Game/scene/IScene.h:34* 순수 가상 함수 currentScene()의 정의](https://github.com/Mynsu/Sirtet_SFML/blob/9a5e461624dd15256a1f22c75fd294aef88ab21d/dlls/Game/scene/Intro.cpp#L139) )
+( [*dlls/Game/scene/Playing.cpp:974* 키워드 typeid](https://github.com/Mynsu/Sirtet_SFML/blob/9a5e461624dd15256a1f22c75fd294aef88ab21d/dlls/Game/scene/inPlay/Playing.cpp#L974), [*dlls/Game/scene/IScene.h:34* 순수 가상 함수 currentScene()의 정의](https://github.com/Mynsu/Sirtet_SFML/blob/9a5e461624dd15256a1f22c75fd294aef88ab21d/dlls/Game/scene/Intro.cpp#L139) )
 
 **#인스턴스 카운팅**   
   일부 클래스의 총 인스턴스 수를 제한했습니다.  싱글턴 패턴을 쓰지 않았습니다.   
@@ -290,7 +290,7 @@ IDE에서는 실행되는데 출력 디렉토리에서는 실행이 안 된다�
 
 **#수학** **#벡터** **#선형 보간**   
   UI 애니메이션에 2차원 벡터 연산과 선형 보간이 쓰였습니다.   
-( [*dlls/Game/scene/online/InLobby.cpp:952, 1377*](https://github.com/Mynsu/Sirtet_SFML/blob/9a5e461624dd15256a1f22c75fd294aef88ab21d/dlls/Game/scene/online/InLobby.cpp#L1377) )
+( [*dlls/Game/scene/online/InLobby.cpp:952, 1375*](https://github.com/Mynsu/Sirtet_SFML/blob/9a5e461624dd15256a1f22c75fd294aef88ab21d/dlls/Game/scene/online/InLobby.cpp#L1375) )
 
 **#TCP/IP** **#여기부터 네트워크&시스템 프로그래밍**   
   UDP는 wouldblock 때 패킷이 유실될 가능성이 있어 쓰지 않았습니다.
@@ -367,7 +367,7 @@ IDE에서는 실행되는데 출력 디렉토리에서는 실행이 안 된다�
 
 **#클라이언트와 서버의 동기화**   
   게이머가 테트리미노를 움직이기 위해 입력하자마자 클라이언트가 그 움직임을 적용합니다.  거의 동시에 클라이언트는 서버에도 그 움직임을 전달합니다.  입력은 서버에서 검증*validation*한 다음 클라이언트에 적용하는 것이 정석입니다.  하지만 이 게임은 게이머가 클라이언트를 왜곡해도 자신만 손해기 때문에 의도적으로 정석을 따르지 않습니다.  따라서 서버가 입력을 검증하는 동안 클라이언트가 애니메이션을 보여주며 응답이 빠른 척할 필요가 없습니다.   
-( [_dlls/Game/ui/PlayView.cpp:200_](https://github.com/Mynsu/Sirtet_SFML/blob/master/dlls/Game/ui/PlayView.cpp#L200) )   
+( [_dlls/Game/ui/PlayView.cpp:201_](https://github.com/Mynsu/Sirtet_SFML/blob/master/dlls/Game/ui/PlayView.cpp#L201) )   
   반면, 게이머가 테트리미노 낙하 속도를 못된 방법으로 낮추면 클라이언트가 접속 종료됩니다.  클라이언트와 서버 모두에서 시간을 따로 재어 처리합니다.  역시 낙하 속도를 높히는 것은 게이머 자신에게 손해기 때문에 처리하지 않습니다.  대신 다음 테트리미노가 스폰되는 시간을 서로 동기화합니다.   
 ( [_dlls/Game/ui/PlayView.cpp:148_](https://github.com/Mynsu/Sirtet_SFML/blob/9a5e461624dd15256a1f22c75fd294aef88ab21d/dlls/Game/ui/PlayView.cpp#L148), [_exes/Server/Room.cpp:45_](https://github.com/Mynsu/Sirtet_SFML/blob/9a5e461624dd15256a1f22c75fd294aef88ab21d/exes/Server/Playing.cpp#L45) )
 

@@ -938,58 +938,51 @@ void ::scene::inPlay::Playing::loadResources( const sf::RenderWindow& )
 	}
 	else
 	{
-		for ( auto it = eventQueue.cbegin(); eventQueue.cend() != it; )
-		{
-			if ( sf::Event::KeyPressed == it->type )
-			{
-				switch ( it->key.code )
-				{
-					case sf::Keyboard::Space:
-						mCurrentTetrimino.hardDrop( );
-						mFrameCountSoftDropInterval = 0;
-						it = eventQueue.erase(it);
-						break;
-					case sf::Keyboard::Down:
-						hasTetriminoLanded = mCurrentTetrimino.moveDown( mStage.cgrid( ) );
-						mFrameCountSoftDropInterval = 0;
-						it = eventQueue.erase(it);
-						break;
-					case sf::Keyboard::Left:
-						mCurrentTetrimino.tryMoveLeft( mStage.cgrid( ) );
-						it = eventQueue.erase(it);
-						break;
-					case sf::Keyboard::Right:
-						mCurrentTetrimino.tryMoveRight( mStage.cgrid( ) );
-						it = eventQueue.erase(it);
-						break;
-					case sf::Keyboard::LShift:
-						[[ fallthrough ]];
-					case sf::Keyboard::Up:
-						mCurrentTetrimino.tryRotate( mStage.cgrid( ) );
-						it = eventQueue.erase(it);
-						break;
-					case sf::Keyboard::Escape:
-						if ( nullptr == mOverlappedScene_ ||
-							typeid(*mOverlappedScene_) != typeid(::scene::inPlay::Assertion) )
-						{
-							retVal = ::scene::inPlay::ID::ASSERTION;
-							it = eventQueue.erase(it);
-						}
-						else
-						{
-							++it;
-						}
-						break;
-					default:
-						++it;
-						break;
-				}
-			}
-			else
-			{
-				++it;
-			}
-		}
+		eventQueue.erase(std::remove_if(eventQueue.begin(), eventQueue.end(), [this, &hasTetriminoLanded, &retVal](const sf::Event& event)->bool
+										{
+											bool isRemoved = false;
+											if ( sf::Event::KeyPressed == event.type )
+											{
+												switch ( event.key.code )
+												{
+													case sf::Keyboard::Space:
+														mCurrentTetrimino.hardDrop( );
+														mFrameCountSoftDropInterval = 0;
+														isRemoved = true;
+														break;
+													case sf::Keyboard::Down:
+														hasTetriminoLanded = mCurrentTetrimino.moveDown( mStage.cgrid() );
+														mFrameCountSoftDropInterval = 0;
+														isRemoved = true;
+														break;
+													case sf::Keyboard::Left:
+														mCurrentTetrimino.tryMoveLeft( mStage.cgrid() );
+														isRemoved = true;
+														break;
+													case sf::Keyboard::Right:
+														mCurrentTetrimino.tryMoveRight( mStage.cgrid() );
+														isRemoved = true;
+														break;
+													case sf::Keyboard::LShift:
+														[[ fallthrough ]];
+													case sf::Keyboard::Up:
+														mCurrentTetrimino.tryRotate( mStage.cgrid() );
+														isRemoved = true;
+														break;
+													case sf::Keyboard::Escape:
+														if ( nullptr == mOverlappedScene_ ||
+															typeid(*(this->mOverlappedScene_)) != typeid(::scene::inPlay::Assertion) )
+														{
+															retVal = ::scene::inPlay::ID::ASSERTION;
+															isRemoved = true;
+														}
+														break;
+													default:
+														break;
+												}
+											}
+											return isRemoved;
+										}), eventQueue.end());
 	}
 	
 	if ( (uint16_t)fps*mTempo < mFrameCountSoftDropInterval )

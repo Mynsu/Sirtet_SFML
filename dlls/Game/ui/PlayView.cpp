@@ -193,91 +193,88 @@ void ui::PlayView::update( std::vector<sf::Event>& eventQueue, ::scene::online::
 			{
 				Packet packet;
 				const uint16_t inputDelayFPS = mFPS_ * INPUT_DELAY_MS / 1000;
-				for ( auto it = eventQueue.cbegin(); eventQueue.cend() != it; )
-				{
-					if ( sf::Event::KeyPressed == it->type )
-					{
-						switch ( it->key.code )
-						{
-							case sf::Keyboard::Space:
-								if ( inputDelayFPS < mFrameCountInputDelay )
-								{
-									mFrameCountInputDelay = 0;
-									if ( false == mHasTetriminoLandedOnServer )
-									{
-										packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::HARD_DROP );
-									}
-									mCurrentTetrimino.hardDrop( );
-									resetAlarm( AlarmIndex::INTERVAL_TETRIMINO_DOWN );
-								}
-								it = eventQueue.erase(it);
-								break;
-							case sf::Keyboard::Down:
-								if ( inputDelayFPS < mFrameCountInputDelay )
-								{
-									mFrameCountInputDelay = 0;
-									if ( false == mHasTetriminoLandedOnServer )
-									{
-										packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::DOWN );
-									}
-									mHasTetriminoLandedOnClient = mCurrentTetrimino.moveDown( mStage.cgrid() );
-									if ( true == mHasTetriminoLandedOnClient )
-									{
-										const uint8_t ignored = 1;
-										packet.pack( TAG_MY_TETRIMINO_LANDED_ON_CLIENT, ignored );
-									}
-									resetAlarm( AlarmIndex::INTERVAL_TETRIMINO_DOWN );
-								}
-								it = eventQueue.erase(it);
-								break;
-							case sf::Keyboard::Left:
-								if ( inputDelayFPS < mFrameCountInputDelay )
-								{
-									mFrameCountInputDelay = 0;
-									if ( false == mHasTetriminoLandedOnServer )
-									{
-										packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::LEFT );
-										mCurrentTetrimino.tryMoveLeft( mStage.cgrid() );
-									}
-								}
-								it = eventQueue.erase(it);
-								break;
-							case sf::Keyboard::Right:
-								if ( inputDelayFPS < mFrameCountInputDelay )
-								{
-									mFrameCountInputDelay = 0;
-									if ( false == mHasTetriminoLandedOnServer )
-									{
-										packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::RIGHT );
-										mCurrentTetrimino.tryMoveRight( mStage.cgrid() );
-									}
-								}
-								it = eventQueue.erase(it);
-								break;
-							case sf::Keyboard::LShift:
-								[[ fallthrough ]];
-							case sf::Keyboard::Up:
-								if ( inputDelayFPS < mFrameCountInputDelay )
-								{
-									mFrameCountInputDelay = 0;
-									if ( false == mHasTetriminoLandedOnServer )
-									{
-										packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::ROTATE );
-										mCurrentTetrimino.tryRotate( mStage.cgrid() );
-									}
-								}
-								it = eventQueue.erase(it);
-								break;
-							default:
-								++it;
-								break;
-						}
-					}
-					else
-					{
-						++it;
-					}
-				}
+				eventQueue.erase(std::remove_if(eventQueue.begin(), eventQueue.end(), [this, &inputDelayFPS, &packet](const sf::Event& event)->bool
+												{
+													bool isRemoved = false;
+													if ( sf::Event::KeyPressed == event.type )
+													{
+														switch ( event.key.code )
+														{
+															case sf::Keyboard::Space:
+																if ( inputDelayFPS < mFrameCountInputDelay )
+																{
+																	mFrameCountInputDelay = 0;
+																	if ( false == mHasTetriminoLandedOnServer )
+																	{
+																		packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::HARD_DROP );
+																	}
+																	mCurrentTetrimino.hardDrop( );
+																	resetAlarm( AlarmIndex::INTERVAL_TETRIMINO_DOWN );
+																}
+																isRemoved = true;
+																break;
+															case sf::Keyboard::Down:
+																if ( inputDelayFPS < mFrameCountInputDelay )
+																{
+																	mFrameCountInputDelay = 0;
+																	if ( false == mHasTetriminoLandedOnServer )
+																	{
+																		packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::DOWN );
+																	}
+																	mHasTetriminoLandedOnClient = mCurrentTetrimino.moveDown( mStage.cgrid() );
+																	if ( true == mHasTetriminoLandedOnClient )
+																	{
+																		const uint8_t ignored = 1;
+																		packet.pack( TAG_MY_TETRIMINO_LANDED_ON_CLIENT, ignored );
+																	}
+																	resetAlarm( AlarmIndex::INTERVAL_TETRIMINO_DOWN );
+																}
+																isRemoved = true;
+																break;
+															case sf::Keyboard::Left:
+																if ( inputDelayFPS < mFrameCountInputDelay )
+																{
+																	mFrameCountInputDelay = 0;
+																	if ( false == mHasTetriminoLandedOnServer )
+																	{
+																		packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::LEFT );
+																		mCurrentTetrimino.tryMoveLeft( mStage.cgrid() );
+																	}
+																}
+																isRemoved = true;
+																break;
+															case sf::Keyboard::Right:
+																if ( inputDelayFPS < mFrameCountInputDelay )
+																{
+																	mFrameCountInputDelay = 0;
+																	if ( false == mHasTetriminoLandedOnServer )
+																	{
+																		packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::RIGHT );
+																		mCurrentTetrimino.tryMoveRight( mStage.cgrid() );
+																	}
+																}
+																isRemoved = true;
+																break;
+															case sf::Keyboard::LShift:
+																[[ fallthrough ]];
+															case sf::Keyboard::Up:
+																if ( inputDelayFPS < mFrameCountInputDelay )
+																{
+																	mFrameCountInputDelay = 0;
+																	if ( false == mHasTetriminoLandedOnServer )
+																	{
+																		packet.pack( TAG_MY_TETRIMINO_MOVE, (uint8_t)::model::tetrimino::Move::ROTATE );
+																		mCurrentTetrimino.tryRotate( mStage.cgrid() );
+																	}
+																}
+																isRemoved = true;
+																break;
+															default:
+																break;
+														}
+													}
+													return isRemoved;
+												}), eventQueue.end());
 
 				if ( false == mHasTetriminoLandedOnClient &&
 					true == alarmAfter(mTempoMs, AlarmIndex::INTERVAL_TETRIMINO_DOWN) )

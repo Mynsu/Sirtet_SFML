@@ -476,24 +476,23 @@ void scene::online::Waiting::loadResources( const sf::RenderWindow& window )
 			__assume(0);
 #endif
 	}
-	for ( auto it = eventQueue.cbegin(); eventQueue.cend() !=it; )
-	{
-		if ( sf::Event::KeyPressed == it->type &&
-			sf::Keyboard::Escape == it->key.code )
-		{
-			if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::SELECTION]) )
-			{
-				gService()->console().printFailure(FailureLevel::WARNING,
-												   "File Not Found: "+mSoundPaths[(int)SoundIndex::SELECTION] );
-			}
-			retVal = ::scene::online::ID::MAIN_MENU;
-			it = eventQueue.erase(it);
-		}
-		else
-		{
-			++it;
-		}
-	}
+
+	eventQueue.erase(std::remove_if(eventQueue.begin(), eventQueue.end(), [this, &retVal](const sf::Event& event)->bool
+									{
+										bool isRemoved = false;
+										if ( sf::Event::KeyPressed == event.type &&
+											sf::Keyboard::Escape == event.key.code )
+										{
+											if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::SELECTION]) )
+											{
+												gService()->console().printFailure(FailureLevel::WARNING,
+																				   "File Not Found: "+mSoundPaths[(int)SoundIndex::SELECTION] );
+											}
+											retVal = ::scene::online::ID::MAIN_MENU;
+											isRemoved = true;
+										}
+										return isRemoved;
+									}), eventQueue.end());
 	return retVal;
 }
 

@@ -21,6 +21,7 @@
 #include <functional>
 #include <random>
 #include <optional>
+#include <algorithm>
 #include <SFML/Window.hpp>
 #include <SFML/System.hpp>
 #ifdef _DEBUG

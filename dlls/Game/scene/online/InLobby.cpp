@@ -1304,51 +1304,49 @@ void scene::online::InLobby::loadResources( const sf::RenderWindow& window )
 		mFrameCountRequestDelay = 0;
 	}
 
-	for ( auto it = eventQueue.cbegin(); eventQueue.cend() != it; )
-	{
-		if ( sf::Event::EventType::KeyPressed == it->type &&
-			sf::Keyboard::Escape == it->key.code )
-		{
-			if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::SELECTION]) )
-			{
-				gService()->console().printFailure(FailureLevel::WARNING,
-												   "File Not Found: "+mSoundPaths[(int)SoundIndex::SELECTION] );
-			}
-			retVal = ::scene::online::ID::MAIN_MENU;
-			it = eventQueue.erase(it);
-		}
-		else if ( sf::Event::EventType::MouseButtonPressed == it->type )
-		{
-			if ( sf::Mouse::Button::Left == it->mouseButton.button )
-			{
-				const Clock::time_point now = Clock::now();
-				const math::Vector<2> pos( (float)it->mouseButton.x, (float)it->mouseButton.y );
-				const math::Vector<2> diff( pos - mLatestMouseEvent.clickPosition );
-				if ( std::chrono::milliseconds(500) > now-mLatestMouseEvent.latestClickTime &&
-					100.f > diff.magnitude() )
-				{
-					createRoom( );
-					if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::SELECTION]) )
-					{
-						gService()->console().printFailure(FailureLevel::WARNING,
-														   "File Not Found: "+mSoundPaths[(int)SoundIndex::SELECTION] );
-					}
-				}
-				mLatestMouseEvent.latestClickTime = now;
-				mLatestMouseEvent.clickPosition = pos;
-				it = eventQueue.erase(it);
-			}
-			else if ( sf::Mouse::Button::Right == it->mouseButton.button )
-			{
-				mTextInputBox.activate( "What nickname has the one you want to play with?" );
-				it = eventQueue.erase(it);
-			}
-		}
-		else
-		{
-			++it;
-		}
-	}
+	eventQueue.erase(std::remove_if(eventQueue.begin(), eventQueue.end(), [this, &retVal](const sf::Event& event)->bool
+									{
+										bool isRemoved = false;
+										if ( sf::Event::EventType::KeyPressed == event.type &&
+											sf::Keyboard::Escape == event.key.code )
+										{
+											if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::SELECTION]) )
+											{
+												gService()->console().printFailure(FailureLevel::WARNING,
+																				   "File Not Found: "+mSoundPaths[(int)SoundIndex::SELECTION] );
+											}
+											retVal = ::scene::online::ID::MAIN_MENU;
+											isRemoved = true;
+										}
+										else if ( sf::Event::EventType::MouseButtonPressed == event.type )
+										{
+											if ( sf::Mouse::Button::Left == event.mouseButton.button )
+											{
+												const Clock::time_point now = Clock::now();
+												const math::Vector<2> pos( (float)event.mouseButton.x, (float)event.mouseButton.y );
+												const math::Vector<2> diff( pos - mLatestMouseEvent.clickPosition );
+												if ( std::chrono::milliseconds(500) > now-mLatestMouseEvent.latestClickTime &&
+													100.f > diff.magnitude() )
+												{
+													createRoom( );
+													if ( false == gService()->sound().playSFX(mSoundPaths[(int)SoundIndex::SELECTION]) )
+													{
+														gService()->console().printFailure(FailureLevel::WARNING,
+																						   "File Not Found: "+mSoundPaths[(int)SoundIndex::SELECTION] );
+													}
+												}
+												mLatestMouseEvent.latestClickTime = now;
+												mLatestMouseEvent.clickPosition = pos;
+												isRemoved = true;
+											}
+											else if ( sf::Mouse::Button::Right == event.mouseButton.button )
+											{
+												mTextInputBox.activate( "What nickname has the one you want to play with?" );
+												isRemoved = true;
+											}
+										}
+										return isRemoved;
+									}), eventQueue.end());
 	return retVal;
 }
 
