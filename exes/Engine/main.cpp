@@ -116,12 +116,12 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int )
 		return -1;
 	}
 	EngineComponents engineComponents;
-	engineComponents.service = &gService;
+	engineComponents.service = std::addressof(gService);
 	sf::RenderWindow window( sf::VideoMode( winWidth, winHeight ),
 							 "Sirtet: the Classic",
 							 winStyle );
 	window.setFramerateLimit( DEFAULT_FOREGROUND_FPS );
-	engineComponents.window = &window;
+	engineComponents.window = std::addressof(window);
 	const GameComponents gameComponents = GetGameAPI(engineComponents);
 	// Passed by value, or copied, thus initialized for security.
 	engineComponents = { nullptr };

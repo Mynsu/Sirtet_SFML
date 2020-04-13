@@ -142,7 +142,7 @@ int main( )
 	
 	{
 		WSAData w;
-		WSAStartup( MAKEWORD(2, 2), &w );
+		WSAStartup( MAKEWORD(2, 2), std::addressof(w) );
 	}
 
 	IOCP iocp( 2 );

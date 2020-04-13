@@ -15,7 +15,7 @@ public:
 		IsInstantiated = true;
 
 		WSAData w;
-		WSAStartup( MAKEWORD(2, 2), &w );
+		WSAStartup( MAKEWORD(2, 2), std::addressof(w) );
 	}
 	~GameLocal( )
 	{

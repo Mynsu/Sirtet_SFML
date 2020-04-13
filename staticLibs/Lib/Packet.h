@@ -1,6 +1,7 @@
 #pragma once
-#include <string>
 #include <intrin.h>
+#include <string>
+#include <memory>
 
 // NOTE: Not to include "Common.h".
 using Tag = char[];
@@ -67,7 +68,7 @@ public:
 				__assume( 0 );
 #endif
 		}
-		mData.append( (char*)&data, sizeof(T) );
+		mData.append( (char*)std::addressof(data), sizeof(T) );
 		mHasSomethingToSend = true;
 	}
 	bool hasData( ) const

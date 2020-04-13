@@ -12,7 +12,7 @@ bool ::scene::SceneManager::IsInstantiated = false;
 void ::scene::SceneManager::init( sf::RenderWindow& window )
 {
 	ASSERT_NOT_NULL( gService() );
-	mWindow = &window;
+	mWindow = std::addressof(window);
 #ifdef _DEV
 	gService()->console().addCommand( CMD_CHANGE_SCENE, std::bind(&SceneManager::chscnto, this, std::placeholders::_1) );
 	gService()->console().addCommand( CMD_RELOAD, std::bind(&SceneManager::refresh, this, std::placeholders::_1) );

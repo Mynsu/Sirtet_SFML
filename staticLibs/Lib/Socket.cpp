@@ -62,7 +62,7 @@ int Socket::acceptOverlapped( Socket& candidateClientSocket, const uint16_t cand
 					  candidateClientSocket.mAddressBuffer.get(), 0,
 					  sizeof(AddressBuffer::localAddress), sizeof(AddressBuffer::remoteAddress),
 					  &ignored,
-					  &overlapped );
+					  std::addressof(overlapped) );
 	const int err = WSAGetLastError();
 	if ( FALSE == result )
 	{
@@ -72,7 +72,7 @@ int Socket::acceptOverlapped( Socket& candidateClientSocket, const uint16_t cand
 		}
 		else
 		{
-			erase( &overlapped );
+			erase( std::addressof(overlapped) );
 		}
 	}
 
@@ -132,7 +132,7 @@ int Socket::disconnectOverlapped( )
 		}
 	}
 	Overlapped& overlapped = mOverlappedStructs.emplace_front(IOType::DISCONNECT);
-	result = DisconnectEx(mhSocket, &overlapped, TF_REUSE_SOCKET, 0);
+	result = DisconnectEx(mhSocket, std::addressof(overlapped), TF_REUSE_SOCKET, 0);
 	const int err = WSAGetLastError();
 	if ( FALSE == result )
 	{
@@ -143,7 +143,7 @@ int Socket::disconnectOverlapped( )
 		else if ( WSAENOTCONN == err )
 		{
 			result = TRUE;
-			erase( &overlapped );
+			erase( std::addressof(overlapped) );
 		}
 	}
 	return result;
@@ -165,7 +165,7 @@ int Socket::receiveOverlapped( LPWSAOVERLAPPED_COMPLETION_ROUTINE lpRoutine )
 	b.buf = mReceivingBuffer;
 	DWORD ignored = 0;
 	Overlapped& overlapped = mOverlappedStructs.emplace_front(IOType::RECEIVE);
-	int result = WSARecv(mhSocket, &b, 1, NULL, &ignored, &overlapped, lpRoutine);
+	int result = WSARecv(mhSocket, &b, 1, NULL, &ignored, std::addressof(overlapped), lpRoutine);
 	const int err = WSAGetLastError();
 	if ( 0 == result ||
 		-1 == result && WSA_IO_PENDING == err ||
@@ -177,7 +177,7 @@ int Socket::receiveOverlapped( LPWSAOVERLAPPED_COMPLETION_ROUTINE lpRoutine )
 	// Exception
 	else
 	{
-		erase( &overlapped );
+		erase( std::addressof(overlapped) );
 	}
 	return result;
 }
@@ -204,7 +204,7 @@ int Socket::sendOverlapped( char* const data, const size_t size,
 	b.buf = data;
 	b.len = (ULONG)size;
 	Overlapped& overlapped = mOverlappedStructs.emplace_front(IOType::SEND);
-	int result = ::WSASend(mhSocket, &b, 1, NULL, 0, &overlapped, lpRoutine);
+	int result = ::WSASend(mhSocket, &b, 1, NULL, 0, std::addressof(overlapped), lpRoutine);
 	const int err = WSAGetLastError();
 	if ( 0 == result ||
 		-1 == result && WSA_IO_PENDING == err ||
@@ -215,7 +215,7 @@ int Socket::sendOverlapped( char* const data, const size_t size,
 	// Exception
 	else
 	{
-		erase( &overlapped );
+		erase( std::addressof(overlapped) );
 	}
 	return result;
 }
@@ -227,7 +227,7 @@ int Socket::sendOverlapped( Packet& packet, LPWSAOVERLAPPED_COMPLETION_ROUTINE l
 	b.buf = data.data();
 	b.len = (ULONG)data.size();
 	Overlapped& overlapped = mOverlappedStructs.emplace_front(IOType::SEND);
-	int result = ::WSASend(mhSocket, &b, 1, NULL, 0, &overlapped, lpRoutine);
+	int result = ::WSASend(mhSocket, &b, 1, NULL, 0, std::addressof(overlapped), lpRoutine);
 	const int err = WSAGetLastError();
 	if ( 0 == result ||
 		-1 == result &&	WSA_IO_PENDING == err ||
@@ -238,7 +238,7 @@ int Socket::sendOverlapped( Packet& packet, LPWSAOVERLAPPED_COMPLETION_ROUTINE l
 	// Exception
 	else
 	{
-		erase( &overlapped );
+		erase( std::addressof(overlapped) );
 	}
 	return result;
 }
@@ -304,7 +304,7 @@ void Socket::erase( LPOVERLAPPED const lpOverlapped )
 	}
 #endif
 	auto it = mOverlappedStructs.begin();
-	if ( lpOverlapped == &*it )
+	if ( lpOverlapped == std::addressof(*it) )
 	{
 		mOverlappedStructs.pop_front();
 	}
@@ -319,7 +319,7 @@ void Socket::erase( LPOVERLAPPED const lpOverlapped )
 #endif
 		// Necessary to erase something in std::forward_list.
 		auto it2 = mOverlappedStructs.cbegin();
-		while ( lpOverlapped != &*it )
+		while ( lpOverlapped != std::addressof(*it) )
 		{
 			++it;
 #ifdef _DEBUG

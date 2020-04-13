@@ -309,7 +309,7 @@ std::vector<ClientIndex> Room::notify( std::array<Client, CLIENT_CAPACITY>& clie
 						const ::model::tetrimino::Type nextTetType = playing.nextTetriminoType();
 						nextTetriminos += (char)nextTetType;
 						const ::model::stage::Grid& stage = playing.serializedStage();
-						stages.append( (char*)&stage, sizeof(stage) );
+						stages.append( (char*)std::addressof(stage), sizeof(stage) );
 						break;
 					}
 					case Playing::UpdateResult::LINE_CLEARED:
@@ -321,7 +321,7 @@ std::vector<ClientIndex> Room::notify( std::array<Client, CLIENT_CAPACITY>& clie
 						const ::model::tetrimino::Type nextTetType = playing.nextTetriminoType();
 						nextTetriminos += (char)nextTetType;
 						const ::model::stage::Grid& stage = playing.serializedStage();
-						stages.append( (char*)&stage, sizeof(stage) );
+						stages.append( (char*)std::addressof(stage), sizeof(stage) );
 						const uint8_t numOfLinesCleared = playing.numOfLinesClearedRecently();
 						numsOfLinesCleared += (char)numOfLinesCleared;
 						break;
@@ -330,7 +330,7 @@ std::vector<ClientIndex> Room::notify( std::array<Client, CLIENT_CAPACITY>& clie
 					{
 						stages.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
 						const ::model::stage::Grid& stage = playing.serializedStage();
-						stages.append( (char*)&stage, sizeof(stage) );
+						stages.append( (char*)std::addressof(stage), sizeof(stage) );
 						gamesOver.append( (char*)&nicknameHashed, sizeof(nicknameHashed) );
 						break;
 					}
@@ -472,7 +472,7 @@ std::vector<ClientIndex> Room::notify( std::array<Client, CLIENT_CAPACITY>& clie
 				const ::model::tetrimino::Type nextTetType = playing.nextTetriminoType();
 				nextTetriminos += (char)nextTetType;
 				const ::model::stage::Grid& stage = playing.serializedStage();
-				stages.append( (char*)&stage, sizeof(stage) );
+				stages.append( (char*)std::addressof(stage), sizeof(stage) );
 			}
 			if ( false == currentTetriminos.empty() )
 			{

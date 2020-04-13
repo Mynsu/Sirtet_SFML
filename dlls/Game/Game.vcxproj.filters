@@ -66,56 +66,56 @@
     <ClCompile Include="scene\online\InRoom.cpp">
       <Filter>소스 파일\scene\online</Filter>
     </ClCompile>
-    <ClCompile Include="model\Tetrimino.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="pch.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="scene\inPlay\AllClear.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="scene\inPlay\Assertion.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="scene\inPlay\GameOver.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="ui\NextTetriminoPanel.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="ui\PlayView.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="ui\TextInputBox.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="scene\online\Waiting.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="vfx\Combo.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="scene\inPlay\InPlay.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="scene\inPlay\Playing.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="scene\inPlay\Ready.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Game.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="scene\inPlay\AllClear.cpp">
+      <Filter>소스 파일\scene\inPlay</Filter>
+    </ClCompile>
+    <ClCompile Include="scene\inPlay\Assertion.cpp">
+      <Filter>소스 파일\scene\inPlay</Filter>
+    </ClCompile>
+    <ClCompile Include="scene\inPlay\GameOver.cpp">
+      <Filter>소스 파일\scene\inPlay</Filter>
+    </ClCompile>
+    <ClCompile Include="scene\inPlay\InPlay.cpp">
+      <Filter>소스 파일\scene\inPlay</Filter>
+    </ClCompile>
     <ClCompile Include="scene\Intro.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>소스 파일\scene</Filter>
     </ClCompile>
     <ClCompile Include="scene\MainMenu.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>소스 파일\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="scene\inPlay\Playing.cpp">
+      <Filter>소스 파일\scene\inPlay</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\PlayView.cpp">
+      <Filter>소스 파일\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="scene\inPlay\Ready.cpp">
+      <Filter>소스 파일\scene\inPlay</Filter>
+    </ClCompile>
+    <ClCompile Include="model\Tetrimino.cpp">
+      <Filter>소스 파일\model</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\TextInputBox.cpp">
+      <Filter>소스 파일\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="scene\online\Waiting.cpp">
+      <Filter>소스 파일\scene\online</Filter>
     </ClCompile>
     <ClCompile Include="scene\SceneManager.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>소스 파일\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\NextTetriminoPanel.cpp">
+      <Filter>소스 파일\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="vfx\Combo.cpp">
+      <Filter>소스 파일\vfx</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -144,52 +144,52 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="scene\inPlay\AllClear.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>헤더 파일\scene\inPlay</Filter>
     </ClInclude>
     <ClInclude Include="scene\inPlay\Assertion.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="scene\inPlay\GameOver.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="scene\online\IScene.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="ui\NextTetriminoPanel.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="ui\PlayView.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="ui\TextInputBox.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="scene\online\Waiting.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>헤더 파일\scene\inPlay</Filter>
     </ClInclude>
     <ClInclude Include="vfx\Combo.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>헤더 파일\vfx</Filter>
     </ClInclude>
-    <ClInclude Include="model\Tetrimino.h">
-      <Filter>헤더 파일</Filter>
+    <ClInclude Include="scene\inPlay\GameOver.h">
+      <Filter>헤더 파일\scene\inPlay</Filter>
     </ClInclude>
     <ClInclude Include="scene\inPlay\InPlay.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="scene\inPlay\Playing.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="scene\inPlay\Ready.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>헤더 파일\scene\inPlay</Filter>
     </ClInclude>
     <ClInclude Include="scene\Intro.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>헤더 파일\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="scene\online\IScene.h">
+      <Filter>헤더 파일\scene\online</Filter>
     </ClInclude>
     <ClInclude Include="scene\MainMenu.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>헤더 파일\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\NextTetriminoPanel.h">
+      <Filter>헤더 파일\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="scene\inPlay\Playing.h">
+      <Filter>헤더 파일\scene\inPlay</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\PlayView.h">
+      <Filter>헤더 파일\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="scene\inPlay\Ready.h">
+      <Filter>헤더 파일\scene\inPlay</Filter>
     </ClInclude>
     <ClInclude Include="scene\SceneManager.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>헤더 파일\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="model\Tetrimino.h">
+      <Filter>헤더 파일\model</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\TextInputBox.h">
+      <Filter>헤더 파일\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="scene\online\Waiting.h">
+      <Filter>헤더 파일\scene\online</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
