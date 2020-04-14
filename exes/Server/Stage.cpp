@@ -88,13 +88,19 @@ bool model::Stage::isOver( ) const
 
 void model::Stage::blackout( )
 {
-	const sf::Color GRAY( 0x808080ff );
+	const uint32_t GRAY = 0x808080ff;
 	for ( auto& row : mGrid )
 	{
-		for ( ::model::stage::Cell& cell : row )
-		{
-			// Gray
-			cell.color = GRAY;
-		}
+		// Unrolling.
+		row[0].color = GRAY;
+		row[1].color = GRAY;
+		row[2].color = GRAY;
+		row[3].color = GRAY;
+		row[4].color = GRAY;
+		row[5].color = GRAY;
+		row[6].color = GRAY;
+		row[7].color = GRAY;
+		row[8].color = GRAY;
+		row[9].color = GRAY;
 	}
 }

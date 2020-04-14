@@ -392,7 +392,7 @@ void model::Tetrimino::land( ::model::stage::Grid& grid )
 			const uint8_t y = mPosition.y + i/model::tetrimino::BLOCKS_A_TETRIMINO;
 			ASSERT_TRUE( x < ::model::stage::GRID_WIDTH && y < ::model::stage::GRID_HEIGHT );
 			grid[y][x].blocked = true;
-			grid[y][x].color = mBlockShape.getFillColor();
+			grid[y][x].color = mBlockShape.getFillColor().toInteger();
 		}
 	}
 }

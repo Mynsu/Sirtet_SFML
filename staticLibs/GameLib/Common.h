@@ -29,14 +29,11 @@ namespace model
 
 		// A stage consists of CELLs as a tetrimino consists of BLOCKs.
 		// Strictly, cell isn't block and vice versa, but they match up each other.
+		// This satisfies conditions of POD(trivial and standard-layout).
 		struct Cell
 		{
-			Cell( )
-				: blocked( false ), color( sf::Color::Transparent )
-			{
-			}
 			bool blocked;
-			sf::Color color;
+			uint32_t color;
 		};
 
 		using Grid = std::array<std::array<Cell, ::model::stage::GRID_WIDTH>, ::model::stage::GRID_HEIGHT>;

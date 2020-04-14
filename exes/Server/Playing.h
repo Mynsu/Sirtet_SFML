@@ -69,6 +69,7 @@ public:
 	}
 	const ::model::stage::Grid& serializedStage( ) const
 	{
+		static_assert(std::is_pod_v<std::remove_reference_t<decltype(mStage.cgrid())>>);
 		return mStage.cgrid();
 	}
 	uint8_t numOfLinesClearedRecently( ) const

@@ -12,7 +12,7 @@ void model::Stage::draw( sf::RenderWindow& window )
 		{
 			if ( true == mGrid[i][k].blocked )
 			{
-				mCellShape.setFillColor( mGrid[i][k].color );
+				mCellShape.setFillColor( sf::Color(mGrid[i][k].color) );
 				mCellShape.setPosition( mPosition_ + sf::Vector2f(k, i)*mCellSize_ );
 				window.draw( mCellShape );
 			}
@@ -36,11 +36,12 @@ bool model::Stage::isOver( ) const
 
 void model::Stage::blackout( const sf::Color color )
 {
+	const uint32_t _color = color.toInteger();
 	for ( auto& row : mGrid )
 	{
 		for ( model::stage::Cell& cell : row )
 		{
-			cell.color = color;
+			cell.color = _color;
 		}
 	}
 }

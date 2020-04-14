@@ -5,7 +5,10 @@ namespace model
 	class Stage
 	{
 	public:
-		Stage( ) = default;
+		Stage( )
+		{
+			ZeroMemory(&mGrid, sizeof(mGrid));
+		}
 		Stage( const Stage&	) = delete;
 		Stage( Stage&& ) = delete;
 		void operator=( const Stage& ) = delete;
