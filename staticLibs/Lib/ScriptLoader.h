@@ -32,7 +32,7 @@ namespace util::script
 		luaopen_base( lua );
 
 		Str expansion[] = { variables... };
-		for ( const auto str : expansion )
+		for ( const Str& str : expansion )
 		{
 			const int TOP_IDX = -1;
 			lua_getglobal( lua, str.data() );
