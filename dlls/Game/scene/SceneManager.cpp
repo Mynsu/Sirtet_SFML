@@ -25,9 +25,9 @@ void ::scene::SceneManager::init( sf::RenderWindow& window )
 		result.cend() != it )
 	{
 		// Type check
-		if ( true == std::holds_alternative<int>(it->second) )
+		if ( true == std::holds_alternative<::util::script::number_t>(it->second) )
 		{
-			startScene = (::scene::ID)std::get<int>(it->second);
+			startScene = (::scene::ID)(int)std::get<::util::script::number_t>(it->second);
 		}
 		else
 		{

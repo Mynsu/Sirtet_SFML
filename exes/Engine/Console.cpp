@@ -63,9 +63,9 @@ void Console::initialize( )
 		result.cend() != it )
 	{
 		// Type check
-		if ( true == std::holds_alternative<int>(it->second) )
+		if ( true == std::holds_alternative<::util::script::number_t>(it->second) )
 		{
-			color = std::get<int>(it->second);
+			color = (int)std::get<::util::script::number_t>(it->second);
 		}
 		else
 		{
@@ -99,9 +99,9 @@ void Console::initialize( )
 		result.cend() != it )
 	{
 		// Type check
-		if ( true == std::holds_alternative<int>(it->second) )
+		if ( true == std::holds_alternative<::util::script::number_t>(it->second) )
 		{
-			mFontSize = std::get<int>(it->second);
+			mFontSize = (int)std::get<::util::script::number_t>(it->second);
 		}
 		else
 		{
@@ -117,9 +117,9 @@ void Console::initialize( )
 		result.cend() != it )
 	{
 		// Type check
-		if ( true == std::holds_alternative<int>(it->second) )
+		if ( true == std::holds_alternative<::util::script::number_t>(it->second) )
 		{
-			currentInputFontColor = std::get<int>(it->second);
+			currentInputFontColor = (int)std::get<::util::script::number_t>(it->second);
 		}
 		else
 		{
@@ -135,9 +135,9 @@ void Console::initialize( )
 		result.cend() != it )
 	{
 		// Type check
-		if ( true == std::holds_alternative<int>(it->second) )
+		if ( true == std::holds_alternative<::util::script::number_t>(it->second) )
 		{
-			winSize.x = std::get<int>(it->second);
+			winSize.x = (int)std::get<::util::script::number_t>(it->second);
 		}
 		else
 		{
@@ -153,9 +153,9 @@ void Console::initialize( )
 		result.cend() != it )
 	{
 		// Type check
-		if ( true == std::holds_alternative<int>(it->second) )
+		if ( true == std::holds_alternative<::util::script::number_t>(it->second) )
 		{
-			winSize.y = std::get<int>(it->second);
+			winSize.y = (int)std::get<::util::script::number_t>(it->second);
 		}
 		else
 		{
@@ -171,9 +171,9 @@ void Console::initialize( )
 		result.cend() != it )
 	{
 		// Type check
-		if ( true == std::holds_alternative<int>(it->second) )
+		if ( true == std::holds_alternative<::util::script::number_t>(it->second) )
 		{
-			mMaxLinesShown = (uint8_t)std::get<int>(it->second);
+			mMaxLinesShown = (uint8_t)std::get<::util::script::number_t>(it->second);
 		}
 		else
 		{

@@ -67,10 +67,9 @@ void scene::Intro::loadResources( const sf::RenderWindow& window )
 	if ( const auto it = result.find(varName1);
 		result.cend( ) != it )
 	{
-		// Type check whether it can be cast to enum type or not,
-		if ( true == std::holds_alternative<int>(it->second) )
+		if ( true == std::holds_alternative<::util::script::number_t>(it->second) )
 		{
-			mNextScene = (::scene::ID)std::get<int>(it->second);
+			mNextScene = (::scene::ID)(int)std::get<::util::script::number_t>(it->second);
 		}
 		else
 		{
