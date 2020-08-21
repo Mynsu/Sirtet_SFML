@@ -1,5 +1,6 @@
 #pragma once
 #include <WinSock2.h>
+#include <WS2tcpip.h>
 #pragma comment (lib, "Ws2_32")
 #include <MSWSock.h>
 #pragma comment (lib, "mswsock")
@@ -103,6 +104,36 @@ public:
 	std::string& extraReceivingBuffer( )
 	{
 		return mExtraReceivingBuffer;
+	}
+	std::string getIPAddress( )
+	{
+		std::string retVal;
+		char hostName[100] = {0};
+		if ( 0 != gethostname(hostName, sizeof(hostName)) )
+		{
+			//std::cerr << "Warning: Failed to get host name(" << WSAGetLastError() << ").\n";
+			return retVal;
+		}
+		addrinfo hint;
+		ZeroMemory(&hint, sizeof(hint));
+		hint.ai_family = AF_INET;
+		hint.ai_socktype = SOCK_STREAM;
+		hint.ai_protocol = IPPROTO_TCP;
+		addrinfo* pResult = nullptr;
+		if ( 0 != getaddrinfo(hostName, "0", &hint, &pResult) )
+		{
+			//std::cerr << "Warning: Failed to get address info(" << WSAGetLastError() << ").\n";
+			return retVal;
+		}
+		for ( addrinfo* pOne = pResult; nullptr != pOne; pOne = pOne->ai_next )
+		{
+			SOCKADDR_IN* addressInfo = (SOCKADDR_IN*)pOne->ai_addr;
+			//char stringBuf[16] = {0};
+			char stringBuf[20] = {0};
+			retVal += inet_ntop(AF_INET, &addressInfo->sin_addr, stringBuf, sizeof(stringBuf));
+			retVal += ", ";
+		}
+		return retVal;
 	}
 private:
 	void erase( LPOVERLAPPED const lpOverlapped );

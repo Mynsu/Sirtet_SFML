@@ -18,10 +18,13 @@ namespace
 	std::unique_ptr<std::thread> ThreadToReceive;
 	std::condition_variable CvForResumingRcv;
 	std::mutex MutexForConditionVariable, MutexForReceivingResult;
+	// Spurious wakeup, lost wakeup ¹æÁö
+	std::atomic<bool> HasWokenUp;
 
 	void Receive( Socket& socket )
 	{
 		IsReceiving = true;
+		HasWokenUp = false;
 		while ( true == IsReceiving )
 		{
 			int rcvRes = socket.receiveBlocking();
@@ -37,7 +40,8 @@ namespace
 					ReceivingResult = rcvRes;
 				}
 				std::unique_lock uLock( MutexForConditionVariable );
-				CvForResumingRcv.wait( uLock );
+				CvForResumingRcv.wait( uLock, []()->bool{ return HasWokenUp; } );
+				HasWokenUp = false;
 			}
 			else
 			{
@@ -77,7 +81,7 @@ scene::online::Online::Online( const sf::RenderWindow& window )
 ::scene::online::Online::~Online( )
 {
 	IsReceiving = false;
-	std::this_thread::sleep_for( std::chrono::milliseconds(RECEIVING_WAIT_MS+50) );
+	HasWokenUp = true;
 	CvForResumingRcv.notify_all( );
 	if ( nullptr != ThreadToReceive && true == ThreadToReceive->joinable() )
 	{
@@ -297,7 +301,7 @@ bool scene::online::Online::connectToMainServer( )
 {
 	bool result = true;
 	IsReceiving = false;
-	std::this_thread::sleep_for( std::chrono::milliseconds(RECEIVING_WAIT_MS+50) );
+	HasWokenUp = true;
 	CvForResumingRcv.notify_one( );
 	if ( true == ThreadToReceive->joinable() )
 	{
@@ -394,6 +398,7 @@ void scene::online::Online::receive( )
 	}
 	else
 	{
+		HasWokenUp = true;
 		CvForResumingRcv.notify_one( );
 	}
 }
