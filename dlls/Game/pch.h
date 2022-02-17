@@ -13,6 +13,7 @@
 #include <queue>
 #include <array>
 #include <bitset>
+#include <atomic>
 #include <thread>
 #include <condition_variable>
 #include <memory>

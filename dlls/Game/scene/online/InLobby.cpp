@@ -1013,7 +1013,6 @@ void scene::online::InLobby::loadResources( const sf::RenderWindow& window )
 		lua_getglobal( lua, tableName.data() );
 		if ( false == lua_istable(lua, TOP_IDX) )
 		{
-			// Type Check Exception
 			gService()->console().printScriptError( ExceptionType::TYPE_CHECK,
 													 tableName, scriptPath );
 		}

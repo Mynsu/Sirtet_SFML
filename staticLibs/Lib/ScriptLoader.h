@@ -11,9 +11,10 @@
 
 namespace util::script
 {
+	using number_t = float;
 	// Load data from a .lua script file.
 	// Value type is std::variant<bool, int, float, std::string>, which you can customize.
-	template <typename Value=std::variant<bool,int,float,std::string>, typename Str, typename... Strs,
+	template <typename Value=std::variant<bool,number_t,std::string>, typename Str, typename... Strs,
 		std::enable_if_t<std::is_same_v<std::decay_t<Str>,std::string>>* = nullptr>
 		static const std::unordered_map<Str, Value> LoadFromScript( Str scriptPath, Strs... variables )
 	{
@@ -32,7 +33,7 @@ namespace util::script
 		luaopen_base( lua );
 
 		Str expansion[] = { variables... };
-		for ( const auto str : expansion )
+		for ( const Str& str : expansion )
 		{
 			const int TOP_IDX = -1;
 			lua_getglobal( lua, str.data() );
@@ -45,30 +46,21 @@ namespace util::script
 				case LUA_TNUMBER:
 				{
 					const double number = lua_tonumber(lua, TOP_IDX);
-					// When integer,
-					if ( std::floor(number) == number )
+					// Exception: Double-precision at this point, but it'll be down-cast to single-precision.
+					if ( -(std::numeric_limits<float>::max)() > number ||
+							(std::numeric_limits<float>::max)() < number )
 					{
-						retVals.emplace( str, (int)lua_tointeger(lua, TOP_IDX) );
-					}
-					// When floating point number,
-					else
-					{
-						// Exception: Double-precision at this point, but it'll be down-cast to single-precision.
-						if ( std::numeric_limits<float>::min() > number ||
-							 std::numeric_limits<float>::max() < number )
-						{
-							const std::string msg( "Overflow or underflow occurs." );
+						const std::string msg( "Overflow or underflow occurs." );
 #ifdef GAME_EXPORTS
-							gService()->console().printFailure( FailureLevel::WARNING,
-																			msg + str + scriptPath );
+						gService()->console().printFailure( FailureLevel::WARNING,
+																		msg + str + scriptPath );
 #else
-							gService._console().printFailure( FailureLevel::WARNING,
-																	  msg + str + scriptPath );
+						gService._console().printFailure( FailureLevel::WARNING,
+																	msg + str + scriptPath );
 #endif
-							continue;
-						}
-						retVals.emplace( str, (float)number );
+						continue;
 					}
+					retVals.emplace( str, (float)number );
 					break;
 				}
 				case LUA_TSTRING:

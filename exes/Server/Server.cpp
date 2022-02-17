@@ -37,7 +37,7 @@ int main( )
 	Socket listener( Socket::Type::TCP );
 	{
 		bool result = true;
-		if ( -1 == listener.bind(EndPoint(MAIN_SERVER_IP_ADDRESS, MAIN_SERVER_PORT)) )
+		if ( -1 == listener.bind(EndPoint(nullptr, MAIN_SERVER_PORT)) )
 		{
 			// Exception
 			std::cerr << "FATAL: Failed to bind listener.\n";
@@ -171,7 +171,9 @@ int main( )
 	long long sumMSPerFrame = 0;
 #endif
 	ClientIndex queueServerIdx = UINT16_MAX;
-	std::cout << "###############\n### MAIN SERVER\n###############\n\nQ. What would the queue server say?" << std::endl;
+	std::cout << "###############\n### MAIN SERVER\n###############\n\n"
+		<< "IP Address: " << listener.getIPAddress() << "\n\n"
+		<< "Q. What would the queue server say?" << std::endl;
 	std::string sign;
 	std::cin >> sign;
 	const HashedKey encryptedSign = ::util::hash::Digest2(sign);
